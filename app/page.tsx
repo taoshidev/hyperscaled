@@ -90,7 +90,7 @@ export default function Home() {
 
       {/* Header */}
       <header className="relative z-10 border-b border-white/[0.06] py-8">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6">
+        <div className="mx-auto flex max-w-[1280px] items-center justify-between px-6">
           <div className="text-lg tracking-tight">
             Hyper<span className="font-semibold">funded</span>
           </div>
@@ -109,13 +109,13 @@ export default function Home() {
       {/* Main Content */}
       <main className="relative z-10">
         {/* Hero */}
-        <section className="px-6 pb-20 pt-28 text-center">
-          <div className="mx-auto max-w-5xl">
-            <h1 className="mx-auto max-w-4xl text-5xl font-normal leading-[1.1] tracking-[-0.04em] md:text-7xl">
+        <section className="px-6 pb-20 pt-[120px] text-center">
+          <div className="mx-auto max-w-[1280px]">
+            <h1 className="text-5xl font-normal leading-[1.1] tracking-[-0.04em] md:text-[72px]">
               Trade on Hyperliquid. Earn a Funded Account. Keep 100% of Your
               Profits.
             </h1>
-            <p className="mx-auto mt-6 max-w-xl text-lg font-light leading-relaxed text-white/50">
+            <p className="mx-auto mb-[60px] mt-6 max-w-[640px] text-lg font-light leading-[1.6] text-white/50">
               Pass a simple evaluation, keep your profits, and scale your
               account up to $2.5M.
             </p>
@@ -123,9 +123,9 @@ export default function Home() {
         </section>
 
         {/* Waitlist Form */}
-        <section className="px-6">
-          <div className="mx-auto max-w-md">
-            <form onSubmit={handleSubmit} className="flex gap-2">
+        <section className="mb-[120px] px-6">
+          <div className="mx-auto max-w-[480px]">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-2 md:flex-row">
               <Input
                 type="email"
                 placeholder="Email address"
@@ -151,8 +151,8 @@ export default function Home() {
 
         {/* Stats */}
         <section className="px-6">
-          <div className="mx-auto mt-28 max-w-3xl border-y border-white/[0.06] py-20">
-            <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
+          <div className="mx-auto mb-[120px] max-w-[900px] border-y border-white/[0.06] py-20">
+            <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
               {stats.map((stat) => (
                 <div
                   key={stat.label}
@@ -169,19 +169,19 @@ export default function Home() {
         </section>
 
         {/* Features */}
-        <section className="px-6 pb-28 pt-28">
-          <div className="mx-auto max-w-5xl">
+        <section className="px-6 pb-[120px]">
+          <div className="mx-auto max-w-[1280px]">
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
               {features.map((feature) => (
                 <Card
                   key={feature.title}
-                  className="border-white/[0.06] bg-white/[0.02] shadow-none transition-colors hover:border-white/[0.1] hover:bg-white/[0.04]"
+                  className="gap-0 rounded-lg border-white/[0.06] bg-white/[0.02] p-8 shadow-none transition-colors hover:border-white/[0.1] hover:bg-white/[0.04]"
                 >
-                  <CardContent className="pt-2">
+                  <CardContent className="p-0">
                     <h3 className="mb-3 text-base font-normal tracking-[-0.01em]">
                       {feature.title}
                     </h3>
-                    <p className="text-sm font-light leading-relaxed text-white/50">
+                    <p className="text-sm font-light leading-[1.6] text-white/50">
                       {feature.description}
                     </p>
                   </CardContent>
@@ -193,7 +193,7 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/[0.06] py-14 text-center">
+      <footer className="relative z-10 border-t border-white/[0.06] py-[60px] text-center">
         <div className="text-[13px] text-white/30">
           &copy; 2026 Hyperfunded
         </div>
