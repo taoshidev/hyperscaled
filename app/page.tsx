@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useHubspotForm } from "next-hubspot";
 import { Card, CardContent } from "@/components/ui/card";
 
 const features = [
@@ -45,16 +43,11 @@ const stats = [
 ];
 
 export default function Home() {
-  const [email, setEmail] = useState("");
-  const [showSuccess, setShowSuccess] = useState(false);
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    console.log("Email submitted:", email);
-    setShowSuccess(true);
-    setEmail("");
-    setTimeout(() => setShowSuccess(false), 5000);
-  }
+  useHubspotForm({
+    portalId: "45009699",
+    formId: "945b5d9c-3356-4673-a669-d1cacd444c5d",
+    target: "#hubspot-form-wrapper",
+  });
 
   return (
     <>
@@ -125,27 +118,7 @@ export default function Home() {
         {/* Waitlist Form */}
         <section className="mb-[120px] px-6">
           <div className="mx-auto max-w-[480px]">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-2 md:flex-row">
-              <Input
-                type="email"
-                placeholder="Email address"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-12 flex-1 border-white/[0.08] bg-white/[0.04] text-[15px] text-white placeholder:text-white/30 focus-visible:border-white/20 focus-visible:bg-white/[0.06] focus-visible:ring-0"
-              />
-              <Button
-                type="submit"
-                className="h-12 rounded-md bg-white px-7 text-[15px] font-normal text-black hover:bg-white/90 active:scale-[0.98]"
-              >
-                Join waitlist
-              </Button>
-            </form>
-            {showSuccess && (
-              <div className="mt-3 rounded-md border border-green-500/20 bg-green-500/10 px-3 py-3 text-center text-sm text-green-500">
-                Added to waitlist
-              </div>
-            )}
+            <div id="hubspot-form-wrapper" />
           </div>
         </section>
 
