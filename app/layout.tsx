@@ -11,7 +11,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Hyperfunded",
   description:
-    "Trade on Hyperliquid. Earn a Funded Account. Keep 100% of Your Profits.",
+    "Permissionless Funded Trading on Hyperliquid. Trade with more capital without risking your own stack.",
 };
 
 export default function RootLayout({

@@ -7,37 +7,37 @@ const features = [
   {
     title: "One-Step Evaluation",
     description:
-      "Hit an 8% profit target to earn your funded account and keep 100% of profits.",
+      "Trade, perform, and unlock funded capital through a transparent, rules-based evaluation.",
   },
   {
     title: "Grow Your Account",
     description:
-      "Consistent performance unlocks larger account sizes, with scaling up to $2.5M.",
+      "Strong performance unlocks access to more capital, with scaling up to $2.5M.",
   },
   {
-    title: "USDC In, USDC Out",
+    title: "USDC In, USDC out",
     description:
-      "Pay and get paid in USDC. Payouts go directly to your wallet with no conversion fees.",
+      "Pay and get paid in USDC. Payouts go directly to your wallet with no withdrawal fees.",
   },
   {
-    title: "Verifiable Payouts",
+    title: "Onchain Transparency",
     description:
-      "All payouts are verifiable, transparent, and tracked onchain. No exceptions.",
+      "Every payout is tracked on-chain, powered by decentralized infrastructure. No exceptions.",
   },
   {
-    title: "No Gatekeepers",
+    title: "Trade on Hyperliquid",
     description:
-      "Permissionless trading on Hyperliquid. You bring the skill, we bring the funding.",
+      "Use the platform you know and love. You bring the skill, we bring the funding.",
   },
   {
     title: "Transparent Rules",
     description:
-      "All evaluation rules are simple and clear. No hidden or opaque rules.",
+      "All evaluation rules are clear and open-source. Nothing hidden or opaque.",
   },
 ];
 
 const stats = [
-  { value: "100%", label: "Profit Split" },
+  { value: "100%", label: "You Keep Your Profits" },
   { value: "$30M+", label: "Paid Out to Traders" },
   { value: "$2.5M", label: "Scaling up to" },
 ];
@@ -105,12 +105,11 @@ export default function Home() {
         <section className="px-6 pb-20 pt-[120px] text-center">
           <div className="mx-auto max-w-[1280px]">
             <h1 className="text-5xl font-normal leading-[1.1] tracking-[-0.04em] md:text-[72px]">
-              Trade on Hyperliquid. Earn a Funded Account. Keep 100% of Your
-              Profits.
+              Permissionless Funded Trading on Hyperliquid
             </h1>
             <p className="mx-auto mb-[60px] mt-6 max-w-[640px] text-lg font-light leading-[1.6] text-white/50">
-              Pass a simple evaluation, keep your profits, and scale your
-              account up to $2.5M.
+              Trade with more capital without risking your own stack. Keep 100%
+              of your profits. Grow your account to $2.5M.
             </p>
           </div>
         </section>
