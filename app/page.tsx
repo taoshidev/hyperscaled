@@ -47,6 +47,7 @@ export default function Home() {
     portalId: "45009699",
     formId: "945b5d9c-3356-4673-a669-d1cacd444c5d",
     target: "#hubspot-form-wrapper",
+    cssRequired: "",
   });
 
   return (
@@ -117,7 +118,7 @@ export default function Home() {
         {/* Waitlist Form */}
         <section className="mb-[120px] px-6">
           <div className="mx-auto max-w-[480px]">
-            <div id="hubspot-form-wrapper" />
+            <div id="hubspot-form-wrapper" className="hubspot-waitlist" />
           </div>
         </section>
 

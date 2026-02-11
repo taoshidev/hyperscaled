@@ -92,6 +92,65 @@
 }
 
 /* Liquid Background Animations */
+/* HubSpot Form Overrides */
+.hubspot-waitlist form {
+  display: flex !important;
+  gap: 8px;
+  justify-content: center;
+}
+
+.hubspot-waitlist .hs-form-field {
+  margin: 0 !important;
+}
+
+.hubspot-waitlist input[type="email"] {
+  flex: 1;
+  padding: 14px 16px !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 6px !important;
+  color: #ffffff !important;
+  font-size: 15px !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.hubspot-waitlist input::placeholder {
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.hubspot-waitlist .hs-submit {
+  margin: 0 !important;
+}
+
+.hubspot-waitlist input[type="submit"] {
+  padding: 14px 28px !important;
+  background: #ffffff !important;
+  border: none !important;
+  border-radius: 6px !important;
+  color: #000000 !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.hubspot-waitlist input[type="submit"]:hover {
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+
+@media (max-width: 768px) {
+  .hubspot-waitlist form {
+    flex-direction: column !important;
+  }
+  .hubspot-waitlist input[type="email"] {
+    width: 100% !important;
+  }
+  .hubspot-waitlist input[type="submit"] {
+    width: 100% !important;
+  }
+}
+
+/* Liquid Background Animations */
 @keyframes liquidMove {
   0%, 100% {
     transform: translate(0%, 0%) rotate(0deg);
