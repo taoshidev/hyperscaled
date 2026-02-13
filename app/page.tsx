@@ -89,8 +89,17 @@ export default function Home() {
           <img
             src="/hyperscaled-wordmark.svg"
             alt="Hyperscaled"
-            className="h-8"
+            className="h-10"
           />
+          <div className="text-[13px] text-white/40">
+            Powered by{" "}
+            <a
+              href="#"
+              className="text-white/60 transition-colors hover:text-white/90"
+            >
+              Vanta Trading
+            </a>
+          </div>
         </div>
       </header>
 
