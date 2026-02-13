@@ -86,9 +86,6 @@ export default function Home() {
       {/* Header */}
       <header className="relative z-10 border-b border-white/[0.06] py-8">
         <div className="mx-auto flex max-w-[1280px] items-center justify-between px-6">
-          <div className="text-lg tracking-tight">
-            Hyper<span className="font-semibold">scaled</span>
-          </div>
           <img
             src="/hyperscaled-wordmark.svg"
             alt="Hyperscaled"
