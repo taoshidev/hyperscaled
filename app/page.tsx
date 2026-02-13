@@ -48,6 +48,7 @@ export default function Home() {
     formId: "945b5d9c-3356-4673-a669-d1cacd444c5d",
     target: "#hubspot-form-wrapper",
     cssRequired: "",
+    submitText: "Join the Waitlist",
   });
 
   return (
@@ -88,15 +89,11 @@ export default function Home() {
           <div className="text-lg tracking-tight">
             Hyper<span className="font-semibold">scaled</span>
           </div>
-          <div className="text-[13px] text-white/40">
-            Powered by{" "}
-            <a
-              href="#"
-              className="text-white/60 transition-colors hover:text-white/90"
-            >
-              Vanta Network
-            </a>
-          </div>
+          <img
+            src="/hyperscaled-wordmark.svg"
+            alt="Hyperscaled"
+            className="h-8"
+          />
         </div>
       </header>
 
