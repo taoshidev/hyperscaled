@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Hyperfunded",
+  title: "Hyperscaled",
   description:
     "Permissionless Funded Trading on Hyperliquid. Trade with more capital without risking your own stack.",
 };

@@ -86,7 +86,7 @@ export default function Home() {
       <header className="relative z-10 border-b border-white/[0.06] py-8">
         <div className="mx-auto flex max-w-[1280px] items-center justify-between px-6">
           <div className="text-lg tracking-tight">
-            Hyper<span className="font-semibold">funded</span>
+            Hyper<span className="font-semibold">scaled</span>
           </div>
           <div className="text-[13px] text-white/40">
             Powered by{" "}
@@ -168,7 +168,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="relative z-10 border-t border-white/[0.06] py-[60px] text-center">
         <div className="text-[13px] text-white/30">
-          &copy; 2026 Hyperfunded
+          &copy; 2026 Hyperscaled
         </div>
         <div className="mt-3 text-[13px] text-white/40">
           Powered by{" "}
