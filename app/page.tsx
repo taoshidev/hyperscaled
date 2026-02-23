@@ -97,7 +97,7 @@ export default function Home() {
               href="#"
               className="text-white/60 transition-colors hover:text-white/90"
             >
-              Vanta Trading
+              Vanta Network
             </a>
           </div>
         </div>
