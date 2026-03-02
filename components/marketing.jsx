@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useRef } from "react";
 const photo = "/hl.png";
 const jollyLogo = "/jolly-green.png";
@@ -176,7 +178,13 @@ function ChromeExtUI(){
   );
 }
 
-export default function App(){
+function getMinerSlugForFirm(firm) {
+  if (firm.slug) return firm.slug;
+  if (firm.name === "Vanta Trading") return "vanta";
+  return null;
+}
+
+export default function App({ lockedMiner = null }){
   const [page,setPage]=useState("home");
   const [searchVal,setSearchVal]=useState("");
   const [showSugg,setShowSugg]=useState(false);
@@ -185,8 +193,20 @@ export default function App(){
   const [tradeTab,setTradeTab]=useState("open");
   const searchRef=useRef(null);
 
+  const visibleFirms = lockedMiner
+    ? FIRMS.filter(f => getMinerSlugForFirm(f) === lockedMiner)
+    : FIRMS;
+
   const handleSearch=(addr)=>{setSearchVal(addr||EXAMPLE_ADDR);setShowSugg(false);setPage("dashboard");setDashTab("performance")};
-  const navTo=(p)=>{setPage(p);window.scrollTo(0,0)};
+  const navTo=(p)=>{
+    if (lockedMiner && FIRMS.some(f => f.slug === p) && p !== lockedMiner) {
+      setPage("home");
+      window.scrollTo(0,0);
+      return;
+    }
+    setPage(p);
+    window.scrollTo(0,0);
+  };
 
   const c={bg:"#000",card:"rgba(255,255,255,0.02)",border:"rgba(255,255,255,0.06)",text:"#fff",muted:"rgba(255,255,255,0.4)",dim:"rgba(255,255,255,0.5)",green:"#22c55e",red:"#ef4444",blue:"#3b82f6",yellow:"#eab308",purple:"#a855f7"};
 
@@ -200,7 +220,11 @@ export default function App(){
   ];
 
   // ── NAV ──
-  const activeFirm = FIRMS.find(f=>f.slug&&f.slug===page)||null;
+  const activeFirm = (() => {
+    const firm = FIRMS.find(f=>f.slug&&f.slug===page)||null;
+    if (firm && lockedMiner && firm.slug !== lockedMiner) return null;
+    return firm;
+  })();
   const Nav=()=>(
     <nav style={{padding:"12px 24px",borderBottom:`1px solid ${c.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",backdropFilter:"blur(12px)",background:"rgba(0,0,0,0.6)",position:"sticky",top:0,zIndex:50}}>
 
@@ -519,8 +543,8 @@ export default function App(){
           ))}
         </div>
 
-        <div className="pricingGrid" style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12}}>
-          {FIRMS.map(f=>(
+        <div className="pricingGrid" style={{display:"grid",gridTemplateColumns:`repeat(${Math.min(visibleFirms.length, 5)},1fr)`,gap:12,maxWidth:visibleFirms.length<=2?500:undefined,margin:visibleFirms.length<=2?"0 auto":undefined}}>
+          {visibleFirms.map(f=>(
             <div key={f.name} style={{background:"rgba(255,255,255,0.02)",border:f.take===0?"1px solid rgba(59,130,246,0.2)":`1px solid ${c.border}`,borderRadius:10,padding:24,display:"flex",flexDirection:"column",position:"relative",overflow:"hidden"}}>
               {f.take===0&&<div style={{position:"absolute",top:0,left:0,right:0,height:1,background:"linear-gradient(90deg,transparent,rgba(59,130,246,0.5),transparent)"}}/>}
               <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
