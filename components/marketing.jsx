@@ -7,15 +7,13 @@ const bitcastLogo = "/bitcast.png";
 const talismanLogo = "/talisman.svg";
 const zokuLogo = "/zoku.png";
 
-const FIRMS = [
-  { name: "Vanta Trading",       slug: null,      logo: "V", logoImg: null,                                                                                                                              url: "https://vantatrading.io", take: 0,  prices: [599, 749, 999], color: "#3b82f6", color2: "#22c55e" },
-  { name: "Jolly Green Trading", slug: "jolly",   logo: "J", logoImg: jollyLogo,                                                                                                                          url: null, take: 10, prices: [1, 2, 3], color: "#22c55e", color2: "#16a34a" },
-  { name: "Bitcast Trading",     slug: "bitcast", logo: "B", logoImg: bitcastLogo,                                                                                                                       url: null, take: 10, prices: [429, 559, 829], color: "#a855f7", color2: "#7c3aed" },
-  { name: "Talisman Trading",    slug: "talisman",logo: "T", logoImg: talismanLogo,                                                                                                                      url: null, take: 15, prices: [389, 519, 769], color: "#eab308", color2: "#d97706" },
-  { name: "Zoku Trading",        slug: "zoku",    logo: "Z", logoImg: zokuLogo,                                                                                                                          url: null, take: 20, prices: [349, 469, 699], color: "#a855f7", color2: "#7c3aed" },
-];
-const TIERS = ["$25K","$50K","$100K"];
-const TIER_VALS = [25000,50000,100000];
+const MARKETING_META = {
+  vanta:    { logo: "V", logoImg: null,          url: "https://vantatrading.io", color2: "#22c55e" },
+  jolly:    { logo: "J", logoImg: jollyLogo,     url: null,                       color2: "#16a34a" },
+  bitcast:  { logo: "B", logoImg: bitcastLogo,   url: null,                       color2: "#7c3aed" },
+  talisman: { logo: "T", logoImg: talismanLogo,  url: null,                       color2: "#d97706" },
+  zoku:     { logo: "Z", logoImg: zokuLogo,      url: null,                       color2: "#7c3aed" },
+};
 const DETAILS = [
   ["Challenge Structure","One Step"],["Order Books","Hyperliquid"],["Pairs","BTC, ETH, SOL, DOGE, XRP, ADA"],
   ["Profit Target","10%"],["Max Drawdown","5% Challenge / 10% Funded"],["Profit Split","Up to 100%"],
@@ -178,13 +176,13 @@ function ChromeExtUI(){
   );
 }
 
-function getMinerSlugForFirm(firm) {
-  if (firm.slug) return firm.slug;
-  if (firm.name === "Vanta Trading") return "vanta";
-  return null;
+function enrichFirm(f) {
+  const meta = MARKETING_META[f.slug] || {};
+  return { ...f, logo: meta.logo || f.name[0], logoImg: meta.logoImg || null, url: meta.url || null, color2: meta.color2 || f.color };
 }
 
-export default function App({ lockedMiner = null }){
+export default function App({ lockedMiner = null, firms = [] }){
+  const enrichedFirms = firms.map(enrichFirm);
   const [page,setPage]=useState("home");
   const [searchVal,setSearchVal]=useState("");
   const [showSugg,setShowSugg]=useState(false);
@@ -194,12 +192,12 @@ export default function App({ lockedMiner = null }){
   const searchRef=useRef(null);
 
   const visibleFirms = lockedMiner
-    ? FIRMS.filter(f => getMinerSlugForFirm(f) === lockedMiner)
-    : FIRMS;
+    ? enrichedFirms.filter(f => f.slug === lockedMiner)
+    : enrichedFirms;
 
   const handleSearch=(addr)=>{setSearchVal(addr||EXAMPLE_ADDR);setShowSugg(false);setPage("dashboard");setDashTab("performance")};
   const navTo=(p)=>{
-    if (lockedMiner && FIRMS.some(f => f.slug === p) && p !== lockedMiner) {
+    if (lockedMiner && enrichedFirms.some(f => f.slug === p) && p !== lockedMiner) {
       setPage("home");
       window.scrollTo(0,0);
       return;
@@ -221,7 +219,7 @@ export default function App({ lockedMiner = null }){
 
   // ── NAV ──
   const activeFirm = (() => {
-    const firm = FIRMS.find(f=>f.slug&&f.slug===page)||null;
+    const firm = enrichedFirms.find(f=>f.slug&&f.slug===page)||null;
     if (firm && lockedMiner && firm.slug !== lockedMiner) return null;
     return firm;
   })();
@@ -275,6 +273,7 @@ export default function App({ lockedMiner = null }){
         {/* Right: Hyperscaled wordmark on firm pages, normal nav links otherwise */}
         {activeFirm
           ? <div style={{display:"flex",alignItems:"center",gap:16}}>
+              <a href="/dashboard" style={{fontSize:13,color:c.muted,textDecoration:"none"}}>Dashboard</a>
               <span style={{fontSize:13,color:c.muted,cursor:"pointer"}} onClick={()=>navTo("leaderboard")}>Leaderboard</span>
               <span style={{fontSize:13,color:c.muted,cursor:"pointer"}}>Rules</span>
               <a href="/status" style={{fontSize:13,color:c.muted,textDecoration:"none"}}>Status</a>
@@ -287,6 +286,7 @@ export default function App({ lockedMiner = null }){
               </a>
             </div>
           : <>
+              <a href="/dashboard" style={{fontSize:13,color:c.muted,textDecoration:"none"}}>Dashboard</a>
               <span style={{fontSize:13,color:page==="leaderboard"?c.text:c.muted,cursor:"pointer"}} onClick={()=>navTo("leaderboard")}>Leaderboard</span>
               <span style={{fontSize:13,color:c.muted,cursor:"pointer"}}>Rules</span>
               <a href="/status" style={{fontSize:13,color:c.muted,textDecoration:"none"}}>Status</a>
@@ -540,15 +540,15 @@ export default function App({ lockedMiner = null }){
         <p style={{textAlign:"center",fontSize:14,color:"rgba(255,255,255,0.35)",marginBottom:24}}>Each firm runs independently on Hyperscaled with their own pricing and profit splits</p>
 
         <div style={{display:"flex",justifyContent:"center",gap:4,marginBottom:32}}>
-          {TIERS.map((t,i)=>(
-            <button key={t} onClick={()=>setSelectedTier(i)} style={{padding:"8px 20px",fontSize:13,borderRadius:6,cursor:"pointer",fontFamily:"'Inter',sans-serif",border:selectedTier===i?"1px solid rgba(255,255,255,0.12)":"1px solid transparent",background:selectedTier===i?"rgba(255,255,255,0.06)":"transparent",color:selectedTier===i?"#fff":"rgba(255,255,255,0.35)"}}>{t} Account</button>
+          {(visibleFirms[0]?.tiers||[]).map((t,i)=>(
+            <button key={t.label} onClick={()=>setSelectedTier(i)} style={{padding:"8px 20px",fontSize:13,borderRadius:6,cursor:"pointer",fontFamily:"'Inter',sans-serif",border:selectedTier===i?"1px solid rgba(255,255,255,0.12)":"1px solid transparent",background:selectedTier===i?"rgba(255,255,255,0.06)":"transparent",color:selectedTier===i?"#fff":"rgba(255,255,255,0.35)"}}>{t.label} Account</button>
           ))}
         </div>
 
         <div className="pricingGrid" style={{display:"grid",gridTemplateColumns:`repeat(${Math.min(visibleFirms.length, 5)},1fr)`,gap:12,maxWidth:visibleFirms.length<=2?500:undefined,margin:visibleFirms.length<=2?"0 auto":undefined}}>
-          {visibleFirms.map(f=>(
-            <div key={f.name} style={{background:"rgba(255,255,255,0.02)",border:f.take===0?"1px solid rgba(59,130,246,0.2)":`1px solid ${c.border}`,borderRadius:10,padding:24,display:"flex",flexDirection:"column",position:"relative",overflow:"hidden"}}>
-              {f.take===0&&<div style={{position:"absolute",top:0,left:0,right:0,height:1,background:"linear-gradient(90deg,transparent,rgba(59,130,246,0.5),transparent)"}}/>}
+          {visibleFirms.map(f=>{const st=f.tiers[selectedTier]||f.tiers[0];const firmTake=100-st.profitSplit;return(
+            <div key={f.name} style={{background:"rgba(255,255,255,0.02)",border:st.profitSplit===100?"1px solid rgba(59,130,246,0.2)":`1px solid ${c.border}`,borderRadius:10,padding:24,display:"flex",flexDirection:"column",position:"relative",overflow:"hidden"}}>
+              {st.profitSplit===100&&<div style={{position:"absolute",top:0,left:0,right:0,height:1,background:"linear-gradient(90deg,transparent,rgba(59,130,246,0.5),transparent)"}}/>}
               <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
                 {f.logoImg
                   ? <img src={f.logoImg} alt={f.name} style={{width:28,height:28,borderRadius:6,objectFit:"contain",background:`${f.color}12`,border:`1px solid ${f.color}25`,padding:3}} onError={e=>{e.target.style.display="none"}} />
@@ -556,22 +556,22 @@ export default function App({ lockedMiner = null }){
                 }
                 <div style={{fontSize:13,fontWeight:500}}>{f.name}</div>
               </div>
-              <div style={{fontSize:34,fontWeight:300,letterSpacing:"-0.03em",marginBottom:4}}>${f.prices[selectedTier]}</div>
-              <div style={{fontSize:11,color:"rgba(255,255,255,0.25)",marginBottom:16}}>{TIERS[selectedTier]} Funded Account</div>
+              <div style={{fontSize:34,fontWeight:300,letterSpacing:"-0.03em",marginBottom:4}}>${st.priceUsdc}</div>
+              <div style={{fontSize:11,color:"rgba(255,255,255,0.25)",marginBottom:16}}>{st.label} Funded Account</div>
 
               <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:20,flex:1}}>
-                {[["Profit Split",`${100-f.take}%`,100-f.take===100?c.green:"#fff"],["Firm Take",`${f.take}%`,"#fff"],["Funding",fmtUSD(TIER_VALS[selectedTier]),"#fff"],["Payouts","Weekly","#fff"]].map(([l,v,cl])=>(
+                {[["Profit Split",`${st.profitSplit}%`,st.profitSplit===100?c.green:"#fff"],["Firm Take",`${firmTake}%`,"#fff"],["Funding",fmtUSD(st.accountSize),"#fff"],["Payouts","Weekly","#fff"]].map(([l,v,cl])=>(
                   <div key={l} style={{display:"flex",justifyContent:"space-between",fontSize:12}}><span style={{color:"rgba(255,255,255,0.35)"}}>{l}</span><span style={{fontWeight:500,color:cl}}>{v}</span></div>
                 ))}
               </div>
 
               {f.slug
                 ? <button onClick={()=>navTo(f.slug)} style={{padding:"10px 0",borderRadius:6,background:`${f.color}18`,color:f.color,fontSize:13,fontWeight:500,border:`1px solid ${f.color}35`,textAlign:"center",width:"100%",cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>View Firm →</button>
-                : <a href={f.url} target="_blank" rel="noreferrer" style={{padding:"10px 0",borderRadius:6,background:f.take===0?"#fff":"rgba(255,255,255,0.06)",color:f.take===0?"#000":"#fff",fontSize:13,fontWeight:500,border:f.take===0?"none":"1px solid rgba(255,255,255,0.08)",textAlign:"center",textDecoration:"none",display:"block"}}>{f.take===0?"Get Started →":"Select Firm"}</a>
+                : <a href={f.url} target="_blank" rel="noreferrer" style={{padding:"10px 0",borderRadius:6,background:st.profitSplit===100?"#fff":"rgba(255,255,255,0.06)",color:st.profitSplit===100?"#000":"#fff",fontSize:13,fontWeight:500,border:st.profitSplit===100?"none":"1px solid rgba(255,255,255,0.08)",textAlign:"center",textDecoration:"none",display:"block"}}>{st.profitSplit===100?"Get Started →":"Select Firm"}</a>
               }
-              {f.take===0&&<div style={{textAlign:"center",fontSize:10,color:c.green,marginTop:6}}>100% profit — no firm take</div>}
+              {st.profitSplit===100&&<div style={{textAlign:"center",fontSize:10,color:c.green,marginTop:6}}>100% profit — no firm take</div>}
             </div>
-          ))}
+          );})}
         </div>
       </section>
     </div>
@@ -852,7 +852,7 @@ export default function App({ lockedMiner = null }){
             <table style={{width:"100%",borderCollapse:"collapse",minWidth:800}}>
               <thead><tr>{["Address","PnL","Progress","Sharpe","Trades","Win%","Drawdown","Since"].map(h=><th key={h} style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontWeight:400,textAlign:"left",padding:"8px 10px",borderBottom:`1px solid ${c.border}`,textTransform:"uppercase",letterSpacing:"0.04em"}}>{h}</th>)}</tr></thead>
               <tbody>{challenge.map((t,i)=>{
-                const pct=Math.max(0,(t.pnl/TIER_VALS[0]*10)*100);
+                const pct=Math.max(0,(t.pnl/25000*10)*100);
                 return (
                   <tr key={i} style={{cursor:"pointer"}} onClick={()=>{setSearchVal(t.addr);navTo("dashboard")}}>
                     <td style={{fontSize:12,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",fontFamily:"monospace",color:c.yellow}}>{t.addr}</td>
@@ -866,7 +866,7 @@ export default function App({ lockedMiner = null }){
                     <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>{t.sharpe.toFixed(2)}</td>
                     <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>{fmt(t.trades)}</td>
                     <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",color:t.winRate>=60?c.green:"#fff"}}>{t.winRate}%</td>
-                    <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>{t.pnl<0?`${((Math.abs(t.pnl)/TIER_VALS[0])*100).toFixed(1)}%`:"0.0%"}</td>
+                    <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>{t.pnl<0?`${((Math.abs(t.pnl)/25000)*100).toFixed(1)}%`:"0.0%"}</td>
                     <td style={{fontSize:12,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",color:"rgba(255,255,255,0.3)"}}>{t.registered}</td>
                   </tr>
                 );
@@ -885,7 +885,7 @@ export default function App({ lockedMiner = null }){
     // hex→rgb helper for rgba()
     const hexRgb=(h)=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`${r},${g},${b}`};
     const cr=hexRgb(C1);
-    const split=100-firm.take;
+    const split=firm.tiers[0]?.profitSplit||100;
     const scalingByTier=["up to $500K","up to $1M","up to $2.5M"];
     const FDETAILS=[
       ["Challenge Structure","One Step"],["Order Books","Hyperliquid"],["Pairs","BTC, ETH, SOL, DOGE, XRP, ADA"],
@@ -903,7 +903,7 @@ export default function App({ lockedMiner = null }){
       ["News Trading","Allowed","Restricted","Restricted"],
       ["Weekend Trading","Allowed","Restricted","Restricted"],
       ["Infrastructure","Decentralized","Centralized","Centralized"],
-      ["Entry Price ($25K)",`$${firm.prices[0]}`,"~$155","~$100–200"],
+      ["Entry Price ($25K)",`$${firm.tiers[0]?.priceUsdc||0}`,"~$155","~$100–200"],
     ];
     const PERKS=[
       [`$25,000 funded account`,`${split}% profit split`,"Scale up to $500K","Weekly USDC payouts","Onchain verification"],
@@ -942,7 +942,7 @@ export default function App({ lockedMiner = null }){
                 <button onClick={()=>window.location.href=`/miner/${firm.slug}`} style={{padding:"12px 28px",borderRadius:8,background:`linear-gradient(135deg,${C1},${C2})`,color:"#fff",fontSize:14,fontWeight:500,border:"none",cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Start Challenge →</button>
               </div>
               <div style={{display:"flex",gap:32}}>
-                {[[`$${firm.prices[0]}`,"Entry Price — $25K Account"],[`${split}%`,"Profit Split"],["$2.5M","Max Funding ($100K tier)"]].map(([v,l],i)=>(
+                {[[`$${firm.tiers[0]?.priceUsdc||0}`,"Entry Price — $25K Account"],[`${split}%`,"Profit Split"],["$2.5M","Max Funding ($100K tier)"]].map(([v,l],i)=>(
                   <div key={i}>
                     <div style={{fontSize:22,fontWeight:400,letterSpacing:"-0.02em",color:i===0?C1:"#fff"}}>{v}</div>
                     <div style={{fontSize:11,color:"rgba(255,255,255,0.25)",marginTop:3}}>{l}</div>
@@ -1046,8 +1046,8 @@ export default function App({ lockedMiner = null }){
           <h2 style={{fontSize:28,fontWeight:400,letterSpacing:"-0.03em",textAlign:"center",marginBottom:6}}>Simple, Transparent Pricing</h2>
           <p style={{textAlign:"center",fontSize:14,color:"rgba(255,255,255,0.35)",marginBottom:24}}>One-time fee to start your evaluation. No subscriptions, no hidden charges.</p>
           <div style={{display:"flex",justifyContent:"center",gap:6,marginBottom:32}}>
-            {TIERS.map((t,i)=>(
-              <button key={t} onClick={()=>setFTier(i)} style={{padding:"8px 20px",fontSize:13,borderRadius:6,cursor:"pointer",fontFamily:"'Inter',sans-serif",border:fTier===i?`1px solid rgba(${cr},0.3)`:"1px solid transparent",background:fTier===i?`rgba(${cr},0.08)`:"transparent",color:fTier===i?C1:"rgba(255,255,255,0.35)",fontWeight:fTier===i?500:400,transition:"all 0.15s"}}>{t} Account</button>
+            {(firm.tiers||[]).map((t,i)=>(
+              <button key={t.label} onClick={()=>setFTier(i)} style={{padding:"8px 20px",fontSize:13,borderRadius:6,cursor:"pointer",fontFamily:"'Inter',sans-serif",border:fTier===i?`1px solid rgba(${cr},0.3)`:"1px solid transparent",background:fTier===i?`rgba(${cr},0.08)`:"transparent",color:fTier===i?C1:"rgba(255,255,255,0.35)",fontWeight:fTier===i?500:400,transition:"all 0.15s"}}>{t.label} Account</button>
             ))}
           </div>
           <div className="zPricingGrid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,maxWidth:860,margin:"0 auto"}}>
@@ -1056,8 +1056,8 @@ export default function App({ lockedMiner = null }){
                 {highlight&&<div style={{position:"absolute",top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,transparent,${C1},${C2},transparent)`}}/>}
                 {highlight&&<div style={{position:"absolute",top:14,right:14,fontSize:9,padding:"3px 9px",borderRadius:100,background:`rgba(${cr},0.12)`,color:C1,border:`1px solid rgba(${cr},0.2)`,fontWeight:600,letterSpacing:"0.04em"}}>MOST POPULAR</div>}
                 <div style={{fontSize:12,color:"rgba(255,255,255,0.35)",marginBottom:5}}>{label}</div>
-                <div style={{fontSize:38,fontWeight:300,letterSpacing:"-0.04em",marginBottom:2,color:highlight?C1:"#fff"}}>${firm.prices[tier]}</div>
-                <div style={{fontSize:11,color:"rgba(255,255,255,0.25)",marginBottom:20}}>{TIERS[tier]} Funded Account · One-time fee</div>
+                <div style={{fontSize:38,fontWeight:300,letterSpacing:"-0.04em",marginBottom:2,color:highlight?C1:"#fff"}}>${firm.tiers[tier]?.priceUsdc||0}</div>
+                <div style={{fontSize:11,color:"rgba(255,255,255,0.25)",marginBottom:20}}>{firm.tiers[tier]?.label||""} Funded Account · One-time fee</div>
                 <div style={{flex:1,display:"flex",flexDirection:"column",gap:9,marginBottom:22}}>
                   {PERKS[tier].map((p,j)=>(
                     <div key={j} style={{display:"flex",alignItems:"center",gap:9,fontSize:13}}>
@@ -1087,7 +1087,7 @@ export default function App({ lockedMiner = null }){
               <div style={{fontSize:11,color:"rgba(255,255,255,0.28)",letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:12}}>Ready to Trade?</div>
               <h2 style={{fontSize:34,fontWeight:300,letterSpacing:"-0.03em",marginBottom:14}}>
                 Start Your {firm.name} Challenge<br/>
-                <span style={{background:`linear-gradient(135deg,${C1},${C2})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",fontWeight:500}}>from ${firm.prices[0]}.</span>
+                <span style={{background:`linear-gradient(135deg,${C1},${C2})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",fontWeight:500}}>from ${firm.tiers[0]?.priceUsdc||0}.</span>
               </h2>
               <p style={{fontSize:15,color:"rgba(255,255,255,0.38)",marginBottom:30,maxWidth:460,margin:"0 auto 30px"}}>
                 One-step evaluation. {split}% profit split. Weekly onchain payouts. No arbitrary limits.

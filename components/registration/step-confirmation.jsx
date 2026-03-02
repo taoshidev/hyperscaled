@@ -2,12 +2,11 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { TIERS } from "@/lib/miners";
 import { CHROME_EXTENSION_URL, BASESCAN_URL } from "@/lib/constants";
 import { CheckCircle2, Clock, ExternalLink, Download } from "lucide-react";
 
 export function StepConfirmation({ miner, tierIndex, hlAddress, txHash, payerAddress, registrationStatus, registrationMessage }) {
-  const tier = TIERS[tierIndex];
+  const tier = miner.tiers[tierIndex];
   const isRegistered = registrationStatus === "registered";
   const baseScanUrl = `${BASESCAN_URL}/tx/${txHash}`;
 

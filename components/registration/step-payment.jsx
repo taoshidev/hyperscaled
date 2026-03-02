@@ -24,7 +24,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { USDC_ADDRESS, USDC_DECIMALS, BASE_CHAIN_ID, BASE_NETWORK, CHAIN_LABEL } from "@/lib/constants";
-import { TIERS } from "@/lib/miners";
 import { usdcAbi } from "@/lib/usdc-abi";
 import { Loader2, AlertTriangle } from "lucide-react";
 
@@ -38,8 +37,8 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
   const [status, setStatus] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const price = miner.prices[tierIndex];
-  const tier = TIERS[tierIndex];
+  const tier = miner.tiers[tierIndex];
+  const price = tier.priceUsdc;
 
   const { data: balance } = useReadContract({
     address: USDC_ADDRESS,

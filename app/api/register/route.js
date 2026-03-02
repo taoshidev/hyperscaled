@@ -5,16 +5,19 @@ import {
   decodePaymentSignatureHeader,
   encodePaymentResponseHeader,
 } from "@x402/core/http";
-import { getMinerBySlug, getMinerApiUrl, getMinerWalletAddress, TIERS } from "@/lib/miners";
+import { getMinerBySlug, getTiersForMiner, TIERS } from "@/lib/miners";
 import { isValidHLAddress, isValidEvmAddress } from "@/lib/validation";
 import { USDC_ADDRESS, USDC_DECIMALS, USDC_EIP712_NAME, USDC_EIP712_VERSION, BASE_NETWORK, FACILITATOR_URL, BASESCAN_URL } from "@/lib/constants";
+import { db } from "@/lib/db";
+import { users, registrations } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
 const facilitator = new HTTPFacilitatorClient({ url: FACILITATOR_URL });
 
-function buildPaymentRequirements(miner, tierIndex, requestUrl) {
-  const minerWallet = getMinerWalletAddress(miner);
-  const price = miner.prices[tierIndex];
-  const tier = TIERS[tierIndex];
+function buildPaymentRequirements(miner, tier, requestUrl) {
+  const minerWallet = miner.usdcWallet;
+  const price = Number(tier.priceUsdc);
+  const tierLabel = TIERS.find((t) => t.accountSize === tier.accountSize)?.label || `$${tier.accountSize / 1000}K`;
 
   const extra = { name: USDC_EIP712_NAME, version: USDC_EIP712_VERSION };
 
@@ -45,11 +48,10 @@ function buildPaymentRequirements(miner, tierIndex, requestUrl) {
         url: requestUrl,
         method: "POST",
       },
-      description: `${miner.name} ${tier.label} Account Registration`,
+      description: `${miner.name} ${tierLabel} Account Registration`,
     },
     minerWallet,
     price,
-    tier,
   };
 }
 
@@ -68,7 +70,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  const miner = getMinerBySlug(minerSlug);
+  const miner = await getMinerBySlug(minerSlug);
   if (!miner) {
     return NextResponse.json({ error: "Unknown miner" }, { status: 400 });
   }
@@ -81,13 +83,18 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid payout address" }, { status: 400 });
   }
 
-  if (tierIndex < 0 || tierIndex >= TIERS.length) {
+  const minerTiers = await getTiersForMiner(miner.hotkey);
+  const activeTiers = minerTiers.filter((t) => t.isActive);
+
+  if (tierIndex < 0 || tierIndex >= activeTiers.length) {
     return NextResponse.json({ error: "Invalid tier" }, { status: 400 });
   }
 
-  const { requirements, paymentRequired, minerWallet, tier } = buildPaymentRequirements(
+  const tier = activeTiers[tierIndex];
+
+  const { requirements, paymentRequired, minerWallet, price } = buildPaymentRequirements(
     miner,
-    tierIndex,
+    tier,
     request.url,
   );
 
@@ -169,14 +176,40 @@ export async function POST(request) {
   }
 
   const txHash = settleResult?.transaction || "";
-
-  const apiUrl = getMinerApiUrl(miner);
-  let registered = false;
   const effectivePayoutAddress = payoutAddress || paymentPayload?.payload?.authorization?.from;
 
-  if (apiUrl) {
+  // Upsert user record
+  let userId = null;
+  try {
+    const [existing] = await db
+      .select()
+      .from(users)
+      .where(eq(users.wallet, effectivePayoutAddress))
+      .limit(1);
+
+    if (existing) {
+      userId = existing.id;
+      if (email && email !== existing.email) {
+        await db.update(users).set({ email, updatedAt: new Date() }).where(eq(users.id, existing.id));
+      }
+    } else {
+      const [newUser] = await db
+        .insert(users)
+        .values({ wallet: effectivePayoutAddress, email })
+        .returning({ id: users.id });
+      userId = newUser.id;
+    }
+  } catch (err) {
+    console.warn("[register] User upsert failed:", err.message);
+  }
+
+  // Call miner API
+  let registered = false;
+  let statusDetail = null;
+
+  if (miner.apiUrl) {
     try {
-      const res = await fetch(`${apiUrl}/create_hl_subaccount`, {
+      const res = await fetch(`${miner.apiUrl}/create_hl_subaccount`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -188,11 +221,32 @@ export async function POST(request) {
       if (res.ok) {
         registered = true;
       } else {
-        console.warn(`[register] Miner API returned ${res.status}:`, await res.text().catch(() => ""));
+        const errText = await res.text().catch(() => "");
+        console.warn(`[register] Miner API returned ${res.status}:`, errText);
+        statusDetail = { reason: "miner_api_error", error: errText, apiStatus: res.status };
       }
     } catch (err) {
       console.warn("[register] Miner API unreachable:", err.message);
+      statusDetail = { reason: "miner_api_unreachable", error: err.message };
     }
+  }
+
+  // Insert registration record
+  try {
+    await db.insert(registrations).values({
+      userId,
+      minerHotkey: miner.hotkey,
+      hlAddress,
+      accountSize,
+      payoutAddress: effectivePayoutAddress,
+      tierIndex,
+      priceUsdc: String(price),
+      txHash,
+      status: registered ? "registered" : "pending",
+      statusDetail,
+    });
+  } catch (err) {
+    console.warn("[register] Registration insert failed:", err.message);
   }
 
   const resendKey = process.env.RESEND_API_KEY;
@@ -208,8 +262,8 @@ export async function POST(request) {
           from: "Hyperscaled <noreply@hyperscaled.com>",
           to: [email],
           subject: registered
-            ? `✓ Registered with ${miner.name}`
-            : `⏳ Registration Pending — ${miner.name}`,
+            ? `\u2713 Registered with ${miner.name}`
+            : `\u231B Registration Pending \u2014 ${miner.name}`,
           html: registered
             ? registeredEmailHtml(miner, accountSize, hlAddress, effectivePayoutAddress, txHash)
             : pendingEmailHtml(miner, accountSize, hlAddress, effectivePayoutAddress, txHash),
@@ -224,7 +278,7 @@ export async function POST(request) {
     status: registered ? "registered" : "pending",
     message: registered
       ? "Your trading account has been created."
-      : "Your payment is confirmed on-chain. Account setup is in progress — we will follow up via email.",
+      : "Your payment is confirmed on-chain. Account setup is in progress \u2014 we will follow up via email.",
     txHash,
   };
 
@@ -243,7 +297,7 @@ function registeredEmailHtml(miner, accountSize, hlAddress, payoutAddress, txHas
   return `
     <div style="font-family: 'Inter', Arial, sans-serif; background: #0a0a0a; color: #f5f5f5; padding: 40px 20px; max-width: 600px; margin: 0 auto;">
       <div style="text-align: center; margin-bottom: 32px;">
-        <div style="font-size: 48px;">✅</div>
+        <div style="font-size: 48px;">\u2705</div>
         <h1 style="font-size: 24px; font-weight: 700; margin: 16px 0 8px;">Registration Complete</h1>
         <p style="color: #888; font-size: 14px;">Your ${miner.name} trading account is ready</p>
       </div>
@@ -256,9 +310,9 @@ function registeredEmailHtml(miner, accountSize, hlAddress, payoutAddress, txHas
         </table>
       </div>
       <div style="text-align: center;">
-        <a href="${BASESCAN_URL}/tx/${txHash}" style="color: ${miner.color}; font-size: 14px;">View transaction on BaseScan →</a>
+        <a href="${BASESCAN_URL}/tx/${txHash}" style="color: ${miner.color}; font-size: 14px;">View transaction on BaseScan \u2192</a>
       </div>
-      <p style="text-align: center; color: #555; font-size: 12px; margin-top: 32px;">Hyperscaled — The Decentralized Prop Trading Network</p>
+      <p style="text-align: center; color: #555; font-size: 12px; margin-top: 32px;">Hyperscaled \u2014 The Decentralized Prop Trading Network</p>
     </div>
   `;
 }
@@ -267,7 +321,7 @@ function pendingEmailHtml(miner, accountSize, hlAddress, payoutAddress, txHash) 
   return `
     <div style="font-family: 'Inter', Arial, sans-serif; background: #0a0a0a; color: #f5f5f5; padding: 40px 20px; max-width: 600px; margin: 0 auto;">
       <div style="text-align: center; margin-bottom: 32px;">
-        <div style="font-size: 48px;">⏳</div>
+        <div style="font-size: 48px;">\u231B</div>
         <h1 style="font-size: 24px; font-weight: 700; margin: 16px 0 8px;">Registration Pending</h1>
         <p style="color: #888; font-size: 14px;">Your payment is confirmed. Account setup with ${miner.name} is in progress.</p>
       </div>
@@ -280,12 +334,12 @@ function pendingEmailHtml(miner, accountSize, hlAddress, payoutAddress, txHash) 
         </table>
       </div>
       <div style="background: #2a2000; border: 1px solid #554400; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
-        <p style="color: #eab308; font-size: 14px; margin: 0;">⚠️ Your payment was received but we could not automatically create your account. Our team will set it up manually and notify you once it's ready.</p>
+        <p style="color: #eab308; font-size: 14px; margin: 0;">\u26A0\uFE0F Your payment was received but we could not automatically create your account. Our team will set it up manually and notify you once it's ready.</p>
       </div>
       <div style="text-align: center;">
-        <a href="${BASESCAN_URL}/tx/${txHash}" style="color: ${miner.color}; font-size: 14px;">View transaction on BaseScan →</a>
+        <a href="${BASESCAN_URL}/tx/${txHash}" style="color: ${miner.color}; font-size: 14px;">View transaction on BaseScan \u2192</a>
       </div>
-      <p style="text-align: center; color: #555; font-size: 12px; margin-top: 32px;">Hyperscaled — The Decentralized Prop Trading Network</p>
+      <p style="text-align: center; color: #555; font-size: 12px; margin-top: 32px;">Hyperscaled \u2014 The Decentralized Prop Trading Network</p>
     </div>
   `;
 }

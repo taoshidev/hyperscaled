@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
-import { getMinerBySlug, getMinerWalletAddress } from "@/lib/miners";
+import { getMinerWithTiersBySlug } from "@/lib/miners";
 import { RegistrationFlow } from "@/components/registration/registration-flow";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const miner = getMinerBySlug(slug);
+  const miner = await getMinerWithTiersBySlug(slug);
   if (!miner) return {};
   return {
     title: `Register — ${miner.name} | Hyperscaled`,
@@ -16,19 +16,15 @@ export async function generateMetadata({ params }) {
 
 export default async function MinerPage({ params }) {
   const { slug } = await params;
-  const miner = getMinerBySlug(slug);
+  const miner = await getMinerWithTiersBySlug(slug);
   if (!miner) notFound();
 
-  const minerWallet = getMinerWalletAddress(miner);
-
-  // Pass only client-safe data (no env keys)
   const clientMiner = {
     name: miner.name,
     slug: miner.slug,
-    prices: miner.prices,
-    take: miner.take,
     color: miner.color,
+    tiers: miner.tiers,
   };
 
-  return <RegistrationFlow miner={clientMiner} minerWallet={minerWallet} />;
+  return <RegistrationFlow miner={clientMiner} minerWallet={miner.usdcWallet} />;
 }

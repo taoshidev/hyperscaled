@@ -2,11 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { TIERS } from "@/lib/miners";
 
 export function StepSelectTier({ miner, onSelect }) {
-  const profitSplit = 100 - miner.take;
-
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
@@ -16,7 +13,7 @@ export function StepSelectTier({ miner, onSelect }) {
         </p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {TIERS.map((tier, i) => (
+        {miner.tiers.map((tier, i) => (
           <Card
             key={tier.label}
             className="relative overflow-hidden cursor-pointer transition-all hover:scale-[1.02] border-border/50 hover:border-transparent"
@@ -37,12 +34,12 @@ export function StepSelectTier({ miner, onSelect }) {
                   className="text-4xl font-bold"
                   style={{ color: miner.color }}
                 >
-                  ${miner.prices[i]}
+                  ${tier.priceUsdc}
                 </span>
                 <span className="text-muted-foreground ml-1">USDC</span>
               </div>
               <div className="text-sm text-muted-foreground">
-                <span className="text-foreground font-medium">{profitSplit}%</span>{" "}
+                <span className="text-foreground font-medium">{tier.profitSplit}%</span>{" "}
                 profit split
               </div>
               <Button
