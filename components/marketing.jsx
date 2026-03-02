@@ -7,7 +7,7 @@ const zokuLogo = "/zoku.png";
 
 const FIRMS = [
   { name: "Vanta Trading",       slug: null,      logo: "V", logoImg: null,                                                                                                                              url: "https://vantatrading.io", take: 0,  prices: [599, 749, 999], color: "#3b82f6", color2: "#22c55e" },
-  { name: "Jolly Green Trading", slug: "jolly",   logo: "J", logoImg: jollyLogo,                                                                                                                          url: null, take: 10, prices: [449, 579, 849], color: "#22c55e", color2: "#16a34a" },
+  { name: "Jolly Green Trading", slug: "jolly",   logo: "J", logoImg: jollyLogo,                                                                                                                          url: null, take: 10, prices: [1, 2, 3], color: "#22c55e", color2: "#16a34a" },
   { name: "Bitcast Trading",     slug: "bitcast", logo: "B", logoImg: bitcastLogo,                                                                                                                       url: null, take: 10, prices: [429, 559, 829], color: "#a855f7", color2: "#7c3aed" },
   { name: "Talisman Trading",    slug: "talisman",logo: "T", logoImg: talismanLogo,                                                                                                                      url: null, take: 15, prices: [389, 519, 769], color: "#eab308", color2: "#d97706" },
   { name: "Zoku Trading",        slug: "zoku",    logo: "Z", logoImg: zokuLogo,                                                                                                                          url: null, take: 20, prices: [349, 469, 699], color: "#a855f7", color2: "#7c3aed" },
@@ -913,7 +913,7 @@ export default function App(){
                 {firm.name} is a decentralized prop firm on the Hyperscaled network. Funded accounts from $25K to $2.5M. Weekly onchain payouts. One-step evaluation. No hidden rules.
               </p>
               <div style={{display:"flex",gap:12,marginBottom:40}}>
-                <button onClick={()=>document.getElementById("f-pricing")?.scrollIntoView({behavior:"smooth"})} style={{padding:"12px 28px",borderRadius:8,background:`linear-gradient(135deg,${C1},${C2})`,color:"#fff",fontSize:14,fontWeight:500,border:"none",cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Start Challenge →</button>
+                <button onClick={()=>window.location.href=`/miner/${firm.slug}`} style={{padding:"12px 28px",borderRadius:8,background:`linear-gradient(135deg,${C1},${C2})`,color:"#fff",fontSize:14,fontWeight:500,border:"none",cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Start Challenge →</button>
               </div>
               <div style={{display:"flex",gap:32}}>
                 {[[`$${firm.prices[0]}`,"Entry Price — $25K Account"],[`${split}%`,"Profit Split"],["$2.5M","Max Funding ($100K tier)"]].map(([v,l],i)=>(
@@ -1042,7 +1042,7 @@ export default function App(){
                     </div>
                   ))}
                 </div>
-                <button style={{padding:"11px 0",borderRadius:7,background:highlight?`linear-gradient(135deg,${C1},${C2})`:"rgba(255,255,255,0.06)",color:"#fff",fontSize:13,fontWeight:500,border:highlight?"none":"1px solid rgba(255,255,255,0.08)",cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                <button onClick={()=>window.location.href=`/miner/${firm.slug}`} style={{padding:"11px 0",borderRadius:7,background:highlight?`linear-gradient(135deg,${C1},${C2})`:"rgba(255,255,255,0.06)",color:"#fff",fontSize:13,fontWeight:500,border:highlight?"none":"1px solid rgba(255,255,255,0.08)",cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
                   {highlight?"Start Challenge →":"Select Tier"}
                 </button>
               </div>
@@ -1067,7 +1067,7 @@ export default function App(){
                 One-step evaluation. {split}% profit split. Weekly onchain payouts. No arbitrary limits.
               </p>
               <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
-                <button onClick={()=>document.getElementById("f-pricing")?.scrollIntoView({behavior:"smooth"})} style={{padding:"13px 34px",borderRadius:8,background:`linear-gradient(135deg,${C1},${C2})`,color:"#fff",fontSize:14,fontWeight:500,border:"none",cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Get Funded →</button>
+                <button onClick={()=>window.location.href=`/miner/${firm.slug}`} style={{padding:"13px 34px",borderRadius:8,background:`linear-gradient(135deg,${C1},${C2})`,color:"#fff",fontSize:14,fontWeight:500,border:"none",cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Get Funded →</button>
                 <button onClick={()=>navTo("home")} style={{padding:"13px 34px",borderRadius:8,background:"transparent",color:"#fff",fontSize:14,fontWeight:500,border:"1px solid rgba(255,255,255,0.1)",cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>View All Firms</button>
               </div>
             </div>

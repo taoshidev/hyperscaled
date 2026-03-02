@@ -1,6 +1,6 @@
 "use client";
 
-import App from "../src/App";
+import App from "@/components/marketing";
 
 export default function Page() {
   return <App />;
