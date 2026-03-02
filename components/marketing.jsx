@@ -277,6 +277,7 @@ export default function App({ lockedMiner = null }){
           ? <div style={{display:"flex",alignItems:"center",gap:16}}>
               <span style={{fontSize:13,color:c.muted,cursor:"pointer"}} onClick={()=>navTo("leaderboard")}>Leaderboard</span>
               <span style={{fontSize:13,color:c.muted,cursor:"pointer"}}>Rules</span>
+              <a href="/status" style={{fontSize:13,color:c.muted,textDecoration:"none"}}>Status</a>
               <div style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer"}} onClick={()=>navTo("home")}>
                 <img src="/hyperscaled-wordmark.svg" alt="Hyperscaled" style={{height:32,width:"auto",display:"block",objectFit:"contain",opacity:0.7}} />
               </div>
@@ -288,6 +289,7 @@ export default function App({ lockedMiner = null }){
           : <>
               <span style={{fontSize:13,color:page==="leaderboard"?c.text:c.muted,cursor:"pointer"}} onClick={()=>navTo("leaderboard")}>Leaderboard</span>
               <span style={{fontSize:13,color:c.muted,cursor:"pointer"}}>Rules</span>
+              <a href="/status" style={{fontSize:13,color:c.muted,textDecoration:"none"}}>Status</a>
               <a href="https://chromewebstore.google.com" target="_blank" rel="noreferrer" style={{fontSize:12,padding:"7px 16px",borderRadius:6,background:"linear-gradient(135deg,#3b82f6,#7c3aed)",color:"#fff",textDecoration:"none",display:"flex",alignItems:"center",gap:6,fontWeight:500,whiteSpace:"nowrap",border:"none"}}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Extension

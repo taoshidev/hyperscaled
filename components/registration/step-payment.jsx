@@ -15,10 +15,18 @@ import { ExactEvmScheme } from "@x402/evm/exact/client";
 import { toClientEvmSigner } from "@x402/evm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { USDC_ADDRESS, USDC_DECIMALS, BASE_CHAIN_ID, BASE_NETWORK, CHAIN_LABEL } from "@/lib/constants";
 import { TIERS } from "@/lib/miners";
 import { usdcAbi } from "@/lib/usdc-abi";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 
 export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, onComplete, onBack }) {
   const { address, isConnected, chainId } = useAccount();
@@ -28,6 +36,7 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
   const [error, setError] = useState(null);
   const [isPaying, setIsPaying] = useState(false);
   const [status, setStatus] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const price = miner.prices[tierIndex];
   const tier = TIERS[tierIndex];
@@ -185,7 +194,7 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
           )}
           <Button
             className="w-full"
-            onClick={handlePay}
+            onClick={() => setShowConfirm(true)}
             disabled={isPaying || !hasEnough}
             style={{ backgroundColor: miner.color, color: "#fff" }}
           >
@@ -202,6 +211,40 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
           </Button>
         </div>
       )}
+
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-yellow-500" />
+              Confirm Payment
+            </DialogTitle>
+            <DialogDescription>
+              You are about to send <strong>${price} USDC</strong> to the following address:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-md bg-muted p-3">
+            <p className="font-mono text-xs break-all text-center">{minerWallet}</p>
+          </div>
+          <p className="text-xs text-muted-foreground text-center">
+            Please verify this address before continuing. This action cannot be undone.
+          </p>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setShowConfirm(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                setShowConfirm(false);
+                handlePay();
+              }}
+              style={{ backgroundColor: miner.color, color: "#fff" }}
+            >
+              Confirm &amp; Pay
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {error && (
         <p className="text-sm text-destructive text-center">{error}</p>
