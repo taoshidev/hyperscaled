@@ -3,13 +3,13 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TIERS } from "@/lib/miners";
-import { CHROME_EXTENSION_URL } from "@/lib/constants";
+import { CHROME_EXTENSION_URL, BASESCAN_URL } from "@/lib/constants";
 import { CheckCircle2, Clock, ExternalLink, Download } from "lucide-react";
 
 export function StepConfirmation({ miner, tierIndex, hlAddress, txHash, payerAddress, registrationStatus, registrationMessage }) {
   const tier = TIERS[tierIndex];
   const isRegistered = registrationStatus === "registered";
-  const baseScanUrl = `https://basescan.org/tx/${txHash}`;
+  const baseScanUrl = `${BASESCAN_URL}/tx/${txHash}`;
 
   return (
     <div className="space-y-6 max-w-md mx-auto">
