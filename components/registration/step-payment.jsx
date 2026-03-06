@@ -57,6 +57,11 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
     setStatus("Requesting payment details...");
 
     try {
+      const affiliateUtm = document.cookie
+        .split("; ")
+        .find((c) => c.startsWith("hs_affiliate="))
+        ?.split("=")[1] || null;
+
       const registrationData = {
         minerSlug: miner.slug,
         hlAddress,
@@ -64,6 +69,7 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
         payoutAddress: address,
         email,
         tierIndex,
+        affiliateUtm,
       };
 
       const initialRes = await fetch("/api/register", {

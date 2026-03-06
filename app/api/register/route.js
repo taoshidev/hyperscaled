@@ -64,7 +64,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { minerSlug, hlAddress, accountSize, payoutAddress, email, tierIndex } = body;
+  const { minerSlug, hlAddress, accountSize, payoutAddress, email, tierIndex, affiliateUtm } = body;
 
   if (!minerSlug || !hlAddress || !accountSize || !email || tierIndex == null) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -189,13 +189,16 @@ export async function POST(request) {
 
     if (existing) {
       userId = existing.id;
-      if (email && email !== existing.email) {
-        await db.update(users).set({ email, updatedAt: new Date() }).where(eq(users.id, existing.id));
+      const updates = {};
+      if (email && email !== existing.email) updates.email = email;
+      if (affiliateUtm && !existing.utmCode) updates.utmCode = affiliateUtm;
+      if (Object.keys(updates).length > 0) {
+        await db.update(users).set({ ...updates, updatedAt: new Date() }).where(eq(users.id, existing.id));
       }
     } else {
       const [newUser] = await db
         .insert(users)
-        .values({ wallet: effectivePayoutAddress, email })
+        .values({ wallet: effectivePayoutAddress, email, utmCode: affiliateUtm || null })
         .returning({ id: users.id });
       userId = newUser.id;
     }
