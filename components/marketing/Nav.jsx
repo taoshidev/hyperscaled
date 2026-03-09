@@ -39,7 +39,7 @@ export default function Nav({ onSearch }) {
     >
       <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between gap-4">
         {/* Wordmark */}
-        <a href="#" className="flex items-center shrink-0">
+        <a href="/" className="flex items-center shrink-0">
           <img src="/hyperscaled-logo.svg" alt="Hyperscaled" className="h-7 w-auto" />
         </a>
 
