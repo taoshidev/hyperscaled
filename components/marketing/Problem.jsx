@@ -37,7 +37,7 @@ const painPoints = [
     icon: ClockCountdown,
     title: 'Discretionary payouts. They may not even pay you.',
     body: 'Centralized prop firms control your earnings under full discretion — they can delay, dispute, or deny payouts with zero accountability. No guarantees, no appeals, no transparency.',
-    body2: 'Hyperscaled is different. We give 100% payouts because we live trade the best traders onchain. When traders win, the network wins.',
+    body2: 'Hyperscaled gives 100% payouts because we live trade the best traders. When traders win, the network wins.',
     tag: 'No Guarantee',
     tagColor: 'text-zinc-400 bg-zinc-400/10 border-zinc-400/20',
     span: 'md:col-span-2',
@@ -112,13 +112,18 @@ export default function Problem() {
                   <h3 className="text-base font-semibold text-white tracking-tight mb-3 leading-snug">
                     {pt.title}
                   </h3>
-                  {pt.body2 ? (
-                    <div className="space-y-3">
-                      <p className="text-sm text-zinc-400 leading-relaxed">{pt.body}</p>
-                      <p className="text-sm text-teal-400/80 leading-relaxed">{pt.body2}</p>
+                  <p className="text-sm text-zinc-400 leading-relaxed mb-4">{pt.body}</p>
+                  {pt.body2 && (
+                    <div className="relative rounded-xl border border-teal-400/25 bg-teal-400/[0.06] px-4 py-3.5 overflow-hidden">
+                      <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{ background: 'radial-gradient(circle at 0% 50%, rgba(0,198,167,0.12), transparent 70%)' }}
+                      />
+                      <div className="relative flex items-start gap-3">
+                        <span className="mt-0.5 shrink-0 w-1.5 h-1.5 rounded-full bg-teal-400 pulse-teal" />
+                        <p className="text-sm font-semibold text-teal-300 leading-relaxed">{pt.body2}</p>
+                      </div>
                     </div>
-                  ) : (
-                    <p className="text-sm text-zinc-400 leading-relaxed">{pt.body}</p>
                   )}
                 </div>
               </motion.div>
