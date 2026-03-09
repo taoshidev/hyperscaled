@@ -69,7 +69,7 @@ export default function Leaderboard({ onSelectTrader }) {
           <div className="flex items-center gap-3 mb-4">
             <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Network</span>
             <span className="h-px flex-1 bg-white/[0.06]" />
-            <span className="text-[10px] text-zinc-600">Aggregated across all prop firms on the Hyperscaled protocol</span>
+            <span className="text-[10px] text-zinc-600">Aggregated across all of Vanta Network</span>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
