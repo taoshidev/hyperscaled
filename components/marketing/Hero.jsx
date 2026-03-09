@@ -1,6 +1,5 @@
 'use client'
 
-import { useRef } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight, TrendUp, ArrowsClockwise } from '@phosphor-icons/react'
 import WaitlistForm from './WaitlistForm'
@@ -30,8 +29,6 @@ const stats = [
 ]
 
 export default function Hero() {
-  const leaderboardRef = useRef(null)
-
   return (
     <section className="relative min-h-[100dvh] flex items-center overflow-hidden pt-16">
       {/* Liquid crystal shader background */}
@@ -79,8 +76,7 @@ export default function Hero() {
             <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-3 mb-10">
               <WaitlistForm className="flex-1 sm:max-w-sm" />
               <a
-                ref={leaderboardRef}
-                href="#leaderboard"
+                href="/leaderboard"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-white/[0.12] text-white text-sm font-medium hover:border-white/[0.24] hover:bg-white/[0.04] active:scale-[0.98] transition-all"
               >
                 View Leaderboard

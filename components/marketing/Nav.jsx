@@ -20,11 +20,12 @@ export default function Nav({ onSearch }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     const val = query.trim()
-    if (!val) {
-      document.getElementById('leaderboard')?.scrollIntoView({ behavior: 'smooth' })
-      return
+    if (!val) return
+    if (onSearch) {
+      onSearch(val)
+    } else {
+      window.location.href = `/leaderboard?addr=${encodeURIComponent(val)}`
     }
-    onSearch?.(val)
     setQuery('')
     inputRef.current?.blur()
   }
@@ -76,7 +77,7 @@ export default function Nav({ onSearch }) {
 
         {/* Right links + CTA */}
         <div className="flex items-center gap-6 shrink-0">
-          <a href="#leaderboard" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-colors">Leaderboard</a>
+          <a href="/leaderboard" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-colors">Leaderboard</a>
           <a href="#" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-colors">Rules</a>
           <a href="/status" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-colors">Status</a>
           <a
