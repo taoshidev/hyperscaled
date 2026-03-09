@@ -90,13 +90,7 @@ export default function Leaderboard({ onSelectTrader }) {
         >
           {/* Section label */}
           <div className="flex items-center gap-3 mb-5">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Hyperscaled</span>
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-teal-400/10 border border-teal-400/20 text-[10px] text-teal-400 font-medium">
-                <span className="w-1 h-1 rounded-full bg-teal-400 pulse-teal" />
-                1 source
-              </span>
-            </div>
+            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Hyperscaled</span>
             <span className="h-px flex-1 bg-white/[0.06]" />
             <span className="text-[10px] text-zinc-600">Traders registered directly on Hyperscaled</span>
           </div>
