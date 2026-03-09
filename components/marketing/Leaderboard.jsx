@@ -23,7 +23,7 @@ const LB = [
 function fmt(n) { return n.toLocaleString('en-US') }
 function fmtUSD(n) { return '$' + fmt(n) }
 
-const summaryStats = [
+const networkStats = [
   { label: 'Token Value Distributed', value: '$30M+', color: 'text-teal-400' },
   { label: 'Funded Traders (Historical)', value: '4,200+', color: 'text-white' },
   { label: 'Active Funded', value: '310', color: 'text-blue-400' },
@@ -44,12 +44,12 @@ export default function Leaderboard({ onSelectTrader }) {
     <section id="leaderboard" ref={ref} className="py-24 px-6">
       <div className="max-w-[1400px] mx-auto">
 
-        {/* Header */}
+        {/* Page header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={spring}
-          className="mb-10"
+          className="mb-14"
         >
           <span className="text-xs text-zinc-500 tracking-widest uppercase block mb-4">Leaderboard</span>
           <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-2xl">
@@ -58,30 +58,53 @@ export default function Leaderboard({ onSelectTrader }) {
           </h2>
         </motion.div>
 
-        {/* Stats row */}
+        {/* ── Network Stats ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ ...spring, delay: 0.1 }}
-          className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-10"
+          transition={{ ...spring, delay: 0.08 }}
+          className="mb-12"
         >
-          {summaryStats.map((s) => (
-            <div key={s.label} className="bg-zinc-900/40 border border-white/[0.06] rounded-xl p-4">
-              <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1.5">{s.label}</div>
-              <div className={`text-xl font-bold tracking-tight ${s.color}`}>{s.value}</div>
-            </div>
-          ))}
+          {/* Section label */}
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Network</span>
+            <span className="h-px flex-1 bg-white/[0.06]" />
+            <span className="text-[10px] text-zinc-600">Aggregated across all prop firms on the Hyperscaled protocol</span>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+            {networkStats.map((s) => (
+              <div key={s.label} className="bg-zinc-900/40 border border-white/[0.06] rounded-xl p-4">
+                <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1.5">{s.label}</div>
+                <div className={`text-xl font-bold tracking-tight ${s.color}`}>{s.value}</div>
+              </div>
+            ))}
+          </div>
         </motion.div>
 
-        {/* Tabs + Tables */}
+        {/* ── Hyperscaled Trader Table ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ ...spring, delay: 0.15 }}
+          transition={{ ...spring, delay: 0.14 }}
         >
+          {/* Section label */}
+          <div className="flex items-center gap-3 mb-5">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Hyperscaled</span>
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-teal-400/10 border border-teal-400/20 text-[10px] text-teal-400 font-medium">
+                <span className="w-1 h-1 rounded-full bg-teal-400 pulse-teal" />
+                1 source
+              </span>
+            </div>
+            <span className="h-px flex-1 bg-white/[0.06]" />
+            <span className="text-[10px] text-zinc-600">Traders registered directly on Hyperscaled</span>
+          </div>
+
+          {/* Tabs */}
           <div className="flex gap-0 border-b border-white/[0.06] mb-5">
             {[
-              ['funded', `Funded Traders (${funded.length})`],
+              ['funded', `Funded (${funded.length})`],
               ['challenge', `In Challenge (${challenge.length})`],
             ].map(([tab, label]) => (
               <button
@@ -189,6 +212,7 @@ export default function Leaderboard({ onSelectTrader }) {
             </div>
           )}
         </motion.div>
+
       </div>
     </section>
   )
