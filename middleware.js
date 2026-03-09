@@ -32,7 +32,7 @@ export function middleware(request) {
 
   // Capture UTM param into hs_affiliate cookie
   if (!affiliateCookie) {
-    const utm = searchParams.get("utm");
+    const utm = searchParams.get("aff");
     if (utm) {
       response.cookies.set("hs_affiliate", utm, {
         path: "/",
