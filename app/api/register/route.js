@@ -85,7 +85,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid tier" }, { status: 400 });
   }
 
-  const { requirements, paymentRequired, minerWallet, tier } = buildPaymentRequirements(
+  const { requirements, paymentRequired, minerWallet } = buildPaymentRequirements(
     miner,
     tierIndex,
     request.url,
