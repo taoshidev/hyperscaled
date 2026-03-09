@@ -24,9 +24,9 @@ const cardVariants = {
 }
 
 const stats = [
-  { value: '4,200+', label: 'Network Traders' },
-  { value: '$482M+', label: 'Network Volume' },
-  { value: '$30M+', label: 'Paid Out' },
+  { value: '4,200+', label: 'Funded Traders' },
+  { value: '$1B+', label: 'Network Volume' },
+  { value: '$30M+', label: 'Token Value Distributed' },
 ]
 
 export default function Hero() {
@@ -72,7 +72,7 @@ export default function Hero() {
               className="text-base text-zinc-400 leading-relaxed max-w-[56ch] mb-8"
             >
               Trade with more capital without risking your own stack. Keep 100% of your profits.
-              Grow your account to $2.5M. Built on the biggest decentralized prop firm in the world.
+              Grow your account to $2.5M. Built on the biggest decentralized prop firm infrastructure in the world.
             </motion.p>
 
             {/* CTA buttons */}

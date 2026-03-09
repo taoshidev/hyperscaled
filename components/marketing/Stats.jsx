@@ -18,9 +18,9 @@ const cardVariants = {
 
 const statData = [
   {
-    rawNum: '482',
+    rawNum: '1',
     prefix: '$',
-    suffix: 'M+',
+    suffix: 'B+',
     label: 'Network Volume',
     desc: 'Total trading volume processed across the network',
     icon: ChartLineUp,
@@ -30,8 +30,8 @@ const statData = [
     rawNum: '4200',
     prefix: '',
     suffix: '+',
-    label: 'Network Traders',
-    desc: 'Active funded traders deployed across all integrated prop firms',
+    label: 'Funded Traders',
+    desc: 'Funded traders deployed across all integrated prop firms',
     icon: UsersThree,
     badge: null,
   },
@@ -39,8 +39,8 @@ const statData = [
     rawNum: '30',
     prefix: '$',
     suffix: 'M+',
-    label: 'Paid Out via Network',
-    desc: 'USDC distributed directly to trader wallets, onchain and verifiable',
+    label: 'Token Value Distributed',
+    desc: 'Token equivalent value distributed directly to trader wallets, onchain and verifiable',
     icon: CurrencyDollar,
     badge: null,
   },

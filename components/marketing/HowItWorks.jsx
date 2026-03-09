@@ -10,9 +10,9 @@ const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
 function PropFirmMockup() {
   const plans = [
-    { name: 'Jolly Green Trading', size: '$25,000', split: '90% Split', highlight: false, logo: '/jolly-green.png' },
-    { name: 'Talisman', size: '$50,000', split: '95% Split', highlight: true, logo: '/talisman.svg' },
-    { name: 'Zoku', size: '$100,000', split: '100% Split', highlight: false, logo: '/zoku.png' },
+    { name: 'Bitcast', size: '$25,000', highlight: false, logo: '/bitcast.svg' },
+    { name: 'Beanstock', size: '$50,000', highlight: true, logo: '/beanstock.png' },
+    { name: 'Vanta Trading', size: '$100,000', highlight: false, logo: '/vanta.png' },
   ]
   return (
     <div className="w-full max-w-sm space-y-2.5">
@@ -29,20 +29,12 @@ function PropFirmMockup() {
             {p.logo && (
               <img src={p.logo} alt="" className="w-6 h-6 rounded-md shrink-0 object-contain" />
             )}
-            <div>
-              <div className={`text-sm font-semibold ${p.highlight ? 'text-white' : 'text-zinc-300'}`}>
-                {p.name}
-              </div>
+            <div className={`text-sm font-semibold ${p.highlight ? 'text-white' : 'text-zinc-300'}`}>
+              {p.name}
             </div>
           </div>
-          <span
-            className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-              p.highlight
-                ? 'bg-teal-400 text-zinc-950'
-                : 'bg-zinc-700 text-zinc-400'
-            }`}
-          >
-            {p.split}
+          <span className={`text-xs font-mono ${p.highlight ? 'text-teal-400' : 'text-zinc-500'}`}>
+            {p.size}
           </span>
         </div>
       ))}
@@ -133,7 +125,7 @@ function PayoutMockup() {
           <ArrowRight size={12} className="text-teal-400" />
         </div>
         <div className="min-w-0">
-          <div className="text-xs font-semibold text-white">Weekly Payout Received</div>
+          <div className="text-xs font-semibold text-white">Monthly Payout Received</div>
           <div className="text-[10px] text-zinc-500 font-mono">0x71...9A2B · 2 mins ago</div>
         </div>
       </div>
@@ -162,7 +154,7 @@ const steps = [
     number: '03',
     icon: TrendUp,
     title: 'Trade & Get Funded',
-    body: 'Hit 10% profit targets to scale up to $2.5M. Payouts are automated weekly via smart contract directly to your wallet.',
+    body: 'Hit 10% profit targets to scale up to $2.5M. Payouts are automated onchain monthly directly to your wallet.',
     mockup: <PayoutMockup />,
   },
 ]

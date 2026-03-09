@@ -8,7 +8,6 @@ import Solution from './marketing/Solution'
 import HowItWorks from './marketing/HowItWorks'
 import Features from './marketing/Features'
 import FAQ from './marketing/FAQ'
-import CTABanner from './marketing/CTABanner'
 import Footer from './marketing/Footer'
 
 export default function App() {
@@ -23,7 +22,6 @@ export default function App() {
         <HowItWorks />
         <Features />
         <FAQ />
-        <CTABanner />
       </main>
       <Footer />
     </div>

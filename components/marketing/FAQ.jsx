@@ -9,7 +9,7 @@ const spring = { type: 'spring', stiffness: 100, damping: 20 }
 const faqs = [
   {
     q: 'Do I need to submit KYC documents?',
-    a: 'No. Hyperscaled is a permissionless protocol. You connect with a Hyperliquid wallet address — no passport, no bank account, no proof of address required. Traders in 150+ countries participate today.',
+    a: 'No, you simply use a digital signature via Privado. Hyperscaled is a permissionless protocol. You connect with a Hyperliquid wallet address. Traders in 150+ countries can participate today.',
   },
   {
     q: 'How does the one-step evaluation work?',
@@ -17,23 +17,19 @@ const faqs = [
   },
   {
     q: 'When and how do I get paid?',
-    a: 'Funded traders receive USDC directly to their connected wallet every week. Every payout is recorded onchain — no centralized discretion, no hold periods, no withdrawal fees.',
+    a: 'Funded traders receive USDC directly to their connected wallet every month. Every payout is recorded onchain — no centralized discretion, no hold periods, no withdrawal fees.',
   },
   {
     q: 'What markets can I trade?',
-    a: 'BTC, ETH, SOL, DOGE, XRP, ARB, OP, AVAX perpetuals on Hyperliquid. News trading and weekend trading are both allowed. No restricted windows.',
+    a: 'BTC, ETH, ADA, XRP, SOL, DOGE perps on Hyperliquid with HYPE, TAO, LINK, ZEC, BCH, XMR, and LTC being added. News trading and weekend trading are both allowed. No restricted windows.',
   },
   {
     q: 'How does account scaling work?',
-    a: 'Strong quarterly performance triggers automatic promotions. Traders can scale from $25K up to $2.5M funded capital with no additional evaluation fees. Every scaling milestone is governed by onchain rules.',
+    a: 'Strong quarterly performance triggers automatic promotions. Traders can scale from $100K up to $2.5M funded capital with no additional evaluation fees. Every scaling milestone is governed by a decentralized set of rules set by validators.',
   },
   {
     q: 'What is Hyperscaled built on?',
     a: 'Hyperscaled is a Web3 protocol built on Hyperliquid\'s order book infrastructure and powered by the Bittensor network. All rules, payout logic, and trader records are open-source and verifiable onchain.',
-  },
-  {
-    q: 'Can traders outside the US participate?',
-    a: 'Yes. Because there\'s no KYC, the protocol is globally accessible. 1,847 of our current 4,200+ traders are outside the US and EU — trading from Southeast Asia, Latin America, and Africa.',
   },
 ]
 

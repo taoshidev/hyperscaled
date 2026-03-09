@@ -25,7 +25,7 @@ const pillars = [
   {
     icon: LinkSimple,
     title: 'Onchain Payouts',
-    desc: 'USDC direct to your wallet every week. Fully verifiable.',
+    desc: 'USDC direct to your wallet monthly. Fully verifiable.',
   },
   {
     icon: Globe,
@@ -34,8 +34,8 @@ const pillars = [
   },
   {
     icon: LockOpen,
-    title: 'Zero KYC',
-    desc: "Connect your Hyperliquid wallet. That's all we need.",
+    title: 'Permissionless Cryptographic KYC',
+    desc: "Connect your Hyperliquid wallet. Cryptographically sign, that's all we need.",
   },
 ]
 
@@ -43,13 +43,12 @@ const compareRows = [
   { label: 'Non-Custodial',       hs: 'Yes',        ftmo: 'No',           typical: 'No' },
   { label: 'KYC Required',        hs: 'None',       ftmo: 'Full KYC',     typical: 'Full KYC' },
   { label: 'Profit Split',        hs: 'Up to 100%', ftmo: 'Up to 90%',    typical: '70–80%' },
-  { label: 'Payout Speed',        hs: 'Weekly',     ftmo: 'Monthly',      typical: 'Monthly' },
   { label: 'Payout Verification', hs: 'Onchain',    ftmo: 'Centralized',  typical: 'Centralized' },
   { label: 'Max Account',         hs: '$2.5M',      ftmo: '$400K',        typical: '$200K' },
   { label: 'News Trading',        hs: 'Allowed',    ftmo: 'Restricted',   typical: 'Restricted' },
 ]
 
-const hsBest = ['Yes', 'None', 'Up to 100%', 'Weekly', 'Onchain', '$2.5M', 'Allowed']
+const hsBest = ['Yes', 'None', 'Up to 100%', 'Onchain', '$2.5M', 'Allowed']
 
 export default function Solution() {
   const ref = useRef(null)
@@ -97,7 +96,7 @@ export default function Solution() {
               </h2>
               <p className="text-base text-zinc-400 leading-relaxed max-w-[52ch]">
                 Hyperscaled mirrors your Hyperliquid trades into a protocol-funded simulated account
-                and pays out performance rewards in USDC — onchain, automatically, weekly.
+                and pays out performance rewards in USDC — onchain, automatically, monthly.
               </p>
             </motion.div>
 

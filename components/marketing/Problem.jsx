@@ -19,25 +19,26 @@ const itemVariants = {
 const painPoints = [
   {
     icon: IdentificationCard,
-    title: 'KYC requirements lock out 73% of the world',
-    body: 'Every major prop firm requires passport scans, proof of address, and a compliant bank account. Traders in 47+ countries are rejected outright — no exceptions, no appeals.',
+    title: 'KYC and geographic bans lock out most of the world',
+    body: 'Every major prop firm requires passport scans, proof of address, and a compliant bank account. Traders in 150+ countries are rejected outright — no exceptions, no appeals.',
     tag: 'Rejected',
     tagColor: 'text-red-400 bg-red-400/10 border-red-400/20',
     span: 'md:col-span-2',
   },
   {
     icon: ChartLineDown,
-    title: 'You earn 70%. They take 30% for doing nothing.',
-    body: 'Legacy prop firms extract 20–40% of your profits permanently. No accountability, no transparency — they just keep a cut of every winning trade you make.',
-    tag: '30% Cut',
+    title: 'You earn 70%. They take up to 30% for doing nothing.',
+    body: 'Legacy prop firms extract 10–30% of your profits permanently. No accountability, no transparency — they just keep a cut of every winning trade you make, even though its simulated accounts.',
+    tag: 'Up to 30% Cut',
     tagColor: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
     span: 'md:col-span-1',
   },
   {
     icon: ClockCountdown,
-    title: 'Payouts take 7–30 days. Sometimes they don\'t come.',
-    body: 'Centralized prop firms hold your earnings, delay withdrawals, and operate under opaque discretion. 1 in 6 payout requests gets disputed or delayed past 30 days.',
-    tag: '30-Day Wait',
+    title: 'Discretionary payouts. They may not even pay you.',
+    body: 'Centralized prop firms control your earnings under full discretion — they can delay, dispute, or deny payouts with zero accountability. No guarantees, no appeals, no transparency.',
+    body2: 'Hyperscaled is different. We give 100% payouts because we live trade the best traders onchain. When traders win, the network wins.',
+    tag: 'No Guarantee',
     tagColor: 'text-zinc-400 bg-zinc-400/10 border-zinc-400/20',
     span: 'md:col-span-2',
   },
@@ -61,7 +62,7 @@ export default function Problem() {
             The Problem
           </span>
           <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-2xl mb-5">
-            Prop firms take 30%.{' '}
+            Prop firms take up to 30%.{' '}
             <span className="text-zinc-500">Then ghost you on payouts.</span>
           </h2>
           <p className="text-base text-zinc-400 leading-relaxed max-w-[60ch]">
@@ -111,7 +112,14 @@ export default function Problem() {
                   <h3 className="text-base font-semibold text-white tracking-tight mb-3 leading-snug">
                     {pt.title}
                   </h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed">{pt.body}</p>
+                  {pt.body2 ? (
+                    <div className="space-y-3">
+                      <p className="text-sm text-zinc-400 leading-relaxed">{pt.body}</p>
+                      <p className="text-sm text-teal-400/80 leading-relaxed">{pt.body2}</p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-zinc-400 leading-relaxed">{pt.body}</p>
+                  )}
                 </div>
               </motion.div>
             )

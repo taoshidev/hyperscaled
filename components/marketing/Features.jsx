@@ -58,7 +58,7 @@ const features = [
     extra: (
       <div className="mt-5">
         <div className="flex justify-between text-xs text-zinc-500 mb-1.5">
-          <span>$25K → $2.5M</span>
+          <span>$100K → $2.5M</span>
           <span>Scaling path</span>
         </div>
         <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
@@ -71,7 +71,7 @@ const features = [
           />
         </div>
         <div className="flex items-center justify-between mt-3">
-          {['$25K', '$50K', '$100K', '$250K', '$2.5M'].map((t) => (
+          {['$100K', '$250K', '$500K', '$1M', '$2.5M'].map((t) => (
             <span key={t} className="text-[10px] text-zinc-600 font-mono">{t}</span>
           ))}
         </div>
