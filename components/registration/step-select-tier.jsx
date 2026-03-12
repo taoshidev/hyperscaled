@@ -78,7 +78,7 @@ export function StepSelectTier({ selectedTier, onSelect, onContinue }) {
               onKeyDown={(e) => handleKeyDown(e, tier, i)}
               style={{ animationDelay: `${i * 80}ms` }}
               className={`
-                relative cursor-pointer rounded-2xl border p-6 overflow-hidden group
+                relative cursor-pointer rounded-2xl border p-6 group
                 bg-zinc-900/50 text-card-foreground
                 transition-[border-color,box-shadow,transform,opacity] duration-200
                 animate-[fadeInUp_0.35s_ease-out_both]
@@ -121,13 +121,17 @@ export function StepSelectTier({ selectedTier, onSelect, onContinue }) {
 
               {/* Pricing */}
               <div className="flex items-baseline gap-2.5 mb-1">
-                <ins className="text-2xl font-bold text-teal-400 font-mono no-underline">
+                <ins className="no-underline">
                   <span className="sr-only">Sale price: </span>
-                  {formatPrice(tier.promoPrice)}
+                  <span className="text-2xl font-bold text-teal-400 font-mono">
+                    {formatPrice(tier.promoPrice)}
+                  </span>
                 </ins>
-                <del className="text-sm text-[oklch(0.65_0_0)] font-mono">
+                <del className="no-underline">
                   <span className="sr-only">Original price: </span>
-                  {formatPrice(tier.fullPrice)}
+                  <span className="text-sm text-[oklch(0.65_0_0)] font-mono">
+                    {formatPrice(tier.fullPrice)}
+                  </span>
                 </del>
               </div>
 
