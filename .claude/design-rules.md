@@ -23,6 +23,7 @@ Loaded automatically by CLAUDE.md. These are non-negotiable.
 ## Animation Rules
 
 - **Only animate**: `transform` and `opacity`. Nothing else.
+- **Never use `transition-all`** — always specify exact properties: `transition-[border-color,box-shadow,transform]`
 - Use Framer Motion for enter/exit, transition CSS for hover states
 - Skeleton shimmer for loading states (`.skeleton` class exists in globals.css)
 - `.pulse-teal` for live connection indicators
@@ -65,3 +66,16 @@ Loaded automatically by CLAUDE.md. These are non-negotiable.
 - Dense but not cramped — every pixel earns its space
 - Financial data is scannable: monospace numbers, right-aligned amounts, color-coded PnL
 - Interactions feel instant — no loading spinners, no empty states without skeletons
+
+## Accessibility Minimums
+
+These are not optional. Every component must meet these before shipping.
+
+- **Interactive elements**: Never use `<div onClick>` for selectable items. Use `<button>`, `role="radio"`, `role="checkbox"`, or the appropriate semantic element. Every clickable thing must be keyboard accessible.
+- **Selection groups**: Any set of options (tiers, tabs, filters) needs `role="radiogroup"` or `role="tablist"` with `aria-checked`/`aria-selected` and arrow key navigation.
+- **Touch targets**: 44px minimum height on all buttons and tappable elements (WCAG 2.5.8). Use `h-11` not `h-9` on primary actions.
+- **Minimum text size**: 12px (`text-xs`). Never use `text-[10px]` or `text-[11px]`. If a label needs to be small, use `text-xs` with `tracking-wide` and `uppercase`.
+- **Focus indicators**: All interactive elements need `focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background outline-none`.
+- **Pricing / strikethrough**: Use `<del>` for original price, `<ins>` for sale price, with `sr-only` labels for screen reader context.
+- **Landmarks**: Every page has a `<main>`. Navigation has `<nav>`. Use `<ol>` for sequential steps.
+- **Progress indicators**: Steppers use `<ol>` with `aria-current="step"` on the active step.

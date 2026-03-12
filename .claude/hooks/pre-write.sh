@@ -17,10 +17,33 @@ if [[ "$FILE_PATH" =~ \.(ts|tsx)$ ]]; then
   exit 2
 fi
 
-# Block h-screen
-if echo "$NEW_CONTENT" | grep -qE 'h-screen'; then
-  echo "STOP: Use min-h-[100dvh] instead of h-screen." >&2
+# Skip remaining checks for markdown/docs files
+if [[ "$FILE_PATH" =~ \.(md|mdx)$ ]]; then
+  exit 0
+fi
+
+# Block h-screen (use min-h-[100dvh] instead)
+HSCREEN="h-screen"
+if echo "$NEW_CONTENT" | grep -qF "$HSCREEN"; then
+  echo "STOP: Use min-h-[100dvh] instead of $HSCREEN." >&2
   exit 2
+fi
+
+# Block transition-all (specify exact properties)
+if echo "$NEW_CONTENT" | grep -qE 'transition-all'; then
+  echo "STOP: Do not use transition-all. Specify exact properties, e.g. transition-[border-color,box-shadow,transform]." >&2
+  exit 2
+fi
+
+# Block text-[10px] and text-[11px] (minimum is text-xs / 12px)
+if echo "$NEW_CONTENT" | grep -qE 'text-\[1[01]px\]'; then
+  echo "STOP: Minimum text size is 12px (text-xs). Do not use text-[10px] or text-[11px]." >&2
+  exit 2
+fi
+
+# Block div onClick for selection patterns (warn, not block)
+if echo "$NEW_CONTENT" | grep -qE '<div[^>]*onClick'; then
+  echo "WARNING: <div onClick> detected. Use button, role=radio, or a semantic element for interactive items." >&2
 fi
 
 # Protect API routes

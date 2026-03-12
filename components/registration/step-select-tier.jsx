@@ -44,12 +44,12 @@ export function StepSelectTier({ selectedTier, onSelect, onContinue }) {
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+        <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">
           Choose your funded account size
         </h2>
-        <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          One evaluation. No recurring fees. 100% of performance rewards are
-          yours.
+        <p className="text-sm text-muted-foreground max-w-md mx-auto text-balance">
+          One evaluation. No recurring fees. 100%&nbsp;of performance
+          rewards are&nbsp;yours.
         </p>
       </div>
 
@@ -114,7 +114,7 @@ export function StepSelectTier({ selectedTier, onSelect, onContinue }) {
 
               {/* Account size */}
               <div className="mt-2 mb-4">
-                <span className="text-3xl font-bold font-mono tracking-tight">
+                <span className="text-3xl font-bold tracking-tight">
                   {formatAccountSize(tier.accountSize)}
                 </span>
               </div>
@@ -123,13 +123,13 @@ export function StepSelectTier({ selectedTier, onSelect, onContinue }) {
               <div className="flex items-baseline gap-2.5 mb-1">
                 <ins className="no-underline">
                   <span className="sr-only">Sale price: </span>
-                  <span className="text-2xl font-bold text-teal-400 font-mono">
+                  <span className="text-2xl font-bold text-teal-400">
                     {formatPrice(tier.promoPrice)}
                   </span>
                 </ins>
-                <del className="no-underline">
+                <del>
                   <span className="sr-only">Original price: </span>
-                  <span className="text-sm text-[oklch(0.65_0_0)] font-mono">
+                  <span className="text-sm text-[oklch(0.65_0_0)]">
                     {formatPrice(tier.fullPrice)}
                   </span>
                 </del>
