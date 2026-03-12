@@ -104,6 +104,18 @@
   animation: pulse-teal 2s ease-in-out infinite;
 }
 
+/* ── Fade-in-up for tier cards ── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ── Shiny CTA button ── */
 @property --gradient-angle {
   syntax: "<angle>";

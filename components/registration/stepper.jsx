@@ -1,39 +1,59 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { motion } from "framer-motion";
+import { Check, Circle } from "@phosphor-icons/react";
 
-const STEP_LABELS = ["Tier", "Wallet", "Email", "Payment", "Done"];
-
-export function Stepper({ currentStep, minerColor }) {
+export function Stepper({ currentStep, steps }) {
   return (
-    <div className="flex items-center justify-center gap-2 mb-8">
-      {STEP_LABELS.map((label, i) => {
+    <div className="flex items-center justify-center gap-0 mb-10">
+      {steps.map((label, i) => {
         const isCompleted = i < currentStep;
         const isActive = i === currentStep;
+        const isFuture = i > currentStep;
+
         return (
-          <div key={label} className="flex items-center gap-2">
-            <div className="flex flex-col items-center gap-1">
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-colors"
-                style={{
-                  backgroundColor: isCompleted || isActive ? minerColor : "transparent",
-                  border: isCompleted || isActive ? "none" : "1px solid rgba(255,255,255,0.2)",
-                  color: isCompleted || isActive ? "#fff" : "rgba(255,255,255,0.4)",
+          <div key={label} className="flex items-center">
+            {/* Step node */}
+            <div className="flex flex-col items-center gap-1.5">
+              <motion.div
+                initial={false}
+                animate={{
+                  opacity: 1,
+                  scale: isActive ? 1 : 0.95,
                 }}
+                transition={{ duration: 0.2 }}
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-colors duration-200
+                  ${isCompleted ? "bg-teal-400 text-white" : ""}
+                  ${isActive ? "bg-teal-400 text-white" : ""}
+                  ${isFuture ? "bg-transparent border border-white/15 text-white/30" : ""}
+                `}
               >
-                {isCompleted ? <Check className="w-4 h-4" /> : i + 1}
-              </div>
-              <span
-                className="text-[10px] font-medium"
-                style={{ color: isCompleted || isActive ? minerColor : "rgba(255,255,255,0.4)" }}
+                {isCompleted ? (
+                  <Check size={14} weight="bold" />
+                ) : isFuture ? (
+                  <Circle size={8} weight="fill" className="text-white/20" />
+                ) : (
+                  i + 1
+                )}
+              </motion.div>
+              <motion.span
+                initial={false}
+                animate={{ opacity: isActive ? 1 : isFuture ? 0.35 : 0.55 }}
+                transition={{ duration: 0.2 }}
+                className={`text-[10px] font-medium whitespace-nowrap
+                  ${isActive ? "text-teal-400 font-bold" : "text-muted-foreground"}
+                `}
               >
                 {label}
-              </span>
+              </motion.span>
             </div>
-            {i < STEP_LABELS.length - 1 && (
+
+            {/* Connector line */}
+            {i < steps.length - 1 && (
               <div
-                className="w-8 h-px mb-4"
-                style={{ backgroundColor: i < currentStep ? minerColor : "rgba(255,255,255,0.1)" }}
+                className={`w-10 sm:w-14 h-px mx-2 mb-5 transition-colors duration-200
+                  ${i < currentStep ? "bg-teal-400" : "bg-white/10"}
+                `}
               />
             )}
           </div>

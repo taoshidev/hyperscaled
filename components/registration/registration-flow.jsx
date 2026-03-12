@@ -3,93 +3,37 @@
 import { useState } from "react";
 import { Stepper } from "./stepper";
 import { StepSelectTier } from "./step-select-tier";
-import { StepHLAddress } from "./step-hl-address";
-import { StepEmail } from "./step-email";
-import { StepPayment } from "./step-payment";
-import { StepConfirmation } from "./step-confirmation";
 
-export function RegistrationFlow({ miner, minerWallet }) {
-  const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState({
-    tierIndex: null,
-    hlAddress: "",
-    email: "",
-    txHash: null,
-    payerAddress: null,
-    registrationStatus: null,
-    registrationMessage: "",
-  });
+const STEP_LABELS = ["Select Plan", "Wallet", "Payment", "Confirmation"];
 
-  function update(fields) {
-    setFormData((prev) => ({ ...prev, ...fields }));
-  }
+export function RegistrationFlow() {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [selectedTier, setSelectedTier] = useState(null);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start pt-12 pb-20 px-4">
+    <div className="min-h-[100dvh] flex flex-col items-center justify-start pt-12 pb-20 px-4">
       <div className="w-full max-w-3xl">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold" style={{ color: miner.color }}>
-            {miner.name}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">Entity Miner Registration</p>
+        {/* Branding */}
+        <div className="flex flex-col items-center gap-3 mb-10">
+          <img
+            src="/hyperscaled-logo.svg"
+            alt="Hyperscaled"
+            className="h-8 w-auto"
+          />
+          <p className="text-xs text-muted-foreground tracking-wide">
+            Vanta Trading · Entity Miner
+          </p>
         </div>
 
-        <Stepper currentStep={step} minerColor={miner.color} />
+        {/* Stepper */}
+        <Stepper currentStep={currentStep} steps={STEP_LABELS} />
 
-        {step === 0 && (
+        {/* Active step */}
+        {currentStep === 0 && (
           <StepSelectTier
-            miner={miner}
-            onSelect={(tierIndex) => {
-              update({ tierIndex });
-              setStep(1);
-            }}
-          />
-        )}
-
-        {step === 1 && (
-          <StepHLAddress
-            miner={miner}
-            value={formData.hlAddress}
-            onChange={(hlAddress) => update({ hlAddress })}
-            onNext={() => setStep(2)}
-            onBack={() => setStep(0)}
-          />
-        )}
-
-        {step === 2 && (
-          <StepEmail
-            miner={miner}
-            value={formData.email}
-            onChange={(email) => update({ email })}
-            onNext={() => setStep(3)}
-            onBack={() => setStep(1)}
-          />
-        )}
-
-        {step === 3 && (
-          <StepPayment
-            miner={miner}
-            minerWallet={minerWallet}
-            tierIndex={formData.tierIndex}
-            hlAddress={formData.hlAddress}
-            email={formData.email}
-            onComplete={(result) => {
-              update(result);
-              setStep(4);
-            }}
-            onBack={() => setStep(2)}
-          />
-        )}
-
-        {step === 4 && (
-          <StepConfirmation
-            miner={miner}
-            tierIndex={formData.tierIndex}
-            hlAddress={formData.hlAddress}
-            txHash={formData.txHash}
-            payerAddress={formData.payerAddress}
-            registrationStatus={formData.registrationStatus}
-            registrationMessage={formData.registrationMessage}
+            selectedTier={selectedTier}
+            onSelect={setSelectedTier}
+            onContinue={() => setCurrentStep(1)}
           />
         )}
       </div>

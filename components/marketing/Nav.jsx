@@ -2,7 +2,8 @@
 
 import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { DownloadSimple, MagnifyingGlass } from '@phosphor-icons/react'
+import Link from 'next/link'
+import { ArrowRight, MagnifyingGlass } from '@phosphor-icons/react'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -80,15 +81,15 @@ export default function Nav({ onSearch }) {
           <a href="/leaderboard" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-colors">Leaderboard</a>
           <a href="#" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-colors">Rules</a>
           <a href="/status" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-colors">Status</a>
-          <a
-            href="#get-funded"
+          <Link
+            href="/register"
             className="shiny-cta px-5 py-2"
           >
             <span className="flex items-center gap-1.5">
-              <DownloadSimple size={15} weight="bold" />
-              Extension
+              Start Evaluation
+              <ArrowRight size={15} weight="bold" />
             </span>
-          </a>
+          </Link>
         </div>
       </div>
     </motion.header>

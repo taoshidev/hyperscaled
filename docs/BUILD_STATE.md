@@ -1,6 +1,6 @@
 # Build State
 
-Last updated: 2025-03-12
+Last updated: 2026-03-12
 
 ## Marketing Site (`/`)
 
@@ -42,21 +42,24 @@ Last updated: 2025-03-12
 
 **Next action**: UI polish pass — loading states, empty states, responsive behavior
 
-## Registration Flow
+## Registration Flow (`/register`)
 
-**Status**: Complete (first pass)
+**Status**: Phase 1 complete — tier selection UI
 
 | Item | State |
 |------|-------|
-| Tier selection step | Done |
-| HL address input step | Done |
-| Email input step | Done |
-| USDC payment step | Done |
-| Confirmation step | Done |
-| Stepper component | Done |
-| Registration API route | Done |
+| /register route + layout | Done |
+| Tier data in lib/constants.js (TIERS) | Done |
+| Stepper component (4-step, Phosphor Icons, Framer Motion) | Done |
+| Registration flow orchestrator (new 4-step) | Done |
+| Tier selection step (interactive cards, selected state) | Done |
+| Email step | Removed (not in new flow) |
+| Wallet step | Pending (Phase 2) |
+| Payment step | Pending (Phase 2) |
+| Confirmation step | Pending (Phase 2) |
+| Marketing CTAs linked to /register | Done |
 
-**Next action**: Review UX flow, error handling, edge cases
+**Next action**: Phase 2 — wallet connection + payment steps
 
 ## Leaderboard (`/leaderboard`)
 

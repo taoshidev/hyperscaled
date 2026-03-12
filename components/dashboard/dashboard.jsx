@@ -68,7 +68,7 @@ export function Dashboard() {
           <p className="text-sm text-muted-foreground">
             This wallet is not registered with any entity miner.
           </p>
-          <Link href="/">
+          <Link href="/register">
             <Button className="mt-2">Register Now</Button>
           </Link>
         </div>
