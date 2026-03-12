@@ -36,7 +36,7 @@ Browser
 ### Registration
 
 - Multi-step flow: `components/registration/registration-flow.jsx`
-- Steps: select-tier → hl-address → email → payment → confirmation
+- Steps: select-tier → connect-and-pay → confirmation (3 steps)
 - Payment uses wagmi/viem for USDC transfer (ABI in `lib/usdc-abi.js`)
 
 ### Leaderboard (`/leaderboard`)

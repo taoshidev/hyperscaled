@@ -44,15 +44,15 @@ Last updated: 2026-03-12
 
 ## Registration Flow (`/register`)
 
-**Status**: Phase 2 complete — correct tier data, wallet input, payment wiring
+**Status**: Phase 2 complete — 3-step flow, connect & pay wired
 
 | Item | State |
 |------|-------|
 | /register route + layout | Done |
-| Tier data in lib/constants.js (TIERS) | Done (Phase 2: corrected to 5% drawdown, Unlimited period, label/value format) |
-| Stepper component (4-step, Phosphor Icons, Framer Motion) | Done |
-| Registration flow orchestrator (new 4-step) | Done (Phase 2: wired all steps) |
-| Tier selection step (interactive cards, selected state) | Done (Phase 2: label/value rows, Pro card elevated) |
+| Tier data in lib/constants.js (TIERS) | Done (5% drawdown, Unlimited period, label/value format) |
+| Stepper component (3-step, Phosphor Icons, Framer Motion) | Done (Phase 2: collapsed from 4 to 3 steps) |
+| Registration flow orchestrator (3-step) | Done (Phase 2: Select Plan → Connect & Pay → Confirmation) |
+| Tier selection step (interactive cards, selected state) | Done (label/value rows, Pro card elevated) |
 | A11y: ARIA radiogroup + keyboard nav on tier cards | Done |
 | A11y: Semantic stepper (ol/li, aria-current) | Done |
 | A11y: Screen reader pricing context (ins/del, sr-only) | Done |
@@ -61,9 +61,10 @@ Last updated: 2026-03-12
 | Performance: targeted transitions (no transition-all) | Done |
 | Contrast: brightened small muted text (oklch 0.65) | Done |
 | Min font size: text-xs (12px) floor on all labels | Done |
-| Email step | Removed (not in new flow) |
-| Wallet step (HL address input, validation, tier summary) | Done (Phase 2) |
-| Payment step (order summary, RainbowKit, USDC transfer) | Done (Phase 2: wagmi/viem fallback, x402 TODO) |
+| Email step | Removed (not in flow) |
+| Connect & Pay step (merged wallet + payment) | Done (Phase 2: order summary, RainbowKit connect, alt wallet toggle, USDC payment, wagmi/viem fallback, x402 TODO) |
+| Old step-hl-address.jsx | Deleted (absorbed into step-connect-pay.jsx) |
+| Old step-payment.jsx | Deleted (absorbed into step-connect-pay.jsx) |
 | Confirmation step | Pending (Phase 3 — placeholder in place) |
 | Marketing CTAs linked to /register | Done |
 

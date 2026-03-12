@@ -3,16 +3,15 @@
 import { useState } from "react";
 import { Stepper } from "./stepper";
 import { StepSelectTier } from "./step-select-tier";
-import { StepHlAddress } from "./step-hl-address";
-import { StepPayment } from "./step-payment";
+import { StepConnectAndPay } from "./step-connect-pay";
 
-const STEP_LABELS = ["Select Plan", "Wallet", "Payment", "Confirmation"];
+const STEP_LABELS = ["Select Plan", "Connect & Pay", "Confirmation"];
 
 export function RegistrationFlow() {
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedTier, setSelectedTier] = useState(null);
-  const [hlAddress, setHlAddress] = useState("");
   const [txHash, setTxHash] = useState(null);
+  const [hlAddress, setHlAddress] = useState(null);
 
   return (
     <main className="min-h-[100dvh] flex flex-col items-center justify-start pt-12 pb-20 px-4">
@@ -41,32 +40,21 @@ export function RegistrationFlow() {
           />
         )}
 
-        {/* Step 1: Wallet address */}
+        {/* Step 1: Connect & Pay */}
         {currentStep === 1 && (
-          <StepHlAddress
-            hlAddress={hlAddress}
-            setHlAddress={setHlAddress}
+          <StepConnectAndPay
             selectedTier={selectedTier}
-            onContinue={() => setCurrentStep(2)}
+            onPaymentComplete={({ txHash: hash, hlAddress: addr }) => {
+              setTxHash(hash);
+              setHlAddress(addr);
+              setCurrentStep(2);
+            }}
             onBack={() => setCurrentStep(0)}
           />
         )}
 
-        {/* Step 2: Payment */}
+        {/* Step 2: Confirmation — Phase 3 */}
         {currentStep === 2 && (
-          <StepPayment
-            selectedTier={selectedTier}
-            hlAddress={hlAddress}
-            onPaymentComplete={(hash) => {
-              setTxHash(hash);
-              setCurrentStep(3);
-            }}
-            onBack={() => setCurrentStep(1)}
-          />
-        )}
-
-        {/* Step 3: Confirmation — Phase 3 */}
-        {currentStep === 3 && (
           <div className="text-center space-y-4 py-12 animate-[fadeInUp_0.35s_ease-out_both]">
             <h2 className="text-2xl font-semibold tracking-tight">
               Registration complete
@@ -77,6 +65,11 @@ export function RegistrationFlow() {
             {txHash && (
               <p className="text-xs font-mono text-muted-foreground break-all max-w-md mx-auto">
                 tx: {txHash}
+              </p>
+            )}
+            {hlAddress && (
+              <p className="text-xs font-mono text-muted-foreground break-all max-w-md mx-auto">
+                wallet: {hlAddress}
               </p>
             )}
           </div>
