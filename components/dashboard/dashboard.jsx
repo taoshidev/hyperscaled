@@ -15,6 +15,7 @@ import { TradeHistory } from "./trade-history";
 import { PendingOrders } from "./pending-orders";
 import { OrderEvents } from "./order-events";
 import { StatsPanel } from "./stats-panel";
+import { KycVerification } from "./kyc-verification";
 
 export function Dashboard() {
   const { address, isConnected } = useAccount();
@@ -119,6 +120,9 @@ export function Dashboard() {
           </div>
           <ConnectButton />
         </div>
+
+        {/* KYC Verification */}
+        <KycVerification wallet={address} />
 
         {/* Account Overview */}
         <AccountOverview dashboard={data} />

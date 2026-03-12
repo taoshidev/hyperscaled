@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isValidEvmAddress } from "@/lib/validation";
+import { STUB_ENABLED, stubStatus } from "@/lib/gateway-stubs";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -10,6 +11,11 @@ export async function GET(request) {
       { error: "Invalid or missing hl_address" },
       { status: 400 },
     );
+  }
+
+  // STUB: return fake status when gateway is offline
+  if (STUB_ENABLED) {
+    return NextResponse.json({ ...stubStatus, hl_address: hlAddress });
   }
 
   const validatorUrl = process.env.VALIDATOR_API_URL;
