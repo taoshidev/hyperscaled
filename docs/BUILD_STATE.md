@@ -44,30 +44,30 @@ Last updated: 2026-03-12
 
 ## Registration Flow (`/register`)
 
-**Status**: Phase 1 hardened — accessibility + performance fixes
+**Status**: Phase 2 complete — correct tier data, wallet input, payment wiring
 
 | Item | State |
 |------|-------|
 | /register route + layout | Done |
-| Tier data in lib/constants.js (TIERS) | Done |
+| Tier data in lib/constants.js (TIERS) | Done (Phase 2: corrected to 5% drawdown, Unlimited period, label/value format) |
 | Stepper component (4-step, Phosphor Icons, Framer Motion) | Done |
-| Registration flow orchestrator (new 4-step) | Done |
-| Tier selection step (interactive cards, selected state) | Done |
+| Registration flow orchestrator (new 4-step) | Done (Phase 2: wired all steps) |
+| Tier selection step (interactive cards, selected state) | Done (Phase 2: label/value rows, Pro card elevated) |
 | A11y: ARIA radiogroup + keyboard nav on tier cards | Done |
 | A11y: Semantic stepper (ol/li, aria-current) | Done |
 | A11y: Screen reader pricing context (ins/del, sr-only) | Done |
 | A11y: Focus-visible indicators, main landmark | Done |
-| Touch target: Continue button 44px | Done |
+| Touch target: All buttons 44px (h-11) | Done |
 | Performance: targeted transitions (no transition-all) | Done |
 | Contrast: brightened small muted text (oklch 0.65) | Done |
 | Min font size: text-xs (12px) floor on all labels | Done |
 | Email step | Removed (not in new flow) |
-| Wallet step | Pending (Phase 2) |
-| Payment step | Pending (Phase 2) |
-| Confirmation step | Pending (Phase 2) |
+| Wallet step (HL address input, validation, tier summary) | Done (Phase 2) |
+| Payment step (order summary, RainbowKit, USDC transfer) | Done (Phase 2: wagmi/viem fallback, x402 TODO) |
+| Confirmation step | Pending (Phase 3 — placeholder in place) |
 | Marketing CTAs linked to /register | Done |
 
-**Next action**: Phase 2 — wallet connection + payment steps
+**Next action**: Phase 3 — confirmation step UI
 
 ## Leaderboard (`/leaderboard`)
 

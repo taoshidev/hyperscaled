@@ -85,9 +85,11 @@ export function StepSelectTier({ selectedTier, onSelect, onContinue }) {
                 outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
                 ${isSelected
                   ? "border-teal-400 shadow-[0_0_20px_rgba(0,198,167,0.15)]"
-                  : "border-white/[0.06] hover:border-white/[0.10]"
+                  : isPopular
+                    ? "border-white/[0.15] hover:border-white/[0.20]"
+                    : "border-white/[0.06] hover:border-white/[0.10]"
                 }
-                ${isPopular ? "md:scale-[1.03] md:z-10" : ""}
+                ${isPopular ? "md:scale-[1.02] md:z-10" : ""}
               `}
             >
               {/* Hover glow */}
@@ -142,22 +144,25 @@ export function StepSelectTier({ selectedTier, onSelect, onContinue }) {
                 </span>
               </div>
 
-              {/* Details */}
-              <ul className="space-y-2">
+              {/* Separator */}
+              <div className="border-t border-border mb-4" />
+
+              {/* Details — label/value rows */}
+              <div className="space-y-2.5">
                 {tier.details.map((detail) => (
-                  <li
-                    key={detail}
-                    className="flex items-center gap-2 text-xs text-[oklch(0.65_0_0)]"
+                  <div
+                    key={detail.label}
+                    className="flex items-center justify-between text-xs"
                   >
-                    <Check
-                      size={12}
-                      weight="bold"
-                      className="text-teal-400 shrink-0"
-                    />
-                    {detail}
-                  </li>
+                    <span className="text-[oklch(0.65_0_0)]">
+                      {detail.label}
+                    </span>
+                    <span className="text-foreground font-medium font-mono">
+                      {detail.value}
+                    </span>
+                  </div>
                 ))}
-              </ul>
+              </div>
 
               {/* Selected indicator */}
               {isSelected && (
