@@ -11,7 +11,7 @@ export function RegistrationFlow() {
   const [selectedTier, setSelectedTier] = useState(null);
 
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center justify-start pt-12 pb-20 px-4">
+    <main className="min-h-[100dvh] flex flex-col items-center justify-start pt-12 pb-20 px-4">
       <div className="w-full max-w-3xl">
         {/* Branding */}
         <div className="flex flex-col items-center gap-3 mb-10">
@@ -37,6 +37,6 @@ export function RegistrationFlow() {
           />
         )}
       </div>
-    </div>
+    </main>
   );
 }

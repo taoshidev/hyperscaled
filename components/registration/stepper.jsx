@@ -5,14 +5,18 @@ import { Check, Circle } from "@phosphor-icons/react";
 
 export function Stepper({ currentStep, steps }) {
   return (
-    <div className="flex items-center justify-center gap-0 mb-10">
+    <ol className="flex items-center justify-center gap-0 mb-10" aria-label="Registration progress">
       {steps.map((label, i) => {
         const isCompleted = i < currentStep;
         const isActive = i === currentStep;
         const isFuture = i > currentStep;
 
         return (
-          <div key={label} className="flex items-center">
+          <li
+            key={label}
+            className="flex items-center"
+            aria-current={isActive ? "step" : undefined}
+          >
             {/* Step node */}
             <div className="flex flex-col items-center gap-1.5">
               <motion.div
@@ -40,11 +44,14 @@ export function Stepper({ currentStep, steps }) {
                 initial={false}
                 animate={{ opacity: isActive ? 1 : isFuture ? 0.35 : 0.55 }}
                 transition={{ duration: 0.2 }}
-                className={`text-[10px] font-medium whitespace-nowrap
-                  ${isActive ? "text-teal-400 font-bold" : "text-muted-foreground"}
+                className={`text-xs font-medium whitespace-nowrap
+                  ${isActive ? "text-teal-400 font-bold" : "text-[oklch(0.65_0_0)]"}
                 `}
               >
                 {label}
+                {isCompleted && <span className="sr-only"> (completed)</span>}
+                {isActive && <span className="sr-only"> (current step)</span>}
+                {isFuture && <span className="sr-only"> (upcoming)</span>}
               </motion.span>
             </div>
 
@@ -54,11 +61,12 @@ export function Stepper({ currentStep, steps }) {
                 className={`w-10 sm:w-14 h-px mx-2 mb-5 transition-colors duration-200
                   ${i < currentStep ? "bg-teal-400" : "bg-white/10"}
                 `}
+                aria-hidden="true"
               />
             )}
-          </div>
+          </li>
         );
       })}
-    </div>
+    </ol>
   );
 }

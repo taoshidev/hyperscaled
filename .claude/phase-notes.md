@@ -2,12 +2,13 @@
 
 ## Current status
 
-Registration Phase 1 complete. Tier selection UI is live at /register with interactive cards, stepper, and marketing CTAs updated.
+Registration Phase 1 hardened. Tier selection UI at /register with full keyboard accessibility, ARIA semantics, and performance fixes applied.
 
 ## Completed phases
 
 - **Phase 0**: Initial build — marketing site, dashboard, leaderboard, miner detail, status page, registration flow, mock API routes, wallet connection
 - **Registration Phase 1**: Route, stepper, tier selection UI — /register route with Providers layout, 4-step stepper (Phosphor Icons + Framer Motion), interactive tier cards (Starter $25K, Pro $50K, Elite $100K), TIERS data in lib/constants.js, marketing CTAs updated to link to /register, email step removed from flow
+- **Registration Phase 1 Harden**: Accessibility + performance fixes — ARIA radiogroup with roving tabindex on tier cards, semantic stepper (ol/li + aria-current), ins/del + sr-only for pricing, focus-visible indicators, main landmark, 44px touch target on Continue, targeted transitions (no transition-all), brightened small muted text (oklch 0.65), text-xs (12px) floor on all labels, removed Framer Motion from card selected indicator
 
 ## In progress
 

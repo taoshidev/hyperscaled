@@ -44,7 +44,7 @@ Last updated: 2026-03-12
 
 ## Registration Flow (`/register`)
 
-**Status**: Phase 1 complete — tier selection UI
+**Status**: Phase 1 hardened — accessibility + performance fixes
 
 | Item | State |
 |------|-------|
@@ -53,6 +53,14 @@ Last updated: 2026-03-12
 | Stepper component (4-step, Phosphor Icons, Framer Motion) | Done |
 | Registration flow orchestrator (new 4-step) | Done |
 | Tier selection step (interactive cards, selected state) | Done |
+| A11y: ARIA radiogroup + keyboard nav on tier cards | Done |
+| A11y: Semantic stepper (ol/li, aria-current) | Done |
+| A11y: Screen reader pricing context (ins/del, sr-only) | Done |
+| A11y: Focus-visible indicators, main landmark | Done |
+| Touch target: Continue button 44px | Done |
+| Performance: targeted transitions (no transition-all) | Done |
+| Contrast: brightened small muted text (oklch 0.65) | Done |
+| Min font size: text-xs (12px) floor on all labels | Done |
 | Email step | Removed (not in new flow) |
 | Wallet step | Pending (Phase 2) |
 | Payment step | Pending (Phase 2) |
