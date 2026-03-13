@@ -85,6 +85,10 @@ Last updated: 2026-03-12
 | Polish: "View Leaderboard" removed, "Go to Dashboard" secondary | Done |
 | Polish: stepper collapsed to text on confirmation step | Done |
 | Polish: spacing rhythm (explicit mt-* between sections) | Done |
+| Polish: two-column confirmation layout (receipt left, extension right) | Done |
+| Polish: extension UI mockup (account size, progress bars, position row) | Done |
+| Polish: "Go to Dashboard" as secondary text link below receipt | Done |
+| Polish: confirmation container widens to max-w-5xl on step 2 | Done |
 
 **Next action**: UI polish pass across other pages
 

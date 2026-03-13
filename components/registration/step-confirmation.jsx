@@ -10,8 +10,8 @@ import {
   ArrowSquareOut,
   ArrowRight,
   GoogleChromeLogo,
+  TrendUp,
 } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
 import { BASESCAN_URL, CHROME_EXTENSION_URL } from "@/lib/constants";
 import { copyToClipboard } from "@/lib/utils";
 import { formatAccountSize, truncateAddress } from "@/lib/format";
@@ -40,6 +40,86 @@ function CopyButton({ text, label }) {
         <Copy size={14} weight="bold" />
       )}
     </button>
+  );
+}
+
+function ProgressBar({ label, current, max, color }) {
+  const pct = (current / max) * 100;
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-white/50">{label}</span>
+        <span className="text-white/70 font-medium tabular-nums">
+          {current}% / {max}%
+        </span>
+      </div>
+      <div className="h-1.5 rounded-full bg-white/[0.06]">
+        <div
+          className={`h-full rounded-full ${color}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ExtensionMockup({ selectedTier }) {
+  return (
+    <div
+      aria-hidden="true"
+      className="relative mx-auto w-[260px] rounded-xl border border-white/[0.08] bg-[#0c0c0e] p-4 shadow-2xl shadow-black/60 rotate-[2deg]"
+    >
+      {/* Extension header */}
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-white tracking-tight">
+          Hyperscaled
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0" />
+          <span className="text-xs text-teal-400 font-medium">Active</span>
+        </span>
+      </div>
+
+      {/* Account size */}
+      <div className="mt-3">
+        <p className="text-xs text-white/40 uppercase tracking-wider">
+          Account Size
+        </p>
+        <p className="text-lg font-semibold text-white tabular-nums mt-0.5">
+          {formatAccountSize(selectedTier.accountSize)}
+        </p>
+      </div>
+
+      {/* Progress bars */}
+      <div className="mt-3 space-y-2.5">
+        <ProgressBar
+          label="Profit"
+          current={4.2}
+          max={10}
+          color="bg-teal-400"
+        />
+        <ProgressBar
+          label="Drawdown"
+          current={1.8}
+          max={5}
+          color="bg-amber-400"
+        />
+      </div>
+
+      {/* Position row */}
+      <div className="mt-3 flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
+        <div className="flex items-center gap-1.5">
+          <TrendUp size={12} weight="bold" className="text-teal-400" />
+          <span className="text-xs font-medium text-white/80">
+            ETH-PERP
+          </span>
+          <span className="text-xs text-white/40">Long</span>
+        </div>
+        <span className="text-xs font-semibold text-teal-400 tabular-nums">
+          +$1,240
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -94,130 +174,133 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash }) {
         </p>
       </motion.div>
 
-      {/* Registration summary card */}
+      {/* Two-column split: receipt (left) + extension CTA (right) */}
       <motion.div
         variants={itemVariants}
-        className="w-full max-w-lg rounded-xl border border-border bg-zinc-900/50 p-5 space-y-0 mt-8"
+        className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8"
       >
-        {/* Plan */}
-        <div className="flex items-center justify-between py-3">
-          <span className="text-sm text-muted-foreground">Plan</span>
-          <span className="text-sm font-semibold">
-            {selectedTier.name} —{" "}
-            {formatAccountSize(selectedTier.accountSize)} Funded Account
-          </span>
-        </div>
+        {/* Left column — Receipt */}
+        <div className="flex flex-col">
+          <div className="rounded-xl border border-border bg-zinc-900/50 p-5 space-y-0">
+            {/* Plan */}
+            <div className="flex items-center justify-between py-3">
+              <span className="text-sm text-muted-foreground">Plan</span>
+              <span className="text-sm font-semibold">
+                {selectedTier.name} —{" "}
+                {formatAccountSize(selectedTier.accountSize)} Funded Account
+              </span>
+            </div>
 
-        <div className="border-t border-border" />
+            <div className="border-t border-border" />
 
-        {/* Trading wallet */}
-        <div className="flex items-center justify-between py-3">
-          <span className="text-sm text-muted-foreground">Trading wallet</span>
-          <div className="flex items-center">
-            <span className="text-sm font-mono text-foreground">
-              {truncateAddress(hlAddress)}
-            </span>
-            <CopyButton text={hlAddress} label="Copy wallet address" />
-          </div>
-        </div>
-
-        <div className="border-t border-border" />
-
-        {/* Transaction */}
-        <div className="flex items-center justify-between py-3">
-          <span className="text-sm text-muted-foreground">Transaction</span>
-          <div className="flex items-center">
-            <span className="text-sm font-mono text-foreground">
-              {truncateAddress(txHash)}
-            </span>
-            <CopyButton text={txHash} label="Copy transaction hash" />
-            <a
-              href={explorerUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="View transaction on block explorer"
-              className="ml-1 p-1 min-h-11 min-w-11 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-[color] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            >
-              <ArrowSquareOut size={14} weight="bold" />
-              <span className="sr-only">(opens in new tab)</span>
-            </a>
-          </div>
-        </div>
-
-        <div className="border-t border-border" />
-
-        {/* Status */}
-        <div className="flex items-center justify-between py-3">
-          <span className="text-sm text-muted-foreground">Status</span>
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-teal-400 pulse-teal shrink-0" />
-            <span className="text-sm text-foreground">Provisioning…</span>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Chrome extension install — primary CTA */}
-      <motion.div variants={itemVariants} className="w-full max-w-lg space-y-4 text-center mt-10">
-        <h3 className="text-lg font-semibold tracking-tight text-foreground">
-          Install the Chrome extension to start&nbsp;trading
-        </h3>
-        <p className="text-sm text-muted-foreground max-w-md mx-auto text-balance">
-          The extension is required to participate in your evaluation. It tracks
-          your positions, enforces risk limits, and displays your progress
-          inside&nbsp;Hyperliquid.
-        </p>
-        <a
-          href={CHROME_EXTENSION_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="shiny-cta h-11 w-full flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-        >
-          <span className="inline-flex items-center gap-2 text-sm font-semibold">
-            <GoogleChromeLogo size={18} weight="bold" />
-            Install Chrome Extension
-          </span>
-        </a>
-        <p className="text-xs text-muted-foreground">
-          Available for Chrome and&nbsp;Brave
-        </p>
-      </motion.div>
-
-      {/* After you install — secondary info */}
-      <motion.div variants={itemVariants} className="w-full max-w-lg space-y-3 mt-6">
-        <h4 className="text-sm font-semibold text-foreground">
-          After you install
-        </h4>
-        <div className="space-y-2.5">
-          {AFTER_INSTALL.map((step) => (
-            <div key={step.title} className="flex items-start gap-2.5">
-              <span className="text-muted-foreground mt-0.5 shrink-0" aria-hidden="true">·</span>
-              <div>
-                <p className="text-sm font-semibold text-foreground">
-                  {step.title}
-                </p>
-                <p className="text-xs text-muted-foreground text-balance">
-                  {step.description}
-                </p>
+            {/* Trading wallet */}
+            <div className="flex items-center justify-between py-3">
+              <span className="text-sm text-muted-foreground">Trading wallet</span>
+              <div className="flex items-center">
+                <span className="text-sm font-mono text-foreground">
+                  {truncateAddress(hlAddress)}
+                </span>
+                <CopyButton text={hlAddress} label="Copy wallet address" />
               </div>
             </div>
-          ))}
-        </div>
-      </motion.div>
 
-      {/* Dashboard link — secondary action */}
-      <motion.div
-        variants={itemVariants}
-        className="flex justify-center mt-10"
-      >
-        <Link href="/dashboard">
-          <Button
-            variant="outline"
-            className="h-11 px-8 text-sm font-semibold border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 cursor-pointer"
+            <div className="border-t border-border" />
+
+            {/* Transaction */}
+            <div className="flex items-center justify-between py-3">
+              <span className="text-sm text-muted-foreground">Transaction</span>
+              <div className="flex items-center">
+                <span className="text-sm font-mono text-foreground">
+                  {truncateAddress(txHash)}
+                </span>
+                <CopyButton text={txHash} label="Copy transaction hash" />
+                <a
+                  href={explorerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="View transaction on block explorer"
+                  className="ml-1 p-1 min-h-11 min-w-11 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-[color] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  <ArrowSquareOut size={14} weight="bold" />
+                  <span className="sr-only">(opens in new tab)</span>
+                </a>
+              </div>
+            </div>
+
+            <div className="border-t border-border" />
+
+            {/* Status */}
+            <div className="flex items-center justify-between py-3">
+              <span className="text-sm text-muted-foreground">Status</span>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-teal-400 pulse-teal shrink-0" />
+                <span className="text-sm text-foreground">Provisioning…</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Dashboard link — below receipt */}
+          <Link
+            href="/dashboard"
+            className="mt-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-[color] duration-200 min-h-11 self-start"
           >
             Go to Dashboard
-            <ArrowRight size={15} weight="bold" className="ml-1.5" />
-          </Button>
-        </Link>
+            <ArrowRight size={14} weight="bold" />
+          </Link>
+        </div>
+
+        {/* Right column — Extension install */}
+        <div className="flex flex-col items-center text-center">
+          {/* Extension mockup */}
+          <div className="mb-6">
+            <ExtensionMockup selectedTier={selectedTier} />
+          </div>
+
+          <h3 className="text-lg font-semibold tracking-tight text-foreground text-balance">
+            Install the Chrome extension to start&nbsp;trading
+          </h3>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto text-balance mt-2">
+            The extension tracks your positions, enforces risk limits, and
+            displays your progress inside&nbsp;Hyperliquid.
+          </p>
+
+          <a
+            href={CHROME_EXTENSION_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shiny-cta h-11 w-full max-w-sm flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background mt-4"
+          >
+            <span className="inline-flex items-center gap-2 text-sm font-semibold">
+              <GoogleChromeLogo size={18} weight="bold" />
+              Install Chrome Extension
+            </span>
+          </a>
+          <p className="text-xs text-muted-foreground mt-2">
+            Available for Chrome and&nbsp;Brave
+          </p>
+
+          {/* After you install */}
+          <div className="w-full max-w-sm text-left space-y-3 mt-6">
+            <h4 className="text-sm font-semibold text-foreground">
+              After you install
+            </h4>
+            <div className="space-y-2.5">
+              {AFTER_INSTALL.map((step) => (
+                <div key={step.title} className="flex items-start gap-2.5">
+                  <span className="text-muted-foreground mt-0.5 shrink-0" aria-hidden="true">·</span>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {step.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground text-balance">
+                      {step.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </motion.div>
     </motion.div>
   );

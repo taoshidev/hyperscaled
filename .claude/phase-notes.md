@@ -37,6 +37,10 @@ Registration Phase 3 complete. All 3 steps of the registration flow are fully bu
   - Stepper collapse: on confirmation step (step 2), stepper replaced with "Registration complete" teal text
   - Spacing rhythm: replaced space-y-* with explicit flex-col + mt-* gaps across all registration files (step-select-tier, step-connect-pay, step-confirmation, registration-flow)
   - Shared utils: formatAccountSize and truncateAddress imported from lib/format.js (dedup from harden)
+  - Two-column confirmation: grid grid-cols-1 lg:grid-cols-2 gap-8 below success header. Left column = receipt card + "Go to Dashboard" text link. Right column = extension mockup + CTA + "After you install" bullets.
+  - Extension UI mockup: static decorative component (aria-hidden) showing Hyperscaled header with Active dot, $50,000 account size, profit progress bar (4.2%/10%), drawdown bar (1.8%/5%), ETH-PERP position row. Rotated 2deg with shadow for depth.
+  - "Go to Dashboard" changed from outline Button to plain text link with arrow icon below receipt
+  - Confirmation container widened from max-w-3xl to max-w-5xl on step 2 to accommodate two-column layout
 
 ## In progress
 
