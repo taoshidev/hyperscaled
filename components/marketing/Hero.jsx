@@ -1,8 +1,8 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ArrowRight, TrendUp, ArrowsClockwise } from '@phosphor-icons/react'
-import WaitlistForm from './WaitlistForm'
+import Link from 'next/link'
+import { ArrowRight, TrendUp, ArrowsClockwise, DownloadSimple } from '@phosphor-icons/react'
 import LiquidCrystalBg from './LiquidCrystalBg'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
@@ -74,14 +74,22 @@ export default function Hero() {
 
             {/* CTA buttons */}
             <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-3 mb-10">
-              <WaitlistForm className="flex-1 sm:max-w-sm" />
-              <a
-                href="/leaderboard"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-white/[0.12] text-white text-sm font-medium hover:border-white/[0.24] hover:bg-white/[0.04] active:scale-[0.98] transition-all"
+              <Link
+                href="/register"
+                className="shiny-cta px-6 py-3 whitespace-nowrap"
               >
-                View Leaderboard
-                <ArrowRight size={15} />
-              </a>
+                <span className="flex items-center gap-1.5">
+                  Start Your Evaluation
+                  <ArrowRight size={15} weight="bold" />
+                </span>
+              </Link>
+              <Link
+                href="/extension"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-white/[0.12] text-white text-sm font-medium hover:border-white/[0.24] hover:bg-white/[0.04] active:scale-[0.98] transition-[border-color,background-color,transform] duration-200"
+              >
+                <DownloadSimple size={16} weight="bold" />
+                Chrome Extension
+              </Link>
             </motion.div>
 
             {/* Stats row */}
