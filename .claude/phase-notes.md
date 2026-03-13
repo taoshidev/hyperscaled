@@ -20,6 +20,15 @@ Registration Phase 3 complete. All 3 steps of the registration flow are fully bu
   - **Part C — Promo Banner**: Compact inline callout above tier selection headline: "Launch pricing — up to 55% off all evaluations" with bg-teal-400/10 text-teal-400 styling.
   - **Part D — Cleanup**: No orphaned files found (only 5 expected files in components/registration/). Replaced centered logo + "Vanta Trading · Entity Miner" with minimal nav bar (logo left, Exit button right). Marketing CTAs verified — Hero.jsx and Nav.jsx both use `<Link href="/register">` (same tab).
 
+- **Registration Harden (Phase 2+3 Audit)**:
+  - H1: Fixed 5 touch targets below 44px — Exit button h-9→h-11, CopyButton min-h-11 min-w-11, block explorer link min-h-11 min-w-11, "View Leaderboard" min-h-11, "Get the extension" min-h-11
+  - H2: Deduplicated formatAccountSize and truncateAddress — moved to lib/format.js, removed inline defs from step-confirmation.jsx, step-connect-pay.jsx, step-select-tier.jsx
+  - H3: CopyButton aria-label updates dynamically to "Copied" when in copied state
+  - M1: CopyButton focus-visible ring already present (verified)
+  - M2: Promo banner switched from &nbsp; to text-balance
+  - M3: Block explorer link has sr-only "(opens in new tab)" text (ArrowSquareOut icon was already present)
+  - M4: Added design decision comment documenting why beforeunload doesn't cover wallet connection
+
 ## In progress
 
 Nothing currently in progress.

@@ -13,15 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { BASESCAN_URL, CHROME_EXTENSION_URL } from "@/lib/constants";
 import { copyToClipboard } from "@/lib/utils";
-
-function truncateAddress(addr) {
-  if (!addr) return "";
-  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
-}
-
-function formatAccountSize(size) {
-  return `$${size.toLocaleString("en-US")}`;
-}
+import { formatAccountSize, truncateAddress } from "@/lib/format";
 
 function CopyButton({ text, label }) {
   const [copied, setCopied] = useState(false);
@@ -38,8 +30,8 @@ function CopyButton({ text, label }) {
     <button
       type="button"
       onClick={handleCopy}
-      aria-label={label}
-      className="ml-2 p-1 rounded text-muted-foreground hover:text-foreground transition-[color] duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      aria-label={copied ? "Copied" : label}
+      className="ml-2 p-1 min-h-11 min-w-11 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-[color] duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
       {copied ? (
         <Check size={14} weight="bold" className="text-teal-400" />
@@ -150,9 +142,10 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash }) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="View transaction on block explorer"
-              className="ml-1 p-1 rounded text-muted-foreground hover:text-foreground transition-[color] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className="ml-1 p-1 min-h-11 min-w-11 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-[color] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <ArrowSquareOut size={14} weight="bold" />
+              <span className="sr-only">(opens in new tab)</span>
             </a>
           </div>
         </div>
@@ -192,7 +185,7 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash }) {
                     href={step.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-medium text-teal-400 hover:text-teal-300 transition-[color] duration-200 mt-1"
+                    className="min-h-11 inline-flex items-center gap-1 text-xs font-medium text-teal-400 hover:text-teal-300 transition-[color] duration-200 mt-1"
                   >
                     {step.linkLabel}
                     <ArrowSquareOut size={12} weight="bold" />
@@ -217,7 +210,7 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash }) {
         </Link>
         <Link
           href="/leaderboard"
-          className="text-sm text-muted-foreground hover:text-foreground transition-[color] duration-200"
+          className="min-h-11 inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-[color] duration-200"
         >
           View Leaderboard
         </Link>

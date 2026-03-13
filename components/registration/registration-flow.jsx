@@ -18,6 +18,9 @@ export function RegistrationFlow() {
   const [paymentProcessing, setPaymentProcessing] = useState(false);
 
   // B1: Browser refresh guard — only during active payment processing
+  // Note: beforeunload only fires during active payment processing.
+  // Wallet connection mid-signature is not guarded — acceptable tradeoff
+  // since no funds have moved yet at that point.
   useEffect(() => {
     if (!paymentProcessing) return;
 
@@ -44,7 +47,7 @@ export function RegistrationFlow() {
         <Link href="/">
           <Button
             variant="outline"
-            className="text-sm h-9 border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 cursor-pointer"
+            className="text-sm h-11 border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 cursor-pointer"
           >
             Exit
           </Button>

@@ -4,13 +4,10 @@ import { useRef, useCallback } from "react";
 import { Check, ArrowRight } from "@phosphor-icons/react";
 import { TIERS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
+import { formatAccountSize } from "@/lib/format";
 
 function savingsPercent(full, promo) {
   return Math.round(((full - promo) / full) * 100);
-}
-
-function formatAccountSize(size) {
-  return `$${size.toLocaleString("en-US")}`;
 }
 
 function formatPrice(price) {
@@ -44,8 +41,8 @@ export function StepSelectTier({ selectedTier, onSelect, onContinue }) {
     <div className="space-y-8">
       {/* Promo banner */}
       <div className="flex justify-center">
-        <p className="bg-teal-400/10 text-teal-400 text-sm font-medium px-4 py-2 rounded-lg text-center">
-          Launch pricing — up to 55% off all&nbsp;evaluations
+        <p className="bg-teal-400/10 text-teal-400 text-sm font-medium px-4 py-2 rounded-lg text-center text-balance">
+          Launch pricing — up to 55% off all evaluations
         </p>
       </div>
 

@@ -27,15 +27,7 @@ import {
   VANTA_USDC_WALLET,
 } from "@/lib/constants";
 import { usdcAbi } from "@/lib/usdc-abi";
-
-function formatAccountSize(size) {
-  return `$${size.toLocaleString("en-US")}`;
-}
-
-function truncateAddress(addr) {
-  if (!addr) return "";
-  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
-}
+import { formatAccountSize, truncateAddress } from "@/lib/format";
 
 function formatRulesSummary(details) {
   return details.map((d) => `${d.value} ${d.label.toLowerCase()}`).join(" · ");

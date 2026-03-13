@@ -71,6 +71,12 @@ Last updated: 2026-03-12
 | Browser refresh guard (payment only) | Done (Phase 3: beforeunload during processing) |
 | Mobile stepper (compact label) | Done (Phase 3: "Step X of 3 — Label" below md) |
 | Marketing CTAs linked to /register | Done |
+| Harden: touch targets >= 44px (5 elements) | Done |
+| Harden: shared utils in lib/format.js (no dupes) | Done |
+| Harden: CopyButton a11y (dynamic aria-label, focus ring) | Done |
+| Harden: promo banner text-balance (no nbsp) | Done |
+| Harden: block explorer sr-only external indicator | Done |
+| Harden: beforeunload design decision documented | Done |
 
 **Next action**: UI polish pass
 
