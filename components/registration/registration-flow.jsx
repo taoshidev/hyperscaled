@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { Stepper } from "./stepper";
 import { StepSelectTier } from "./step-select-tier";
 import { StepConnectAndPay } from "./step-connect-pay";
+import { StepConfirmation } from "./step-confirmation";
 
 const STEP_LABELS = ["Select Plan", "Connect & Pay", "Confirmation"];
 
@@ -12,68 +15,84 @@ export function RegistrationFlow() {
   const [selectedTier, setSelectedTier] = useState(null);
   const [txHash, setTxHash] = useState(null);
   const [hlAddress, setHlAddress] = useState(null);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+
+  // B1: Browser refresh guard — only during active payment processing
+  useEffect(() => {
+    if (!paymentProcessing) return;
+
+    function handleBeforeUnload(e) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [paymentProcessing]);
 
   return (
-    <main className="min-h-[100dvh] flex flex-col items-center justify-start pt-12 pb-20 px-4">
-      <div className="w-full max-w-3xl">
-        {/* Branding */}
-        <div className="flex flex-col items-center gap-3 mb-10">
+    <main className="min-h-[100dvh] flex flex-col">
+      {/* D2: Minimal nav bar */}
+      <nav className="flex items-center justify-between py-4 px-6 w-full max-w-5xl mx-auto">
+        <Link href="/" className="outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg">
           <img
             src="/hyperscaled-logo.svg"
             alt="Hyperscaled"
-            className="h-8 w-auto"
+            className="h-7 w-auto"
           />
-          <p className="text-xs text-muted-foreground tracking-wide">
-            Vanta Trading · Entity Miner
-          </p>
+        </Link>
+        <Link href="/">
+          <Button
+            variant="outline"
+            className="text-sm h-9 border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 cursor-pointer"
+          >
+            Exit
+          </Button>
+        </Link>
+      </nav>
+
+      {/* Flow content */}
+      <div className="flex-1 flex flex-col items-center justify-start pt-6 pb-20 px-4">
+        <div className="w-full max-w-3xl">
+          {/* Stepper */}
+          <Stepper
+            currentStep={currentStep === 2 ? 3 : currentStep}
+            steps={STEP_LABELS}
+          />
+
+          {/* Step 0: Tier selection */}
+          {currentStep === 0 && (
+            <StepSelectTier
+              selectedTier={selectedTier}
+              onSelect={setSelectedTier}
+              onContinue={() => setCurrentStep(1)}
+            />
+          )}
+
+          {/* Step 1: Connect & Pay */}
+          {currentStep === 1 && (
+            <StepConnectAndPay
+              selectedTier={selectedTier}
+              onPaymentProcessing={setPaymentProcessing}
+              onPaymentComplete={({ txHash: hash, hlAddress: addr }) => {
+                setPaymentProcessing(false);
+                setTxHash(hash);
+                setHlAddress(addr);
+                setCurrentStep(2);
+              }}
+              onBack={() => setCurrentStep(0)}
+            />
+          )}
+
+          {/* Step 2: Confirmation */}
+          {currentStep === 2 && (
+            <StepConfirmation
+              selectedTier={selectedTier}
+              hlAddress={hlAddress}
+              txHash={txHash}
+            />
+          )}
         </div>
-
-        {/* Stepper */}
-        <Stepper currentStep={currentStep} steps={STEP_LABELS} />
-
-        {/* Step 0: Tier selection */}
-        {currentStep === 0 && (
-          <StepSelectTier
-            selectedTier={selectedTier}
-            onSelect={setSelectedTier}
-            onContinue={() => setCurrentStep(1)}
-          />
-        )}
-
-        {/* Step 1: Connect & Pay */}
-        {currentStep === 1 && (
-          <StepConnectAndPay
-            selectedTier={selectedTier}
-            onPaymentComplete={({ txHash: hash, hlAddress: addr }) => {
-              setTxHash(hash);
-              setHlAddress(addr);
-              setCurrentStep(2);
-            }}
-            onBack={() => setCurrentStep(0)}
-          />
-        )}
-
-        {/* Step 2: Confirmation — Phase 3 */}
-        {currentStep === 2 && (
-          <div className="text-center space-y-4 py-12 animate-[fadeInUp_0.35s_ease-out_both]">
-            <h2 className="text-2xl font-semibold tracking-tight">
-              Registration complete
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Your evaluation account is being set up. This is a placeholder — full confirmation UI coming in Phase&nbsp;3.
-            </p>
-            {txHash && (
-              <p className="text-xs font-mono text-muted-foreground break-all max-w-md mx-auto">
-                tx: {txHash}
-              </p>
-            )}
-            {hlAddress && (
-              <p className="text-xs font-mono text-muted-foreground break-all max-w-md mx-auto">
-                wallet: {hlAddress}
-              </p>
-            )}
-          </div>
-        )}
       </div>
     </main>
   );

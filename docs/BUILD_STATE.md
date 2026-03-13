@@ -44,15 +44,15 @@ Last updated: 2026-03-12
 
 ## Registration Flow (`/register`)
 
-**Status**: Phase 2 complete — 3-step flow, connect & pay wired
+**Status**: Complete — 3-step flow, all screens built
 
 | Item | State |
 |------|-------|
 | /register route + layout | Done |
 | Tier data in lib/constants.js (TIERS) | Done (5% drawdown, Unlimited period, label/value format) |
-| Stepper component (3-step, Phosphor Icons, Framer Motion) | Done (Phase 2: collapsed from 4 to 3 steps) |
-| Registration flow orchestrator (3-step) | Done (Phase 2: Select Plan → Connect & Pay → Confirmation) |
-| Tier selection step (interactive cards, selected state) | Done (label/value rows, Pro card elevated) |
+| Stepper component (3-step, Phosphor Icons, Framer Motion) | Done (Phase 2: collapsed from 4 to 3 steps; Phase 3: mobile compact "Step X of 3" label) |
+| Registration flow orchestrator (3-step) | Done (Phase 2: Select Plan → Connect & Pay → Confirmation; Phase 3: nav bar, beforeunload guard) |
+| Tier selection step (interactive cards, selected state) | Done (label/value rows, Pro card elevated, promo banner) |
 | A11y: ARIA radiogroup + keyboard nav on tier cards | Done |
 | A11y: Semantic stepper (ol/li, aria-current) | Done |
 | A11y: Screen reader pricing context (ins/del, sr-only) | Done |
@@ -65,10 +65,14 @@ Last updated: 2026-03-12
 | Connect & Pay step (merged wallet + payment) | Done (Phase 2: order summary, RainbowKit connect, alt wallet toggle, USDC payment, wagmi/viem fallback, x402 TODO) |
 | Old step-hl-address.jsx | Deleted (absorbed into step-connect-pay.jsx) |
 | Old step-payment.jsx | Deleted (absorbed into step-connect-pay.jsx) |
-| Confirmation step | Pending (Phase 3 — placeholder in place) |
+| Confirmation step | Done (Phase 3: success header, summary card with copy buttons, next steps, dashboard/leaderboard links) |
+| Promo banner on tier selection | Done (Phase 3: "Launch pricing — up to 55% off") |
+| Registration nav bar (logo + exit) | Done (Phase 3: replaces centered branding) |
+| Browser refresh guard (payment only) | Done (Phase 3: beforeunload during processing) |
+| Mobile stepper (compact label) | Done (Phase 3: "Step X of 3 — Label" below md) |
 | Marketing CTAs linked to /register | Done |
 
-**Next action**: Phase 3 — confirmation step UI
+**Next action**: UI polish pass
 
 ## Leaderboard (`/leaderboard`)
 

@@ -41,7 +41,7 @@ function formatRulesSummary(details) {
   return details.map((d) => `${d.value} ${d.label.toLowerCase()}`).join(" · ");
 }
 
-export function StepConnectAndPay({ selectedTier, onPaymentComplete, onBack }) {
+export function StepConnectAndPay({ selectedTier, onPaymentComplete, onPaymentProcessing, onBack }) {
   const { address, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
   const { data: walletClient } = useWalletClient();
@@ -86,6 +86,7 @@ export function StepConnectAndPay({ selectedTier, onPaymentComplete, onBack }) {
 
     setPaymentState("processing");
     setErrorMessage("");
+    onPaymentProcessing?.(true);
 
     try {
       // TODO: Replace with x402 payment flow when API is confirmed
@@ -104,6 +105,7 @@ export function StepConnectAndPay({ selectedTier, onPaymentComplete, onBack }) {
       await publicClient.waitForTransactionReceipt({ hash: txHash });
 
       setPaymentState("success");
+      onPaymentProcessing?.(false);
 
       setTimeout(() => {
         onPaymentComplete({
@@ -113,6 +115,7 @@ export function StepConnectAndPay({ selectedTier, onPaymentComplete, onBack }) {
       }, 1500);
     } catch (err) {
       setPaymentState("error");
+      onPaymentProcessing?.(false);
 
       if (
         err.message?.includes("User rejected") ||
@@ -134,7 +137,7 @@ export function StepConnectAndPay({ selectedTier, onPaymentComplete, onBack }) {
         );
       }
     }
-  }, [walletClient, publicClient, price, onPaymentComplete, resolvedHlAddress]);
+  }, [walletClient, publicClient, price, onPaymentComplete, onPaymentProcessing, resolvedHlAddress]);
 
   const canPay =
     isConnected &&

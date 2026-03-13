@@ -42,6 +42,13 @@ export function StepSelectTier({ selectedTier, onSelect, onContinue }) {
 
   return (
     <div className="space-y-8">
+      {/* Promo banner */}
+      <div className="flex justify-center">
+        <p className="bg-teal-400/10 text-teal-400 text-sm font-medium px-4 py-2 rounded-lg text-center">
+          Launch pricing — up to 55% off all&nbsp;evaluations
+        </p>
+      </div>
+
       {/* Header */}
       <div className="text-center space-y-2">
         <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">
