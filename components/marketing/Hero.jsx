@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { ArrowRight, TrendUp, ArrowsClockwise } from '@phosphor-icons/react'
+import { ArrowRight, TrendUp, ArrowsClockwise, DownloadSimple } from '@phosphor-icons/react'
 import LiquidCrystalBg from './LiquidCrystalBg'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
@@ -84,11 +84,11 @@ export default function Hero() {
                 </span>
               </Link>
               <Link
-                href="/leaderboard"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-white/[0.12] text-white text-sm font-medium hover:border-white/[0.24] hover:bg-white/[0.04] active:scale-[0.98] transition-all"
+                href="/extension"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-white/[0.12] text-white text-sm font-medium hover:border-white/[0.24] hover:bg-white/[0.04] active:scale-[0.98] transition-[border-color,background-color,transform] duration-200"
               >
-                View Leaderboard
-                <ArrowRight size={15} />
+                <DownloadSimple size={16} weight="bold" />
+                Chrome Extension
               </Link>
             </motion.div>
 
