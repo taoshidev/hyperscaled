@@ -47,7 +47,7 @@ export function Stepper({ currentStep, steps }) {
                   }}
                   transition={{ duration: 0.2 }}
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-colors duration-200
-                    ${isCompleted ? "bg-teal-400 text-white" : ""}
+                    ${isCompleted ? "bg-white/10 text-white" : ""}
                     ${isActive ? "bg-teal-400 text-white" : ""}
                     ${isFuture ? "bg-transparent border border-white/15 text-white/30" : ""}
                   `}

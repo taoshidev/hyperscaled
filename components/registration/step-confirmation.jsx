@@ -9,6 +9,7 @@ import {
   Check,
   ArrowSquareOut,
   ArrowRight,
+  GoogleChromeLogo,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { BASESCAN_URL, CHROME_EXTENSION_URL } from "@/lib/constants";
@@ -42,18 +43,11 @@ function CopyButton({ text, label }) {
   );
 }
 
-const NEXT_STEPS = [
-  {
-    title: "Install the Chrome extension",
-    description:
-      "Track your evaluation progress directly inside\u00a0Hyperliquid.",
-    href: CHROME_EXTENSION_URL,
-    linkLabel: "Get the extension",
-  },
+const AFTER_INSTALL = [
   {
     title: "Start trading",
     description:
-      "Your trades from the registered wallet are automatically tracked. Trade as you normally\u00a0would.",
+      "Open Hyperliquid and trade from your registered wallet. The extension tracks every position automatically.",
   },
   {
     title: "Hit your profit target",
@@ -83,7 +77,7 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash }) {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="flex flex-col items-center space-y-8"
+      className="flex flex-col items-center"
     >
       {/* Success header */}
       <motion.div variants={itemVariants} className="text-center space-y-3">
@@ -103,7 +97,7 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash }) {
       {/* Registration summary card */}
       <motion.div
         variants={itemVariants}
-        className="w-full max-w-lg rounded-xl border border-border bg-zinc-900/50 p-5 space-y-0"
+        className="w-full max-w-lg rounded-xl border border-border bg-zinc-900/50 p-5 space-y-0 mt-8"
       >
         {/* Plan */}
         <div className="flex items-center justify-between py-3">
@@ -162,57 +156,67 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash }) {
         </div>
       </motion.div>
 
-      {/* Next steps */}
-      <motion.div variants={itemVariants} className="w-full max-w-lg space-y-5">
-        <h3 className="text-sm font-semibold tracking-tight text-foreground">
-          What&#8217;s next
+      {/* Chrome extension install — primary CTA */}
+      <motion.div variants={itemVariants} className="w-full max-w-lg space-y-4 text-center mt-10">
+        <h3 className="text-lg font-semibold tracking-tight text-foreground">
+          Install the Chrome extension to start&nbsp;trading
         </h3>
-        <ol className="space-y-4">
-          {NEXT_STEPS.map((step, i) => (
-            <li key={step.title} className="flex items-start gap-3.5">
-              <span className="shrink-0 w-6 h-6 rounded-full bg-teal-400 flex items-center justify-center text-xs font-bold text-zinc-950">
-                {i + 1}
-              </span>
-              <div className="space-y-0.5 pt-0.5">
+        <p className="text-sm text-muted-foreground max-w-md mx-auto text-balance">
+          The extension is required to participate in your evaluation. It tracks
+          your positions, enforces risk limits, and displays your progress
+          inside&nbsp;Hyperliquid.
+        </p>
+        <a
+          href={CHROME_EXTENSION_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shiny-cta h-11 w-full flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        >
+          <span className="inline-flex items-center gap-2 text-sm font-semibold">
+            <GoogleChromeLogo size={18} weight="bold" />
+            Install Chrome Extension
+          </span>
+        </a>
+        <p className="text-xs text-muted-foreground">
+          Available for Chrome and&nbsp;Brave
+        </p>
+      </motion.div>
+
+      {/* After you install — secondary info */}
+      <motion.div variants={itemVariants} className="w-full max-w-lg space-y-3 mt-6">
+        <h4 className="text-sm font-semibold text-foreground">
+          After you install
+        </h4>
+        <div className="space-y-2.5">
+          {AFTER_INSTALL.map((step) => (
+            <div key={step.title} className="flex items-start gap-2.5">
+              <span className="text-muted-foreground mt-0.5 shrink-0" aria-hidden="true">·</span>
+              <div>
                 <p className="text-sm font-semibold text-foreground">
                   {step.title}
                 </p>
                 <p className="text-xs text-muted-foreground text-balance">
                   {step.description}
                 </p>
-                {step.href && (
-                  <a
-                    href={step.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="min-h-11 inline-flex items-center gap-1 text-xs font-medium text-teal-400 hover:text-teal-300 transition-[color] duration-200 mt-1"
-                  >
-                    {step.linkLabel}
-                    <ArrowSquareOut size={12} weight="bold" />
-                  </a>
-                )}
               </div>
-            </li>
+            </div>
           ))}
-        </ol>
+        </div>
       </motion.div>
 
-      {/* Footer actions */}
+      {/* Dashboard link — secondary action */}
       <motion.div
         variants={itemVariants}
-        className="flex flex-col items-center gap-3 pt-2"
+        className="flex justify-center mt-10"
       >
         <Link href="/dashboard">
-          <Button className="h-11 px-8 text-sm font-semibold bg-teal-400 text-zinc-950 hover:bg-teal-400/90 cursor-pointer">
+          <Button
+            variant="outline"
+            className="h-11 px-8 text-sm font-semibold border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 cursor-pointer"
+          >
             Go to Dashboard
             <ArrowRight size={15} weight="bold" className="ml-1.5" />
           </Button>
-        </Link>
-        <Link
-          href="/leaderboard"
-          className="min-h-11 inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-[color] duration-200"
-        >
-          View Leaderboard
         </Link>
       </motion.div>
     </motion.div>

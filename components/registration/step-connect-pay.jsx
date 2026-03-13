@@ -139,7 +139,7 @@ export function StepConnectAndPay({ selectedTier, onPaymentComplete, onPaymentPr
     paymentState !== "processing";
 
   return (
-    <div className="flex flex-col items-center space-y-8 animate-[fadeInUp_0.35s_ease-out_both]">
+    <div className="flex flex-col items-center animate-[fadeInUp_0.35s_ease-out_both]">
       {/* Order summary card */}
       <div className="w-full max-w-lg rounded-xl border border-border bg-zinc-900/50 p-5 space-y-3">
         {/* Plan row */}
@@ -183,7 +183,7 @@ export function StepConnectAndPay({ selectedTier, onPaymentComplete, onPaymentPr
       </div>
 
       {/* Wallet connection section */}
-      <div className="w-full max-w-lg space-y-4">
+      <div className="w-full max-w-lg space-y-4 mt-8">
         {/* Status region for screen readers */}
         <div aria-live="polite" className="sr-only">
           {paymentState === "processing" && "Confirming transaction..."}
@@ -404,7 +404,7 @@ export function StepConnectAndPay({ selectedTier, onPaymentComplete, onPaymentPr
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-[color] duration-200 h-11 px-4 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg"
+          className="mt-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-[color] duration-200 h-11 px-4 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg"
         >
           <ArrowLeft size={14} weight="bold" />
           Back to plan selection
@@ -421,7 +421,7 @@ export function StepConnectAndPay({ selectedTier, onPaymentComplete, onPaymentPr
               hlAddress: "0xdev456789abcdef0123456789abcdef0123456789",
             })
           }
-          className="text-xs text-muted-foreground/50 underline h-11 cursor-pointer"
+          className="mt-2 text-xs text-muted-foreground/50 underline h-11 cursor-pointer"
         >
           Skip payment (dev only)
         </button>

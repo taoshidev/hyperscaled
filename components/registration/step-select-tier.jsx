@@ -38,7 +38,7 @@ export function StepSelectTier({ selectedTier, onSelect, onContinue }) {
   );
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col">
       {/* Promo banner */}
       <div className="flex justify-center">
         <p className="bg-teal-400/10 text-teal-400 text-sm font-medium px-4 py-2 rounded-lg text-center text-balance">
@@ -47,7 +47,7 @@ export function StepSelectTier({ selectedTier, onSelect, onContinue }) {
       </div>
 
       {/* Header */}
-      <div className="text-center space-y-2">
+      <div className="text-center space-y-2 mt-3">
         <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">
           Choose your funded account size
         </h2>
@@ -61,7 +61,7 @@ export function StepSelectTier({ selectedTier, onSelect, onContinue }) {
       <div
         role="radiogroup"
         aria-label="Choose your funded account size"
-        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10"
       >
         {TIERS.map((tier, i) => {
           const isSelected = selectedTier?.id === tier.id;
@@ -93,12 +93,13 @@ export function StepSelectTier({ selectedTier, onSelect, onContinue }) {
                     ? "border-white/[0.15] hover:border-white/[0.20]"
                     : "border-white/[0.06] hover:border-white/[0.10]"
                 }
+                ${selectedTier && !isSelected ? "opacity-70" : ""}
                 ${isPopular ? "md:scale-[1.02] md:z-10" : ""}
               `}
             >
-              {/* Hover glow */}
+              {/* Hover glow — persistent when selected */}
               <div
-                className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
+                className={`absolute inset-0 rounded-2xl pointer-events-none transition-opacity ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
                 style={{ background: 'radial-gradient(circle at 20% 20%, rgba(0,198,167,0.06), transparent 60%)' }}
               />
 
@@ -180,19 +181,31 @@ export function StepSelectTier({ selectedTier, onSelect, onContinue }) {
       </div>
 
       {/* Continue button */}
-      <div className="flex justify-center">
-        <Button
-          onClick={onContinue}
-          disabled={!selectedTier}
-          className="px-8 h-11 text-sm font-semibold bg-teal-400 text-zinc-950 hover:bg-teal-400/90 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-        >
-          Continue
-          <ArrowRight size={15} weight="bold" className="ml-1.5" />
-        </Button>
+      <div className="flex justify-center mt-8">
+        {selectedTier ? (
+          <button
+            type="button"
+            onClick={onContinue}
+            className="shiny-cta h-11 px-8 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <span className="inline-flex items-center gap-1.5 text-sm font-semibold">
+              Continue
+              <ArrowRight size={15} weight="bold" />
+            </span>
+          </button>
+        ) : (
+          <Button
+            disabled
+            className="px-8 h-11 text-sm font-semibold bg-muted text-muted-foreground cursor-not-allowed"
+          >
+            Continue
+            <ArrowRight size={15} weight="bold" className="ml-1.5" />
+          </Button>
+        )}
       </div>
 
       {/* Footer note */}
-      <p className="text-xs text-center text-muted-foreground">
+      <p className="text-xs text-center text-muted-foreground mt-6">
         You&#8217;ll connect your wallet to pay with USDC on Base in the next
         step.
       </p>

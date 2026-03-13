@@ -77,8 +77,16 @@ Last updated: 2026-03-12
 | Harden: promo banner text-balance (no nbsp) | Done |
 | Harden: block explorer sr-only external indicator | Done |
 | Harden: beforeunload design decision documented | Done |
+| Polish: stepper completed nodes white/gray (not teal) | Done |
+| Polish: selected tier card persistent glow + unselected dim | Done |
+| Polish: Continue button shiny-cta when tier selected | Done |
+| Polish: confirmation Chrome extension CTA (shiny-cta, prominent) | Done |
+| Polish: "After you install" compact bullets (no numbered circles) | Done |
+| Polish: "View Leaderboard" removed, "Go to Dashboard" secondary | Done |
+| Polish: stepper collapsed to text on confirmation step | Done |
+| Polish: spacing rhythm (explicit mt-* between sections) | Done |
 
-**Next action**: UI polish pass
+**Next action**: UI polish pass across other pages
 
 ## Leaderboard (`/leaderboard`)
 

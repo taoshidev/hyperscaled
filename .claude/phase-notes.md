@@ -29,13 +29,22 @@ Registration Phase 3 complete. All 3 steps of the registration flow are fully bu
   - M3: Block explorer link has sr-only "(opens in new tab)" text (ArrowSquareOut icon was already present)
   - M4: Added design decision comment documenting why beforeunload doesn't cover wallet connection
 
+- **Registration Polish (Visual & UX)**:
+  - Stepper: completed nodes changed from bg-teal-400 to bg-white/10 text-white (white/gray, not teal)
+  - Tier cards: selected card has persistent hover glow (opacity-100); unselected cards dim to opacity-70
+  - Continue button: switches from disabled muted Button to shiny-cta native button when tier selected
+  - Confirmation rework: replaced numbered "What's next" list with prominent Chrome extension CTA (shiny-cta, GoogleChromeLogo icon, full-width) + compact "After you install" bullets (· prefix, no numbered circles). Removed "View Leaderboard" link. "Go to Dashboard" is now secondary outline button.
+  - Stepper collapse: on confirmation step (step 2), stepper replaced with "Registration complete" teal text
+  - Spacing rhythm: replaced space-y-* with explicit flex-col + mt-* gaps across all registration files (step-select-tier, step-connect-pay, step-confirmation, registration-flow)
+  - Shared utils: formatAccountSize and truncateAddress imported from lib/format.js (dedup from harden)
+
 ## In progress
 
 Nothing currently in progress.
 
 ## Next action
 
-UI polish pass across all pages.
+UI polish pass across other pages (dashboard, leaderboard, miner detail).
 
 ## Known issues
 

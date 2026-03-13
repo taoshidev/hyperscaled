@@ -57,11 +57,19 @@ export function RegistrationFlow() {
       {/* Flow content */}
       <div className="flex-1 flex flex-col items-center justify-start pt-6 pb-20 px-4">
         <div className="w-full max-w-3xl">
-          {/* Stepper */}
-          <Stepper
-            currentStep={currentStep === 2 ? 3 : currentStep}
-            steps={STEP_LABELS}
-          />
+          {/* Stepper — collapsed to text on confirmation */}
+          {currentStep === 2 ? (
+            <div className="mb-10 flex justify-center">
+              <p className="text-sm font-medium text-teal-400">
+                Registration complete
+              </p>
+            </div>
+          ) : (
+            <Stepper
+              currentStep={currentStep}
+              steps={STEP_LABELS}
+            />
+          )}
 
           {/* Step 0: Tier selection */}
           {currentStep === 0 && (
