@@ -415,6 +415,22 @@ export function StepConnectAndPay({ selectedTier, onPaymentComplete, onBack }) {
           Back to plan selection
         </button>
       )}
+
+      {/* Dev-only payment bypass */}
+      {process.env.NODE_ENV === "development" && (
+        <button
+          type="button"
+          onClick={() =>
+            onPaymentComplete({
+              txHash: "0xdev123456789abcdef0123456789abcdef01234567",
+              hlAddress: "0xdev456789abcdef0123456789abcdef0123456789",
+            })
+          }
+          className="text-xs text-muted-foreground/50 underline h-11 cursor-pointer"
+        >
+          Skip payment (dev only)
+        </button>
+      )}
     </div>
   );
 }
