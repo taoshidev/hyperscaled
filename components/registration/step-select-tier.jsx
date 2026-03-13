@@ -82,16 +82,17 @@ export function StepSelectTier({ selectedTier, onSelect, onContinue }) {
               onKeyDown={(e) => handleKeyDown(e, tier, i)}
               style={{ animationDelay: `${i * 80}ms` }}
               className={`
-                relative cursor-pointer rounded-2xl border p-6 group
-                bg-zinc-900/50 text-card-foreground
+                relative cursor-pointer rounded-2xl p-6 group
+                text-card-foreground
                 transition-[border-color,box-shadow,transform,opacity] duration-200
                 animate-[fadeInUp_0.35s_ease-out_both]
                 outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
                 ${isSelected
-                  ? "border-teal-400 shadow-[0_0_20px_rgba(0,198,167,0.15)]"
-                  : isPopular
-                    ? "border-white/[0.15] hover:border-white/[0.20]"
-                    : "border-white/[0.06] hover:border-white/[0.10]"
+                  ? "shiny-border"
+                  : `border bg-zinc-900/50 ${isPopular
+                      ? "border-white/[0.15] hover:border-white/[0.20]"
+                      : "border-white/[0.06] hover:border-white/[0.10]"
+                    }`
                 }
                 ${selectedTier && !isSelected ? "opacity-70" : ""}
                 ${isPopular ? "md:scale-[1.02] md:z-10" : ""}
