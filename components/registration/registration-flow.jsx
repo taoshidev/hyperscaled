@@ -89,7 +89,6 @@ export function RegistrationFlow({ miner, minerWallet }) {
             txHash={formData.txHash}
             payerAddress={formData.payerAddress}
             registrationStatus={formData.registrationStatus}
-            registrationMessage={formData.registrationMessage}
           />
         )}
       </div>
