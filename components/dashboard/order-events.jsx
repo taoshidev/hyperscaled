@@ -19,6 +19,9 @@ export function OrderEvents({ events }) {
           <div className="space-y-3 max-h-96 overflow-y-auto">
             {items.map((e, i) => {
               const accepted = e.status === "accepted";
+              const pair = e.trade_pair || e.pair;
+              const error = e.error_message || e.error;
+              const ts = e.timestamp_ms || e.timestamp;
               return (
                 <div
                   key={i}
@@ -31,17 +34,17 @@ export function OrderEvents({ events }) {
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{e.pair}</span>
+                      <span className="font-medium">{pair}</span>
                       <span className="text-muted-foreground">
                         {e.order_type}
                       </span>
                     </div>
-                    {e.error && (
-                      <p className="text-xs text-red-400 mt-0.5">{e.error}</p>
+                    {error && (
+                      <p className="text-xs text-red-400 mt-0.5">{error}</p>
                     )}
-                    {e.timestamp && (
+                    {ts && (
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {formatTime(e.timestamp)}
+                        {formatTime(ts)}
                       </p>
                     )}
                   </div>

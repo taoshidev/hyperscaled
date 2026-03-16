@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { resolveEndpointUrl } from "@/lib/gateway";
 import { STUB_ENABLED, stubDashboard } from "@/lib/gateway-stubs";
 import { isValidEvmAddress } from "@/lib/validation";
 
@@ -7,31 +6,50 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const hlAddress = searchParams.get("hl_address");
 
-  // STUB: return fake dashboard data when gateway is offline
+  if (!hlAddress || !isValidEvmAddress(hlAddress)) {
+    return NextResponse.json(
+      { error: "Invalid or missing hl_address" },
+      { status: 400 },
+    );
+  }
+
   if (STUB_ENABLED) {
-    if (!hlAddress || !isValidEvmAddress(hlAddress)) {
-      return NextResponse.json({ error: "Invalid or missing hl_address" }, { status: 400 });
-    }
     return NextResponse.json(stubDashboard);
   }
 
-  try {
-    const { endpoint_url, hl_address } = await resolveEndpointUrl(hlAddress);
-    const res = await fetch(
-      `${endpoint_url}/api/hl/${hl_address}/dashboard`,
+  const validatorUrl = process.env.VALIDATOR_API_URL;
+  if (!validatorUrl) {
+    return NextResponse.json(
+      { error: "Validator API not configured" },
+      { status: 500 },
     );
+  }
 
-    if (!res.ok) {
+  try {
+    const [traderRes, limitsRes] = await Promise.all([
+      fetch(`${validatorUrl}/hl-traders/${hlAddress}`),
+      fetch(`${validatorUrl}/hl-traders/${hlAddress}/limits`),
+    ]);
+
+    if (traderRes.status === 404) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    if (!traderRes.ok) {
       return NextResponse.json(
-        { error: `Gateway returned ${res.status}` },
+        { error: `Validator returned ${traderRes.status}` },
         { status: 502 },
       );
     }
 
-    const data = await res.json();
-    return NextResponse.json(data, { status: 200 });
-  } catch (err) {
-    const status = err.status || 500;
-    return NextResponse.json({ error: err.message }, { status });
+    const trader = await traderRes.json();
+    const limits = limitsRes.ok ? await limitsRes.json() : null;
+
+    return NextResponse.json({ ...trader, limits }, { status: 200 });
+  } catch {
+    return NextResponse.json(
+      { error: "Could not reach validator" },
+      { status: 502 },
+    );
   }
 }

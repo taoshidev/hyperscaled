@@ -1,10 +1,19 @@
 "use client";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { formatLabel } from "@/lib/format";
+import { formatUSD, formatPercent, formatReturn } from "@/lib/format";
 
-export function StatsPanel({ statistics }) {
-  const entries = statistics ? Object.entries(statistics) : [];
+function StatRow({ label, value }) {
+  return (
+    <div className="flex justify-between text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-medium">{value ?? "--"}</span>
+    </div>
+  );
+}
+
+export function StatsPanel({ drawdown, challengeProgress, limits }) {
+  const hasData = drawdown || challengeProgress || limits;
 
   return (
     <Card>
@@ -12,20 +21,107 @@ export function StatsPanel({ statistics }) {
         <CardTitle className="text-sm font-medium">Statistics</CardTitle>
       </CardHeader>
       <CardContent>
-        {entries.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No statistics available</p>
+        {!hasData ? (
+          <p className="text-sm text-muted-foreground">
+            No statistics available
+          </p>
         ) : (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-            {entries.map(([key, value]) => (
-              <div key={key} className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {formatLabel(key)}
-                </span>
-                <span className="font-medium">
-                  {value != null ? String(value) : "--"}
-                </span>
+          <div className="space-y-4">
+            {challengeProgress && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Challenge
+                </p>
+                <StatRow
+                  label="Current Return"
+                  value={
+                    challengeProgress.current_return != null
+                      ? formatReturn(challengeProgress.current_return)
+                      : undefined
+                  }
+                />
+                <StatRow
+                  label="Target Return"
+                  value={
+                    challengeProgress.target_return_percent != null
+                      ? `${challengeProgress.target_return_percent}%`
+                      : undefined
+                  }
+                />
+                <StatRow
+                  label="Returns Progress"
+                  value={
+                    challengeProgress.returns_progress_percent != null
+                      ? `${challengeProgress.returns_progress_percent.toFixed(1)}%`
+                      : undefined
+                  }
+                />
+                <StatRow
+                  label="Time Progress"
+                  value={
+                    challengeProgress.time_progress_percent != null
+                      ? `${challengeProgress.time_progress_percent.toFixed(1)}%`
+                      : undefined
+                  }
+                />
               </div>
-            ))}
+            )}
+
+            {drawdown && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Drawdown
+                </p>
+                <StatRow
+                  label="Instant"
+                  value={
+                    drawdown.instant != null
+                      ? formatPercent(drawdown.instant)
+                      : undefined
+                  }
+                />
+                <StatRow
+                  label="Daily"
+                  value={
+                    drawdown.daily != null
+                      ? formatPercent(drawdown.daily)
+                      : undefined
+                  }
+                />
+                <StatRow
+                  label="Max Drawdown"
+                  value={
+                    drawdown.ledger_max_drawdown != null
+                      ? formatPercent(drawdown.ledger_max_drawdown)
+                      : undefined
+                  }
+                />
+              </div>
+            )}
+
+            {limits && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Trading Limits
+                </p>
+                <StatRow
+                  label="Max Per Pair"
+                  value={
+                    limits.max_position_per_pair_usd != null
+                      ? formatUSD(limits.max_position_per_pair_usd)
+                      : undefined
+                  }
+                />
+                <StatRow
+                  label="Max Portfolio"
+                  value={
+                    limits.max_portfolio_usd != null
+                      ? formatUSD(limits.max_portfolio_usd)
+                      : undefined
+                  }
+                />
+              </div>
+            )}
           </div>
         )}
       </CardContent>

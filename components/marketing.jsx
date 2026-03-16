@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 const photo = "/hl.png";
 const jollyLogo = "/jolly-green.png";
 const bitcastLogo = "/bitcast.png";
@@ -22,20 +22,6 @@ const DETAILS = [
   ["Payouts","Weekly, Onchain"],["Eval Leverage","1.25x"],["Funded Leverage","5x"],
 ];
 const EXAMPLE_ADDR = "0x7a3b9c4d2e1f8a5b6c7d8e9f0a1b2c3d4e5f41d";
-const LB = [
-  { addr:"0x7a3b...f41d",pnl:48230,funding:400000,sharpe:2.14,promotions:3,trades:847,registered:"Oct 2024",winRate:68,payouts:12480,status:"Funded" },
-  { addr:"0xd4e5...b2c3",pnl:35120,funding:200000,sharpe:1.87,promotions:2,trades:623,registered:"Nov 2024",winRate:64,payouts:8750,status:"Funded" },
-  { addr:"0x9f0a...e8d7",pnl:28940,funding:200000,sharpe:1.95,promotions:2,trades:512,registered:"Sep 2024",winRate:71,payouts:7200,status:"Funded" },
-  { addr:"0x2c3d...a1b0",pnl:22100,funding:100000,sharpe:1.62,promotions:1,trades:389,registered:"Dec 2024",winRate:62,payouts:5500,status:"Funded" },
-  { addr:"0xf8a9...c4d5",pnl:18750,funding:100000,sharpe:1.78,promotions:1,trades:445,registered:"Nov 2024",winRate:66,payouts:4680,status:"Funded" },
-  { addr:"0x5e6f...8a9b",pnl:15320,funding:100000,sharpe:1.54,promotions:1,trades:298,registered:"Jan 2025",winRate:60,payouts:3800,status:"Funded" },
-  { addr:"0xb1c2...f0a1",pnl:12840,funding:50000,sharpe:1.41,promotions:1,trades:267,registered:"Dec 2024",winRate:63,payouts:3200,status:"Funded" },
-  { addr:"0x3d4e...7a8b",pnl:9620,funding:50000,sharpe:1.33,promotions:0,trades:198,registered:"Jan 2025",winRate:58,payouts:2400,status:"Funded" },
-  { addr:"0xa0b1...d3e4",pnl:4180,funding:25000,sharpe:1.12,promotions:0,trades:142,registered:"Feb 2025",winRate:57,payouts:1040,status:"Challenge" },
-  { addr:"0x6c7d...9f0a",pnl:2940,funding:25000,sharpe:0.98,promotions:0,trades:89,registered:"Feb 2025",winRate:55,payouts:0,status:"Challenge" },
-  { addr:"0xe2f3...b5c6",pnl:1820,funding:25000,sharpe:0.87,promotions:0,trades:64,registered:"Feb 2025",winRate:53,payouts:0,status:"Challenge" },
-  { addr:"0x4a5b...8d9e",pnl:-1240,funding:25000,sharpe:0.42,promotions:0,trades:51,registered:"Feb 2025",winRate:41,payouts:0,status:"Challenge" },
-];
 
 function fmt(n){return n.toLocaleString("en-US")}
 function fmtUSD(n){return "$"+fmt(n)}
@@ -809,13 +795,48 @@ export default function App({ lockedMiner = null, firms = [] }){
   };
 
   const Leaderboard=()=>{
-    const funded=LB.filter(t=>t.status==="Funded");
-    const challenge=LB.filter(t=>t.status==="Challenge");
+    const [lbData,setLbData]=useState(null);
+    const [lbLoading,setLbLoading]=useState(true);
+    const [lbError,setLbError]=useState(null);
+
+    useEffect(()=>{
+      let cancelled=false;
+      setLbLoading(true);
+      setLbError(null);
+      fetch("/api/leaderboard")
+        .then(res=>{if(!res.ok)throw new Error(`Failed to load (${res.status})`);return res.json()})
+        .then(data=>{if(!cancelled){setLbData(data);setLbLoading(false)}})
+        .catch(err=>{if(!cancelled){setLbError(err.message);setLbLoading(false)}});
+      return ()=>{cancelled=true};
+    },[]);
+
+    if(lbLoading){
+      return (
+        <div style={{maxWidth:1200,margin:"0 auto",padding:24,textAlign:"center"}}>
+          <h2 style={{fontSize:24,fontWeight:400,letterSpacing:"-0.03em",marginBottom:24}}>Leaderboard</h2>
+          <p style={{color:c.muted,fontSize:14}}>Loading leaderboard...</p>
+        </div>
+      );
+    }
+    if(lbError){
+      return (
+        <div style={{maxWidth:1200,margin:"0 auto",padding:24,textAlign:"center"}}>
+          <h2 style={{fontSize:24,fontWeight:400,letterSpacing:"-0.03em",marginBottom:24}}>Leaderboard</h2>
+          <p style={{color:c.red,fontSize:14}}>{lbError}</p>
+          <button onClick={()=>{setLbLoading(true);setLbError(null);fetch("/api/leaderboard").then(r=>r.ok?r.json():Promise.reject(new Error(`Failed (${r.status})`))).then(d=>{setLbData(d);setLbLoading(false)}).catch(e=>{setLbError(e.message);setLbLoading(false)})}} style={{marginTop:12,padding:"8px 16px",fontSize:13,background:c.card,border:`1px solid ${c.border}`,borderRadius:6,color:"#fff",cursor:"pointer"}}>Retry</button>
+        </div>
+      );
+    }
+
+    const summary=lbData?.summary||{};
+    const funded=lbData?.fundedTraders||[];
+    const challenge=lbData?.challengeTraders||[];
+
     return (
       <div style={{maxWidth:1200,margin:"0 auto",padding:24}}>
         <h2 style={{fontSize:24,fontWeight:400,letterSpacing:"-0.03em",marginBottom:24}}>Leaderboard</h2>
         <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:12,marginBottom:32}}>
-          {[["Total Paid Out","$30M+",c.green],["Traders","4,200+","#fff"],["Funded","310",c.blue],["In Challenge","2,840",c.yellow],["Eliminated","1,050",c.red],["Volume","$482M+","#fff"]].map(([l,v,cl],i)=>(
+          {[["Total Paid Out",fmtUSD(summary.totalPaidOut||0),c.green],["Traders",fmt(summary.totalTraders||0),"#fff"],["Funded",fmt(summary.fundedTraders||0),c.blue],["In Challenge",fmt(summary.inChallenge||0),c.yellow],["Eliminated",fmt(summary.eliminated||0),c.red],["Volume",fmtUSD(summary.totalVolume||0),"#fff"]].map(([l,v,cl],i)=>(
             <div key={i} style={{background:c.card,border:`1px solid ${c.border}`,borderRadius:8,padding:"14px 16px"}}>
               <div style={{fontSize:10,color:"rgba(255,255,255,0.3)",marginBottom:3,textTransform:"uppercase",letterSpacing:"0.04em"}}>{l}</div>
               <div style={{fontSize:20,fontWeight:400,letterSpacing:"-0.02em",color:cl}}>{v}</div>
@@ -827,19 +848,18 @@ export default function App({ lockedMiner = null, firms = [] }){
           <div style={{fontSize:13,color:c.muted,textTransform:"uppercase",letterSpacing:"0.02em",marginBottom:16,display:"flex",alignItems:"center",gap:8}}>Funded Traders <span style={{fontSize:11,padding:"2px 8px",borderRadius:4,background:"rgba(59,130,246,0.1)",color:c.blue}}>{funded.length}</span></div>
           <div style={{overflowX:"auto"}}>
             <table style={{width:"100%",borderCollapse:"collapse",minWidth:1000}}>
-              <thead><tr>{["#","Address","PnL","Funding","Sharpe","Promos","Trades","Win%","Payouts","Since"].map(h=><th key={h} style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontWeight:400,textAlign:"left",padding:"8px 10px",borderBottom:`1px solid ${c.border}`,textTransform:"uppercase",letterSpacing:"0.04em"}}>{h}</th>)}</tr></thead>
+              <thead><tr>{["#","Address","PnL","Funding","Sharpe","Trades","Win%","Payouts","Since"].map(h=><th key={h} style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontWeight:400,textAlign:"left",padding:"8px 10px",borderBottom:`1px solid ${c.border}`,textTransform:"uppercase",letterSpacing:"0.04em"}}>{h}</th>)}</tr></thead>
               <tbody>{funded.map((t,i)=>(
-                <tr key={i} style={{cursor:"pointer"}} onClick={()=>{setSearchVal(t.addr);navTo("dashboard")}}>
-                  <td style={{fontSize:12,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",color:"rgba(255,255,255,0.3)"}}>{i+1}</td>
-                  <td style={{fontSize:12,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",fontFamily:"monospace",color:c.blue}}>{t.addr}</td>
-                  <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",color:t.pnl>=0?c.green:c.red,fontWeight:500}}>{t.pnl>=0?"+":""}${fmt(t.pnl)}</td>
-                  <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>{fmtUSD(t.funding)}</td>
-                  <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>{t.sharpe.toFixed(2)}</td>
-                  <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>{t.promotions}x</td>
-                  <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>{fmt(t.trades)}</td>
-                  <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",color:t.winRate>=60?c.green:"#fff"}}>{t.winRate}%</td>
-                  <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",color:c.green}}>{fmtUSD(t.payouts)}</td>
-                  <td style={{fontSize:12,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",color:"rgba(255,255,255,0.3)"}}>{t.registered}</td>
+                <tr key={i} style={{cursor:"pointer"}} onClick={()=>{setSearchVal(t.address);navTo("dashboard")}}>
+                  <td style={{fontSize:12,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",color:"rgba(255,255,255,0.3)"}}>{t.rank||i+1}</td>
+                  <td style={{fontSize:12,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",fontFamily:"monospace",color:c.blue}}>{t.address}</td>
+                  <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",color:(t.pnl||0)>=0?c.green:c.red,fontWeight:500}}>{(t.pnl||0)>=0?"+":""}${fmt(t.pnl||0)}</td>
+                  <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>{fmtUSD(t.funding||0)}</td>
+                  <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>{t.sharpe!=null?t.sharpe.toFixed(2):"--"}</td>
+                  <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>{fmt(t.trades||0)}</td>
+                  <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",color:(t.winRate||0)>=60?c.green:"#fff"}}>{t.winRate!=null?`${t.winRate}%`:"--"}</td>
+                  <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",color:c.green}}>{fmtUSD(t.payouts||0)}</td>
+                  <td style={{fontSize:12,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",color:"rgba(255,255,255,0.3)"}}>{t.since||"--"}</td>
                 </tr>
               ))}</tbody>
             </table>
@@ -851,26 +871,23 @@ export default function App({ lockedMiner = null, firms = [] }){
           <div style={{overflowX:"auto"}}>
             <table style={{width:"100%",borderCollapse:"collapse",minWidth:800}}>
               <thead><tr>{["Address","PnL","Progress","Sharpe","Trades","Win%","Drawdown","Since"].map(h=><th key={h} style={{fontSize:10,color:"rgba(255,255,255,0.25)",fontWeight:400,textAlign:"left",padding:"8px 10px",borderBottom:`1px solid ${c.border}`,textTransform:"uppercase",letterSpacing:"0.04em"}}>{h}</th>)}</tr></thead>
-              <tbody>{challenge.map((t,i)=>{
-                const pct=Math.max(0,(t.pnl/25000*10)*100);
-                return (
-                  <tr key={i} style={{cursor:"pointer"}} onClick={()=>{setSearchVal(t.addr);navTo("dashboard")}}>
-                    <td style={{fontSize:12,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",fontFamily:"monospace",color:c.yellow}}>{t.addr}</td>
-                    <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",color:t.pnl>=0?c.green:c.red,fontWeight:500}}>{t.pnl>=0?"+":""}${fmt(t.pnl)}</td>
-                    <td style={{padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
-                      <div style={{display:"flex",alignItems:"center",gap:8}}>
-                        <div style={{flex:1,maxWidth:80,height:4,background:"rgba(255,255,255,0.05)",borderRadius:2,overflow:"hidden"}}><div style={{width:`${Math.min(100,pct)}%`,height:"100%",background:t.pnl>=0?c.green:c.red,borderRadius:2}}/></div>
-                        <span style={{fontSize:11,color:"rgba(255,255,255,0.35)"}}>{pct.toFixed(1)}%</span>
-                      </div>
-                    </td>
-                    <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>{t.sharpe.toFixed(2)}</td>
-                    <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>{fmt(t.trades)}</td>
-                    <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",color:t.winRate>=60?c.green:"#fff"}}>{t.winRate}%</td>
-                    <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>{t.pnl<0?`${((Math.abs(t.pnl)/25000)*100).toFixed(1)}%`:"0.0%"}</td>
-                    <td style={{fontSize:12,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",color:"rgba(255,255,255,0.3)"}}>{t.registered}</td>
-                  </tr>
-                );
-              })}</tbody>
+              <tbody>{challenge.map((t,i)=>(
+                <tr key={i} style={{cursor:"pointer"}} onClick={()=>{setSearchVal(t.address);navTo("dashboard")}}>
+                  <td style={{fontSize:12,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",fontFamily:"monospace",color:c.yellow}}>{t.address}</td>
+                  <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",color:(t.pnl||0)>=0?c.green:c.red,fontWeight:500}}>{(t.pnl||0)>=0?"+":""}${fmt(t.pnl||0)}</td>
+                  <td style={{padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <div style={{flex:1,maxWidth:80,height:4,background:"rgba(255,255,255,0.05)",borderRadius:2,overflow:"hidden"}}><div style={{width:`${Math.min(100,t.progress||0)}%`,height:"100%",background:(t.pnl||0)>=0?c.green:c.red,borderRadius:2}}/></div>
+                      <span style={{fontSize:11,color:"rgba(255,255,255,0.35)"}}>{(t.progress||0).toFixed(1)}%</span>
+                    </div>
+                  </td>
+                  <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>{t.sharpe!=null?t.sharpe.toFixed(2):"--"}</td>
+                  <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>{fmt(t.trades||0)}</td>
+                  <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",color:(t.winRate||0)>=60?c.green:"#fff"}}>{t.winRate!=null?`${t.winRate}%`:"--"}</td>
+                  <td style={{fontSize:13,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>{t.drawdown!=null?`${t.drawdown.toFixed(1)}%`:"0.0%"}</td>
+                  <td style={{fontSize:12,padding:"10px",borderBottom:"1px solid rgba(255,255,255,0.03)",color:"rgba(255,255,255,0.3)"}}>{t.since||"--"}</td>
+                </tr>
+              ))}</tbody>
             </table>
           </div>
         </div>

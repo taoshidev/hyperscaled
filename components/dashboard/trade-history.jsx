@@ -8,7 +8,8 @@ import { formatUSD, formatReturn, formatTime, pnlColor } from "@/lib/format";
 export function TradeHistory({ positions }) {
   const [showAll, setShowAll] = useState(false);
 
-  const closed = (positions?.positions || [])
+  const all = Array.isArray(positions) ? positions : positions?.positions || [];
+  const closed = all
     .filter((p) => p.is_closed_position)
     .sort((a, b) => (b.closed_at || 0) - (a.closed_at || 0));
 

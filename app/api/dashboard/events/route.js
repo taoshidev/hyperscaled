@@ -29,7 +29,7 @@ export async function GET(request) {
     }
 
     const data = await res.json();
-    return NextResponse.json(data, { status: 200 });
+    return NextResponse.json(data.events || [], { status: 200 });
   } catch (err) {
     const status = err.status || 500;
     return NextResponse.json({ error: err.message }, { status });

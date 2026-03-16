@@ -139,7 +139,11 @@ export function Dashboard() {
         {/* Order Events + Statistics */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <OrderEvents events={eventsData} />
-          <StatsPanel statistics={data.statistics} />
+          <StatsPanel
+            drawdown={data.drawdown}
+            challengeProgress={data.challenge_progress}
+            limits={data.limits}
+          />
         </div>
       </div>
     </div>
