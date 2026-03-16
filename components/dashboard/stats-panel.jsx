@@ -67,32 +67,32 @@ export function StatsPanel({ drawdown, challengeProgress, limits }) {
               </div>
             )}
 
-            {drawdown && (
+            {(drawdown || challengeProgress) && (
               <div className="space-y-2">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Drawdown
                 </p>
                 <StatRow
-                  label="Instant"
+                  label="Current Drawdown"
                   value={
-                    drawdown.instant != null
-                      ? formatPercent(drawdown.instant)
-                      : undefined
-                  }
-                />
-                <StatRow
-                  label="Daily"
-                  value={
-                    drawdown.daily != null
-                      ? formatPercent(drawdown.daily)
+                    challengeProgress?.drawdown_percent != null
+                      ? `${challengeProgress.drawdown_percent.toFixed(2)}%`
                       : undefined
                   }
                 />
                 <StatRow
                   label="Max Drawdown"
                   value={
-                    drawdown.ledger_max_drawdown != null
-                      ? formatPercent(drawdown.ledger_max_drawdown)
+                    drawdown?.ledger_max_drawdown != null
+                      ? `${((1 - drawdown.ledger_max_drawdown) * 100).toFixed(2)}%`
+                      : undefined
+                  }
+                />
+                <StatRow
+                  label="Drawdown Usage"
+                  value={
+                    challengeProgress?.drawdown_usage_percent != null
+                      ? `${challengeProgress.drawdown_usage_percent.toFixed(1)}%`
                       : undefined
                   }
                 />

@@ -66,7 +66,7 @@ export function AccountOverview({ dashboard }) {
   const { account_size, drawdown, challenge_progress, elimination } = dashboard;
 
   const currentReturn = challenge_progress?.current_return;
-  const instantDrawdown = drawdown?.instant;
+  const drawdownPct = challenge_progress?.drawdown_percent;
   const maxDrawdown = drawdown?.ledger_max_drawdown;
   const challengeCompletion = challenge_progress?.challenge_completion_percent;
   const drawdownLimit = challenge_progress?.drawdown_limit_percent;
@@ -94,12 +94,12 @@ export function AccountOverview({ dashboard }) {
         />
         <StatCard
           label="Drawdown"
-          value={instantDrawdown != null ? formatPercent(instantDrawdown) : "--"}
-          className={instantDrawdown != null ? "text-red-400" : ""}
+          value={drawdownPct != null ? `${drawdownPct.toFixed(2)}%` : "--"}
+          className={drawdownPct != null ? "text-red-400" : ""}
         />
         <StatCard
           label="Max Drawdown"
-          value={maxDrawdown != null ? formatPercent(maxDrawdown) : "--"}
+          value={maxDrawdown != null ? `${((1 - maxDrawdown) * 100).toFixed(2)}%` : "--"}
           className={maxDrawdown != null ? "text-red-400" : ""}
         />
         <StatCard

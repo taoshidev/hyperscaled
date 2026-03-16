@@ -58,7 +58,6 @@ UI polish pass across other pages (dashboard, leaderboard, miner detail).
 - Dark mode is hard-coded (CSS variables set to dark only) — light mode decision pending
 - Two icon libraries in use (Phosphor + Lucide) — need to standardize on Phosphor for new work
 - Pre-existing build error: apple-icon.png and favicon.ico cause PageNotFoundError during `next build` (not from our changes)
-- WalletConnect requires NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID in .env.local to run dev server
 
 ## Decisions made
 

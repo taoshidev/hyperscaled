@@ -1,7 +1,12 @@
 "use client";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { formatUSD, formatLeverage, formatReturn, pnlColor } from "@/lib/format";
+import { formatUSD, formatPrice, formatLeverage, formatReturn, pnlColor } from "@/lib/format";
+
+function pairName(tradePair) {
+  if (Array.isArray(tradePair)) return tradePair[1] || tradePair[0];
+  return tradePair || "--";
+}
 
 export function OpenPositions({ positions }) {
   const all = Array.isArray(positions) ? positions : positions?.positions || [];
@@ -29,30 +34,39 @@ export function OpenPositions({ positions }) {
                 </tr>
               </thead>
               <tbody>
-                {open.map((p, i) => (
-                  <tr key={i} className="border-b border-border/50">
-                    <td className="py-2 pr-4 font-medium">{p.pair}</td>
-                    <td className="py-2 pr-4">
-                      <span
-                        className={`inline-block rounded px-1.5 py-0.5 text-xs font-medium ${
-                          p.direction === "LONG"
-                            ? "bg-green-500/20 text-green-400"
-                            : "bg-red-500/20 text-red-400"
-                        }`}
-                      >
-                        {p.direction}
-                      </span>
-                    </td>
-                    <td className="py-2 pr-4">{formatUSD(p.entry_price)}</td>
-                    <td className="py-2 pr-4">{formatLeverage(p.leverage)}</td>
-                    <td className={`py-2 pr-4 ${pnlColor(p.unrealized_pnl)}`}>
-                      {formatUSD(p.unrealized_pnl)}
-                    </td>
-                    <td className={`py-2 ${pnlColor((p.current_return || 1) - 1)}`}>
-                      {formatReturn(p.current_return)}
-                    </td>
-                  </tr>
-                ))}
+                {open.map((p, i) => {
+                  const direction = p.position_type || p.direction;
+                  return (
+                    <tr key={i} className="border-b border-border/50">
+                      <td className="py-2 pr-4 font-medium">
+                        {pairName(p.trade_pair || p.pair)}
+                      </td>
+                      <td className="py-2 pr-4">
+                        <span
+                          className={`inline-block rounded px-1.5 py-0.5 text-xs font-medium ${
+                            direction === "LONG"
+                              ? "bg-green-500/20 text-green-400"
+                              : "bg-red-500/20 text-red-400"
+                          }`}
+                        >
+                          {direction}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-4 font-mono">
+                        {formatPrice(p.average_entry_price ?? p.entry_price)}
+                      </td>
+                      <td className="py-2 pr-4 font-mono">
+                        {formatLeverage(p.net_leverage ?? p.leverage)}
+                      </td>
+                      <td className={`py-2 pr-4 font-mono ${pnlColor(p.unrealized_pnl)}`}>
+                        {formatUSD(p.unrealized_pnl)}
+                      </td>
+                      <td className={`py-2 font-mono ${pnlColor((p.current_return || 1) - 1)}`}>
+                        {formatReturn(p.current_return)}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
