@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -236,8 +236,44 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
 };
 
-export function StepConfirmation({ selectedTier, hlAddress, txHash }) {
+const POLL_INTERVAL_MS = 5000;
+
+export function StepConfirmation({ selectedTier, hlAddress, txHash, registrationStatus }) {
   const explorerUrl = `${BASESCAN_URL}/tx/${txHash}`;
+
+  const [status, setStatus] = useState(registrationStatus || "pending");
+  const intervalRef = useRef(null);
+
+  useEffect(() => {
+    if (status !== "pending") return;
+
+    async function checkStatus() {
+      try {
+        const res = await fetch(`/api/registration-status?hl_address=${encodeURIComponent(hlAddress)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+
+        if (data.status === "active") {
+          setStatus("registered");
+        } else if (data.status === "failed") {
+          setStatus("failed");
+        }
+      } catch {
+        // Network error — keep polling
+      }
+    }
+
+    checkStatus();
+    intervalRef.current = setInterval(checkStatus, POLL_INTERVAL_MS);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [status, hlAddress]);
+
+  const isRegistered = status === "registered";
+  const isFailed = status === "failed";
+  const isPending = !isRegistered && !isFailed;
 
   return (
     <motion.div
@@ -318,8 +354,24 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash }) {
           <div className="flex items-center justify-between py-2.5">
             <span className="text-sm text-muted-foreground">Status</span>
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-teal-400 pulse-teal shrink-0" />
-              <span className="text-sm text-foreground">Provisioning…</span>
+              {isPending && (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-teal-400 pulse-teal shrink-0" />
+                  <span className="text-sm text-foreground">Provisioning…</span>
+                </>
+              )}
+              {isRegistered && (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-teal-400 shrink-0" />
+                  <span className="text-sm text-teal-400">Registered</span>
+                </>
+              )}
+              {isFailed && (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-destructive shrink-0" />
+                  <span className="text-sm text-destructive">Failed</span>
+                </>
+              )}
             </div>
           </div>
         </div>

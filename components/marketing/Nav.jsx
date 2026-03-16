@@ -79,6 +79,7 @@ export default function Nav({ onSearch }) {
         {/* Right links + CTA */}
         <div className="flex items-center gap-6 shrink-0">
           <a href="/leaderboard" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-colors">Leaderboard</a>
+          <a href="/dashboard" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-colors">Dashboard</a>
           <a href="#" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-colors">Rules</a>
           <a href="/status" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-colors">Status</a>
           <Link

@@ -17,14 +17,59 @@ function StatCard({ label, value, className }) {
   );
 }
 
-export function AccountOverview({ dashboard }) {
-  const { balance, statistics, elimination } = dashboard;
+function ChallengeProgressBar({ challengeProgress }) {
+  if (!challengeProgress?.in_challenge_period) return null;
 
-  const effectiveBalance = balance?.effective_balance ?? balance?.balance;
-  const allTimeReturn = statistics?.all_time_return;
-  const thirtyDayReturn = statistics?.thirty_day_return;
-  const winRate = statistics?.win_rate;
-  const totalTrades = statistics?.total_trades;
+  const completion = challengeProgress.challenge_completion_percent ?? 0;
+  const drawdownUsage = challengeProgress.drawdown_usage_percent ?? 0;
+
+  return (
+    <Card>
+      <CardContent className="p-4 space-y-3">
+        <p className="text-xs text-muted-foreground font-medium">
+          Challenge Period
+        </p>
+        <div className="space-y-2">
+          <div>
+            <div className="flex justify-between text-xs mb-1">
+              <span className="text-muted-foreground">Progress</span>
+              <span className="font-medium">{completion.toFixed(1)}%</span>
+            </div>
+            <div className="h-2 rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full rounded-full bg-green-500 transition-all"
+                style={{ width: `${Math.min(completion, 100)}%` }}
+              />
+            </div>
+          </div>
+          <div>
+            <div className="flex justify-between text-xs mb-1">
+              <span className="text-muted-foreground">Drawdown Usage</span>
+              <span className="font-medium">{drawdownUsage.toFixed(1)}%</span>
+            </div>
+            <div className="h-2 rounded-full bg-muted overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${
+                  drawdownUsage > 80 ? "bg-red-500" : drawdownUsage > 50 ? "bg-yellow-500" : "bg-blue-500"
+                }`}
+                style={{ width: `${Math.min(drawdownUsage, 100)}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function AccountOverview({ dashboard }) {
+  const { account_size, drawdown, challenge_progress, elimination } = dashboard;
+
+  const currentReturn = challenge_progress?.current_return;
+  const instantDrawdown = drawdown?.instant;
+  const maxDrawdown = drawdown?.ledger_max_drawdown;
+  const challengeCompletion = challenge_progress?.challenge_completion_percent;
+  const drawdownLimit = challenge_progress?.drawdown_limit_percent;
 
   return (
     <div className="space-y-4">
@@ -39,32 +84,35 @@ export function AccountOverview({ dashboard }) {
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         <StatCard
-          label="Balance"
-          value={formatUSD(balance?.balance)}
+          label="Account Size"
+          value={formatUSD(account_size)}
         />
         <StatCard
-          label="Effective Balance"
-          value={formatUSD(effectiveBalance)}
+          label="Current Return"
+          value={currentReturn != null ? formatReturn(currentReturn) : "--"}
+          className={currentReturn != null ? pnlColor(currentReturn - 1) : ""}
         />
         <StatCard
-          label="All-Time Return"
-          value={allTimeReturn != null ? formatReturn(allTimeReturn) : "--"}
-          className={allTimeReturn != null ? pnlColor(allTimeReturn - 1) : ""}
+          label="Drawdown"
+          value={instantDrawdown != null ? formatPercent(instantDrawdown) : "--"}
+          className={instantDrawdown != null ? "text-red-400" : ""}
         />
         <StatCard
-          label="30-Day Return"
-          value={thirtyDayReturn != null ? formatReturn(thirtyDayReturn) : "--"}
-          className={thirtyDayReturn != null ? pnlColor(thirtyDayReturn - 1) : ""}
+          label="Max Drawdown"
+          value={maxDrawdown != null ? formatPercent(maxDrawdown) : "--"}
+          className={maxDrawdown != null ? "text-red-400" : ""}
         />
         <StatCard
-          label="Win Rate"
-          value={winRate != null ? formatPercent(winRate) : "--"}
+          label="Challenge Progress"
+          value={challengeCompletion != null ? `${challengeCompletion.toFixed(1)}%` : "--"}
         />
         <StatCard
-          label="Total Trades"
-          value={totalTrades != null ? totalTrades : "--"}
+          label="Drawdown Limit"
+          value={drawdownLimit != null ? `${drawdownLimit.toFixed(1)}%` : "--"}
         />
       </div>
+
+      <ChallengeProgressBar challengeProgress={challenge_progress} />
     </div>
   );
 }

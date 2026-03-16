@@ -32,7 +32,7 @@ export function useDashboardStream(hlAddress) {
       try {
         const msg = JSON.parse(event.data);
         if (msg.type === "dashboard") {
-          queryClient.setQueryData(["dashboard", hlAddress], msg.data);
+          queryClient.invalidateQueries({ queryKey: ["dashboard", hlAddress] });
         } else if (msg.type === "event") {
           queryClient.setQueryData(["events", hlAddress], (old) => {
             const prev = Array.isArray(old) ? old : [];

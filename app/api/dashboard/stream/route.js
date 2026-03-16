@@ -1,10 +1,31 @@
 import { resolveEndpointUrl } from "@/lib/gateway";
+import { STUB_ENABLED, stubDashboard } from "@/lib/gateway-stubs";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const hlAddress = searchParams.get("hl_address");
+
+  // STUB: return a no-op SSE stream when gateway is offline
+  if (STUB_ENABLED) {
+    const encoder = new TextEncoder();
+    const body = new ReadableStream({
+      start(controller) {
+        const msg = JSON.stringify({ type: "dashboard", data: stubDashboard });
+        controller.enqueue(encoder.encode(`data: ${msg}\n\n`));
+        // Keep connection open, close when client disconnects
+        request.signal.addEventListener("abort", () => controller.close());
+      },
+    });
+    return new Response(body, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
+  }
 
   let endpoint_url, hl_address;
   try {

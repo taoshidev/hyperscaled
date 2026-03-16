@@ -1,9 +1,19 @@
 import { NextResponse } from "next/server";
 import { resolveEndpointUrl } from "@/lib/gateway";
+import { STUB_ENABLED, stubEvents } from "@/lib/gateway-stubs";
+import { isValidEvmAddress } from "@/lib/validation";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const hlAddress = searchParams.get("hl_address");
+
+  // STUB: return fake events when gateway is offline
+  if (STUB_ENABLED) {
+    if (!hlAddress || !isValidEvmAddress(hlAddress)) {
+      return NextResponse.json({ error: "Invalid or missing hl_address" }, { status: 400 });
+    }
+    return NextResponse.json(stubEvents);
+  }
 
   try {
     const { endpoint_url, hl_address } = await resolveEndpointUrl(hlAddress);
@@ -19,7 +29,7 @@ export async function GET(request) {
     }
 
     const data = await res.json();
-    return NextResponse.json(data, { status: 200 });
+    return NextResponse.json(data.events || [], { status: 200 });
   } catch (err) {
     const status = err.status || 500;
     return NextResponse.json({ error: err.message }, { status });

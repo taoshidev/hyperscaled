@@ -4,9 +4,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { formatUSD, formatLeverage, formatReturn, pnlColor } from "@/lib/format";
 
 export function OpenPositions({ positions }) {
-  const open = (positions?.positions || []).filter(
-    (p) => !p.is_closed_position,
-  );
+  const all = Array.isArray(positions) ? positions : positions?.positions || [];
+  const open = all.filter((p) => !p.is_closed_position);
 
   return (
     <Card>
