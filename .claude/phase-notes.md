@@ -42,13 +42,52 @@ Registration Phase 3 complete. All 3 steps of the registration flow are fully bu
   - "Go to Dashboard" changed from outline Button to plain text link with arrow icon below receipt
   - Confirmation container widened from max-w-3xl to max-w-5xl on step 2 to accommodate two-column layout
 
+- **Phase 0 — Global Compliance + Design Rule Sweep**:
+  Files changed: 17
+  - `components/marketing/HowItWorks.jsx` — "Vanta Trading" → "Arcline Capital", Chrome Extension step → "Trade on Hyperliquid", text-[10px] ×4, transition-all ×1
+  - `components/marketing/Leaderboard.jsx` — "Vanta Network" → "Hyperscaled network", text-[10px] ×6
+  - `components/marketing/Hero.jsx` — Chrome Extension CTA → "View Leaderboard", removed DownloadSimple import, text-[10px] ×12
+  - `components/marketing/Footer.jsx` — "Built on Bittensor" removed from tagline, copyright 2025→2026, transition-all ×1
+  - `components/marketing/Solution.jsx` — "Up to 100%" → "100%" ×2 (compareRows + hsBest)
+  - `components/marketing/Features.jsx` — "we bring the funding" → "the network provides funded account access", text-[10px] ×3, transition-all ×1
+  - `components/marketing/Problem.jsx` — text-[10px] ×1, transition-all ×1
+  - `components/marketing/WaitlistForm.jsx` — transition-all ×1
+  - `components/marketing/Stats.jsx` — text-[10px] ×1
+  - `components/marketing/TraderDashboard.jsx` — text-[10px] ×14, text-[9px] ×2, text-[8px] ×1
+  - `components/registration/step-confirmation.jsx` — "Vanta Network Dashboard" → "Hyperscaled Dashboard", "Vanta Network" → "Hyperscaled"
+  - `components/registration/step-connect-pay.jsx` — VANTA_USDC_WALLET → HYPERSCALED_USDC_WALLET
+  - `components/dashboard/dashboard.jsx` — min-h-screen → min-h-[100dvh] ×5
+  - `components/dashboard/account-overview.jsx` — transition-all ×2
+  - `components/status/status-checker.jsx` — min-h-screen → min-h-[100dvh]
+  - `app/leaderboard/page.jsx` — min-h-screen → min-h-[100dvh] ×2
+  - `lib/constants.js` — VANTA_USDC_WALLET → HYPERSCALED_USDC_WALLET
+  - `lib/db/seed.js` — "Vanta Trading" / "vanta" → "Arcline Capital" / "arcline"
+  - `endpoint_docs.md` — "Vanta Network API Endpoints" → "Hyperscaled API Endpoints"
+  - `docs/COPY_DECK.md` — updated "Vanta" references to match new names
+
+  Fix counts:
+  - Vanta references removed: 9
+  - Built on Bittensor removed: 1 (tagline; "Powered by" kept in footer + hero)
+  - Up to 100% fixed: 2
+  - Chrome Extension refs removed: 2 (hero CTA + HowItWorks step)
+  - Funding language fixed: 1
+  - Copyright year fixed: 1
+  - text-[10px] fixed: 41 (all replaced with text-xs)
+  - text-[9px] fixed: 2, text-[8px] fixed: 1 (also bumped to text-xs)
+  - transition-all fixed: 7
+  - min-h-screen fixed: 8
+
+  Intentionally left:
+  - Chrome Extension in registration confirmation (step-confirmation.jsx lines 382, 396) — flagged as open decision #2 in PHASES.md
+  - "vanta-cli" references in endpoint_docs.md — these refer to the external CLI tool, not the product brand
+
 ## In progress
 
 Nothing currently in progress.
 
 ## Next action
 
-UI polish pass across other pages (dashboard, leaderboard, miner detail).
+Phase 1 — Nav + Footer Overhaul (see docs/PHASES.md).
 
 ## Known issues
 

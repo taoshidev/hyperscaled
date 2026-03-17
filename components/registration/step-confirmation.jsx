@@ -191,7 +191,7 @@ function ExtensionMockup() {
           <div className="rounded-md border border-white/[0.06] bg-white/[0.02] px-4 py-4 flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-white">View Full Analytics</p>
-              <p className="text-xs text-white/40">Vanta Network Dashboard</p>
+              <p className="text-xs text-white/40">Hyperscaled Dashboard</p>
             </div>
             <CaretRight size={14} className="text-white/40" />
           </div>
@@ -299,7 +299,7 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
               You&#8217;re in. Evaluation starts&nbsp;now.
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Your funded account is being provisioned on Vanta&nbsp;Network.
+              Your funded account is being provisioned on Hyperscaled.
             </p>
           </div>
         </div>

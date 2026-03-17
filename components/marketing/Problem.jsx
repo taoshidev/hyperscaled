@@ -85,7 +85,7 @@ export default function Problem() {
                 key={pt.title}
                 variants={itemVariants}
                 className={`${pt.span} relative bg-zinc-900/40 border border-white/[0.06] rounded-2xl p-6 md:p-8
-                  group hover:border-white/[0.10] transition-all overflow-hidden`}
+                  group hover:border-white/[0.10] transition-[border-color] overflow-hidden`}
               >
                 {/* Subtle glow on hover */}
                 <div
@@ -102,7 +102,7 @@ export default function Problem() {
                       <Icon size={20} className="text-zinc-300" />
                     </div>
                     <span
-                      className={`flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-semibold ${pt.tagColor}`}
+                      className={`flex items-center gap-1 px-2 py-0.5 rounded-md border text-xs font-semibold ${pt.tagColor}`}
                     >
                       <X size={9} weight="bold" />
                       {pt.tag}

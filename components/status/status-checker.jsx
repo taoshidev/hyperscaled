@@ -47,7 +47,7 @@ export function StatusChecker() {
   }, [isConnected, address]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-[100dvh] flex items-center justify-center p-4">
       <div className="space-y-6 max-w-md w-full mx-auto">
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold">Registration Status</h1>

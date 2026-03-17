@@ -42,13 +42,13 @@ const pillars = [
 const compareRows = [
   { label: 'Non-Custodial',       hs: 'Yes',        ftmo: 'No',           typical: 'No' },
   { label: 'KYC Required',        hs: 'None',       ftmo: 'Full KYC',     typical: 'Full KYC' },
-  { label: 'Profit Split',        hs: 'Up to 100%', ftmo: 'Up to 90%',    typical: '70–80%' },
+  { label: 'Profit Split',        hs: '100%',        ftmo: 'Up to 90%',    typical: '70–80%' },
   { label: 'Payout Verification', hs: 'Onchain',    ftmo: 'Centralized',  typical: 'Centralized' },
   { label: 'Max Account',         hs: '$2.5M',      ftmo: '$400K',        typical: '$200K' },
   { label: 'News Trading',        hs: 'Allowed',    ftmo: 'Restricted',   typical: 'Restricted' },
 ]
 
-const hsBest = ['Yes', 'None', 'Up to 100%', 'Onchain', '$2.5M', 'Allowed']
+const hsBest = ['Yes', 'None', '100%', 'Onchain', '$2.5M', 'Allowed']
 
 export default function Solution() {
   const ref = useRef(null)

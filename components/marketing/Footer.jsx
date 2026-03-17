@@ -38,14 +38,14 @@ export default function Footer() {
               <span className="text-sm font-bold tracking-tight">Hyperscaled</span>
             </div>
             <p className="text-xs text-zinc-500 leading-relaxed max-w-[24ch]">
-              Permissionless funded trading on Hyperliquid. Built on Bittensor.
+              Permissionless funded trading on Hyperliquid.
             </p>
             <div className="flex items-center gap-3 mt-5">
               {[TwitterLogo, DiscordLogo, GithubLogo].map((Icon, i) => (
                 <a
                   key={i}
                   href="#"
-                  className="w-8 h-8 rounded-lg bg-zinc-900 border border-white/[0.06] flex items-center justify-center text-zinc-400 hover:text-white hover:border-white/[0.14] transition-all"
+                  className="w-8 h-8 rounded-lg bg-zinc-900 border border-white/[0.06] flex items-center justify-center text-zinc-400 hover:text-white hover:border-white/[0.14] transition-colors"
                 >
                   <Icon size={15} />
                 </a>
@@ -88,7 +88,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-white/[0.06] pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-zinc-600">
-            © 2025 Hyperscaled Protocol. Built on{' '}
+            © 2026 Hyperscaled. All rights reserved. Built on{' '}
             <a
               href="https://hyperliquid.xyz"
               target="_blank"

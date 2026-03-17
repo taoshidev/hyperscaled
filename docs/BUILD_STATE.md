@@ -20,7 +20,7 @@ Last updated: 2026-03-16
 | LiquidCrystal background | Done |
 | ShinyButton CTA | Done |
 | Leaderboard preview | Not on home page — Component exists at `/leaderboard` but is NOT rendered in the home page marketing compose list (`components/marketing.jsx`). Spec does not require it on home page. |
-| Compliance (copy/design rules) | Not Started — 72 violations (see docs/REPO_SCAN.md) |
+| Compliance (copy/design rules) | Done — 72 violations fixed (9 Vanta, 1 Built on Bittensor, 2 Up to 100%, 2 Chrome Extension, 1 funding language, 1 copyright, 41 text-[10px], 7 transition-all, 8 min-h-screen) |
 | Missing pages | Not Started — `/how-it-works`, `/pricing`, `/rules`, `/partners`, `/faq` |
 
 **Next action**: Phase 0 — Global compliance + design rule sweep

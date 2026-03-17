@@ -161,7 +161,7 @@ Mark up inline or add comments. Anything not marked will ship as-is.
 > Hit 10% profit targets to scale up to $2.5M. Payouts are automated onchain monthly directly to your wallet.
 
 **Mock UI copy** (prop firm cards):
-- Firm names: `Bitcast`, `Beanstock`, `Vanta Trading`
+- Firm names: `Bitcast`, `Beanstock`, `Arcline Capital`
 - Plan sizes: `$25,000`, `$50,000`, `$100,000`
 
 **Mock UI copy** (extension overlay):
@@ -260,7 +260,7 @@ Mark up inline or add comments. Anything not marked will ship as-is.
 
 **H2**: `Top traders on the network.`
 
-**Network stats section** — Label: `Network` · Caption: `Aggregated across all of Vanta Network`
+**Network stats section** — Label: `Network` · Caption: `Aggregated across the Hyperscaled network`
 
 | Label | Value |
 |-------|-------|

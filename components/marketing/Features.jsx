@@ -72,7 +72,7 @@ const features = [
         </div>
         <div className="flex items-center justify-between mt-3">
           {['$100K', '$250K', '$500K', '$1M', '$2.5M'].map((t) => (
-            <span key={t} className="text-[10px] text-zinc-600 font-mono">{t}</span>
+            <span key={t} className="text-xs text-zinc-600 font-mono">{t}</span>
           ))}
         </div>
       </div>
@@ -90,7 +90,7 @@ const features = [
           <span>Payout → your wallet</span>
           <span className="text-teal-400">+$1,271.23 USDC</span>
         </div>
-        <div className="text-zinc-600 text-[10px] mt-1">0x4a5b...8d9e · onchain · 2 days ago</div>
+        <div className="text-zinc-600 text-xs mt-1">0x4a5b...8d9e · onchain · 2 days ago</div>
       </div>
     ),
   },
@@ -105,7 +105,7 @@ const features = [
         {['Open-Source', 'Auditable', 'Decentralized'].map((tag) => (
           <span
             key={tag}
-            className="px-2.5 py-1 rounded-full border border-teal-400/20 bg-teal-400/5 text-[10px] text-teal-400 font-medium"
+            className="px-2.5 py-1 rounded-full border border-teal-400/20 bg-teal-400/5 text-xs text-teal-400 font-medium"
           >
             {tag}
           </span>
@@ -116,7 +116,7 @@ const features = [
   {
     icon: Lightning,
     title: 'Trade on Hyperliquid',
-    body: 'Use the platform you know and love. You bring the skill, we bring the funding. No new platform to learn.',
+    body: 'Use the platform you know and love. You bring the skill, the network provides funded account access. No new platform to learn.',
     span: 'md:col-span-6',
     large: false,
   },
@@ -175,7 +175,7 @@ export default function Features() {
                 key={feat.title}
                 variants={cardVariants}
                 className={`${feat.span} relative bg-zinc-900/50 border border-white/[0.06] rounded-2xl p-6 overflow-hidden
-                  group hover:border-teal-400/20 transition-all duration-300`}
+                  group hover:border-teal-400/20 transition-[border-color] duration-300`}
               >
                 {/* Inner glow */}
                 <div
