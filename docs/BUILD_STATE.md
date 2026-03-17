@@ -1,6 +1,6 @@
 # Build State
 
-Last updated: 2026-03-16
+Last updated: 2026-03-17
 
 ## Marketing Site (`/`)
 
@@ -14,16 +14,18 @@ Last updated: 2026-03-16
 | Problem / Solution | Done |
 | Stats section | Done |
 | FAQ | Done |
-| Footer | Done — ⚠️ Copyright year wrong (2025). Dead social links. "Built on Bittensor" in tagline. |
-| Nav | Done — ⚠️ Links don't match spec. Missing Pricing, Partners, Rules routes. Dead anchors. |
+| Footer | Done — 4-column layout (Brand, Protocol, Community, Legal), social icons, "Built on Hyperliquid · Powered by Bittensor", © 2026. Placeholder URLs have TODO comments. |
+| Nav | Done — 6 route-based links (How It Works, Pricing, Rules, Leaderboard, Partners, FAQ), "Start Evaluation" external CTA, mobile hamburger menu. Search removed (backlog). |
 | Waitlist form | Done (to be removed) — spec has no waitlist form |
 | LiquidCrystal background | Done |
 | ShinyButton CTA | Done |
 | Leaderboard preview | Not on home page — Component exists at `/leaderboard` but is NOT rendered in the home page marketing compose list (`components/marketing.jsx`). Spec does not require it on home page. |
 | Compliance (copy/design rules) | Done — 72 violations fixed (9 Vanta, 1 Built on Bittensor, 2 Up to 100%, 2 Chrome Extension, 1 funding language, 1 copyright, 41 text-[10px], 7 transition-all, 8 min-h-screen) |
 | Missing pages | Not Started — `/how-it-works`, `/pricing`, `/rules`, `/partners`, `/faq` |
+| Legal pages (`/terms`, `/privacy`, `/risk`) | Done — placeholder pages with "Coming soon." Content pending. |
+| TODO Polish tracker | Done — `docs/TODO_POLISH.md` tracks deferred URLs + legal content |
 
-**Next action**: Phase 0 — Global compliance + design rule sweep
+**Next action**: Phase 2 — Shared Constants + Components (see docs/PHASES.md)
 
 ## Dashboard (`/dashboard`)
 
