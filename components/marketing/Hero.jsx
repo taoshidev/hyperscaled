@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight, TrendUp, ArrowsClockwise } from '@phosphor-icons/react'
 import LiquidCrystalBg from './LiquidCrystalBg'
+import { HERO_STATS } from '@/lib/constants'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -21,12 +22,6 @@ const cardVariants = {
   hidden: { opacity: 0, x: 40 },
   visible: { opacity: 1, x: 0, transition: { ...spring, delay: 0.3 } },
 }
-
-const stats = [
-  { value: '4,200+', label: 'Funded Traders' },
-  { value: '$1B+', label: 'Network Volume' },
-  { value: '$30M+', label: 'Token Value Distributed' },
-]
 
 export default function Hero() {
   return (
@@ -97,7 +92,7 @@ export default function Hero() {
               variants={itemVariants}
               className="flex flex-wrap items-center gap-8 pt-8 border-t border-white/[0.06]"
             >
-              {stats.map((s) => (
+              {HERO_STATS.map((s) => (
                 <div key={s.label}>
                   <div className="text-xl font-bold tracking-tight text-white">{s.value}</div>
                   <div className="text-xs text-zinc-500 mt-0.5">{s.label}</div>

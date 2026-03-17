@@ -103,13 +103,45 @@ Registration Phase 3 complete. All 3 steps of the registration flow are fully bu
   - CTA points to https://app.hyperscaled.trade (external app), not /register
   - Nav links are all route-based (no scroll anchors)
 
+- **Phase 2 — Shared Constants + Components**:
+  Files changed: 4 (lib/constants.js, Stats.jsx, Hero.jsx, FAQ.jsx)
+  Files created: 3 (components/shared/ScalingPathVisual.jsx, FAQAccordion.jsx, RulesTable.jsx)
+
+  **Constants added to lib/constants.js**:
+  - NETWORK_STATS — 5 stats (value/label/description) for Stats section + reuse
+  - HERO_STATS — 3 inline stats for Hero section
+  - EVAL_RULES — 8 evaluation phase rules (rule/parameter)
+  - FUNDED_RULES — 7 funded account rules (rule/parameter)
+  - SCALING_PATH — 9 steps from $100K → $2.5M (from/to)
+  - SCALING_MILESTONES — 12 milestones from $25K → $2.5M
+  - PRICING_TIERS — 3 tiers with full spec details (launch/standard pricing, targets, drawdowns, CTAs)
+  - FAQ_ITEMS — 5 categories, 22 total FAQ entries with id/question/answer
+  - HOME_FAQ_IDS — 5 IDs for Home page condensed FAQ
+  - PRICING_FAQ_IDS — 3 IDs for Pricing page mini FAQ
+  - PRICING_FAQ — 3 pricing-specific FAQ entries
+
+  **Existing components updated**:
+  - Stats.jsx — imports NETWORK_STATS, parses value strings into rawNum/prefix/suffix for counter animation
+  - Hero.jsx — imports HERO_STATS, replaces hardcoded `stats` array
+  - FAQ.jsx — imports FAQ_ITEMS + HOME_FAQ_IDS, filters flat items by ID subset
+
+  **New shared components created**:
+  - ScalingPathVisual.jsx — horizontal stepped bar chart from SCALING_MILESTONES, Framer Motion staggered entry, optional highlightFrom prop, big-jump indicators at $750K/$1M, responsive horizontal scroll on mobile
+  - FAQAccordion.jsx — reusable accordion with single-item-open, optional `grouped` prop for category headings, CaretDown icon with rotation, teal active state, aria-expanded + aria-controls + role="region", Framer Motion height animation
+  - RulesTable.jsx — two-column table (desktop) / stacked cards (mobile), optional label prop, dark theme with subtle borders
+
+  **Decisions**:
+  - FAQ answers use \u00a0 (non-breaking space) before last word to prevent typographic widows
+  - Stats component preserves existing counter animation by parsing NETWORK_STATS value strings
+  - ScalingPathVisual uses non-linear bar heights (32px base + 10px per step) to visually communicate scaling
+
 ## In progress
 
 Nothing currently in progress.
 
 ## Next action
 
-Phase 2 — Shared Constants + Components (see docs/PHASES.md).
+Phase 3 — Home Page Overhaul (see docs/PHASES.md).
 
 ## Known issues
 

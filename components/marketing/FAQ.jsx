@@ -3,35 +3,15 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { Plus, Minus } from '@phosphor-icons/react'
+import { FAQ_ITEMS, HOME_FAQ_IDS } from '@/lib/constants'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
-const faqs = [
-  {
-    q: 'Do I need to submit KYC documents?',
-    a: 'No, you simply use a digital signature via Privado. Hyperscaled is a permissionless protocol. You connect with a Hyperliquid wallet address. Traders in 150+ countries can participate today.',
-  },
-  {
-    q: 'How does the one-step evaluation work?',
-    a: 'Trade on Hyperliquid normally while the protocol mirrors your wallet into a simulated funded account. Hit 10% profit on your evaluation account while keeping max drawdown under 5%. That\'s it — no second phase, no surprise rule changes.',
-  },
-  {
-    q: 'When and how do I get paid?',
-    a: 'Funded traders receive USDC directly to their connected wallet every month. Every payout is recorded onchain — no centralized discretion, no hold periods, no withdrawal fees.',
-  },
-  {
-    q: 'What markets can I trade?',
-    a: 'BTC, ETH, ADA, XRP, SOL, DOGE perps on Hyperliquid with HYPE, TAO, LINK, ZEC, BCH, XMR, and LTC being added. News trading and weekend trading are both allowed. No restricted windows.',
-  },
-  {
-    q: 'How does account scaling work?',
-    a: 'Strong quarterly performance triggers automatic promotions. Traders can scale from $100K up to $2.5M funded capital with no additional evaluation fees. Every scaling milestone is governed by a decentralized set of rules set by validators.',
-  },
-  {
-    q: 'What is Hyperscaled built on?',
-    a: 'Hyperscaled is a Web3 protocol built on Hyperliquid\'s order book infrastructure and powered by the Bittensor network. All rules, payout logic, and trader records are open-source and verifiable onchain.',
-  },
-]
+const allItems = FAQ_ITEMS.flatMap((cat) => cat.items)
+const faqs = HOME_FAQ_IDS.map((id) => allItems.find((item) => item.id === id)).filter(Boolean).map((item) => ({
+  q: item.question,
+  a: item.answer,
+}))
 
 function FAQItem({ item, index }) {
   const [open, setOpen] = useState(false)

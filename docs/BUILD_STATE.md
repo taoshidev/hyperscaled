@@ -25,7 +25,36 @@ Last updated: 2026-03-17
 | Legal pages (`/terms`, `/privacy`, `/risk`) | Done — placeholder pages with "Coming soon." Content pending. |
 | TODO Polish tracker | Done — `docs/TODO_POLISH.md` tracks deferred URLs + legal content |
 
-**Next action**: Phase 2 — Shared Constants + Components (see docs/PHASES.md)
+**Next action**: Phase 3 — Home Page Overhaul (see docs/PHASES.md)
+
+## Shared Constants (`lib/constants.js`)
+
+**Status**: Done
+
+| Item | State |
+|------|-------|
+| NETWORK_STATS | Done — 5 stats (value/label/description) |
+| HERO_STATS | Done — 3 inline hero stats |
+| EVAL_RULES | Done — 8 evaluation rules |
+| FUNDED_RULES | Done — 7 funded account rules |
+| SCALING_PATH | Done — 9 steps ($100K → $2.5M) |
+| SCALING_MILESTONES | Done — 12 milestones ($25K → $2.5M) |
+| PRICING_TIERS | Done — 3 tiers with full spec details |
+| FAQ_ITEMS | Done — 5 categories, 22 entries |
+| HOME_FAQ_IDS | Done — 5-item subset for home page |
+| PRICING_FAQ / PRICING_FAQ_IDS | Done — 3 pricing-specific entries |
+
+## Shared Components (`components/shared/`)
+
+**Status**: Done
+
+| Item | State |
+|------|-------|
+| ScalingPathVisual | Done — horizontal stepped bar, Framer Motion, highlightFrom prop |
+| FAQAccordion | Done — single-open, grouped mode, a11y, Framer Motion |
+| RulesTable | Done — desktop table / mobile stacked cards, label prop |
+
+**Next action**: Mount on pages during Phases 3–8
 
 ## Dashboard (`/dashboard`)
 
