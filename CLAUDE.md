@@ -43,10 +43,11 @@ public/                       ← Logos, miner avatars
 1. Read CLAUDE.md (this file)
 2. Read docs/ARCHITECTURE.md
 3. Read docs/BUILD_STATE.md
-4. Read .claude/design-rules.md
-5. If working on a specific module, read that module's phase-notes
-6. Confirm pwd and worktree are clean
-7. Then proceed
+4. Read docs/PHASES.md
+5. Read .claude/design-rules.md
+6. If working on a specific module, read that module's phase-notes
+7. Confirm pwd and worktree are clean
+8. Then proceed
 
 For detailed context:
 - System design: docs/ARCHITECTURE.md
