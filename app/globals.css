@@ -57,8 +57,11 @@
 @theme inline {
   --color-teal-400: #00C6A7;
   --color-teal-500: #00A88D;
-  --font-family-sans: 'Satoshi', ui-sans-serif, system-ui, sans-serif;
-  --font-family-mono: ui-monospace, 'SF Mono', 'Fira Code', monospace;
+}
+
+@theme {
+  --font-sans: 'Satoshi', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Fira Code', monospace;
 }
 
 @layer base {
@@ -154,7 +157,6 @@
   overflow: hidden;
   cursor: pointer;
   outline-offset: 4px;
-  font-family: 'Satoshi', ui-sans-serif, system-ui, sans-serif;
   font-size: 0.875rem;
   line-height: 1.2;
   font-weight: 600;
