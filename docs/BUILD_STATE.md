@@ -1,10 +1,10 @@
 # Build State
 
-Last updated: 2026-03-12
+Last updated: 2026-03-16
 
 ## Marketing Site (`/`)
 
-**Status**: Complete (first pass)
+**Status**: Complete (first pass) — compliance sweep needed
 
 | Item | State |
 |------|-------|
@@ -14,14 +14,16 @@ Last updated: 2026-03-12
 | Problem / Solution | Done |
 | Stats section | Done |
 | FAQ | Done |
-| Footer | Done |
-| Nav | Done |
-| Waitlist form | Done |
+| Footer | Done — ⚠️ Copyright year wrong (2025). Dead social links. "Built on Bittensor" in tagline. |
+| Nav | Done — ⚠️ Links don't match spec. Missing Pricing, Partners, Rules routes. Dead anchors. |
+| Waitlist form | Done (to be removed) — spec has no waitlist form |
 | LiquidCrystal background | Done |
 | ShinyButton CTA | Done |
-| Leaderboard preview | Done |
+| Leaderboard preview | Not on home page — Component exists at `/leaderboard` but is NOT rendered in the home page marketing compose list (`components/marketing.jsx`). Spec does not require it on home page. |
+| Compliance (copy/design rules) | Not Started — 72 violations (see docs/REPO_SCAN.md) |
+| Missing pages | Not Started — `/how-it-works`, `/pricing`, `/rules`, `/partners`, `/faq` |
 
-**Next action**: Review for copy polish and responsive edge cases
+**Next action**: Phase 0 — Global compliance + design rule sweep
 
 ## Dashboard (`/dashboard`)
 
@@ -152,4 +154,4 @@ Last updated: 2026-03-12
 | Hooks (pre-write, post-edit) | Done |
 | Phase notes | Done |
 
-**Next action**: Begin Phase 1 — UI polish pass
+**Next action**: See docs/PHASES.md for launch plan
