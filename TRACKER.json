@@ -1,0 +1,202 @@
+{
+  "project": "Hyperscaled Marketing Website",
+  "lastUpdated": "2026-03-17T10:00:00Z",
+  "phases": [
+    {
+      "id": 0, "name": "Global Compliance Sweep", "status": "done",
+      "scope": "All existing files", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [],
+      "sessions": [{ "session": 1, "date": "2026-03-15", "notes": "All 9 compliance items fixed across 23 files (75 total fixes)" }],
+      "items": [
+        { "name": "Remove Vanta branding", "status": "done", "count": 9 },
+        { "name": "Remove Built on Bittensor", "status": "done", "count": 1 },
+        { "name": "Fix Up to 100%", "status": "done", "count": 2 },
+        { "name": "Remove Chrome Extension refs", "status": "done", "count": 2 },
+        { "name": "Fix funding language", "status": "done", "count": 1 },
+        { "name": "Fix copyright year", "status": "done", "count": 1 },
+        { "name": "Fix text-[10px]", "status": "done", "count": 44 },
+        { "name": "Fix transition-all", "status": "done", "count": 7 },
+        { "name": "Fix min-h-screen", "status": "done", "count": 8 }
+      ]
+    },
+    {
+      "id": 1, "name": "Nav + Footer Overhaul", "status": "done",
+      "scope": "Nav.jsx, Footer.jsx", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [0],
+      "sessions": [{ "session": 2, "date": "2026-03-16", "notes": "Nav + footer rebuilt, search removed to backlog" }],
+      "items": [
+        { "name": "Nav 6 route-based links", "status": "done" },
+        { "name": "Remove old nav links", "status": "done" },
+        { "name": "Start Evaluation CTA", "status": "done" },
+        { "name": "All links to standalone routes", "status": "done" },
+        { "name": "Footer 4-column layout", "status": "done" },
+        { "name": "Footer bottom bar copy", "status": "done" },
+        { "name": "Social placeholders + TODO_POLISH.md", "status": "done" }
+      ]
+    },
+    {
+      "id": 2, "name": "Shared Constants + Components", "status": "not_started",
+      "scope": "lib/constants.js, shared/", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [0], "sessions": [],
+      "items": [
+        { "name": "SCALING_PATH constant", "status": "pending" },
+        { "name": "EVAL_RULES + FUNDED_RULES constants", "status": "pending" },
+        { "name": "FAQ_ITEMS constant", "status": "pending" },
+        { "name": "PRICING_TIERS constant", "status": "pending" },
+        { "name": "NETWORK_STATS constant", "status": "pending" },
+        { "name": "Rename VANTA_USDC_WALLET", "status": "pending" },
+        { "name": "ScalingPathVisual component", "status": "pending" },
+        { "name": "FAQAccordion component", "status": "pending" }
+      ]
+    },
+    {
+      "id": 3, "name": "Home Page Overhaul", "status": "not_started",
+      "scope": "components/marketing/*", "estSessions": "2–3 sessions", "estHours": 5,
+      "dependsOn": [1, 2], "sessions": [],
+      "items": [
+        { "name": "Hero section", "status": "pending" },
+        { "name": "Network Stats Bar", "status": "pending" },
+        { "name": "Problem cards", "status": "pending" },
+        { "name": "Protocol/Comparison", "status": "pending" },
+        { "name": "How It Works 3 steps", "status": "pending" },
+        { "name": "Features 6 cards", "status": "pending" },
+        { "name": "Partners CTA section", "status": "pending" },
+        { "name": "FAQ condensed", "status": "pending" }
+      ]
+    },
+    {
+      "id": 4, "name": "Pricing Page", "status": "not_started",
+      "scope": "app/pricing/", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [1, 2], "sessions": [],
+      "items": [
+        { "name": "Launch pricing banner", "status": "pending" },
+        { "name": "Page hero", "status": "pending" },
+        { "name": "3-tier pricing cards", "status": "pending" },
+        { "name": "Whats Included row", "status": "pending" },
+        { "name": "Scaling path visual", "status": "pending" },
+        { "name": "Pricing FAQ mini", "status": "pending" }
+      ]
+    },
+    {
+      "id": 5, "name": "How It Works Page", "status": "not_started",
+      "scope": "app/how-it-works/", "estSessions": "1–2 sessions", "estHours": 3,
+      "dependsOn": [1, 2], "sessions": [],
+      "items": [
+        { "name": "Page hero + CTA", "status": "pending" },
+        { "name": "4-step expanded flow", "status": "pending" },
+        { "name": "Non-custodial explainer", "status": "pending" },
+        { "name": "Payout mechanics", "status": "pending" },
+        { "name": "Bottom CTA", "status": "pending" }
+      ]
+    },
+    {
+      "id": 6, "name": "Rules Page", "status": "not_started",
+      "scope": "app/rules/", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [1, 2], "sessions": [],
+      "items": [
+        { "name": "Page hero", "status": "pending" },
+        { "name": "Evaluation rules table", "status": "pending" },
+        { "name": "Funded account rules table", "status": "pending" },
+        { "name": "Scaling rules", "status": "pending" },
+        { "name": "Disqualification rules", "status": "pending" },
+        { "name": "KYC and payouts", "status": "pending" },
+        { "name": "Protocol transparency + CTA", "status": "pending" }
+      ]
+    },
+    {
+      "id": 7, "name": "FAQ Page", "status": "not_started",
+      "scope": "app/faq/", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [1, 2], "sessions": [],
+      "items": [
+        { "name": "Page hero", "status": "pending" },
+        { "name": "Full accordion by category", "status": "pending" },
+        { "name": "Discord + email links", "status": "pending" }
+      ]
+    },
+    {
+      "id": 8, "name": "Partners Page", "status": "not_started",
+      "scope": "app/partners/", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [1, 2], "sessions": [],
+      "items": [
+        { "name": "Page hero with CTAs", "status": "pending" },
+        { "name": "What You Control cards", "status": "pending" },
+        { "name": "Revenue model", "status": "pending" },
+        { "name": "How it works 4 steps", "status": "pending" },
+        { "name": "Division of responsibility", "status": "pending" },
+        { "name": "Funding capacity table", "status": "pending" },
+        { "name": "Application CTA", "status": "pending" }
+      ]
+    }
+  ],
+  "routes": [
+    { "path": "/", "label": "Home", "status": "exists-needs-overhaul", "phase": 3, "note": "Exists, needs full rebuild" },
+    { "path": "/how-it-works", "label": "How It Works", "status": "missing", "phase": 5 },
+    { "path": "/pricing", "label": "Pricing", "status": "missing", "phase": 4 },
+    { "path": "/rules", "label": "Rules", "status": "missing", "phase": 6 },
+    { "path": "/leaderboard", "label": "Leaderboard", "status": "complete", "phase": null, "note": "No changes needed" },
+    { "path": "/partners", "label": "Partners", "status": "missing", "phase": 8 },
+    { "path": "/faq", "label": "FAQ", "status": "missing", "phase": 7 },
+    { "path": "/register", "label": "Register", "status": "complete", "phase": null, "note": "3-step flow, working" },
+    { "path": "/dashboard", "label": "Dashboard", "status": "complete", "phase": null, "note": "SSE streaming, working" },
+    { "path": "/miner/[slug]", "label": "Miner Detail", "status": "complete", "phase": null, "note": "Dynamic route, working" },
+    { "path": "/status", "label": "Status", "status": "complete", "phase": null, "note": "Working" }
+  ],
+  "violations": [
+    { "name": "Vanta branding", "fixed": 9, "total": 9, "severity": "high" },
+    { "name": "Built on Bittensor", "fixed": 1, "total": 1, "severity": "high" },
+    { "name": "Up to 100%", "fixed": 2, "total": 2, "severity": "high" },
+    { "name": "Chrome Extension", "fixed": 2, "total": 2, "severity": "high" },
+    { "name": "Funding language", "fixed": 1, "total": 1, "severity": "high" },
+    { "name": "Copyright year", "fixed": 1, "total": 1, "severity": "high" },
+    { "name": "text-[10px]", "fixed": 44, "total": 44, "severity": "med" },
+    { "name": "transition-all", "fixed": 7, "total": 7, "severity": "med" },
+    { "name": "min-h-screen", "fixed": 8, "total": 8, "severity": "low" }
+  ],
+  "decisions": [
+    { "name": "Nav search behavior", "status": "resolved", "resolution": "Removed, backlogged" },
+    { "name": "Chrome Extension CTA on registration", "status": "open", "resolution": null },
+    { "name": "Social link URLs", "status": "resolved", "resolution": "Placeholders + TODO" },
+    { "name": "Docs link URL", "status": "resolved", "resolution": "Placeholder + TODO" },
+    { "name": "Legal pages", "status": "resolved", "resolution": "Placeholder pages created" },
+    { "name": "Partner application", "status": "resolved", "resolution": "mailto: partners@hyperscaled.trade" }
+  ],
+  "todoPolish": [
+    { "item": "Replace social link placeholders with real URLs", "priority": "medium" },
+    { "item": "Replace Docs link placeholder with real URL", "priority": "medium" },
+    { "item": "Resolve Chrome Extension CTA decision", "priority": "high" },
+    { "item": "Final accessibility pass on all pages", "priority": "low" },
+    { "item": "Performance audit (Lighthouse)", "priority": "low" },
+    { "item": "SEO meta tags for all routes", "priority": "medium" }
+  ],
+  "repoScan": {
+    "date": "2026-03-17",
+    "buildClean": true,
+    "buildNotes": "No errors, no warnings",
+    "deps": [
+      { "pkg": "next", "version": "15.3.x", "ok": true },
+      { "pkg": "react", "version": "19.x", "ok": true },
+      { "pkg": "tailwindcss", "version": "4.x", "ok": true },
+      { "pkg": "framer-motion", "version": "latest", "ok": true },
+      { "pkg": "@tanstack/react-query", "version": "latest", "ok": true },
+      { "pkg": "wagmi + viem + rainbowkit", "version": "latest", "ok": true }
+    ],
+    "solid": [
+      "Build passes clean — no errors",
+      "All deps current (Next 15.3, React 19, TW4)",
+      "Registration flow complete (3-step)",
+      "Dashboard + SSE streaming working",
+      "Leaderboard page — no changes needed",
+      "Design system (shiny-cta, skeleton, etc) solid",
+      "Miner detail page working",
+      "Status page working"
+    ],
+    "blockers": [
+      { "icon": "🔴", "text": "5 marketing pages don't exist yet", "detail": "/how-it-works, /pricing, /rules, /partners, /faq" },
+      { "icon": "🔴", "text": "Home page needs full overhaul", "detail": "Hero, stats, problem, protocol, features — all off-spec" },
+      { "icon": "🟡", "text": "Shared constants not centralized", "detail": "Pricing tiers, FAQ, rules, stats still hardcoded in components" },
+      { "icon": "🟡", "text": "No reusable ScalingPathVisual or FAQAccordion", "detail": "Needed by Pricing, FAQ, Home, Rules pages" },
+      { "icon": "🟡", "text": "1 open decision needs team input", "detail": "Chrome Extension CTA on registration" },
+      { "icon": "🟢", "text": "All 75 compliance violations fixed in P0", "detail": "Vanta branding, Bittensor, funding language, CSS issues" }
+    ]
+  }
+}
