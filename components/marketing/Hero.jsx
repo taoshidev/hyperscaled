@@ -63,26 +63,27 @@ export default function Hero() {
               variants={itemVariants}
               className="text-base text-zinc-400 leading-relaxed max-w-[56ch] mb-8"
             >
-              Trade with more capital without risking your own stack. Keep 100% of your profits.
-              Grow your account to $2.5M. Built on the biggest decentralized prop firm infrastructure in the world.
+              Trade with more capital without risking your own stack. Keep 100% of your profits and grow your account to&nbsp;$2.5M. Built on the most advanced decentralized prop trading infrastructure in the&nbsp;world.
             </motion.p>
 
             {/* CTA buttons */}
             <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-3 mb-10">
-              <Link
-                href="/register"
+              <a
+                href="https://app.hyperscaled.trade"
+                target="_blank"
+                rel="noreferrer"
                 className="shiny-cta px-6 py-3 whitespace-nowrap"
               >
                 <span className="flex items-center gap-1.5">
                   Start Your Evaluation
                   <ArrowRight size={15} weight="bold" />
                 </span>
-              </Link>
+              </a>
               <Link
-                href="/leaderboard"
+                href="/how-it-works"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-white/[0.12] text-white text-sm font-medium hover:border-white/[0.24] hover:bg-white/[0.04] active:scale-[0.98] transition-[border-color,background-color,transform] duration-200"
               >
-                View Leaderboard
+                Learn More
                 <ArrowRight size={15} weight="bold" />
               </Link>
             </motion.div>
@@ -131,7 +132,7 @@ export default function Hero() {
                     Live
                   </span>
                 </div>
-                <div className="text-xs text-zinc-600 font-mono">HL · Bittensor</div>
+                <div className="text-xs text-zinc-600 font-mono">7d cycle</div>
               </div>
 
               {/* Balance */}

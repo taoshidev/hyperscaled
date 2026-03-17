@@ -135,13 +135,43 @@ Registration Phase 3 complete. All 3 steps of the registration flow are fully bu
   - Stats component preserves existing counter animation by parsing NETWORK_STATS value strings
   - ScalingPathVisual uses non-linear bar heights (32px base + 10px per step) to visually communicate scaling
 
+- **Phase 3 — Home Page Overhaul**:
+  Files changed: 7 (Hero.jsx, Stats.jsx, Problem.jsx, Solution.jsx, HowItWorks.jsx, Features.jsx, FAQ.jsx, marketing.jsx)
+  Files created: 1 (components/marketing/PartnersCTA.jsx)
+
+  **Hero**:
+  - Primary CTA → external `https://app.hyperscaled.trade` (anchor, not Link)
+  - Secondary CTA → "Learn More" linking to `/how-it-works`
+  - Widget header: removed "HL · Bittensor", replaced with "7d cycle"
+  - Updated subheadline copy per spec
+
+  **Stats**: Removed all badges (STAT_BADGES set to null array). Still imports from NETWORK_STATS.
+
+  **Problem**: Changed from asymmetric 2+1 grid to 3 equal columns (`md:grid-cols-3`). Removed `body2` field. Added standalone teal callout bar at bottom. Updated tags and copy per spec.
+
+  **Solution/Protocol**: Changed from 3-column comparison (Hyperscaled/FTMO/Typical) to 2-column (Hyperscaled/FTMO). Added new rows: Profit Target, Evaluation, Weekend Trading. Changed LockOpen → Fingerprint icon. Updated payout copy to "7-day cycle". Added ✅ checkmarks via `Set` lookup. Added full-width banner tagline above ("Permissionless. Open-Source. Onchain.").
+
+  **HowItWorks**: 3 new steps with mockup components:
+  - Step 01: "Start Your Evaluation" + TierSelectorMockup ($25K/$50K/$100K)
+  - Step 02: "Trade on Hyperliquid" + DashboardMockup (status + progress)
+  - Step 03: "Hit the Target. Get Paid." + PayoutMockup (bar chart + payout row)
+  - Icons: CurrencyDollar, TrendUp, Trophy
+
+  **Features**: All 6 cards rewritten per spec. "Grow Your Account" card uses ScalingPathVisual from shared components.
+
+  **PartnersCTA** (new): Dark card section between Features and FAQ. "FOR OPERATORS & INSTITUTIONS" label, "Run your own funded trading firm." headline, CTA linking to /partners.
+
+  **FAQ**: Added `Link` import, "View full FAQ →" link to `/faq` in left sticky panel.
+
+  **Responsive**: Verified at 375px (mobile), 768px (tablet), 1280px (desktop). No horizontal overflow, cards stack on mobile, comparison table readable, text legible at all breakpoints.
+
 ## In progress
 
 Nothing currently in progress.
 
 ## Next action
 
-Phase 3 — Home Page Overhaul (see docs/PHASES.md).
+Phase 4 — Pricing Page (see docs/PHASES.md).
 
 ## Known issues
 

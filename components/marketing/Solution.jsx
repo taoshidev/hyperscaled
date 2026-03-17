@@ -2,7 +2,7 @@
 
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
-import { ShieldCheck, LinkSimple, Globe, LockOpen } from '@phosphor-icons/react'
+import { ShieldCheck, LinkSimple, Globe, Fingerprint } from '@phosphor-icons/react'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -25,7 +25,7 @@ const pillars = [
   {
     icon: LinkSimple,
     title: 'Onchain Payouts',
-    desc: 'USDC direct to your wallet monthly. Fully verifiable.',
+    desc: 'USDC direct to your wallet on a 7-day cycle. Fully verifiable.',
   },
   {
     icon: Globe,
@@ -33,22 +33,25 @@ const pillars = [
     desc: 'Open to every trader in every country. No geographic exclusions.',
   },
   {
-    icon: LockOpen,
-    title: 'Permissionless Cryptographic KYC',
-    desc: "Connect your Hyperliquid wallet. Cryptographically sign, that's all we need.",
+    icon: Fingerprint,
+    title: 'Cryptographic Identity',
+    desc: "Connect your Hyperliquid wallet. Sign cryptographically. That's all we\u00a0need.",
   },
 ]
 
 const compareRows = [
-  { label: 'Non-Custodial',       hs: 'Yes',        ftmo: 'No',           typical: 'No' },
-  { label: 'KYC Required',        hs: 'None',       ftmo: 'Full KYC',     typical: 'Full KYC' },
-  { label: 'Profit Split',        hs: '100%',        ftmo: 'Up to 90%',    typical: '70–80%' },
-  { label: 'Payout Verification', hs: 'Onchain',    ftmo: 'Centralized',  typical: 'Centralized' },
-  { label: 'Max Account',         hs: '$2.5M',      ftmo: '$400K',        typical: '$200K' },
-  { label: 'News Trading',        hs: 'Allowed',    ftmo: 'Restricted',   typical: 'Restricted' },
+  { label: 'Profit Target',       hs: '10%',        ftmo: '15%' },
+  { label: 'Evaluation',          hs: '1-Step',     ftmo: '2-Step' },
+  { label: 'Non-Custodial',       hs: 'Yes',        ftmo: 'No' },
+  { label: 'KYC Required',        hs: 'None',       ftmo: 'Full KYC' },
+  { label: 'Profit Split',        hs: '100%',       ftmo: 'Up to 90%' },
+  { label: 'Payout Verification', hs: 'Onchain',    ftmo: 'Centralized' },
+  { label: 'Max Account',         hs: '$2.5M',      ftmo: '$400K' },
+  { label: 'News Trading',        hs: 'Allowed',    ftmo: 'Restricted' },
+  { label: 'Weekend Trading',     hs: 'Allowed',    ftmo: 'Restricted' },
 ]
 
-const hsBest = ['Yes', 'None', '100%', 'Onchain', '$2.5M', 'Allowed']
+const hsBest = new Set(['10%', '1-Step', 'Yes', 'None', '100%', 'Onchain', '$2.5M', 'Allowed'])
 
 export default function Solution() {
   const ref = useRef(null)
@@ -73,7 +76,7 @@ export default function Solution() {
             Onchain.
           </p>
           <p className="text-base text-zinc-400 max-w-[55ch] mx-auto">
-            Built to remove hidden rules, opaque payouts, and centralized discretion.
+            Built to remove hidden rules, opaque payouts, and centralized&nbsp;discretion.
           </p>
         </motion.div>
 
@@ -96,7 +99,7 @@ export default function Solution() {
               </h2>
               <p className="text-base text-zinc-400 leading-relaxed max-w-[52ch]">
                 Hyperscaled mirrors your Hyperliquid trades into a protocol-funded simulated account
-                and pays out performance rewards in USDC — onchain, automatically, monthly.
+                and pays out performance rewards in USDC — onchain, automatically, on a 7-day&nbsp;cycle.
               </p>
             </motion.div>
 
@@ -127,7 +130,7 @@ export default function Solution() {
             </motion.div>
           </div>
 
-          {/* Right — comparison table */}
+          {/* Right — comparison table (Hyperscaled vs FTMO) */}
           <motion.div
             ref={tableRef}
             initial={{ opacity: 0, x: 24 }}
@@ -136,40 +139,34 @@ export default function Solution() {
             className="bg-zinc-900/50 border border-white/[0.06] rounded-2xl overflow-hidden"
           >
             {/* Table header */}
-            <div className="grid grid-cols-4 border-b border-white/[0.06]">
-              <div className="col-span-1 p-4 text-xs text-zinc-500 font-medium" />
+            <div className="grid grid-cols-3 border-b border-white/[0.06]">
+              <div className="p-4 text-xs text-zinc-500 font-medium" />
               <div className="p-4 text-center">
                 <span className="text-xs font-semibold text-teal-400">Hyperscaled</span>
               </div>
               <div className="p-4 text-center">
                 <span className="text-xs text-zinc-400">FTMO</span>
               </div>
-              <div className="p-4 text-center">
-                <span className="text-xs text-zinc-400">Typical</span>
-              </div>
             </div>
 
             {/* Table rows */}
             {compareRows.map((row, i) => {
-              const isHsBest = hsBest.includes(row.hs)
+              const isHsBest = hsBest.has(row.hs)
               return (
                 <div
                   key={row.label}
-                  className={`grid grid-cols-4 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.02] transition-colors ${
+                  className={`grid grid-cols-3 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.02] transition-colors ${
                     i % 2 === 0 ? '' : 'bg-white/[0.01]'
                   }`}
                 >
-                  <div className="col-span-1 p-3.5 text-xs text-zinc-500">{row.label}</div>
+                  <div className="p-3.5 text-xs text-zinc-500">{row.label}</div>
                   <div className="p-3.5 text-center">
                     <span className={`text-xs font-semibold ${isHsBest ? 'text-teal-400' : 'text-zinc-300'}`}>
-                      {row.hs}
+                      {row.hs}{isHsBest ? ' ✅' : ''}
                     </span>
                   </div>
                   <div className="p-3.5 text-center">
                     <span className="text-xs text-zinc-500">{row.ftmo}</span>
-                  </div>
-                  <div className="p-3.5 text-center">
-                    <span className="text-xs text-zinc-500">{row.typical}</span>
                   </div>
                 </div>
               )

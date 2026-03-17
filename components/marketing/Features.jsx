@@ -10,6 +10,7 @@ import {
   Lightning,
   FileText,
 } from '@phosphor-icons/react'
+import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -27,7 +28,7 @@ const features = [
   {
     icon: CheckCircle,
     title: 'One-Step Evaluation',
-    body: 'Trade, perform, and unlock funded capital through a transparent, rules-based evaluation. Hit 10% profit, keep drawdown under 5%. One step — no second phase, no retakes.',
+    body: 'Trade, perform, and unlock funded capital through a transparent, rules-based evaluation. Hit 10% profit, keep drawdown under 5%. One step — no second phase, no\u00a0retakes.',
     span: 'md:col-span-7',
     large: true,
     extra: (
@@ -52,36 +53,19 @@ const features = [
   {
     icon: TrendUp,
     title: 'Grow Your Account',
-    body: 'Strong performance unlocks access to more capital, with scaling up to $2.5M.',
+    body: 'Hit a 5% quarterly return with a Sharpe ratio above 1 and your account scales automatically — no application, no fees. $100K accounts scale all the way to\u00a0$2.5M.',
     span: 'md:col-span-5',
     large: false,
     extra: (
       <div className="mt-5">
-        <div className="flex justify-between text-xs text-zinc-500 mb-1.5">
-          <span>$100K → $2.5M</span>
-          <span>Scaling path</span>
-        </div>
-        <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
-          <motion.div
-            className="h-1.5 rounded-full bg-teal-400"
-            initial={{ width: 0 }}
-            whileInView={{ width: '100%' }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.2, ease: 'easeOut', delay: 0.4 }}
-          />
-        </div>
-        <div className="flex items-center justify-between mt-3">
-          {['$100K', '$250K', '$500K', '$1M', '$2.5M'].map((t) => (
-            <span key={t} className="text-xs text-zinc-600 font-mono">{t}</span>
-          ))}
-        </div>
+        <ScalingPathVisual />
       </div>
     ),
   },
   {
     icon: CurrencyDollar,
     title: 'USDC In, USDC Out',
-    body: 'Pay and get paid in USDC. Payouts go directly to your wallet with no withdrawal fees.',
+    body: 'Pay your registration fee in USDC and receive performance rewards in USDC — directly to your wallet with no withdrawal fees, no delays, no\u00a0intermediaries.',
     span: 'md:col-span-5',
     large: false,
     extra: (
@@ -90,14 +74,14 @@ const features = [
           <span>Payout → your wallet</span>
           <span className="text-teal-400">+$1,271.23 USDC</span>
         </div>
-        <div className="text-zinc-600 text-xs mt-1">0x4a5b...8d9e · onchain · 2 days ago</div>
+        <div className="text-zinc-600 text-xs mt-1">onchain · 2 days ago</div>
       </div>
     ),
   },
   {
     icon: LinkSimple,
     title: 'Onchain Transparency',
-    body: 'Every payout is tracked onchain, powered by decentralized infrastructure. No exceptions. No black boxes. Every rule, every reward — fully auditable.',
+    body: 'Every payout is tracked onchain. No exceptions. No black boxes. Every rule, every reward — fully\u00a0auditable.',
     span: 'md:col-span-7',
     large: false,
     extra: (
@@ -116,14 +100,14 @@ const features = [
   {
     icon: Lightning,
     title: 'Trade on Hyperliquid',
-    body: 'Use the platform you know and love. You bring the skill, the network provides funded account access. No new platform to learn.',
+    body: 'Use the platform you already trade on. Same order book. Same fills. Same execution. No new platform to learn — just bring your\u00a0edge.',
     span: 'md:col-span-6',
     large: false,
   },
   {
     icon: FileText,
     title: 'Transparent Rules',
-    body: 'All evaluation rules are clear and open-source. Nothing hidden or opaque.',
+    body: 'All evaluation rules are clear, fixed, and published. Nothing hidden, nothing\u00a0discretionary.',
     span: 'md:col-span-6',
     large: false,
     extra: (
@@ -157,7 +141,7 @@ export default function Features() {
             Features
           </span>
           <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-xl">
-            Built for traders who trade with an edge.
+            Built for traders who trade with an&nbsp;edge.
           </h2>
         </motion.div>
 

@@ -2,39 +2,34 @@
 
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
-import { Buildings, PuzzlePiece, TrendUp, ArrowRight } from '@phosphor-icons/react'
+import { CurrencyDollar, TrendUp, Trophy, ArrowRight } from '@phosphor-icons/react'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
 /* ── Right-panel mockups ─────────────────────────────────────── */
 
-function PropFirmMockup() {
-  const plans = [
-    { name: 'Bitcast', size: '$25,000', highlight: false, logo: '/bitcast.svg' },
-    { name: 'Beanstock', size: '$50,000', highlight: true, logo: '/beanstock.png' },
-    { name: 'Arcline Capital', size: '$100,000', highlight: false, logo: '/arcline.png' },
+function TierSelectorMockup() {
+  const tiers = [
+    { size: '$25,000', price: '$149', highlight: false },
+    { size: '$50,000', price: '$249', highlight: true },
+    { size: '$100,000', price: '$449', highlight: false },
   ]
   return (
     <div className="w-full max-w-sm space-y-2.5">
-      {plans.map((p) => (
+      {tiers.map((t) => (
         <div
-          key={p.name}
+          key={t.size}
           className={`flex items-center justify-between px-4 py-3.5 rounded-xl border transition-colors ${
-            p.highlight
+            t.highlight
               ? 'bg-teal-400/5 border-teal-400/25'
               : 'bg-zinc-800/60 border-white/[0.06]'
           }`}
         >
-          <div className="flex items-center gap-2">
-            {p.logo && (
-              <img src={p.logo} alt="" className="w-6 h-6 rounded-md shrink-0 object-contain" />
-            )}
-            <div className={`text-sm font-semibold ${p.highlight ? 'text-white' : 'text-zinc-300'}`}>
-              {p.name}
-            </div>
+          <div className={`text-sm font-semibold ${t.highlight ? 'text-white' : 'text-zinc-300'}`}>
+            {t.size}
           </div>
-          <span className={`text-xs font-mono ${p.highlight ? 'text-teal-400' : 'text-zinc-500'}`}>
-            {p.size}
+          <span className={`text-xs font-mono ${t.highlight ? 'text-teal-400' : 'text-zinc-500'}`}>
+            {t.price}
           </span>
         </div>
       ))}
@@ -42,21 +37,14 @@ function PropFirmMockup() {
   )
 }
 
-function ExtensionMockup() {
+function DashboardMockup() {
   const rows = [
     { label: 'Challenge', value: 'Phase 1', valueClass: 'text-white' },
-    { label: 'Daily Loss', value: '−$120 / $500', valueClass: 'text-zinc-300' },
+    { label: 'Daily Loss', value: '\u2212$120 / $500', valueClass: 'text-zinc-300' },
     { label: 'Profit Target', value: '92.4%', valueClass: 'text-teal-400' },
   ]
   return (
     <div className="w-full max-w-sm rounded-xl overflow-hidden border border-white/[0.08] bg-zinc-900">
-      {/* Browser chrome */}
-      <div className="flex items-center gap-1.5 px-3 py-2.5 bg-zinc-800/80 border-b border-white/[0.06]">
-        <span className="w-2.5 h-2.5 rounded-full bg-zinc-600" />
-        <span className="w-2.5 h-2.5 rounded-full bg-zinc-600" />
-        <span className="w-2.5 h-2.5 rounded-full bg-zinc-600" />
-        <div className="ml-2 flex-1 h-4 rounded bg-zinc-700/60" />
-      </div>
       {/* Status row */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-white/[0.06]">
         <span className="w-2 h-2 rounded-full bg-teal-400 shrink-0" style={{ boxShadow: '0 0 6px rgba(0,198,167,0.7)' }} />
@@ -70,24 +58,12 @@ function ExtensionMockup() {
             <span className={`text-xs font-mono font-medium ${r.valueClass}`}>{r.value}</span>
           </div>
         ))}
-      </div>
-      {/* Store listing card */}
-      <div className="mx-3 mb-3 mt-1 flex items-center gap-3 rounded-xl border border-white/[0.07] bg-zinc-800/50 px-3 py-2.5">
-        <div className="relative shrink-0">
-          <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-white/[0.08] overflow-hidden flex items-center justify-center">
-            <img src="/hyperscaled-mark.svg" alt="" className="w-7 h-7" />
-          </div>
-          <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-zinc-700 border border-zinc-900 flex items-center justify-center">
-            <PuzzlePiece size={11} weight="regular" className="text-teal-400" />
+        {/* Profit target progress bar */}
+        <div className="pt-1">
+          <div className="h-1.5 rounded-full bg-white/[0.06]">
+            <div className="h-1.5 rounded-full bg-teal-400 w-[92%]" />
           </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-xs font-semibold text-white leading-tight">Hyperscaled Extension</div>
-          <div className="text-xs text-zinc-500 mt-0.5">Chrome Web Store · 2.1k installs</div>
-        </div>
-        <span className="text-xs font-semibold text-teal-400 whitespace-nowrap flex items-center gap-0.5">
-          Add to Chrome <ArrowRight size={10} weight="bold" />
-        </span>
       </div>
     </div>
   )
@@ -112,7 +88,7 @@ function PayoutMockup() {
           {bars.map((h, i) => (
             <div
               key={i}
-              className={`flex-1 rounded-sm transition-colors ${i >= 5 ? 'bg-teal-400' : 'bg-zinc-700'}`}
+              className={`flex-1 rounded-sm ${i >= 5 ? 'bg-teal-400' : 'bg-zinc-700'}`}
               style={{ height: `${h}%` }}
             />
           ))}
@@ -138,23 +114,23 @@ function PayoutMockup() {
 const steps = [
   {
     number: '01',
-    icon: Buildings,
-    title: 'Choose a Prop Firm',
-    body: 'Select from verified prop firms offering competitive pricing and profit splits. No hidden fees, instant credentials.',
-    mockup: <PropFirmMockup />,
+    icon: CurrencyDollar,
+    title: 'Start Your Evaluation',
+    body: 'Choose your account size — $25K, $50K, or $100K. Pay a one-time USDC registration fee. No recurring charges, no\u00a0subscriptions.',
+    mockup: <TierSelectorMockup />,
   },
   {
     number: '02',
     icon: TrendUp,
     title: 'Trade on Hyperliquid',
-    body: 'Connect your Hyperliquid wallet. Trade exactly how you trade today — same interface, same order book, same fills. Hyperscaled reads your performance automatically in the background.',
-    mockup: <ExtensionMockup />,
+    body: 'Connect your Hyperliquid wallet. Trade exactly how you trade today — same interface, same order book, same fills. Hyperscaled reads your performance automatically in the\u00a0background.',
+    mockup: <DashboardMockup />,
   },
   {
     number: '03',
-    icon: TrendUp,
-    title: 'Trade & Get Funded',
-    body: 'Hit 10% profit targets to scale up to $2.5M. Payouts are automated onchain monthly directly to your wallet.',
+    icon: Trophy,
+    title: 'Hit the Target. Get Paid.',
+    body: 'Hit the 10% profit target while keeping drawdown under 5%. Pass and your funded account activates immediately. Payouts are automated onchain to your wallet every 7\u00a0days. Keep 100% of everything you\u00a0earn.',
     mockup: <PayoutMockup />,
   },
 ]
@@ -183,7 +159,7 @@ export default function HowItWorks() {
           </span>
           <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-2xl">
             Trade on Hyperliquid.{' '}
-            <span className="text-zinc-500">Get funded by the network.</span>
+            <span className="text-zinc-500">Get funded by the&nbsp;network.</span>
           </h2>
         </motion.div>
 
