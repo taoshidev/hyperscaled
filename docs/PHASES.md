@@ -9,7 +9,7 @@ Last updated: 2026-03-17
 | 0 | Global Compliance + Design Rule Sweep | Done | — |
 | 1 | Nav + Footer Overhaul | Done | Phase 0 |
 | 2 | Shared Constants + Components | Done | Phase 0 |
-| 3 | Home Page Overhaul (`/`) | Not Started | Phase 1, 2 |
+| 3 | Home Page Overhaul (`/`) | Done | Phase 1, 2 |
 | 4 | Pricing Page (`/pricing`) | Not Started | Phase 1, 2 |
 | 5 | How It Works Page (`/how-it-works`) | Not Started | Phase 1, 2 |
 | 6 | Rules Page (`/rules`) | Not Started | Phase 1, 2 |

@@ -7,6 +7,7 @@ import Problem from './marketing/Problem'
 import Solution from './marketing/Solution'
 import HowItWorks from './marketing/HowItWorks'
 import Features from './marketing/Features'
+import PartnersCTA from './marketing/PartnersCTA'
 import FAQ from './marketing/FAQ'
 import Footer from './marketing/Footer'
 
@@ -21,6 +22,7 @@ export default function App() {
         <Solution />
         <HowItWorks />
         <Features />
+        <PartnersCTA />
         <FAQ />
       </main>
       <Footer />

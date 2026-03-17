@@ -20,27 +20,23 @@ const painPoints = [
   {
     icon: IdentificationCard,
     title: 'KYC and geographic bans lock out most of the world',
-    body: 'Every major prop firm requires passport scans, proof of address, and a compliant bank account. Traders in 150+ countries are rejected outright — no exceptions, no appeals.',
+    body: 'Every major prop firm requires passport scans, proof of address, and a compliant bank account. Traders in 150+ countries are rejected outright — no exceptions, no\u00a0appeals.',
     tag: 'Rejected',
     tagColor: 'text-red-400 bg-red-400/10 border-red-400/20',
-    span: 'md:col-span-2',
   },
   {
     icon: ChartLineDown,
-    title: 'You earn 70%. They take up to 30% for doing nothing.',
-    body: 'Legacy prop firms extract 10–30% of your profits permanently. No accountability, no transparency — they just keep a cut of every winning trade you make, even though its simulated accounts.',
+    title: 'You earn 70%. They take 30% for doing nothing.',
+    body: 'Legacy prop firms extract 10–30% of your profits permanently. No accountability, no transparency — they keep a cut of every winning trade you make, even on simulated\u00a0accounts.',
     tag: 'Up to 30% Cut',
     tagColor: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
-    span: 'md:col-span-1',
   },
   {
     icon: ClockCountdown,
     title: 'Discretionary payouts. They may not even pay you.',
-    body: 'Centralized prop firms control your earnings under full discretion — they can delay, dispute, or deny payouts with zero accountability. No guarantees, no appeals, no transparency.',
-    body2: 'Hyperscaled gives 100% payouts because we live trade the best traders. When traders win, the network wins.',
-    tag: 'No Guarantee',
-    tagColor: 'text-zinc-400 bg-zinc-400/10 border-zinc-400/20',
-    span: 'md:col-span-2',
+    body: 'Centralized prop firms control your earnings under full discretion — they can delay, dispute, or deny payouts with zero accountability. No guarantees, no appeals, no\u00a0transparency.',
+    tag: 'No Guarantees',
+    tagColor: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
   },
 ]
 
@@ -63,15 +59,15 @@ export default function Problem() {
           </span>
           <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-2xl mb-5">
             Prop firms take up to 30%.{' '}
-            <span className="text-zinc-500">Then ghost you on payouts.</span>
+            <span className="text-zinc-500">Then ghost you on&nbsp;payouts.</span>
           </h2>
           <p className="text-base text-zinc-400 leading-relaxed max-w-[60ch]">
             Legacy funded trading is broken by design. KYC walls, profit extraction, and centralized
-            discretion mean profitable traders are systematically underserved.
+            discretion mean profitable traders are systematically&nbsp;underserved.
           </p>
         </motion.div>
 
-        {/* Pain point cards — asymmetric grid */}
+        {/* Pain point cards — 3 equal columns */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -84,8 +80,8 @@ export default function Problem() {
               <motion.div
                 key={pt.title}
                 variants={itemVariants}
-                className={`${pt.span} relative bg-zinc-900/40 border border-white/[0.06] rounded-2xl p-6 md:p-8
-                  group hover:border-white/[0.10] transition-[border-color] overflow-hidden`}
+                className="relative bg-zinc-900/40 border border-white/[0.06] rounded-2xl p-6 md:p-8
+                  group hover:border-white/[0.10] transition-[border-color] overflow-hidden"
               >
                 {/* Subtle glow on hover */}
                 <div
@@ -112,23 +108,30 @@ export default function Problem() {
                   <h3 className="text-base font-semibold text-white tracking-tight mb-3 leading-snug">
                     {pt.title}
                   </h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed mb-4">{pt.body}</p>
-                  {pt.body2 && (
-                    <div className="relative rounded-xl border border-teal-400/25 bg-teal-400/[0.06] px-4 py-3.5 overflow-hidden">
-                      <div
-                        className="absolute inset-0 pointer-events-none"
-                        style={{ background: 'radial-gradient(circle at 0% 50%, rgba(0,198,167,0.12), transparent 70%)' }}
-                      />
-                      <div className="relative flex items-start gap-3">
-                        <span className="mt-0.5 shrink-0 w-1.5 h-1.5 rounded-full bg-teal-400 pulse-teal" />
-                        <p className="text-sm font-semibold text-teal-300 leading-relaxed">{pt.body2}</p>
-                      </div>
-                    </div>
-                  )}
+                  <p className="text-sm text-zinc-400 leading-relaxed">{pt.body}</p>
                 </div>
               </motion.div>
             )
           })}
+        </motion.div>
+
+        {/* Callout bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ ...spring, delay: 0.4 }}
+          className="mt-6 rounded-xl border border-teal-400/25 bg-teal-400/[0.06] px-5 py-4 overflow-hidden relative"
+        >
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: 'radial-gradient(circle at 0% 50%, rgba(0,198,167,0.12), transparent 70%)' }}
+          />
+          <div className="relative flex items-start gap-3">
+            <span className="mt-1 shrink-0 w-2 h-2 rounded-full bg-teal-400 pulse-teal" />
+            <p className="text-sm font-semibold text-teal-300 leading-relaxed">
+              Hyperscaled pays 100% performance rewards because the network is aligned with trader success — not extracting your&nbsp;edge.
+            </p>
+          </div>
         </motion.div>
       </div>
     </section>

@@ -18,13 +18,7 @@ const cardVariants = {
 }
 
 const STAT_ICONS = [ChartLineUp, UsersThree, CurrencyDollar, Scales, Percent]
-const STAT_BADGES = [
-  { text: 'Live', pulse: true },
-  null,
-  null,
-  { text: 'Scaling Active', pulse: true },
-  null,
-]
+const STAT_BADGES = [null, null, null, null, null]
 const STAT_TEAL = [false, false, false, false, true]
 
 function parseValue(value) {

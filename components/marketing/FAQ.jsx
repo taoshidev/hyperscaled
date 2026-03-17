@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { Plus, Minus } from '@phosphor-icons/react'
+import Link from 'next/link'
 import { FAQ_ITEMS, HOME_FAQ_IDS } from '@/lib/constants'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
@@ -89,16 +90,23 @@ export default function FAQ() {
               out in the open-source protocol rules.
             </p>
 
-            <div className="mt-8 p-4 rounded-xl bg-zinc-900/50 border border-white/[0.06]">
-              <div className="text-xs text-zinc-500 mb-1">Still have questions?</div>
+            <div className="mt-8 p-4 rounded-xl bg-zinc-900/50 border border-white/[0.06] space-y-2">
+              <div className="text-xs text-zinc-500">Still have questions?</div>
               <a
-                href="https://discord.gg/hyperscaled"
+                href="#"
                 target="_blank"
                 rel="noreferrer"
-                className="text-sm text-teal-400 hover:text-teal-300 transition-colors font-medium"
+                className="text-sm text-teal-400 hover:text-teal-300 transition-colors font-medium block"
               >
+                {/* TODO: Replace with real Discord URL */}
                 Join our Discord →
               </a>
+              <Link
+                href="/faq"
+                className="text-sm text-zinc-400 hover:text-zinc-300 transition-colors font-medium block"
+              >
+                View full FAQ →
+              </Link>
             </div>
           </motion.div>
 

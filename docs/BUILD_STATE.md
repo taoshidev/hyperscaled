@@ -4,16 +4,17 @@ Last updated: 2026-03-17
 
 ## Marketing Site (`/`)
 
-**Status**: Complete (first pass) — compliance sweep needed
+**Status**: Complete — Phase 3 home page overhaul done
 
 | Item | State |
 |------|-------|
-| Hero + CTA | Done |
-| Features section | Done |
-| How It Works | Done |
-| Problem / Solution | Done |
-| Stats section | Done |
-| FAQ | Done |
+| Hero + CTA | Done — Phase 3: external CTA to app.hyperscaled.trade, "Learn More" secondary, updated widget header (7d cycle), updated subhead copy |
+| Features section | Done — Phase 3: 6 cards rewritten per spec, ScalingPathVisual in "Grow Your Account" card |
+| How It Works | Done — Phase 3: 3 new steps (Start Evaluation → Trade on Hyperliquid → Hit the Target), TierSelectorMockup, DashboardMockup, PayoutMockup |
+| Problem / Solution | Done — Phase 3: Problem = 3 equal columns + teal callout bar. Solution = Hyperscaled vs FTMO comparison table (9 rows), 4 protocol pillars, banner tagline |
+| Stats section | Done — Phase 3: badges removed, imports from NETWORK_STATS |
+| FAQ | Done — Phase 3: "View full FAQ →" link added to sticky sidebar |
+| PartnersCTA | Done — Phase 3: new section between Features and FAQ, links to /partners |
 | Footer | Done — 4-column layout (Brand, Protocol, Community, Legal), social icons, "Built on Hyperliquid · Powered by Bittensor", © 2026. Placeholder URLs have TODO comments. |
 | Nav | Done — 6 route-based links (How It Works, Pricing, Rules, Leaderboard, Partners, FAQ), "Start Evaluation" external CTA, mobile hamburger menu. Search removed (backlog). |
 | Waitlist form | Done (to be removed) — spec has no waitlist form |
@@ -25,7 +26,7 @@ Last updated: 2026-03-17
 | Legal pages (`/terms`, `/privacy`, `/risk`) | Done — placeholder pages with "Coming soon." Content pending. |
 | TODO Polish tracker | Done — `docs/TODO_POLISH.md` tracks deferred URLs + legal content |
 
-**Next action**: Phase 3 — Home Page Overhaul (see docs/PHASES.md)
+**Next action**: Phase 4 — Pricing Page (see docs/PHASES.md)
 
 ## Shared Constants (`lib/constants.js`)
 
@@ -54,7 +55,7 @@ Last updated: 2026-03-17
 | FAQAccordion | Done — single-open, grouped mode, a11y, Framer Motion |
 | RulesTable | Done — desktop table / mobile stacked cards, label prop |
 
-**Next action**: Mount on pages during Phases 3–8
+**Next action**: Mount on pages during Phases 4–8
 
 ## Dashboard (`/dashboard`)
 
