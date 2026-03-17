@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hyperscaled — Launch Tracker</title>
+<style>
+:root {
+  --bg:#09090b; --card:rgba(255,255,255,0.03); --card-border:rgba(255,255,255,0.08);
+  --text:#e4e4e7; --dim:#a1a1aa; --muted:#71717a; --faint:#52525b; --rule:rgba(255,255,255,0.04);
+  --accent:#00C6A7; --accent-bg:rgba(0,198,167,0.1); --accent-border:rgba(0,198,167,0.4);
+  --blue:#60a5fa; --blue-bg:rgba(59,130,246,0.1); --blue-border:rgba(59,130,246,0.4);
+  --yellow:#f59e0b; --yellow-bg:rgba(245,158,11,0.1); --yellow-border:rgba(245,158,11,0.3);
+  --red:#f87171; --red-bg:rgba(239,68,68,0.1); --red-border:rgba(239,68,68,0.3);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;line-height:1.5;padding:24px}
+.wrap{max-width:960px;margin:0 auto}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
+.label{font-size:13px;color:var(--accent);font-weight:600;letter-spacing:0.05em;text-transform:uppercase}
+h1{font-size:28px;font-weight:700;margin:4px 0 8px;color:#fafafa}
+.sub{color:var(--muted);font-size:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0}
+.card{background:var(--card);border:1px solid var(--card-border);border-radius:10px;padding:16px 18px}
+.card .cl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px}
+.card .cv{font-size:26px;font-weight:700}
+.card .cs{font-size:12px;color:var(--faint);margin-top:2px}
+.bar-track{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-bottom:28px}
+.bar-fill{height:100%;background:linear-gradient(90deg,#00C6A7,#00A88D);border-radius:3px;transition:width 0.4s}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--card-border);margin-bottom:24px}
+.tab{padding:8px 16px;font-size:13px;font-weight:400;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;margin-bottom:-1px;transition:color 0.2s}
+.tab.on{font-weight:600;color:#fafafa;border-bottom-color:var(--accent)}
+.tab:hover{color:var(--dim)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.panel{background:var(--card);border:1px solid var(--card-border);border-radius:10px;padding:20px}
+.panel h3{font-size:14px;font-weight:600;color:var(--dim);margin:0 0 14px}
+.pipe-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;margin-bottom:4px;border:1px solid transparent;cursor:pointer}
+.pipe-row:hover{background:rgba(255,255,255,0.02)}
+.pipe-id{font-size:11px;font-weight:700;min-width:20px}
+.pipe-name{font-size:13px;flex:1;color:#d4d4d8}
+.pipe-count{font-size:11px}
+.pipe-bar{width:48px;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden}
+.pipe-bar-fill{height:100%;border-radius:2px}
+.blocker{padding:8px 10px;border-radius:6px;background:rgba(255,255,255,0.02);margin-bottom:6px}
+.blocker .bt{font-size:13px;color:#d4d4d8}
+.blocker .bd{font-size:11px;color:var(--faint);margin-top:2px}
+.solid{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center;padding:3px 0}
+.solid .sc{color:var(--accent)}
+.phase-card{background:var(--card);border:1px solid var(--card-border);border-radius:10px;overflow:hidden;margin-bottom:10px}
+.phase-hdr{padding:14px 18px;cursor:pointer;display:flex;align-items:center;gap:12px;user-select:none}
+.phase-hdr:hover{background:rgba(255,255,255,0.02)}
+.badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;white-space:nowrap}
+.phase-scope{font-size:12px;color:var(--muted)}
+.phase-title{font-size:15px;font-weight:600;color:#fafafa;flex:1}
+.phase-count{font-size:12px;color:var(--faint)}
+.chev{color:var(--faint);font-size:14px;transition:transform 0.15s}
+.chev.open{transform:rotate(90deg)}
+.phase-deps{padding:0 18px 6px;display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.dep-tag{font-size:11px;color:var(--muted);background:rgba(255,255,255,0.05);padding:1px 6px;border-radius:3px}
+.phase-body{padding:4px 18px 16px;display:none}
+.phase-body.open{display:block}
+.phase-info{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--faint);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--rule)}
+.item-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--rule);cursor:pointer}
+.item-row:first-child{border-top:none}
+.check{width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.check-on{background:var(--accent);color:var(--bg)}
+.check-off{border:1px solid rgba(255,255,255,0.15)}
+.item-text{font-size:13px;color:#d4d4d8}
+.item-done .item-text{color:var(--faint);text-decoration:line-through}
+.item-ct{font-size:11px;color:var(--muted);margin-left:auto}
+.session-log{margin-top:12px;padding:10px 12px;background:rgba(0,0,0,0.25);border-radius:6px}
+.session-log-title{font-size:11px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+.sesh{font-size:12px;color:var(--dim);padding:2px 0;display:flex;gap:8px}
+.sesh .sn{color:var(--accent);font-weight:600;min-width:70px}
+.next-banner{background:var(--accent-bg);border:1px solid var(--accent-border);border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px}
+.next-badge{background:var(--accent);color:var(--bg);font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px}
+.next-text{font-size:13px;color:#d4d4d8}
+.next-text strong{color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{border-bottom:1px solid var(--card-border)}
+th{padding:10px 14px;text-align:left;color:var(--muted);font-weight:500;font-size:12px}
+td{padding:10px 14px;border-bottom:1px solid var(--rule)}
+.mono{font-family:'SF Mono',Monaco,Consolas,monospace;font-size:12px;color:var(--dim)}
+.viol-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.viol-card{border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.viol-name{font-size:13px;font-weight:500;color:#d4d4d8}
+.viol-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.viol-num{font-size:22px;font-weight:700}
+.dec-row{padding:12px 16px;border-radius:8px;display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.dec-q{font-size:13px;color:#d4d4d8;flex:1}
+.dec-a{font-size:12px;color:var(--accent)}
+.todo-row{padding:8px 0;border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:10px;font-size:13px}
+.pri{font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;text-transform:uppercase}
+.pri-high{background:var(--red-bg);color:var(--red)}
+.pri-medium{background:var(--yellow-bg);color:var(--yellow)}
+.pri-low{background:var(--blue-bg);color:var(--blue)}
+.scan-row{display:flex;gap:6px;align-items:flex-start;padding:3px 0;font-size:12px}
+.scan-file{color:var(--accent);font-family:'SF Mono',Monaco,Consolas,monospace;min-width:200px;flex-shrink:0}
+.scan-msg{color:var(--dim)}
+.hidden{display:none}
+@media(max-width:700px){.grid4{grid-template-columns:repeat(2,1fr)}.grid2,.viol-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║  TRACKER DATA — AUTO-INJECTED BY generate-dashboard.sh         ║
+// ║  Do not hand-edit below this line. Edit TRACKER.json instead.  ║
+// ╚══════════════════════════════════════════════════════════════════╝
+const TRACKER = {
+  "project": "Hyperscaled Marketing Website",
+  "lastUpdated": "2026-03-17T10:00:00Z",
+  "phases": [
+    {
+      "id": 0, "name": "Global Compliance Sweep", "status": "done",
+      "scope": "All existing files", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [],
+      "sessions": [{ "session": 1, "date": "2026-03-15", "notes": "All 9 compliance items fixed across 23 files (75 total fixes)" }],
+      "items": [
+        { "name": "Remove Vanta branding", "status": "done", "count": 9 },
+        { "name": "Remove Built on Bittensor", "status": "done", "count": 1 },
+        { "name": "Fix Up to 100%", "status": "done", "count": 2 },
+        { "name": "Remove Chrome Extension refs", "status": "done", "count": 2 },
+        { "name": "Fix funding language", "status": "done", "count": 1 },
+        { "name": "Fix copyright year", "status": "done", "count": 1 },
+        { "name": "Fix text-[10px]", "status": "done", "count": 44 },
+        { "name": "Fix transition-all", "status": "done", "count": 7 },
+        { "name": "Fix min-h-screen", "status": "done", "count": 8 }
+      ]
+    },
+    {
+      "id": 1, "name": "Nav + Footer Overhaul", "status": "done",
+      "scope": "Nav.jsx, Footer.jsx", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [0],
+      "sessions": [{ "session": 2, "date": "2026-03-16", "notes": "Nav + footer rebuilt, search removed to backlog" }],
+      "items": [
+        { "name": "Nav 6 route-based links", "status": "done" },
+        { "name": "Remove old nav links", "status": "done" },
+        { "name": "Start Evaluation CTA", "status": "done" },
+        { "name": "All links to standalone routes", "status": "done" },
+        { "name": "Footer 4-column layout", "status": "done" },
+        { "name": "Footer bottom bar copy", "status": "done" },
+        { "name": "Social placeholders + TODO_POLISH.md", "status": "done" }
+      ]
+    },
+    {
+      "id": 2, "name": "Shared Constants + Components", "status": "not_started",
+      "scope": "lib/constants.js, shared/", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [0], "sessions": [],
+      "items": [
+        { "name": "SCALING_PATH constant", "status": "pending" },
+        { "name": "EVAL_RULES + FUNDED_RULES constants", "status": "pending" },
+        { "name": "FAQ_ITEMS constant", "status": "pending" },
+        { "name": "PRICING_TIERS constant", "status": "pending" },
+        { "name": "NETWORK_STATS constant", "status": "pending" },
+        { "name": "Rename VANTA_USDC_WALLET", "status": "pending" },
+        { "name": "ScalingPathVisual component", "status": "pending" },
+        { "name": "FAQAccordion component", "status": "pending" }
+      ]
+    },
+    {
+      "id": 3, "name": "Home Page Overhaul", "status": "not_started",
+      "scope": "components/marketing/*", "estSessions": "2–3 sessions", "estHours": 5,
+      "dependsOn": [1, 2], "sessions": [],
+      "items": [
+        { "name": "Hero section", "status": "pending" },
+        { "name": "Network Stats Bar", "status": "pending" },
+        { "name": "Problem cards", "status": "pending" },
+        { "name": "Protocol/Comparison", "status": "pending" },
+        { "name": "How It Works 3 steps", "status": "pending" },
+        { "name": "Features 6 cards", "status": "pending" },
+        { "name": "Partners CTA section", "status": "pending" },
+        { "name": "FAQ condensed", "status": "pending" }
+      ]
+    },
+    {
+      "id": 4, "name": "Pricing Page", "status": "not_started",
+      "scope": "app/pricing/", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [1, 2], "sessions": [],
+      "items": [
+        { "name": "Launch pricing banner", "status": "pending" },
+        { "name": "Page hero", "status": "pending" },
+        { "name": "3-tier pricing cards", "status": "pending" },
+        { "name": "Whats Included row", "status": "pending" },
+        { "name": "Scaling path visual", "status": "pending" },
+        { "name": "Pricing FAQ mini", "status": "pending" }
+      ]
+    },
+    {
+      "id": 5, "name": "How It Works Page", "status": "not_started",
+      "scope": "app/how-it-works/", "estSessions": "1–2 sessions", "estHours": 3,
+      "dependsOn": [1, 2], "sessions": [],
+      "items": [
+        { "name": "Page hero + CTA", "status": "pending" },
+        { "name": "4-step expanded flow", "status": "pending" },
+        { "name": "Non-custodial explainer", "status": "pending" },
+        { "name": "Payout mechanics", "status": "pending" },
+        { "name": "Bottom CTA", "status": "pending" }
+      ]
+    },
+    {
+      "id": 6, "name": "Rules Page", "status": "not_started",
+      "scope": "app/rules/", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [1, 2], "sessions": [],
+      "items": [
+        { "name": "Page hero", "status": "pending" },
+        { "name": "Evaluation rules table", "status": "pending" },
+        { "name": "Funded account rules table", "status": "pending" },
+        { "name": "Scaling rules", "status": "pending" },
+        { "name": "Disqualification rules", "status": "pending" },
+        { "name": "KYC and payouts", "status": "pending" },
+        { "name": "Protocol transparency + CTA", "status": "pending" }
+      ]
+    },
+    {
+      "id": 7, "name": "FAQ Page", "status": "not_started",
+      "scope": "app/faq/", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [1, 2], "sessions": [],
+      "items": [
+        { "name": "Page hero", "status": "pending" },
+        { "name": "Full accordion by category", "status": "pending" },
+        { "name": "Discord + email links", "status": "pending" }
+      ]
+    },
+    {
+      "id": 8, "name": "Partners Page", "status": "not_started",
+      "scope": "app/partners/", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [1, 2], "sessions": [],
+      "items": [
+        { "name": "Page hero with CTAs", "status": "pending" },
+        { "name": "What You Control cards", "status": "pending" },
+        { "name": "Revenue model", "status": "pending" },
+        { "name": "How it works 4 steps", "status": "pending" },
+        { "name": "Division of responsibility", "status": "pending" },
+        { "name": "Funding capacity table", "status": "pending" },
+        { "name": "Application CTA", "status": "pending" }
+      ]
+    }
+  ],
+  "routes": [
+    { "path": "/", "label": "Home", "status": "exists-needs-overhaul", "phase": 3, "note": "Exists, needs full rebuild" },
+    { "path": "/how-it-works", "label": "How It Works", "status": "missing", "phase": 5 },
+    { "path": "/pricing", "label": "Pricing", "status": "missing", "phase": 4 },
+    { "path": "/rules", "label": "Rules", "status": "missing", "phase": 6 },
+    { "path": "/leaderboard", "label": "Leaderboard", "status": "complete", "phase": null, "note": "No changes needed" },
+    { "path": "/partners", "label": "Partners", "status": "missing", "phase": 8 },
+    { "path": "/faq", "label": "FAQ", "status": "missing", "phase": 7 },
+    { "path": "/register", "label": "Register", "status": "complete", "phase": null, "note": "3-step flow, working" },
+    { "path": "/dashboard", "label": "Dashboard", "status": "complete", "phase": null, "note": "SSE streaming, working" },
+    { "path": "/miner/[slug]", "label": "Miner Detail", "status": "complete", "phase": null, "note": "Dynamic route, working" },
+    { "path": "/status", "label": "Status", "status": "complete", "phase": null, "note": "Working" }
+  ],
+  "violations": [
+    { "name": "Vanta branding", "fixed": 9, "total": 9, "severity": "high" },
+    { "name": "Built on Bittensor", "fixed": 1, "total": 1, "severity": "high" },
+    { "name": "Up to 100%", "fixed": 2, "total": 2, "severity": "high" },
+    { "name": "Chrome Extension", "fixed": 2, "total": 2, "severity": "high" },
+    { "name": "Funding language", "fixed": 1, "total": 1, "severity": "high" },
+    { "name": "Copyright year", "fixed": 1, "total": 1, "severity": "high" },
+    { "name": "text-[10px]", "fixed": 44, "total": 44, "severity": "med" },
+    { "name": "transition-all", "fixed": 7, "total": 7, "severity": "med" },
+    { "name": "min-h-screen", "fixed": 8, "total": 8, "severity": "low" }
+  ],
+  "decisions": [
+    { "name": "Nav search behavior", "status": "resolved", "resolution": "Removed, backlogged" },
+    { "name": "Chrome Extension CTA on registration", "status": "open", "resolution": null },
+    { "name": "Social link URLs", "status": "resolved", "resolution": "Placeholders + TODO" },
+    { "name": "Docs link URL", "status": "resolved", "resolution": "Placeholder + TODO" },
+    { "name": "Legal pages", "status": "resolved", "resolution": "Placeholder pages created" },
+    { "name": "Partner application", "status": "resolved", "resolution": "mailto: partners@hyperscaled.trade" }
+  ],
+  "todoPolish": [
+    { "item": "Replace social link placeholders with real URLs", "priority": "medium" },
+    { "item": "Replace Docs link placeholder with real URL", "priority": "medium" },
+    { "item": "Resolve Chrome Extension CTA decision", "priority": "high" },
+    { "item": "Final accessibility pass on all pages", "priority": "low" },
+    { "item": "Performance audit (Lighthouse)", "priority": "low" },
+    { "item": "SEO meta tags for all routes", "priority": "medium" }
+  ],
+  "repoScan": {
+    "date": "2026-03-17",
+    "buildClean": true,
+    "buildNotes": "No errors, no warnings",
+    "deps": [
+      { "pkg": "next", "version": "15.3.x", "ok": true },
+      { "pkg": "react", "version": "19.x", "ok": true },
+      { "pkg": "tailwindcss", "version": "4.x", "ok": true },
+      { "pkg": "framer-motion", "version": "latest", "ok": true },
+      { "pkg": "@tanstack/react-query", "version": "latest", "ok": true },
+      { "pkg": "wagmi + viem + rainbowkit", "version": "latest", "ok": true }
+    ],
+    "solid": [
+      "Build passes clean — no errors",
+      "All deps current (Next 15.3, React 19, TW4)",
+      "Registration flow complete (3-step)",
+      "Dashboard + SSE streaming working",
+      "Leaderboard page — no changes needed",
+      "Design system (shiny-cta, skeleton, etc) solid",
+      "Miner detail page working",
+      "Status page working"
+    ],
+    "blockers": [
+      { "icon": "🔴", "text": "5 marketing pages don't exist yet", "detail": "/how-it-works, /pricing, /rules, /partners, /faq" },
+      { "icon": "🔴", "text": "Home page needs full overhaul", "detail": "Hero, stats, problem, protocol, features — all off-spec" },
+      { "icon": "🟡", "text": "Shared constants not centralized", "detail": "Pricing tiers, FAQ, rules, stats still hardcoded in components" },
+      { "icon": "🟡", "text": "No reusable ScalingPathVisual or FAQAccordion", "detail": "Needed by Pricing, FAQ, Home, Rules pages" },
+      { "icon": "🟡", "text": "1 open decision needs team input", "detail": "Chrome Extension CTA on registration" },
+      { "icon": "🟢", "text": "All 75 compliance violations fixed in P0", "detail": "Vanta branding, Bittensor, funding language, CSS issues" }
+    ]
+  }
+};
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║  END TRACKER DATA                                              ║
+// ╚══════════════════════════════════════════════════════════════════╝
+</script>
+
+<script>
+(function(){
+const D = TRACKER;
+const app = document.getElementById('app');
+
+// --- helpers ---
+function h(tag, cls, html) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (html !== undefined) { if (typeof html === 'string') e.innerHTML = html; else if (html.nodeType) e.appendChild(html); }
+  return e;
+}
+function append(parent) { return function() { for (let i = 0; i < arguments.length; i++) parent.appendChild(arguments[i]); return parent; }; }
+
+// --- computed ---
+const totalItems = D.phases.reduce((s,p) => s + p.items.length, 0);
+const doneItems = D.phases.reduce((s,p) => s + p.items.filter(i => i.status === 'done').length, 0);
+const pct = totalItems ? Math.round((doneItems / totalItems) * 100) : 0;
+const phasesDone = D.phases.filter(p => p.status === 'done').length;
+const routesMk = D.routes.filter(r => r.phase !== null);
+const routesReady = D.routes.filter(r => r.status === 'complete').length;
+const routesMissing = D.routes.filter(r => r.status === 'missing').length;
+const violFixed = D.violations.reduce((s,v) => s + v.fixed, 0);
+const violTotal = D.violations.reduce((s,v) => s + v.total, 0);
+const hDone = D.phases.filter(p => p.status === 'done').reduce((s,p) => s + p.estHours, 0);
+const hTotal = D.phases.reduce((s,p) => s + p.estHours, 0);
+const hLeft = hTotal - hDone;
+const pMap = {}; D.phases.forEach(p => pMap[p.id] = p.status);
+const nextPhases = D.phases.filter(p => p.status === 'not_started' && p.dependsOn.every(d => pMap[d] === 'done'));
+
+const statusMap = {
+  done:        { bg:'rgba(0,198,167,0.1)', border:'rgba(0,198,167,0.4)', text:'#00C6A7', label:'Done' },
+  in_progress: { bg:'rgba(59,130,246,0.1)', border:'rgba(59,130,246,0.4)', text:'#60a5fa', label:'In Progress' },
+  not_started: { bg:'rgba(255,255,255,0.05)', border:'rgba(255,255,255,0.1)', text:'#888', label:'Not Started' },
+  blocked:     { bg:'rgba(239,68,68,0.1)', border:'rgba(239,68,68,0.4)', text:'#f87171', label:'Blocked' }
+};
+
+// --- header ---
+const hdr = h('div','','');
+hdr.style.marginBottom = '32px';
+const hdrTop = h('div','',''); hdrTop.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:4px';
+hdrTop.appendChild(h('span','dot',''));
+hdrTop.appendChild(h('span','label','Launch Tracker'));
+hdr.appendChild(hdrTop);
+hdr.appendChild(h('h1','','Hyperscaled Website Readiness'));
+hdr.appendChild(h('p','sub',`Last updated: ${new Date(D.lastUpdated).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})} · ${D.phases.length} phases · ${totalItems} items`));
+app.appendChild(hdr);
+
+// --- summary cards ---
+const grid = h('div','grid4','');
+[
+  { l:'Overall Progress', v:pct+'%', s:`${doneItems}/${totalItems} items`, c:'var(--accent)' },
+  { l:'Phases Complete', v:`${phasesDone}/${D.phases.length}`, s:`${D.phases.length - phasesDone} remaining`, c:'var(--blue)' },
+  { l:'Routes Ready', v:`${routesReady}/${D.routes.length}`, s:`${routesMissing} missing`, c:routesMissing > 3 ? 'var(--yellow)' : 'var(--accent)' },
+  { l:'Est. Hours Left', v:`~${hLeft}h`, s:`${hDone}h done / ${hTotal}h total`, c:'var(--yellow)' },
+].forEach(c => {
+  const cd = h('div','card','');
+  cd.appendChild(h('div','cl',c.l));
+  const cv = h('div','cv',c.v); cv.style.color = c.c; cd.appendChild(cv);
+  cd.appendChild(h('div','cs',c.s));
+  grid.appendChild(cd);
+});
+app.appendChild(grid);
+
+// --- progress bar ---
+const bt = h('div','bar-track','');
+const bf = h('div','bar-fill',''); bf.style.width = pct+'%';
+bt.appendChild(bf); app.appendChild(bt);
+
+// --- next up banner ---
+if (nextPhases.length > 0) {
+  const np = nextPhases[0];
+  const nb = h('div','next-banner','');
+  nb.appendChild(h('span','next-badge','▶ NEXT UP'));
+  const alsoText = nextPhases.length > 1 ? ' · Also unblocked: ' + nextPhases.slice(1).map(p => 'P'+p.id).join(', ') : '';
+  nb.appendChild(h('span','next-text',`<strong>Phase ${np.id} — ${np.name}</strong> (${np.estSessions}, ~${np.estHours}h) · All deps met${alsoText}`));
+  app.appendChild(nb);
+}
+
+// --- tabs ---
+const tabNames = ['Overview','Phases','Routes','Violations','Decisions','Polish'];
+const tabBar = h('div','tabs','');
+const panels = {};
+let activeTab = 'Overview';
+
+tabNames.forEach(t => {
+  const btn = h('button','tab' + (t === activeTab ? ' on' : ''), t);
+  btn.onclick = function() {
+    tabBar.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    Object.values(panels).forEach(p => p.style.display = 'none');
+    panels[t].style.display = '';
+  };
+  tabBar.appendChild(btn);
+});
+app.appendChild(tabBar);
+
+// ====== TAB: OVERVIEW ======
+const ov = h('div','','');
+const ovGrid = h('div','grid2','');
+
+// Left: pipeline
+const pipePanel = h('div','panel','');
+pipePanel.appendChild(h('h3','','Phase Pipeline'));
+D.phases.forEach(p => {
+  const s = statusMap[p.status] || statusMap.not_started;
+  const isBlocked = p.status === 'not_started' && !p.dependsOn.every(d => pMap[d] === 'done');
+  const eff = isBlocked ? statusMap.blocked : s;
+  const done = p.items.filter(i => i.status === 'done').length;
+  const ppct = p.items.length ? Math.round((done/p.items.length)*100) : 0;
+
+  const row = h('div','pipe-row','');
+  row.style.cssText = `background:${eff.bg};border-color:${eff.border}`;
+  row.innerHTML = `
+    <span class="pipe-id" style="color:${eff.text}">P${p.id}</span>
+    <span class="pipe-name">${p.name}</span>
+    <span class="pipe-count" style="color:${eff.text}">${done}/${p.items.length}</span>
+    <div class="pipe-bar"><div class="pipe-bar-fill" style="width:${ppct}%;background:${eff.text}"></div></div>
+  `;
+  pipePanel.appendChild(row);
+});
+ovGrid.appendChild(pipePanel);
+
+// Right: blockers + solid
+const rightPanel = h('div','panel','');
+rightPanel.appendChild(h('h3','','Honest Status'));
+if (D.repoScan && D.repoScan.blockers) {
+  D.repoScan.blockers.forEach(b => {
+    const bk = h('div','blocker','');
+    bk.innerHTML = `<div class="bt">${b.icon} ${b.text}</div><div class="bd">${b.detail}</div>`;
+    rightPanel.appendChild(bk);
+  });
+}
+const solidTitle = h('h3','',''); solidTitle.textContent = "What's Solid"; solidTitle.style.marginTop = '20px';
+rightPanel.appendChild(solidTitle);
+if (D.repoScan && D.repoScan.solid) {
+  D.repoScan.solid.forEach(t => {
+    const s = h('div','solid','');
+    s.innerHTML = `<span class="sc">✓</span> ${t}`;
+    rightPanel.appendChild(s);
+  });
+}
+
+// Build + deps
+if (D.repoScan) {
+  const depTitle = h('h3','',''); depTitle.textContent = 'Build & Deps'; depTitle.style.marginTop = '20px';
+  rightPanel.appendChild(depTitle);
+  const buildLine = h('div','solid','');
+  buildLine.innerHTML = D.repoScan.buildClean
+    ? `<span class="sc">✓</span> Build clean — ${D.repoScan.buildNotes}`
+    : `<span style="color:var(--red)">✗</span> Build broken — ${D.repoScan.buildNotes}`;
+  rightPanel.appendChild(buildLine);
+  if (D.repoScan.deps) {
+    D.repoScan.deps.forEach(d => {
+      const dl = h('div','solid','');
+      dl.innerHTML = `<span class="sc">✓</span> ${d.pkg} ${d.version}`;
+      rightPanel.appendChild(dl);
+    });
+  }
+}
+ovGrid.appendChild(rightPanel);
+ov.appendChild(ovGrid);
+panels['Overview'] = ov;
+app.appendChild(ov);
+
+// ====== TAB: PHASES ======
+const ph = h('div','','');
+ph.style.display = 'none';
+D.phases.forEach(p => {
+  const s = statusMap[p.status] || statusMap.not_started;
+  const isBlocked = p.status === 'not_started' && !p.dependsOn.every(d => pMap[d] === 'done');
+  const eff = isBlocked ? statusMap.blocked : s;
+  const done = p.items.filter(i => i.status === 'done').length;
+  const startOpen = p.status !== 'done';
+
+  const card = h('div','phase-card','');
+  card.style.borderColor = eff.border;
+
+  // header
+  const hdr = h('div','phase-hdr','');
+  const chevSpan = h('span','chev' + (startOpen ? ' open' : ''), '▶');
+  const badge = h('span','badge','');
+  badge.style.cssText = `background:${eff.bg};color:${eff.text};border:1px solid ${eff.border}`;
+  badge.textContent = 'P' + p.id;
+  hdr.appendChild(chevSpan);
+  hdr.appendChild(badge);
+  hdr.appendChild(h('span','phase-title',p.name));
+  hdr.appendChild(h('span','phase-scope',p.scope));
+
+  const statusBadge = h('span','badge','');
+  statusBadge.style.cssText = `background:${eff.bg};color:${eff.text};border:1px solid ${eff.border}`;
+  statusBadge.textContent = isBlocked ? 'Blocked' : eff.label;
+  hdr.appendChild(statusBadge);
+  hdr.appendChild(h('span','phase-count',`${done}/${p.items.length}`));
+  card.appendChild(hdr);
+
+  // deps row
+  if (p.dependsOn.length > 0) {
+    const deps = h('div','phase-deps','');
+    deps.appendChild(h('span','','<span style="font-size:11px;color:var(--faint)">Deps:</span>'));
+    p.dependsOn.forEach(d => {
+      const ok = pMap[d] === 'done';
+      const tag = h('span','dep-tag','');
+      tag.style.color = ok ? 'var(--accent)' : 'var(--yellow)';
+      tag.textContent = (ok ? '✓ ' : '⏳ ') + 'P' + d;
+      deps.appendChild(tag);
+    });
+    card.appendChild(deps);
+  }
+
+  // body
+  const body = h('div','phase-body' + (startOpen ? ' open' : ''), '');
+
+  // info row
+  const info = h('div','phase-info','');
+  info.innerHTML = `<span>📁 ${p.scope}</span><span>⏱ ${p.estSessions} (~${p.estHours}h)</span>`;
+  body.appendChild(info);
+
+  // items
+  p.items.forEach(item => {
+    const isDone = item.status === 'done';
+    const row = h('div','item-row' + (isDone ? ' item-done' : ''),'');
+    const ck = h('span','check ' + (isDone ? 'check-on' : 'check-off'), isDone ? '✓' : '');
+    row.appendChild(ck);
+    row.appendChild(h('span','item-text',item.name));
+    if (item.count) row.appendChild(h('span','item-ct','×' + item.count));
+    body.appendChild(row);
+  });
+
+  // session log
+  if (p.sessions.length > 0) {
+    const log = h('div','session-log','');
+    log.appendChild(h('div','session-log-title','Session Log'));
+    p.sessions.forEach(s => {
+      const se = h('div','sesh','');
+      se.innerHTML = `<span class="sn">Session ${s.session}</span><span>${s.date} — ${s.notes}</span>`;
+      log.appendChild(se);
+    });
+    body.appendChild(log);
+  }
+
+  card.appendChild(body);
+
+  // toggle
+  hdr.onclick = function() {
+    chevSpan.classList.toggle('open');
+    body.classList.toggle('open');
+  };
+
+  ph.appendChild(card);
+});
+panels['Phases'] = ph;
+app.appendChild(ph);
+
+// ====== TAB: ROUTES ======
+const rt = h('div','','');
+rt.style.display = 'none';
+const rtWrap = h('div','panel','');
+const tbl = document.createElement('table');
+tbl.innerHTML = `<thead><tr><th>Route</th><th>Page</th><th>Status</th><th>Phase</th><th>Notes</th></tr></thead>`;
+const tbody = document.createElement('tbody');
+D.routes.forEach(r => {
+  const sc = r.status === 'complete' ? { bg:'var(--accent-bg)', color:'var(--accent)', label:'Ready' }
+    : r.status === 'missing' ? { bg:'var(--red-bg)', color:'var(--red)', label:'Missing' }
+    : { bg:'var(--yellow-bg)', color:'var(--yellow)', label:'Needs Work' };
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td class="mono">${r.path}</td>
+    <td>${r.label}</td>
+    <td><span class="badge" style="background:${sc.bg};color:${sc.color}">${sc.label}</span></td>
+    <td style="color:var(--muted)">${r.phase !== null ? 'P'+r.phase : '—'}</td>
+    <td style="color:var(--faint);font-size:12px">${r.note || ''}</td>
+  `;
+  tbody.appendChild(tr);
+});
+tbl.appendChild(tbody);
+rtWrap.appendChild(tbl);
+rt.appendChild(rtWrap);
+panels['Routes'] = rt;
+app.appendChild(rt);
+
+// ====== TAB: VIOLATIONS ======
+const vl = h('div','','');
+vl.style.display = 'none';
+const vlGrid = h('div','viol-grid','');
+D.violations.forEach(v => {
+  const allDone = v.fixed === v.total;
+  const sev = v.severity === 'high' ? { bg:'var(--red-bg)', border:'var(--red-border)', text:'var(--red)' }
+    : v.severity === 'med' ? { bg:'var(--yellow-bg)', border:'var(--yellow-border)', text:'var(--yellow)' }
+    : { bg:'var(--card)', border:'var(--card-border)', text:'var(--dim)' };
+  const effBg = allDone ? 'var(--accent-bg)' : sev.bg;
+  const effBorder = allDone ? 'var(--accent-border)' : sev.border;
+  const effText = allDone ? 'var(--accent)' : sev.text;
+  const card = h('div','viol-card','');
+  card.style.cssText = `background:${effBg};border:1px solid ${effBorder}`;
+  card.innerHTML = `
+    <div>
+      <div class="viol-name">${v.name}</div>
+      <div class="viol-sub">${allDone ? 'All fixed ✓' : v.fixed + '/' + v.total + ' fixed'}</div>
+    </div>
+    <div class="viol-num" style="color:${effText}">${v.fixed}/${v.total}</div>
+  `;
+  vlGrid.appendChild(card);
+});
+vl.appendChild(vlGrid);
+const vlSummary = h('div','panel','');
+vlSummary.style.marginTop = '16px';
+vlSummary.innerHTML = `
+  <div style="font-size:13px;font-weight:600;color:var(--dim);margin-bottom:8px">Total: ${violFixed}/${violTotal} violations fixed across ${D.violations.length} categories</div>
+  <div style="font-size:12px;color:var(--muted)">All violations addressed in Phase 0 (Global Compliance Sweep). High-severity = legal/copy compliance. Medium = design rules. Low = best-practice CSS.</div>
+`;
+vl.appendChild(vlSummary);
+panels['Violations'] = vl;
+app.appendChild(vl);
+
+// ====== TAB: DECISIONS ======
+const dc = h('div','','');
+dc.style.display = 'none';
+D.decisions.forEach(d => {
+  const isOpen = d.status === 'open';
+  const row = h('div','dec-row','');
+  row.style.cssText = `background:${isOpen ? 'var(--yellow-bg)' : 'var(--accent-bg)'};border:1px solid ${isOpen ? 'var(--yellow-border)' : 'var(--accent-border)'}`;
+  const badge = h('span','badge','');
+  badge.style.cssText = `background:${isOpen ? 'rgba(245,158,11,0.15)' : 'rgba(0,198,167,0.15)'};color:${isOpen ? 'var(--yellow)' : 'var(--accent)'}`;
+  badge.textContent = isOpen ? 'OPEN' : 'RESOLVED';
+  row.appendChild(badge);
+  row.appendChild(h('span','dec-q',d.name));
+  if (d.resolution) row.appendChild(h('span','dec-a',d.resolution));
+  dc.appendChild(row);
+});
+panels['Decisions'] = dc;
+app.appendChild(dc);
+
+// ====== TAB: POLISH ======
+const pl = h('div','','');
+pl.style.display = 'none';
+const plPanel = h('div','panel','');
+plPanel.appendChild(h('h3','','TODO Polish Items'));
+D.todoPolish.forEach(t => {
+  const row = h('div','todo-row','');
+  const pri = h('span','pri pri-' + t.priority, t.priority);
+  row.appendChild(pri);
+  row.appendChild(h('span','',t.item));
+  plPanel.appendChild(row);
+});
+pl.appendChild(plPanel);
+panels['Polish'] = pl;
+app.appendChild(pl);
+
+// --- footer ---
+const ft = h('div','','');
+ft.style.cssText = 'margin-top:40px;padding-top:16px;border-top:1px solid var(--card-border);font-size:12px;color:var(--muted);text-align:center';
+ft.textContent = `Generated from TRACKER.json · ${new Date().toLocaleDateString()}`;
+app.appendChild(ft);
+
+})();
+</script>
+</body>
+</html>
