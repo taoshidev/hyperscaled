@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { ChartLineUp, UsersThree, CurrencyDollar, Scales, Percent } from '@phosphor-icons/react'
+import { NETWORK_STATS } from '@/lib/constants'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -16,54 +17,39 @@ const cardVariants = {
   visible: { opacity: 1, y: 0, transition: spring },
 }
 
-const statData = [
-  {
-    rawNum: '1',
-    prefix: '$',
-    suffix: 'B+',
-    label: 'Network Volume',
-    desc: 'Total trading volume processed across the network',
-    icon: ChartLineUp,
-    badge: { text: 'Live', pulse: true },
-  },
-  {
-    rawNum: '4200',
-    prefix: '',
-    suffix: '+',
-    label: 'Funded Traders',
-    desc: 'Funded traders deployed across all integrated prop firms',
-    icon: UsersThree,
-    badge: null,
-  },
-  {
-    rawNum: '30',
-    prefix: '$',
-    suffix: 'M+',
-    label: 'Token Value Distributed',
-    desc: 'Token equivalent value distributed directly to trader wallets, onchain and verifiable',
-    icon: CurrencyDollar,
-    badge: null,
-  },
-  {
-    rawNum: '2.5',
-    prefix: '$',
-    suffix: 'M',
-    label: 'Max Account Size',
-    desc: 'Top-tier funded capital available through performance scaling',
-    icon: Scales,
-    badge: { text: 'Scaling Active', pulse: true },
-  },
-  {
-    rawNum: '100',
-    prefix: '',
-    suffix: '%',
-    label: 'Max Profit Split',
-    desc: 'Keep every dollar you earn with the best-in-class industry profit split',
-    icon: Percent,
-    badge: null,
-    teal: true,
-  },
+const STAT_ICONS = [ChartLineUp, UsersThree, CurrencyDollar, Scales, Percent]
+const STAT_BADGES = [
+  { text: 'Live', pulse: true },
+  null,
+  null,
+  { text: 'Scaling Active', pulse: true },
+  null,
 ]
+const STAT_TEAL = [false, false, false, false, true]
+
+function parseValue(value) {
+  const match = value.match(/^([^0-9]*)([0-9,.]+)(.*)$/)
+  if (!match) return { prefix: '', rawNum: '0', suffix: value }
+  return {
+    prefix: match[1],
+    rawNum: match[2].replace(/,/g, ''),
+    suffix: match[3],
+  }
+}
+
+const statData = NETWORK_STATS.map((stat, i) => {
+  const { prefix, rawNum, suffix } = parseValue(stat.value)
+  return {
+    rawNum,
+    prefix,
+    suffix,
+    label: stat.label,
+    desc: stat.description,
+    icon: STAT_ICONS[i],
+    badge: STAT_BADGES[i],
+    teal: STAT_TEAL[i],
+  }
+})
 
 function useCounter(rawNum, active, duration = 1300) {
   const [count, setCount] = useState(0)
