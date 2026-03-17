@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { ArrowRight, TrendUp, ArrowsClockwise, DownloadSimple } from '@phosphor-icons/react'
+import { ArrowRight, TrendUp, ArrowsClockwise } from '@phosphor-icons/react'
 import LiquidCrystalBg from './LiquidCrystalBg'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
@@ -84,11 +84,11 @@ export default function Hero() {
                 </span>
               </Link>
               <Link
-                href="/extension"
+                href="/leaderboard"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-white/[0.12] text-white text-sm font-medium hover:border-white/[0.24] hover:bg-white/[0.04] active:scale-[0.98] transition-[border-color,background-color,transform] duration-200"
               >
-                <DownloadSimple size={16} weight="bold" />
-                Chrome Extension
+                View Leaderboard
+                <ArrowRight size={15} weight="bold" />
               </Link>
             </motion.div>
 
@@ -131,12 +131,12 @@ export default function Hero() {
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-medium text-zinc-400">Funded Account</span>
-                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-teal-400/10 border border-teal-400/20 text-[10px] text-teal-400 font-medium">
+                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-teal-400/10 border border-teal-400/20 text-xs text-teal-400 font-medium">
                     <span className="w-1 h-1 rounded-full bg-teal-400 pulse-teal" />
                     Live
                   </span>
                 </div>
-                <div className="text-[10px] text-zinc-600 font-mono">HL · Bittensor</div>
+                <div className="text-xs text-zinc-600 font-mono">HL · Bittensor</div>
               </div>
 
               {/* Balance */}
@@ -153,16 +153,16 @@ export default function Hero() {
 
               {/* Open position */}
               <div className="mb-4">
-                <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-2">Open Positions</div>
+                <div className="text-xs text-zinc-500 uppercase tracking-widest mb-2">Open Positions</div>
                 <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-semibold text-white font-mono">BTC-PERP</span>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-teal-400/10 text-teal-400 border border-teal-400/20">LONG</span>
+                      <span className="px-1.5 py-0.5 rounded text-xs font-semibold bg-teal-400/10 text-teal-400 border border-teal-400/20">LONG</span>
                     </div>
                     <span className="text-xs font-semibold text-white">+$234.50</span>
                   </div>
-                  <div className="grid grid-cols-3 gap-x-3 text-[10px] text-zinc-500 font-mono">
+                  <div className="grid grid-cols-3 gap-x-3 text-xs text-zinc-500 font-mono">
                     <div>
                       <span className="block text-zinc-600">Size</span>
                       <span className="text-zinc-300">0.15 BTC</span>
@@ -182,7 +182,7 @@ export default function Hero() {
               {/* Promotions */}
               <div className="flex items-center gap-2 mb-4 p-3 rounded-xl bg-teal-400/5 border border-teal-400/10">
                 <TrendUp size={14} className="text-teal-400 shrink-0" />
-                <div className="text-[10px] text-zinc-400 leading-tight">
+                <div className="text-xs text-zinc-400 leading-tight">
                   <span className="text-teal-400 font-semibold">+$100,000</span> All Time Returns · Sharpe{' '}
                   <span className="text-white">9.32%</span> / 1.23
                 </div>
@@ -192,8 +192,8 @@ export default function Hero() {
               <div className="space-y-3 mb-4">
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] text-zinc-500">Quarterly Promotion Progress</span>
-                    <span className="text-[10px] font-mono text-zinc-400">2% / 5%</span>
+                    <span className="text-xs text-zinc-500">Quarterly Promotion Progress</span>
+                    <span className="text-xs font-mono text-zinc-400">2% / 5%</span>
                   </div>
                   <div className="h-1.5 rounded-full bg-white/[0.06]">
                     <div className="h-1.5 rounded-full bg-teal-400 w-[40%]" />
@@ -201,8 +201,8 @@ export default function Hero() {
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] text-zinc-500">Current Drawdown</span>
-                    <span className="text-[10px] font-mono text-amber-400">7.2% / 10%</span>
+                    <span className="text-xs text-zinc-500">Current Drawdown</span>
+                    <span className="text-xs font-mono text-amber-400">7.2% / 10%</span>
                   </div>
                   <div className="h-1.5 rounded-full bg-white/[0.06]">
                     <div
@@ -215,11 +215,11 @@ export default function Hero() {
 
               {/* Footer link */}
               <div className="flex items-center justify-between pt-3 border-t border-white/[0.06]">
-                <div className="flex items-center gap-1.5 text-[10px] text-zinc-600">
+                <div className="flex items-center gap-1.5 text-xs text-zinc-600">
                   <ArrowsClockwise size={11} />
                   Updated just now
                 </div>
-                <a href="#" className="text-[10px] text-teal-400 hover:text-teal-300 transition-colors flex items-center gap-1">
+                <a href="#" className="text-xs text-teal-400 hover:text-teal-300 transition-colors flex items-center gap-1">
                   View Full Analytics
                   <ArrowRight size={10} />
                 </a>

@@ -1,12 +1,12 @@
 # Launch Phases
 
-Last updated: 2026-03-16
+Last updated: 2026-03-17
 
 ## Phase Map
 
 | Phase | Scope | Status | Depends On |
 |-------|-------|--------|------------|
-| 0 | Global Compliance + Design Rule Sweep | Not Started | — |
+| 0 | Global Compliance + Design Rule Sweep | Done | — |
 | 1 | Nav + Footer Overhaul | Not Started | Phase 0 |
 | 2 | Shared Constants + Components | Not Started | Phase 0 |
 | 3 | Home Page Overhaul (`/`) | Not Started | Phase 1, 2 |

@@ -24,7 +24,7 @@ import {
   USDC_DECIMALS,
   BASE_CHAIN_ID,
   CHAIN_LABEL,
-  VANTA_USDC_WALLET,
+  HYPERSCALED_USDC_WALLET,
 } from "@/lib/constants";
 import { usdcAbi } from "@/lib/usdc-abi";
 import { formatAccountSize, truncateAddress } from "@/lib/format";
@@ -90,7 +90,7 @@ export function StepConnectAndPay({ selectedTier, onPaymentComplete, onPaymentPr
         address: USDC_ADDRESS,
         abi: usdcAbi,
         functionName: "transfer",
-        args: [VANTA_USDC_WALLET, amount],
+        args: [HYPERSCALED_USDC_WALLET, amount],
         chain: walletClient.chain,
       });
 

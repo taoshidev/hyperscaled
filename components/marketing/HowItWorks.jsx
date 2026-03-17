@@ -12,7 +12,7 @@ function PropFirmMockup() {
   const plans = [
     { name: 'Bitcast', size: '$25,000', highlight: false, logo: '/bitcast.svg' },
     { name: 'Beanstock', size: '$50,000', highlight: true, logo: '/beanstock.png' },
-    { name: 'Vanta Trading', size: '$100,000', highlight: false, logo: '/vanta.png' },
+    { name: 'Arcline Capital', size: '$100,000', highlight: false, logo: '/arcline.png' },
   ]
   return (
     <div className="w-full max-w-sm space-y-2.5">
@@ -83,9 +83,9 @@ function ExtensionMockup() {
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-xs font-semibold text-white leading-tight">Hyperscaled Extension</div>
-          <div className="text-[10px] text-zinc-500 mt-0.5">Chrome Web Store · 2.1k installs</div>
+          <div className="text-xs text-zinc-500 mt-0.5">Chrome Web Store · 2.1k installs</div>
         </div>
-        <span className="text-[10px] font-semibold text-teal-400 whitespace-nowrap flex items-center gap-0.5">
+        <span className="text-xs font-semibold text-teal-400 whitespace-nowrap flex items-center gap-0.5">
           Add to Chrome <ArrowRight size={10} weight="bold" />
         </span>
       </div>
@@ -100,7 +100,7 @@ function PayoutMockup() {
       <div className="px-5 pt-5 pb-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-1">
-          <span className="text-[10px] text-zinc-500 tracking-widest uppercase font-mono">Total Payouts</span>
+          <span className="text-xs text-zinc-500 tracking-widest uppercase font-mono">Total Payouts</span>
           <span className="text-xs font-semibold text-teal-400 bg-teal-400/10 border border-teal-400/20 px-2 py-0.5 rounded-full">
             +6.0% APY
           </span>
@@ -112,7 +112,7 @@ function PayoutMockup() {
           {bars.map((h, i) => (
             <div
               key={i}
-              className={`flex-1 rounded-sm transition-all ${i >= 5 ? 'bg-teal-400' : 'bg-zinc-700'}`}
+              className={`flex-1 rounded-sm transition-colors ${i >= 5 ? 'bg-teal-400' : 'bg-zinc-700'}`}
               style={{ height: `${h}%` }}
             />
           ))}
@@ -126,7 +126,7 @@ function PayoutMockup() {
         </div>
         <div className="min-w-0">
           <div className="text-xs font-semibold text-white">Monthly Payout Received</div>
-          <div className="text-[10px] text-zinc-500 font-mono">0x71...9A2B · 2 mins ago</div>
+          <div className="text-xs text-zinc-500 font-mono">0x71...9A2B · 2 mins ago</div>
         </div>
       </div>
     </div>
@@ -145,9 +145,9 @@ const steps = [
   },
   {
     number: '02',
-    icon: PuzzlePiece,
-    title: 'Install the Chrome Extension',
-    body: 'The Hyperscaled extension wraps around Hyperliquid interface, showing real-time funded account progress and risk warnings.',
+    icon: TrendUp,
+    title: 'Trade on Hyperliquid',
+    body: 'Connect your Hyperliquid wallet. Trade exactly how you trade today — same interface, same order book, same fills. Hyperscaled reads your performance automatically in the background.',
     mockup: <ExtensionMockup />,
   },
   {

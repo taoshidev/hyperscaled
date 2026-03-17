@@ -1,6 +1,6 @@
-# Vanta Network API Endpoints
+# Hyperscaled API Endpoints
 
-This document describes all REST API endpoints for the **Entity Miner** and **Validator** services. Use this as a reference when integrating with the Vanta Network.
+This document describes all REST API endpoints for the **Entity Miner** and **Validator** services. Use this as a reference when integrating with the Hyperscaled network.
 
 ---
 

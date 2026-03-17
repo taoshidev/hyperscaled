@@ -76,9 +76,9 @@ export default function TraderDashboard({ addr, onClose }) {
             <div>
               <h2 className="text-2xl font-bold tracking-tight mb-3">CRYPTO 100K</h2>
               <div className="flex gap-2 flex-wrap">
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-blue-400/10 border border-blue-400/20 text-blue-400">Tier III</span>
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-teal-400/10 border border-teal-400/20 text-teal-400">Evaluation</span>
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-amber-400/10 border border-amber-400/20 text-amber-400">1.25x Leverage</span>
+                <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-400/10 border border-blue-400/20 text-blue-400">Tier III</span>
+                <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-400/10 border border-teal-400/20 text-teal-400">Evaluation</span>
+                <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-400/10 border border-amber-400/20 text-amber-400">1.25x Leverage</span>
               </div>
             </div>
             <div className="text-xs font-mono text-zinc-500 bg-zinc-900 border border-white/[0.06] px-3 py-2 rounded-lg">{shortAddr}</div>
@@ -107,14 +107,14 @@ export default function TraderDashboard({ addr, onClose }) {
                 <div className="bg-zinc-900/50 border border-white/[0.06] rounded-xl p-5">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-xs text-zinc-500">Balance</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-400/10 border border-teal-400/20 text-teal-400">+0.16%</span>
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-teal-400/10 border border-teal-400/20 text-teal-400">+0.16%</span>
                   </div>
                   <div className="text-2xl font-bold tracking-tight">$100,163.38</div>
                 </div>
                 <div className="bg-zinc-900/50 border border-white/[0.06] rounded-xl p-5">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-xs text-zinc-500">Profit Target</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-400/10 border border-blue-400/20 text-blue-400">$10,000</span>
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-blue-400/10 border border-blue-400/20 text-blue-400">$10,000</span>
                   </div>
                   <div className="text-2xl font-bold tracking-tight">$163.38</div>
                 </div>
@@ -140,19 +140,19 @@ export default function TraderDashboard({ addr, onClose }) {
                       <div className="flex justify-between text-xs text-zinc-500 mb-1"><span>Profit Target</span><span>10%</span></div>
                       <div className="text-xl font-bold text-teal-400 mb-2">$163.38 <span className="text-sm text-zinc-500 font-normal">/ $10,000</span></div>
                       <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden"><div className="h-1.5 rounded-full bg-teal-400" style={{ width: '1.6%' }} /></div>
-                      <div className="text-[10px] text-zinc-600 mt-1.5">1.6% of target</div>
+                      <div className="text-xs text-zinc-600 mt-1.5">1.6% of target</div>
                     </div>
                     <div>
                       <div className="flex justify-between text-xs text-zinc-500 mb-1"><span>Trailing Drawdown</span><span>HWM: $100,163.38</span></div>
                       <div className="text-xl font-bold mb-2">0.00% <span className="text-sm text-zinc-500 font-normal">/ 5.00%</span></div>
                       <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden"><div className="h-1.5 rounded-full bg-blue-400" style={{ width: '0%' }} /></div>
-                      <div className="text-[10px] text-zinc-600 mt-1.5">$0.00 / $5,008.17 max loss</div>
+                      <div className="text-xs text-zinc-600 mt-1.5">$0.00 / $5,008.17 max loss</div>
                     </div>
                     <div>
                       <div className="text-xs text-zinc-500 mb-1">Days Remaining</div>
                       <div className="text-xl font-bold mb-2">∞</div>
                       <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden"><div className="h-1.5 rounded-full bg-blue-400 w-full" /></div>
-                      <div className="text-[10px] text-zinc-600 mt-1.5">Unlimited trading period</div>
+                      <div className="text-xs text-zinc-600 mt-1.5">Unlimited trading period</div>
                     </div>
                   </div>
                   <div className="h-1 rounded-full bg-white/[0.04] overflow-hidden">
@@ -183,7 +183,7 @@ export default function TraderDashboard({ addr, onClose }) {
                       <thead>
                         <tr className="border-b border-white/[0.04]">
                           {['Symbol', 'Side', 'Size', 'Position Value', 'Entry', 'Mark', 'Liq. Price', 'uPnL', 'TP / SL', 'Time'].map((h) => (
-                            <th key={h} className="text-left text-[10px] text-zinc-500 font-medium uppercase tracking-widest px-4 py-3">{h}</th>
+                            <th key={h} className="text-left text-xs text-zinc-500 font-medium uppercase tracking-widest px-4 py-3">{h}</th>
                           ))}
                         </tr>
                       </thead>
@@ -192,7 +192,7 @@ export default function TraderDashboard({ addr, onClose }) {
                           <tr key={i} className="border-b border-white/[0.02]">
                             <td className="px-4 py-3 text-sm font-semibold font-mono">{r[0]}</td>
                             <td className="px-4 py-3">
-                              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${
+                              <span className={`text-xs font-semibold px-1.5 py-0.5 rounded border ${
                                 r[1] === 'LONG'
                                   ? 'text-teal-400 bg-teal-400/10 border-teal-400/20'
                                   : 'text-red-400 bg-red-400/10 border-red-400/20'
@@ -239,8 +239,8 @@ export default function TraderDashboard({ addr, onClose }) {
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs text-zinc-500">Payout Wallet</span>
-                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-400/10 border border-blue-400/20 text-blue-400 font-semibold">BASE</span>
-                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-teal-400/10 border border-teal-400/20 text-teal-400 font-semibold">USDC</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-blue-400/10 border border-blue-400/20 text-blue-400 font-semibold">BASE</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-teal-400/10 border border-teal-400/20 text-teal-400 font-semibold">USDC</span>
                     </div>
                     <div className="text-sm font-mono text-white">0x4f2E...8c3A91dB72f1</div>
                   </div>
@@ -258,7 +258,7 @@ export default function TraderDashboard({ addr, onClose }) {
                   ['Last Payout', '$3,200.00', 'Feb 14, 2025', null],
                 ].map(([l, v, s, cl]) => (
                   <div key={l} className="bg-zinc-900/50 border border-white/[0.06] rounded-xl p-5">
-                    <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-2">{l}</div>
+                    <div className="text-xs text-zinc-500 uppercase tracking-widest mb-2">{l}</div>
                     <div className={`text-2xl font-bold tracking-tight mb-1 ${cl || 'text-white'}`}>{v}</div>
                     <div className="text-xs text-zinc-600">{s}</div>
                   </div>
@@ -275,7 +275,7 @@ export default function TraderDashboard({ addr, onClose }) {
                     <thead>
                       <tr className="border-b border-white/[0.04]">
                         {['#', 'Date', 'Amount', 'Token', 'Network', 'Tx Hash', 'Status'].map((h) => (
-                          <th key={h} className="text-left text-[10px] text-zinc-500 font-medium uppercase tracking-widest px-4 py-3">{h}</th>
+                          <th key={h} className="text-left text-xs text-zinc-500 font-medium uppercase tracking-widest px-4 py-3">{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -287,12 +287,12 @@ export default function TraderDashboard({ addr, onClose }) {
                           <td className="px-4 py-3 text-sm font-medium text-teal-400">{r[2]}</td>
                           <td className="px-4 py-3">
                             <span className="flex items-center gap-1.5 text-sm">
-                              <span className="w-4 h-4 rounded-full bg-blue-400/10 border border-blue-400/20 flex items-center justify-center text-[8px] font-bold text-blue-400">$</span>
+                              <span className="w-4 h-4 rounded-full bg-blue-400/10 border border-blue-400/20 flex items-center justify-center text-xs font-bold text-blue-400">$</span>
                               USDC
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className="text-[10px] px-2 py-0.5 rounded bg-purple-400/10 border border-purple-400/20 text-purple-400">Base</span>
+                            <span className="text-xs px-2 py-0.5 rounded bg-purple-400/10 border border-purple-400/20 text-purple-400">Base</span>
                           </td>
                           <td className="px-4 py-3">
                             <a
@@ -305,7 +305,7 @@ export default function TraderDashboard({ addr, onClose }) {
                             </a>
                           </td>
                           <td className="px-4 py-3">
-                            <span className="text-[10px] px-2 py-0.5 rounded font-medium text-teal-400 bg-teal-400/10 border border-teal-400/20">
+                            <span className="text-xs px-2 py-0.5 rounded font-medium text-teal-400 bg-teal-400/10 border border-teal-400/20">
                               Confirmed
                             </span>
                           </td>

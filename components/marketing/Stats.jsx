@@ -111,7 +111,7 @@ function StatCard({ stat }) {
           <Icon size={16} className="text-zinc-400" />
         </div>
         {stat.badge && (
-          <span className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-zinc-800 border border-white/[0.06] text-[10px] text-zinc-400 font-medium">
+          <span className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-zinc-800 border border-white/[0.06] text-xs text-zinc-400 font-medium">
             {stat.badge.pulse && (
               <span className="w-1.5 h-1.5 rounded-full bg-teal-400 pulse-teal" />
             )}
