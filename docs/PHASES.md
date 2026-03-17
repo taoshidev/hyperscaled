@@ -7,7 +7,7 @@ Last updated: 2026-03-17
 | Phase | Scope | Status | Depends On |
 |-------|-------|--------|------------|
 | 0 | Global Compliance + Design Rule Sweep | Done | — |
-| 1 | Nav + Footer Overhaul | Not Started | Phase 0 |
+| 1 | Nav + Footer Overhaul | Done | Phase 0 |
 | 2 | Shared Constants + Components | Not Started | Phase 0 |
 | 3 | Home Page Overhaul (`/`) | Not Started | Phase 1, 2 |
 | 4 | Pricing Page (`/pricing`) | Not Started | Phase 1, 2 |

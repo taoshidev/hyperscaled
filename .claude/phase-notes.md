@@ -81,13 +81,35 @@ Registration Phase 3 complete. All 3 steps of the registration flow are fully bu
   - Chrome Extension in registration confirmation (step-confirmation.jsx lines 382, 396) — flagged as open decision #2 in PHASES.md
   - "vanta-cli" references in endpoint_docs.md — these refer to the external CLI tool, not the product brand
 
+- **Phase 1 — Nav + Footer Overhaul**:
+  Files changed: 3 (Nav.jsx, Footer.jsx, TODO_POLISH.md)
+  Files created: 3 (app/terms/page.jsx, app/privacy/page.jsx, app/risk/page.jsx)
+
+  **Nav (before → after)**:
+  - Before: 4 links (Protocol, Features, Dashboard, Status) using scroll anchors, "Extension" CTA, search input
+  - After: 6 route-based links (How It Works, Pricing, Rules, Leaderboard, Partners, FAQ), "Start Evaluation" CTA linking to https://app.hyperscaled.trade (external), mobile hamburger menu (AnimatePresence), search removed (deferred to backlog)
+
+  **Footer (before → after)**:
+  - Before: Single-row with dead social links, "Built on Bittensor" tagline, © 2025
+  - After: 4-column grid (Brand, Protocol, Community, Legal). Brand column has logo + tagline + social icon buttons. Protocol column has 6 links (How It Works, Pricing, Rules, Leaderboard, Evaluation Rules, Docs). Community column has Twitter/X, Discord, GitHub with icons. Legal column has Terms, Privacy, Risk Disclosure, Audit Report. Bottom bar: "© 2026 Hyperscaled. All rights reserved." + "Built on Hyperliquid · Powered by Bittensor". Internal links use Next.js Link, external use target="_blank". Placeholder URLs have TODO comments.
+
+  **Legal placeholder pages**: /terms, /privacy, /risk — minimal pages with metadata, min-h-[100dvh], "Coming soon." text.
+
+  **TODO_POLISH.md**: Created to track deferred items — missing URLs (Twitter, Discord, GitHub, Docs, Audit Report), nav search field, legal page content.
+
+  **Decisions**:
+  - Nav search removed from Phase 1 scope — needs UX decision on cross-page behavior
+  - All social/external URLs use # placeholder with TODO comments
+  - CTA points to https://app.hyperscaled.trade (external app), not /register
+  - Nav links are all route-based (no scroll anchors)
+
 ## In progress
 
 Nothing currently in progress.
 
 ## Next action
 
-Phase 1 — Nav + Footer Overhaul (see docs/PHASES.md).
+Phase 2 — Shared Constants + Components (see docs/PHASES.md).
 
 ## Known issues
 
