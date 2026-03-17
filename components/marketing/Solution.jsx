@@ -2,7 +2,7 @@
 
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
-import { ShieldCheck, LinkSimple, Globe, Fingerprint } from '@phosphor-icons/react'
+import { ShieldCheck, LinkSimple, Globe, Fingerprint, CheckCircle } from '@phosphor-icons/react'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -161,8 +161,8 @@ export default function Solution() {
                 >
                   <div className="p-3.5 text-xs text-zinc-500">{row.label}</div>
                   <div className="p-3.5 text-center">
-                    <span className={`text-xs font-semibold ${isHsBest ? 'text-teal-400' : 'text-zinc-300'}`}>
-                      {row.hs}{isHsBest ? ' ✅' : ''}
+                    <span className={`inline-flex items-center gap-1 text-xs font-semibold ${isHsBest ? 'text-teal-400' : 'text-zinc-300'}`}>
+                      {row.hs}{isHsBest && <CheckCircle size={14} weight="fill" className="text-teal-400" />}
                     </span>
                   </div>
                   <div className="p-3.5 text-center">
