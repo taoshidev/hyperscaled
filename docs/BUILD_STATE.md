@@ -8,25 +8,80 @@ Last updated: 2026-03-17
 
 | Item | State |
 |------|-------|
-| Hero + CTA | Done — Phase 3: external CTA to app.hyperscaled.trade, "Learn More" secondary, updated widget header (7d cycle), updated subhead copy |
+| Hero + CTA | Done — Phase 3/5: CTA to /register (was external), "Learn More" secondary, updated widget header (7d cycle), updated subhead copy |
 | Features section | Done — Phase 3: 6 cards rewritten per spec, ScalingPathVisual in "Grow Your Account" card |
 | How It Works | Done — Phase 3: 3 new steps (Start Evaluation → Trade on Hyperliquid → Hit the Target), TierSelectorMockup, DashboardMockup, PayoutMockup |
 | Problem / Solution | Done — Phase 3: Problem = 3 equal columns + teal callout bar. Solution = Hyperscaled vs FTMO comparison table (9 rows), 4 protocol pillars, banner tagline |
 | Stats section | Done — Phase 3: badges removed, imports from NETWORK_STATS |
 | FAQ | Done — Phase 3: "View full FAQ →" link added to sticky sidebar |
 | PartnersCTA | Done — Phase 3: new section between Features and FAQ, links to /partners |
-| Footer | Done — 4-column layout (Brand, Protocol, Community, Legal), social icons, "Built on Hyperliquid · Powered by Bittensor", © 2026. Placeholder URLs have TODO comments. |
-| Nav | Done — 6 route-based links (How It Works, Pricing, Rules, Leaderboard, Partners, FAQ), "Start Evaluation" external CTA, mobile hamburger menu. Search removed (backlog). |
+| Footer | Done — 4-column layout (Brand, Protocol, Community, Legal), social icons, "Built on Hyperliquid · Powered by Bittensor", © 2026. Phase 4: all social/docs URLs patched, Audit Report removed, Contact Support mailto added. |
+| Nav | Done — 6 route-based links (How It Works, Pricing, Rules, Leaderboard, Partners, FAQ), "Start Evaluation" CTA → /register (Phase 5 fix), mobile hamburger menu. Search removed (backlog). No placeholder URLs. |
 | Waitlist form | Done (to be removed) — spec has no waitlist form |
 | LiquidCrystal background | Done |
 | ShinyButton CTA | Done |
 | Leaderboard preview | Not on home page — Component exists at `/leaderboard` but is NOT rendered in the home page marketing compose list (`components/marketing.jsx`). Spec does not require it on home page. |
 | Compliance (copy/design rules) | Done — 72 violations fixed (9 Vanta, 1 Built on Bittensor, 2 Up to 100%, 2 Chrome Extension, 1 funding language, 1 copyright, 41 text-[10px], 7 transition-all, 8 min-h-screen) |
-| Missing pages | Not Started — `/how-it-works`, `/pricing`, `/rules`, `/partners`, `/faq` |
+| Missing pages | In Progress — `/pricing` done (Phase 4), `/how-it-works` done (Phase 5), `/rules` done (Phase 6). Remaining: `/partners`, `/faq` |
 | Legal pages (`/terms`, `/privacy`, `/risk`) | Done — placeholder pages with "Coming soon." Content pending. |
 | TODO Polish tracker | Done — `docs/TODO_POLISH.md` tracks deferred URLs + legal content |
 
-**Next action**: Phase 4 — Pricing Page (see docs/PHASES.md)
+## Pricing Page (`/pricing`)
+
+**Status**: Complete — Phase 4
+
+| Item | State |
+|------|-------|
+| Page route + metadata | Done |
+| Launch pricing banner | Done |
+| Page hero | Done |
+| 3-tier pricing cards (shiny-border on popular) | Done |
+| What's Included row (7 items, CheckCircle) | Done |
+| Scaling path visual | Done |
+| Pricing FAQ mini (3 items) | Done |
+| Responsive layout | Done |
+
+**Next action**: Phase 7 — FAQ Page (see docs/PHASES.md)
+
+## How It Works Page (`/how-it-works`)
+
+**Status**: Complete — Phase 5
+
+| Item | State |
+|------|-------|
+| Page route + metadata | Done |
+| Page hero + CTA | Done |
+| 4-step flow (register, trade, track, pass) | Done |
+| Key details boxes per step | Done |
+| Scaling path visual + tier note | Done |
+| Non-custodial explainer + comparison | Done |
+| Payout mechanics + flow diagram | Done |
+| Callout box (100% profit) | Done |
+| Bottom CTA | Done |
+| Responsive layout | Done |
+
+**Next action**: Phase 7 — FAQ Page
+
+## Rules Page (`/rules`)
+
+**Status**: Complete — Phase 6
+
+| Item | State |
+|------|-------|
+| Page route + metadata | Done |
+| Page hero | Done |
+| Evaluation rules table (EVAL_RULES) | Done |
+| Breach callout box | Done |
+| Funded account rules table (FUNDED_RULES) | Done |
+| Scaling rules (qualifications, bonus, tier note) | Done |
+| Scaling path table (SCALING_PATH) | Done |
+| Scaling path visual | Done |
+| Disqualification rules (does/does not, side-by-side) | Done |
+| KYC & payouts section | Done |
+| Protocol transparency + CTA | Done |
+| Responsive layout | Done |
+
+**Next action**: Phase 7 — FAQ Page
 
 ## Shared Constants (`lib/constants.js`)
 

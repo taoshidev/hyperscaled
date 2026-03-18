@@ -89,6 +89,15 @@
   }
 }
 
+/* ── Scrollbar hide utility ── */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* ── Skeleton shimmer loader ── */
 @keyframes shimmer {
   0%   { background-position: -600px 0; }

@@ -47,17 +47,15 @@ export default function Nav() {
 
         {/* Right: CTA + mobile toggle */}
         <div className="flex items-center gap-4 shrink-0">
-          <a
-            href="https://app.hyperscaled.trade"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/register"
             className="shiny-cta px-5 py-2"
           >
             <span className="flex items-center gap-1.5">
               Start Evaluation
               <ArrowRight size={15} weight="bold" />
             </span>
-          </a>
+          </Link>
 
           {/* Mobile menu toggle */}
           <button

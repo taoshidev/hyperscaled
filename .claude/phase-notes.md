@@ -165,13 +165,106 @@ Registration Phase 3 complete. All 3 steps of the registration flow are fully bu
 
   **Responsive**: Verified at 375px (mobile), 768px (tablet), 1280px (desktop). No horizontal overflow, cards stack on mobile, comparison table readable, text legible at all breakpoints.
 
+- **Phase 4 — Pricing Page**:
+  Files changed: 3 (Footer.jsx, TODO_POLISH.md, PHASES.md)
+  Files created: 2 (app/pricing/page.jsx, components/marketing/PricingPage.jsx)
+
+  **Step 0 — Nav + Footer URL Patch**:
+  - Social icons (brand column): Twitter→x.com/hyperscaledhq, Discord→discord.gg/hyperscaledhq, GitHub→github.com/taoshidev. Added aria-label to each.
+  - Community column links: same URLs, plus new "Contact Support" → mailto:support@hyperscaled.trade
+  - Protocol column: Docs → https://docs.taoshi.io (external, target="_blank")
+  - Legal column: Audit Report removed entirely (no report exists)
+  - mailto links: excluded from target="_blank" and ArrowUpRight icon treatment
+  - TODO_POLISH.md: 5 URL items marked resolved, only "Nav search field" remains pending
+  - Verified: zero `href="#"` remaining in Nav.jsx and Footer.jsx
+
+  **Pricing Page**:
+  - Page route: app/pricing/page.jsx with metadata, imports PricingPage component
+  - No Providers wrapper (marketing page, no wallet connection)
+  - LaunchBanner: teal-400/10 bg, centered text with green dot indicator, "Save up to 50%" copy
+  - PricingHero: "One fee. One evaluation. Keep everything you earn." + subtext
+  - PricingCards: 3-column grid from PRICING_TIERS, $50K card has shiny-border + "Most Popular" pill badge. Each card: tier name, launch price (ins) + strikethrough standard (del) + sr-only context, 7 detail rows (account size, profit target with $amount, drawdown with $limit, profit split, payout cycle, scaling path, time limit), CTA button linking to app.hyperscaled.trade. Popular card CTA uses shiny-cta class.
+  - WhatsIncluded: 7 items with CheckCircle icons in a flex-wrap centered row
+  - ScalingSection: headline + body + ScalingPathVisual from shared components
+  - PricingFAQSection: "Common questions" heading + FAQAccordion with 3 PRICING_FAQ items
+  - All sections use Framer Motion useInView for entrance animations
+  - Responsive: cards stack single-column on mobile, flex-wrap on included items
+
+  **Decisions**:
+  - Popular card uses shiny-border (animated border class), non-popular cards use plain border
+  - Pricing uses ins/del with sr-only for screen reader context (per design-rules.md)
+  - Contact Support uses plain <a> (no target="_blank" for mailto)
+
+- **Phase 5 — How It Works Page**:
+  Files created: 2 (app/how-it-works/page.jsx, components/marketing/HowItWorksPage.jsx)
+
+  **Step 0 — CTA Link Fix**: Changed all generic "Start Your Evaluation" / "Start Evaluation" CTAs from external app.hyperscaled.trade to /register. Affected: Nav.jsx, Hero.jsx, HowItWorksPage.jsx (hero + bottom CTA). PricingPage tier-specific CTAs kept external (correct). Rule: generic "Start Your Evaluation" → /register, tier-specific "Start $25K Evaluation" → https://app.hyperscaled.trade.
+
+  **Page Hero**: Headline "From Hyperliquid trader to funded account — here's exactly how it works.", subtext about no API keys/custody/separate platform, CTA to /register.
+
+  **4-Step Flow**: Full-width cards with left text + right key details box.
+  - Step 01: Register and Select Account Size (4 detail rows: sizes, fee, KYC, activation)
+  - Step 02: Trade on Hyperliquid (4 rows: platform, data access, custody, minimum capital)
+  - Step 03: Track Your Progress (3 rows: dashboard, updates, tracked metrics)
+  - Step 04: Pass, Get Funded, Get Paid (9 rows: profit target, drawdown eval/funded, payout cycle, profit split, max size, funded profit target, scaling qualification, bonus qualification)
+
+  **Scaling Path Visual**: Reuses ScalingPathVisual from shared components. Includes note about Tier I/II scaling to $100K before full path applies.
+
+  **Non-Custodial Explainer**: "WHY THIS IS DIFFERENT" label, "Your wallet. Your trades. Your keys." headline, 3-paragraph body, two-column comparison (Legacy Prop Firm with XCircle red icons vs Hyperscaled with CheckCircle teal icons, 4 items each).
+
+  **Payout Mechanics**: "PAYOUT MECHANICS" label, "Automated. Onchain. Every 7 days." headline, 2-paragraph body (includes KYC note), horizontal 5-node flow diagram (stacks vertically on mobile), teal callout box "100% of profits go to you."
+
+  **Bottom CTA**: "Ready to start?" headline, subtext, primary shiny-cta to app.hyperscaled.trade, secondary "View Pricing" link to /pricing.
+
+  **Responsive**: All step cards stack text above details on mobile. Comparison columns stack on mobile. Payout flow stacks vertically on mobile. CTAs centered on all breakpoints.
+
+  **Patterns**: Uses same spring animation config as PricingPage. useInView for scroll-triggered animations. Framer Motion enter transitions on all sections. &nbsp; for widow prevention. textWrap: 'balance' on body copy.
+
+- **Phase 6 — Rules Page**:
+  Files created: 2 (app/rules/page.jsx, components/marketing/RulesPage.jsx)
+
+  **Page Hero**: "The rules. All of them. No fine print." + subtext about protocol enforcement.
+
+  **Evaluation Rules**: EVALUATION PHASE label, intro text, RulesTable with EVAL_RULES (8 rows), red breach callout box with Warning icon.
+
+  **Funded Account Rules**: FUNDED ACCOUNT PHASE label, intro text, RulesTable with FUNDED_RULES (7 rows).
+
+  **Scaling Rules**: ACCOUNT SCALING label, body text, two qualification blocks (5% quarterly + Sharpe > 1 for scaling, 2% quarterly + Sharpe > 1 for 25% bonus), tier note (Tier I/II cap at $100K, Tier III scales to $2.5M), custom From/To table with SCALING_PATH (9 rows, desktop table + mobile cards with ArrowRight), ScalingPathVisual component.
+
+  **Disqualification**: Two-column layout (stacks on mobile). Left: "What causes disqualification" with XCircle red icons (3 items). Right: "What does not cause disqualification" with CheckCircle teal icons (6 items). Same pattern as HowItWorksPage non-custodial comparison.
+
+  **KYC & Payouts**: KYC & PAYOUTS label, two paragraphs about KYC-only-for-payouts and wallet verification flow.
+
+  **Protocol Transparency**: PROTOCOL label, body about programmatic enforcement, "Start Your Evaluation →" CTA linking to /register (shiny-cta).
+
+  **Patterns**: No scroll animations — this is the one page with zero Framer Motion (restraint = authority). &nbsp; for widow prevention. textWrap: 'balance' on hero. All sections use max-w-[900px] container (slightly narrower than other pages to suit text-heavy content).
+
+- **Phase 6b — Rules Page Polish**:
+  Files changed: 2 (components/marketing/RulesPage.jsx, app/globals.css)
+
+  **Sticky TOC**: Desktop = fixed left sidebar with IntersectionObserver-driven active state highlight. Mobile = sticky horizontal pill bar below nav with horizontal scroll (scrollbar-hide utility added to globals.css). Both use anchor links to section IDs with scroll-mt-24.
+
+  **Section headings**: Added h2 below every teal label — "Evaluation Rules", "Funded Account Rules", "Scaling Rules", "Disqualification", "KYC & Payout Eligibility", "Protocol Transparency". Style: text-2xl font-bold tracking-tight.
+
+  **Removed all animations**: Stripped every useInView, motion.div, and Framer Motion import. All sections render immediately. Only import remaining is framer-motion-free. This page is now the only marketing page with zero motion — intentional restraint for protocol documentation tone.
+
+  **Scaling qualifications in callout boxes**: Replaced plain h3 + bullet list with two side-by-side bordered callout boxes. Scaling qualification = teal-tinted border + bg. Bonus qualification = neutral border. Both use CheckCircle icons instead of middot bullets.
+
+  **KYC section visual weight**: Body text wrapped in bordered card container (rounded-xl border bg-white/[0.02]).
+
+  **Protocol section visual weight**: Body text wrapped in teal-tinted callout box (border-teal-400/20 bg-teal-400/[0.04]). Text color elevated to zinc-300.
+
+  **Bottom CTA downgraded**: Replaced shiny-cta button with plain teal text link "Start Your Evaluation →". On-brand for documentation tone — no flourishes.
+
+  **Minor fixes**: Deleted unused SCALING_TABLE_ROWS const. Added disqualification intro text. Fixed &amp; to & in KYC label. Replaced middot bullets with CheckCircle icons in scaling qualifications.
+
 ## In progress
 
 Nothing currently in progress.
 
 ## Next action
 
-Phase 4 — Pricing Page (see docs/PHASES.md).
+Phase 7 — FAQ Page (see docs/PHASES.md).
 
 ## Known issues
 
