@@ -111,7 +111,7 @@ td{padding:10px 14px;border-bottom:1px solid var(--rule)}
 // ╚══════════════════════════════════════════════════════════════════╝
 const TRACKER = {
   "project": "Hyperscaled Marketing Website",
-  "lastUpdated": "2026-03-18T18:00:00Z",
+  "lastUpdated": "2026-03-18T20:00:00Z",
   "phases": [
     {
       "id": 0, "name": "Global Compliance Sweep", "status": "done",
@@ -209,17 +209,18 @@ const TRACKER = {
       ]
     },
     {
-      "id": 6, "name": "Rules Page", "status": "not_started",
+      "id": 6, "name": "Rules Page", "status": "done",
       "scope": "app/rules/", "estSessions": "1 session", "estHours": 2,
-      "dependsOn": [1, 2], "sessions": [],
+      "dependsOn": [1, 2],
+      "sessions": [{ "session": 8, "date": "2026-03-18", "notes": "Rules page — eval rules, funded rules, scaling path + qualifications, disqualification, KYC, protocol transparency + CTA" }],
       "items": [
-        { "name": "Page hero", "status": "pending" },
-        { "name": "Evaluation rules table", "status": "pending" },
-        { "name": "Funded account rules table", "status": "pending" },
-        { "name": "Scaling rules", "status": "pending" },
-        { "name": "Disqualification rules", "status": "pending" },
-        { "name": "KYC and payouts", "status": "pending" },
-        { "name": "Protocol transparency + CTA", "status": "pending" }
+        { "name": "Page hero", "status": "done" },
+        { "name": "Evaluation rules table", "status": "done" },
+        { "name": "Funded account rules table", "status": "done" },
+        { "name": "Scaling rules", "status": "done" },
+        { "name": "Disqualification rules", "status": "done" },
+        { "name": "KYC and payouts", "status": "done" },
+        { "name": "Protocol transparency + CTA", "status": "done" }
       ]
     },
     {
@@ -251,7 +252,7 @@ const TRACKER = {
     { "path": "/", "label": "Home", "status": "complete", "phase": 3, "note": "Full overhaul done + design polish" },
     { "path": "/how-it-works", "label": "How It Works", "status": "complete", "phase": 5, "note": "4-step flow, non-custodial explainer, payout mechanics" },
     { "path": "/pricing", "label": "Pricing", "status": "complete", "phase": 4, "note": "Launch tiers, scaling visual, FAQ mini" },
-    { "path": "/rules", "label": "Rules", "status": "missing", "phase": 6 },
+    { "path": "/rules", "label": "Rules", "status": "complete", "phase": 6, "note": "Eval rules, funded rules, scaling, disqualification, KYC, protocol transparency" },
     { "path": "/leaderboard", "label": "Leaderboard", "status": "complete", "phase": null, "note": "No changes needed" },
     { "path": "/partners", "label": "Partners", "status": "missing", "phase": 8 },
     { "path": "/faq", "label": "FAQ", "status": "missing", "phase": 7 },

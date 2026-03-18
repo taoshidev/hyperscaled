@@ -10,9 +10,9 @@ Last updated: 2026-03-17
 | 1 | Nav + Footer Overhaul | Done | Phase 0 |
 | 2 | Shared Constants + Components | Done | Phase 0 |
 | 3 | Home Page Overhaul (`/`) | Done | Phase 1, 2 |
-| 4 | Pricing Page (`/pricing`) | Not Started | Phase 1, 2 |
-| 5 | How It Works Page (`/how-it-works`) | Not Started | Phase 1, 2 |
-| 6 | Rules Page (`/rules`) | Not Started | Phase 1, 2 |
+| 4 | Pricing Page (`/pricing`) | Done | Phase 1, 2 |
+| 5 | How It Works Page (`/how-it-works`) | Done | Phase 1, 2 |
+| 6 | Rules Page (`/rules`) | Done | Phase 1, 2 |
 | 7 | FAQ Page (`/faq`) | Not Started | Phase 1, 2 |
 | 8 | Partners Page (`/partners`) | Not Started | Phase 1, 2 |
 
@@ -32,7 +32,7 @@ Last updated: 2026-03-17
 |---|----------|--------|--------|
 | 1 | Nav search — navigates to /leaderboard?addr=? | Open | — |
 | 2 | Chrome Extension CTA on registration confirmation | Open | — |
-| 3 | Social link URLs (Twitter, Discord, GitHub) | Open | — |
-| 4 | Docs link URL in footer | Open | — |
-| 5 | Legal pages — exist or placeholder? | Open | — |
+| 3 | Social link URLs (Twitter, Discord, GitHub) | Resolved | Phase 4: x.com/hyperscaledhq, discord.gg/hyperscaledhq, github.com/taoshidev |
+| 4 | Docs link URL in footer | Resolved | Phase 4: docs.taoshi.io |
+| 5 | Legal pages — exist or placeholder? | Resolved | Placeholder pages exist (/terms, /privacy, /risk) |
 | 6 | Partner application — form or mailto? | Resolved | mailto: partners@hyperscaled.trade |

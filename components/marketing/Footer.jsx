@@ -10,26 +10,26 @@ const footerLinks = {
     { label: 'Rules', href: '/rules' },
     { label: 'Leaderboard', href: '/leaderboard' },
     { label: 'Evaluation Rules', href: '/rules' },
-    { label: 'Docs', href: '#', external: true }, /* TODO: polish — add real URL */
+    { label: 'Docs', href: 'https://docs.taoshi.io', external: true },
   ],
   Community: [
-    { label: 'Twitter / X', href: '#', external: true, icon: TwitterLogo }, /* TODO: polish — add real URL */
-    { label: 'Discord', href: '#', external: true, icon: DiscordLogo }, /* TODO: polish — add real URL */
-    { label: 'GitHub', href: '#', external: true, icon: GithubLogo }, /* TODO: polish — add real URL */
+    { label: 'Twitter / X', href: 'https://x.com/hyperscaledhq', external: true, icon: TwitterLogo },
+    { label: 'Discord', href: 'https://discord.gg/hyperscaledhq', external: true, icon: DiscordLogo },
+    { label: 'GitHub', href: 'https://github.com/taoshidev', external: true, icon: GithubLogo },
+    { label: 'Contact Support', href: 'mailto:support@hyperscaled.trade', external: true },
   ],
   Legal: [
     { label: 'Terms of Service', href: '/terms' },
     { label: 'Privacy Policy', href: '/privacy' },
     { label: 'Risk Disclosure', href: '/risk' },
-    { label: 'Audit Report', href: '#', external: true }, /* TODO: polish — add real URL */
   ],
 }
 
 /* Social icons in brand column */
 const socialIcons = [
-  { Icon: TwitterLogo, href: '#' }, /* TODO: polish — add real URL */
-  { Icon: DiscordLogo, href: '#' }, /* TODO: polish — add real URL */
-  { Icon: GithubLogo, href: '#' }, /* TODO: polish — add real URL */
+  { Icon: TwitterLogo, href: 'https://x.com/hyperscaledhq', label: 'Twitter' },
+  { Icon: DiscordLogo, href: 'https://discord.gg/hyperscaledhq', label: 'Discord' },
+  { Icon: GithubLogo, href: 'https://github.com/taoshidev', label: 'GitHub' },
 ]
 
 export default function Footer() {
@@ -50,10 +50,11 @@ export default function Footer() {
               Permissionless funded trading on&nbsp;Hyperliquid.
             </p>
             <div className="flex items-center gap-3 mt-5">
-              {socialIcons.map(({ Icon, href }, i) => (
+              {socialIcons.map(({ Icon, href, label }, i) => (
                 <a
                   key={i}
                   href={href}
+                  aria-label={label}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-8 h-8 rounded-lg bg-zinc-900 border border-white/[0.06] flex items-center justify-center text-zinc-400 hover:text-white hover:border-white/[0.14] transition-colors"
@@ -75,7 +76,8 @@ export default function Footer() {
 
                   /* External links use plain <a>, internal use Next.js <Link> */
                   const Wrapper = isExternal ? 'a' : Link
-                  const extraProps = isExternal
+                  const isMail = link.href.startsWith('mailto:')
+                  const extraProps = isExternal && !isMail
                     ? { target: '_blank', rel: 'noopener noreferrer' }
                     : {}
 
@@ -88,7 +90,7 @@ export default function Footer() {
                       >
                         {IconComp && <IconComp size={13} className="text-zinc-600 group-hover:text-zinc-400 transition-colors" />}
                         {link.label}
-                        {isExternal && (
+                        {isExternal && !isMail && (
                           <ArrowUpRight
                             size={10}
                             className="text-zinc-700 group-hover:text-zinc-500 transition-colors"
