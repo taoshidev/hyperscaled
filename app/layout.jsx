@@ -14,7 +14,7 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased">
+      <body className="font-sans antialiased">
         {children}
       </body>
     </html>

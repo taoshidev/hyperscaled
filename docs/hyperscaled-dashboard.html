@@ -111,7 +111,7 @@ td{padding:10px 14px;border-bottom:1px solid var(--rule)}
 // ╚══════════════════════════════════════════════════════════════════╝
 const TRACKER = {
   "project": "Hyperscaled Marketing Website",
-  "lastUpdated": "2026-03-17T10:00:00Z",
+  "lastUpdated": "2026-03-17T16:20:00Z",
   "phases": [
     {
       "id": 0, "name": "Global Compliance Sweep", "status": "done",
@@ -146,33 +146,38 @@ const TRACKER = {
       ]
     },
     {
-      "id": 2, "name": "Shared Constants + Components", "status": "not_started",
+      "id": 2, "name": "Shared Constants + Components", "status": "done",
       "scope": "lib/constants.js, shared/", "estSessions": "1 session", "estHours": 2,
-      "dependsOn": [0], "sessions": [],
+      "dependsOn": [0],
+      "sessions": [{ "session": 3, "date": "2026-03-17", "notes": "11 constants in lib/constants.js, Stats/Hero/FAQ updated, new ScalingPathVisual + FAQAccordion + RulesTable components" }],
       "items": [
-        { "name": "SCALING_PATH constant", "status": "pending" },
-        { "name": "EVAL_RULES + FUNDED_RULES constants", "status": "pending" },
-        { "name": "FAQ_ITEMS constant", "status": "pending" },
-        { "name": "PRICING_TIERS constant", "status": "pending" },
-        { "name": "NETWORK_STATS constant", "status": "pending" },
-        { "name": "Rename VANTA_USDC_WALLET", "status": "pending" },
-        { "name": "ScalingPathVisual component", "status": "pending" },
-        { "name": "FAQAccordion component", "status": "pending" }
+        { "name": "SCALING_PATH constant", "status": "done" },
+        { "name": "EVAL_RULES + FUNDED_RULES constants", "status": "done" },
+        { "name": "FAQ_ITEMS constant", "status": "done" },
+        { "name": "PRICING_TIERS constant", "status": "done" },
+        { "name": "NETWORK_STATS constant", "status": "done" },
+        { "name": "Rename VANTA_USDC_WALLET", "status": "done" },
+        { "name": "ScalingPathVisual component", "status": "done" },
+        { "name": "FAQAccordion component", "status": "done" }
       ]
     },
     {
-      "id": 3, "name": "Home Page Overhaul", "status": "not_started",
+      "id": 3, "name": "Home Page Overhaul", "status": "done",
       "scope": "components/marketing/*", "estSessions": "2–3 sessions", "estHours": 5,
-      "dependsOn": [1, 2], "sessions": [],
+      "dependsOn": [1, 2],
+      "sessions": [
+        { "session": 4, "date": "2026-03-17", "notes": "Full home page overhaul — hero, stats, problem, solution, how-it-works, features, partners-cta, faq" },
+        { "session": 5, "date": "2026-03-17", "notes": "Design polish — de-carded Stats/Problem/PartnersCTA, emoji→icon fix, Satoshi font fix" }
+      ],
       "items": [
-        { "name": "Hero section", "status": "pending" },
-        { "name": "Network Stats Bar", "status": "pending" },
-        { "name": "Problem cards", "status": "pending" },
-        { "name": "Protocol/Comparison", "status": "pending" },
-        { "name": "How It Works 3 steps", "status": "pending" },
-        { "name": "Features 6 cards", "status": "pending" },
-        { "name": "Partners CTA section", "status": "pending" },
-        { "name": "FAQ condensed", "status": "pending" }
+        { "name": "Hero section", "status": "done" },
+        { "name": "Network Stats Bar", "status": "done" },
+        { "name": "Problem cards", "status": "done" },
+        { "name": "Protocol/Comparison", "status": "done" },
+        { "name": "How It Works 3 steps", "status": "done" },
+        { "name": "Features 6 cards", "status": "done" },
+        { "name": "Partners CTA section", "status": "done" },
+        { "name": "FAQ condensed", "status": "done" }
       ]
     },
     {
@@ -240,7 +245,7 @@ const TRACKER = {
     }
   ],
   "routes": [
-    { "path": "/", "label": "Home", "status": "exists-needs-overhaul", "phase": 3, "note": "Exists, needs full rebuild" },
+    { "path": "/", "label": "Home", "status": "complete", "phase": 3, "note": "Full overhaul done + design polish" },
     { "path": "/how-it-works", "label": "How It Works", "status": "missing", "phase": 5 },
     { "path": "/pricing", "label": "Pricing", "status": "missing", "phase": 4 },
     { "path": "/rules", "label": "Rules", "status": "missing", "phase": 6 },
