@@ -92,3 +92,25 @@ Every session prompt must follow:
 8. **Phosphor Icons for new work** — Lucide only where shadcn components already use it.
 9. **No hardcoded secrets** — API keys, wallet addresses, etc. go in .env.
 10. **Don't touch API routes** — mock API routes are stable. UI work only unless explicitly told otherwise.
+
+## Post-Session (MANDATORY)
+
+After completing any phase work, before committing:
+
+1. Update TRACKER.json:
+
+   - Set the completed phase status to "done"
+
+   - Set all completed items to "done" status  
+
+   - Add a session entry with session number, today's date, and a 1-line summary
+
+   - Update lastUpdated to current ISO timestamp
+
+   - If any items are partially done, set phase status to "in_progress"
+
+2. Run ./generate-dashboard.sh
+
+3. Include TRACKER.json and docs/hyperscaled-dashboard.html in the commit
+
+This is not optional. Every phase commit must include updated tracker files.

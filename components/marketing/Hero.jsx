@@ -81,7 +81,7 @@ export default function Hero() {
               </a>
               <Link
                 href="/how-it-works"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-white/[0.12] text-white text-sm font-medium hover:border-white/[0.24] hover:bg-white/[0.04] active:scale-[0.98] transition-[border-color,background-color,transform] duration-200"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-white/[0.12] text-white text-sm font-medium hover:border-white/[0.24] hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-teal-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 active:scale-[0.98] transition-[border-color,background-color,transform] duration-200"
               >
                 Learn More
                 <ArrowRight size={15} weight="bold" />

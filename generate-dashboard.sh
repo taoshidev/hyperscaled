@@ -15,23 +15,32 @@ if [ ! -f "$DASHBOARD" ]; then
   exit 1
 fi
 
-# Read the JSON
-JSON_DATA=$(cat "$TRACKER")
+# Find the line numbers of the marker boundaries
+# Top box ends at the line after "Do not hand-edit" (the closing box line)
+# Bottom box starts at the line before "END TRACKER DATA"
+TOP_END=$(grep -n "Do not hand-edit" "$DASHBOARD" | head -1 | cut -d: -f1)
+if [ -z "$TOP_END" ]; then
+  echo "ERROR: Could not find 'Do not hand-edit' marker in dashboard" >&2
+  exit 1
+fi
+# The closing line of the top box is one line after "Do not hand-edit"
+TOP_END=$((TOP_END + 1))
 
-# Replace the TRACKER data block between the marker comments
-perl -0777 -i -pe '
-  BEGIN {
-    local $/;
-    open(my $fh, "<", "'"$TRACKER"'") or die "Cannot read TRACKER.json: $!";
-    $json = <$fh>;
-    close($fh);
-    chomp $json;
-  }
-  s{
-    (// ╔══+╗\n// ║\s+TRACKER DATA.*?╚══+╝\n)
-    .*?
-    (// ╔══+╗\n// ║\s+END TRACKER DATA.*?╚══+╝)
-  }{${1}const TRACKER = ${json};\n${2}}s
-' "$DASHBOARD"
+BOTTOM_START=$(grep -n "END TRACKER DATA" "$DASHBOARD" | head -1 | cut -d: -f1)
+if [ -z "$BOTTOM_START" ]; then
+  echo "ERROR: Could not find 'END TRACKER DATA' marker in dashboard" >&2
+  exit 1
+fi
+# The opening line of the bottom box is one line before "END TRACKER DATA"
+BOTTOM_START=$((BOTTOM_START - 1))
+
+# Build the new file: top (through marker) + new data + bottom (from marker)
+{
+  head -n "$TOP_END" "$DASHBOARD"
+  echo "const TRACKER = $(cat "$TRACKER");"
+  tail -n +"$BOTTOM_START" "$DASHBOARD"
+} > "${DASHBOARD}.tmp"
+
+mv "${DASHBOARD}.tmp" "$DASHBOARD"
 
 echo "✓ dashboard updated from TRACKER.json ($(date '+%Y-%m-%d %H:%M'))"
