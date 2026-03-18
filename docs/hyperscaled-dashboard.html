@@ -111,7 +111,7 @@ td{padding:10px 14px;border-bottom:1px solid var(--rule)}
 // ╚══════════════════════════════════════════════════════════════════╝
 const TRACKER = {
   "project": "Hyperscaled Marketing Website",
-  "lastUpdated": "2026-03-17T16:20:00Z",
+  "lastUpdated": "2026-03-18T18:00:00Z",
   "phases": [
     {
       "id": 0, "name": "Global Compliance Sweep", "status": "done",
@@ -181,28 +181,31 @@ const TRACKER = {
       ]
     },
     {
-      "id": 4, "name": "Pricing Page", "status": "not_started",
+      "id": 4, "name": "Pricing Page", "status": "done",
       "scope": "app/pricing/", "estSessions": "1 session", "estHours": 2,
-      "dependsOn": [1, 2], "sessions": [],
+      "dependsOn": [1, 2],
+      "sessions": [{ "session": 6, "date": "2026-03-18", "notes": "Pricing page with launch tiers, scaling visual, FAQ mini; patched nav/footer URLs" }],
       "items": [
-        { "name": "Launch pricing banner", "status": "pending" },
-        { "name": "Page hero", "status": "pending" },
-        { "name": "3-tier pricing cards", "status": "pending" },
-        { "name": "Whats Included row", "status": "pending" },
-        { "name": "Scaling path visual", "status": "pending" },
-        { "name": "Pricing FAQ mini", "status": "pending" }
+        { "name": "Launch pricing banner", "status": "done" },
+        { "name": "Page hero", "status": "done" },
+        { "name": "3-tier pricing cards", "status": "done" },
+        { "name": "Whats Included row", "status": "done" },
+        { "name": "Scaling path visual", "status": "done" },
+        { "name": "Pricing FAQ mini", "status": "done" },
+        { "name": "Nav/Footer URL patch", "status": "done" }
       ]
     },
     {
-      "id": 5, "name": "How It Works Page", "status": "not_started",
+      "id": 5, "name": "How It Works Page", "status": "done",
       "scope": "app/how-it-works/", "estSessions": "1–2 sessions", "estHours": 3,
-      "dependsOn": [1, 2], "sessions": [],
+      "dependsOn": [1, 2],
+      "sessions": [{ "session": 7, "date": "2026-03-18", "notes": "Full how-it-works page — 4-step flow, scaling visual, non-custodial explainer, payout mechanics, bottom CTA; fixed generic Start Evaluation CTAs globally to /register" }],
       "items": [
-        { "name": "Page hero + CTA", "status": "pending" },
-        { "name": "4-step expanded flow", "status": "pending" },
-        { "name": "Non-custodial explainer", "status": "pending" },
-        { "name": "Payout mechanics", "status": "pending" },
-        { "name": "Bottom CTA", "status": "pending" }
+        { "name": "Page hero + CTA", "status": "done" },
+        { "name": "4-step expanded flow", "status": "done" },
+        { "name": "Non-custodial explainer", "status": "done" },
+        { "name": "Payout mechanics", "status": "done" },
+        { "name": "Bottom CTA", "status": "done" }
       ]
     },
     {
@@ -246,8 +249,8 @@ const TRACKER = {
   ],
   "routes": [
     { "path": "/", "label": "Home", "status": "complete", "phase": 3, "note": "Full overhaul done + design polish" },
-    { "path": "/how-it-works", "label": "How It Works", "status": "missing", "phase": 5 },
-    { "path": "/pricing", "label": "Pricing", "status": "missing", "phase": 4 },
+    { "path": "/how-it-works", "label": "How It Works", "status": "complete", "phase": 5, "note": "4-step flow, non-custodial explainer, payout mechanics" },
+    { "path": "/pricing", "label": "Pricing", "status": "complete", "phase": 4, "note": "Launch tiers, scaling visual, FAQ mini" },
     { "path": "/rules", "label": "Rules", "status": "missing", "phase": 6 },
     { "path": "/leaderboard", "label": "Leaderboard", "status": "complete", "phase": null, "note": "No changes needed" },
     { "path": "/partners", "label": "Partners", "status": "missing", "phase": 8 },
@@ -271,8 +274,8 @@ const TRACKER = {
   "decisions": [
     { "name": "Nav search behavior", "status": "resolved", "resolution": "Removed, backlogged" },
     { "name": "Chrome Extension CTA on registration", "status": "open", "resolution": null },
-    { "name": "Social link URLs", "status": "resolved", "resolution": "Placeholders + TODO" },
-    { "name": "Docs link URL", "status": "resolved", "resolution": "Placeholder + TODO" },
+    { "name": "Social link URLs", "status": "resolved", "resolution": "Phase 4: x.com/hyperscaledhq, discord.gg/hyperscaledhq, github.com/taoshidev" },
+    { "name": "Docs link URL", "status": "resolved", "resolution": "Phase 4: docs.taoshi.io" },
     { "name": "Legal pages", "status": "resolved", "resolution": "Placeholder pages created" },
     { "name": "Partner application", "status": "resolved", "resolution": "mailto: partners@hyperscaled.trade" }
   ],
@@ -447,13 +450,37 @@ ovGrid.appendChild(pipePanel);
 // Right: blockers + solid
 const rightPanel = h('div','panel','');
 rightPanel.appendChild(h('h3','','Honest Status'));
-if (D.repoScan && D.repoScan.blockers) {
-  D.repoScan.blockers.forEach(b => {
-    const bk = h('div','blocker','');
-    bk.innerHTML = `<div class="bt">${b.icon} ${b.text}</div><div class="bd">${b.detail}</div>`;
-    rightPanel.appendChild(bk);
-  });
+// Derive blockers dynamically from phase/route/decision data
+const derivedBlockers = [];
+const missingRoutes = D.routes.filter(r => r.status === 'missing');
+if (missingRoutes.length > 0) {
+  derivedBlockers.push({ icon:'🔴', text:`${missingRoutes.length} marketing page${missingRoutes.length > 1 ? 's' : ''} don't exist yet`, detail: missingRoutes.map(r => r.path).join(', ') });
 }
+const inProgPhases = D.phases.filter(p => p.status === 'in_progress');
+inProgPhases.forEach(p => {
+  const pd = p.items.filter(i => i.status === 'done').length;
+  derivedBlockers.push({ icon:'🟡', text:`Phase ${p.id} (${p.name}) in progress`, detail:`${pd}/${p.items.length} items done` });
+});
+const notStartedPhases = D.phases.filter(p => p.status === 'not_started');
+if (notStartedPhases.length > 0) {
+  derivedBlockers.push({ icon:'🟡', text:`${notStartedPhases.length} phase${notStartedPhases.length > 1 ? 's' : ''} not started`, detail: notStartedPhases.map(p => 'P'+p.id+' '+p.name).join(', ') });
+}
+const openDecs = D.decisions.filter(d => d.status === 'open');
+if (openDecs.length > 0) {
+  derivedBlockers.push({ icon:'🟡', text:`${openDecs.length} open decision${openDecs.length > 1 ? 's' : ''} need${openDecs.length === 1 ? 's' : ''} team input`, detail: openDecs.map(d => d.name).join(', ') });
+}
+const allViolFixed = D.violations.every(v => v.fixed === v.total);
+if (allViolFixed) {
+  derivedBlockers.push({ icon:'🟢', text:`All ${violTotal} compliance violations fixed`, detail: D.violations.map(v => v.name).join(', ') });
+} else {
+  const unfixed = D.violations.filter(v => v.fixed < v.total);
+  derivedBlockers.push({ icon:'🔴', text:`${unfixed.length} violation categor${unfixed.length > 1 ? 'ies' : 'y'} still open`, detail: unfixed.map(v => v.name + ' ('+v.fixed+'/'+v.total+')').join(', ') });
+}
+derivedBlockers.forEach(b => {
+  const bk = h('div','blocker','');
+  bk.innerHTML = `<div class="bt">${b.icon} ${b.text}</div><div class="bd">${b.detail}</div>`;
+  rightPanel.appendChild(bk);
+});
 const solidTitle = h('h3','',''); solidTitle.textContent = "What's Solid"; solidTitle.style.marginTop = '20px';
 rightPanel.appendChild(solidTitle);
 if (D.repoScan && D.repoScan.solid) {
