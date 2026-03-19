@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { reportWarning } from "@/lib/errors";
 
 export function useDashboardStream(hlAddress) {
   const [status, setStatus] = useState("disconnected");
@@ -9,6 +10,7 @@ export function useDashboardStream(hlAddress) {
   const esRef = useRef(null);
   const retriesRef = useRef(0);
   const timerRef = useRef(null);
+  const hasReportedDisconnectRef = useRef(false);
 
   const connect = useCallback(() => {
     if (!hlAddress) return;
@@ -26,6 +28,7 @@ export function useDashboardStream(hlAddress) {
     es.onopen = () => {
       setStatus("connected");
       retriesRef.current = 0;
+      hasReportedDisconnectRef.current = false;
     };
 
     es.onmessage = (event) => {
@@ -46,6 +49,14 @@ export function useDashboardStream(hlAddress) {
       es.close();
       esRef.current = null;
       setStatus("error");
+
+      if (!hasReportedDisconnectRef.current) {
+        hasReportedDisconnectRef.current = true;
+        reportWarning("SSE stream disconnected", {
+          source: "dashboard-stream",
+          userId: hlAddress,
+        });
+      }
 
       const delay = Math.min(1000 * 2 ** retriesRef.current, 30000);
       retriesRef.current += 1;

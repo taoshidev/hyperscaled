@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { STUB_ENABLED, stubDashboard } from "@/lib/gateway-stubs";
 import { isValidEvmAddress } from "@/lib/validation";
+import { reportCritical } from "@/lib/errors";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -46,7 +47,8 @@ export async function GET(request) {
     const limits = limitsRes.ok ? await limitsRes.json() : null;
 
     return NextResponse.json({ ...trader, limits }, { status: 200 });
-  } catch {
+  } catch (err) {
+    reportCritical(err, { source: "api/dashboard", userId: hlAddress, message: "Could not reach validator" });
     return NextResponse.json(
       { error: "Could not reach validator" },
       { status: 502 },
