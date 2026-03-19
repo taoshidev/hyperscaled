@@ -8,8 +8,6 @@ import {
   XCircle,
   Warning,
 } from '@phosphor-icons/react'
-import Nav from './Nav'
-import Footer from './Footer'
 import RulesTable from '@/components/shared/RulesTable'
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import { EVAL_RULES, FUNDED_RULES, SCALING_PATH } from '@/lib/constants'
@@ -447,19 +445,15 @@ export default function RulesPage() {
   const activeId = useActiveSection()
 
   return (
-    <div className="bg-[#09090b] text-white font-sans min-h-[100dvh]">
-      <Nav />
-      <main>
-        <PageHero />
-        <TableOfContents activeId={activeId} />
-        <EvalRulesSection />
-        <FundedRulesSection />
-        <ScalingRulesSection />
-        <DisqualificationSection />
-        <KYCSection />
-        <ProtocolSection />
-      </main>
-      <Footer />
-    </div>
+    <>
+      <PageHero />
+      <TableOfContents activeId={activeId} />
+      <EvalRulesSection />
+      <FundedRulesSection />
+      <ScalingRulesSection />
+      <DisqualificationSection />
+      <KYCSection />
+      <ProtocolSection />
+    </>
   )
 }
