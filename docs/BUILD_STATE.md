@@ -1,6 +1,6 @@
 # Build State
 
-Last updated: 2026-03-17
+Last updated: 2026-03-19
 
 ## Marketing Site (`/`)
 
@@ -22,7 +22,7 @@ Last updated: 2026-03-17
 | ShinyButton CTA | Done |
 | Leaderboard preview | Not on home page — Component exists at `/leaderboard` but is NOT rendered in the home page marketing compose list (`components/marketing.jsx`). Spec does not require it on home page. |
 | Compliance (copy/design rules) | Done — 72 violations fixed (9 Vanta, 1 Built on Bittensor, 2 Up to 100%, 2 Chrome Extension, 1 funding language, 1 copyright, 41 text-[10px], 7 transition-all, 8 min-h-screen) |
-| Missing pages | In Progress — `/pricing` done (Phase 4), `/how-it-works` done (Phase 5), `/rules` done (Phase 6), `/faq` done (Phase 7). Remaining: `/partners` |
+| Missing pages | Done — `/pricing` (Phase 4), `/how-it-works` (Phase 5), `/rules` (Phase 6), `/faq` (Phase 7), `/partners` (Phase 8). All marketing pages complete. |
 | Legal pages (`/terms`, `/privacy`, `/risk`) | Done — placeholder pages with "Coming soon." Content pending. |
 | TODO Polish tracker | Done — `docs/TODO_POLISH.md` tracks deferred URLs + legal content |
 
@@ -41,7 +41,7 @@ Last updated: 2026-03-17
 | Pricing FAQ mini (3 items) | Done |
 | Responsive layout | Done |
 
-**Next action**: Phase 8 — Partners Page (see docs/PHASES.md)
+**Next action**: All marketing pages complete. Polish pass next.
 
 ## How It Works Page (`/how-it-works`)
 
@@ -60,7 +60,7 @@ Last updated: 2026-03-17
 | Bottom CTA | Done |
 | Responsive layout | Done |
 
-**Next action**: Phase 8 — Partners Page
+**Next action**: All marketing pages complete. Polish pass next.
 
 ## Rules Page (`/rules`)
 
@@ -81,7 +81,7 @@ Last updated: 2026-03-17
 | Protocol transparency + CTA | Done |
 | Responsive layout | Done |
 
-**Next action**: Phase 8 — Partners Page
+**Next action**: All marketing pages complete. Polish pass next.
 
 ## FAQ Page (`/faq`)
 
@@ -97,7 +97,25 @@ Last updated: 2026-03-17
 | Bottom contact links (Discord + email) | Done |
 | Responsive layout | Done |
 
-**Next action**: Phase 8 — Partners Page
+**Next action**: All marketing pages complete. Polish pass next.
+
+## Partners Page (`/partners`)
+
+**Status**: Complete — Phase 8
+
+| Item | State |
+|------|-------|
+| Page route + metadata | Done |
+| Page hero + badge pill + dual CTAs | Done |
+| What You Control (6 feature cards, teal checkmarks) | Done |
+| Revenue model (USDC + Alpha, mental model callout) | Done |
+| How It Works (4-step vertical timeline) | Done |
+| Division of responsibility (two-column) | Done |
+| Funding capacity table (desktop table + mobile cards) | Done |
+| Application CTA | Done |
+| Responsive layout | Done |
+
+**Next action**: All marketing pages complete. Polish pass next.
 
 ## Shared Constants (`lib/constants.js`)
 

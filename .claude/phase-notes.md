@@ -274,13 +274,34 @@ Registration Phase 3 complete. All 3 steps of the registration flow are fully bu
 
   **Patterns**: No scroll animations — matches Rules page documentation tone. &nbsp; for widow prevention. textWrap: 'balance' on hero. max-w-[900px] content container. No shiny-cta, no Framer Motion entrance animations.
 
+- **Phase 8 — Partners Page**:
+  Files created: 2 (app/partners/page.jsx, components/marketing/PartnersPage.jsx)
+
+  **Page Hero**: Badge pill ("Partner Program" with teal dot), headline "Run your own funded trading firm. Powered by Hyperscaled infrastructure." (second line in zinc-400), subtext about launching without infrastructure, dual CTAs (mailto:partners@hyperscaled.trade primary, Download Partner Overview secondary with TODO for PDF link).
+
+  **What You Control**: 6 feature cards in 3x2 grid (lg) / 2x3 (sm) / 1-col (mobile). Each card: CheckCircle teal icon + title + description. Items: pricing, profit split, direct payments, white-label branding, permissionless scaling, network-aligned incentives.
+
+  **Revenue Model**: Two cards side by side — Trader Registration Fees (USDC) and Network Rewards (Alpha Emissions). Below: teal-tinted mental model callout box with monospace text (USDC = business revenue + payout liquidity, Alpha = network funding capacity + scaling collateral).
+
+  **How It Works**: 4-step vertical timeline with numbered teal circles and connecting line. Steps: apply → configure → bring traders → scale. Different layout from trader How It Works page (vertical timeline vs horizontal step cards).
+
+  **Division of Responsibility**: Two-column card layout matching Rules page disqualification pattern. Left card (neutral border): operator responsibilities (4 items). Right card (teal-tinted border): Hyperscaled responsibilities (5 items). Both use CheckCircle icons.
+
+  **Funding Capacity Table**: Desktop table with Account Size / Alpha Required columns (3 rows: $25K/7.14, $50K/14.28, $100K/28.5). Mobile stacked cards. Below: "$3,500 in funded capital per 1 Alpha token."
+
+  **Application CTA**: Centered headline "Ready to launch your firm?", body about 48-hour review + whiteglove onboarding, shiny-cta mailto button.
+
+  **Patterns**: No scroll animations — matches Rules/FAQ documentation tone. &nbsp; for widow prevention. textWrap: 'balance' on hero and CTA. max-w-[900px] content container. No Framer Motion. Uses 'use client' for Phosphor Icons only.
+
+  **TODO added**: Partner Overview one-pager PDF link added to docs/TODO_POLISH.md.
+
 ## In progress
 
 Nothing currently in progress.
 
 ## Next action
 
-Phase 8 — Partners Page (see docs/PHASES.md).
+All marketing pages complete. Polish pass next.
 
 ## Known issues
 

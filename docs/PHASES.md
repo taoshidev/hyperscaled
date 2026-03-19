@@ -1,6 +1,6 @@
 # Launch Phases
 
-Last updated: 2026-03-17
+Last updated: 2026-03-19
 
 ## Phase Map
 
@@ -14,7 +14,7 @@ Last updated: 2026-03-17
 | 5 | How It Works Page (`/how-it-works`) | Done | Phase 1, 2 |
 | 6 | Rules Page (`/rules`) | Done | Phase 1, 2 |
 | 7 | FAQ Page (`/faq`) | Done | Phase 1, 2 |
-| 8 | Partners Page (`/partners`) | Not Started | Phase 1, 2 |
+| 8 | Partners Page (`/partners`) | Done | Phase 1, 2 |
 
 ## Workflow Rules
 
