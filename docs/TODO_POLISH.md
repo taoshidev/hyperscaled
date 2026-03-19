@@ -10,6 +10,9 @@ Items deferred during build phases. Address before launch.
 - [x] Audit Report — Removed (no report exists) (Phase 4)
 - [ ] Nav search field (removed from Phase 1 — needs UX decision on cross-page behavior)
 
+## Partner Assets
+- [ ] Partner Overview one-pager PDF (link on `/partners` hero)
+
 ## Legal Pages
 - [ ] Terms of Service content (`/terms`)
 - [ ] Privacy Policy content (`/privacy`)
