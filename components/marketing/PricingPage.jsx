@@ -3,8 +3,6 @@
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { CheckCircle, ArrowRight } from '@phosphor-icons/react'
-import Nav from './Nav'
-import Footer from './Footer'
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import FAQAccordion from '@/components/shared/FAQAccordion'
 import { PRICING_TIERS, PRICING_FAQ } from '@/lib/constants'
@@ -241,17 +239,13 @@ function PricingFAQSection() {
 /* ── Page Compose ── */
 export default function PricingPage() {
   return (
-    <div className="bg-[#09090b] text-white font-sans min-h-[100dvh]">
-      <Nav />
-      <main>
-        <LaunchBanner />
-        <PricingHero />
-        <PricingCards />
-        <WhatsIncluded />
-        <ScalingSection />
-        <PricingFAQSection />
-      </main>
-      <Footer />
-    </div>
+    <>
+      <LaunchBanner />
+      <PricingHero />
+      <PricingCards />
+      <WhatsIncluded />
+      <ScalingSection />
+      <PricingFAQSection />
+    </>
   )
 }

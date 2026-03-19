@@ -10,8 +10,6 @@ import {
   ArrowsOutSimple,
   Lightning,
 } from '@phosphor-icons/react'
-import Nav from './Nav'
-import Footer from './Footer'
 
 /* ───────────────────────────────────────────────
    Data
@@ -436,18 +434,14 @@ function ApplicationCTASection() {
    ─────────────────────────────────────────────── */
 export default function PartnersPage() {
   return (
-    <div className="bg-[#09090b] text-white font-sans min-h-[100dvh]">
-      <Nav />
-      <main>
-        <PageHero />
-        <WhatYouControlSection />
-        <RevenueModelSection />
-        <HowItWorksSection />
-        <ResponsibilitySection />
-        <FundingCapacitySection />
-        <ApplicationCTASection />
-      </main>
-      <Footer />
-    </div>
+    <>
+      <PageHero />
+      <WhatYouControlSection />
+      <RevenueModelSection />
+      <HowItWorksSection />
+      <ResponsibilitySection />
+      <FundingCapacitySection />
+      <ApplicationCTASection />
+    </>
   )
 }

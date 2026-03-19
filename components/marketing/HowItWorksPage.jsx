@@ -12,8 +12,6 @@ import {
   Target,
   CurrencyDollar,
 } from '@phosphor-icons/react'
-import Nav from './Nav'
-import Footer from './Footer'
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
@@ -494,17 +492,13 @@ function BottomCTA() {
    ─────────────────────────────────────────────── */
 export default function HowItWorksPage() {
   return (
-    <div className="bg-[#09090b] text-white font-sans min-h-[100dvh]">
-      <Nav />
-      <main>
-        <PageHero />
-        <StepByStepFlow />
-        <ScalingSection />
-        <NonCustodialExplainer />
-        <PayoutMechanics />
-        <BottomCTA />
-      </main>
-      <Footer />
-    </div>
+    <>
+      <PageHero />
+      <StepByStepFlow />
+      <ScalingSection />
+      <NonCustodialExplainer />
+      <PayoutMechanics />
+      <BottomCTA />
+    </>
   )
 }

@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { ArrowRight, DiscordLogo, Envelope } from '@phosphor-icons/react'
-import Nav from './Nav'
-import Footer from './Footer'
 import FAQAccordion from '@/components/shared/FAQAccordion'
 import { FAQ_ITEMS } from '@/lib/constants'
 
@@ -177,15 +175,11 @@ export default function FAQPage() {
   const activeId = useActiveSection()
 
   return (
-    <div className="bg-[#09090b] text-white font-sans min-h-[100dvh]">
-      <Nav />
-      <main>
-        <PageHero />
-        <TableOfContents activeId={activeId} />
-        <FAQSection />
-        <ContactSection />
-      </main>
-      <Footer />
-    </div>
+    <>
+      <PageHero />
+      <TableOfContents activeId={activeId} />
+      <FAQSection />
+      <ContactSection />
+    </>
   )
 }
