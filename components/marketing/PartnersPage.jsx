@@ -4,11 +4,11 @@ import {
   ArrowRight,
   CheckCircle,
   CurrencyDollar,
-  CoinsVertical,
+  ChartPie,
   Wallet,
   PaintBrush,
-  Infinity as InfinityIcon,
-  ChartLineUp,
+  ArrowsOutSimple,
+  Lightning,
 } from '@phosphor-icons/react'
 import Nav from './Nav'
 import Footer from './Footer'
@@ -26,7 +26,7 @@ const WHAT_YOU_CONTROL = [
   {
     title: 'Set your profit split',
     body: 'Define what traders keep and what you retain as the\u00a0operator',
-    icon: ChartLineUp,
+    icon: ChartPie,
   },
   {
     title: 'Receive payments directly',
@@ -41,12 +41,12 @@ const WHAT_YOU_CONTROL = [
   {
     title: 'Permissionless scaling',
     body: 'No ceiling on how many traders you can\u00a0fund',
-    icon: InfinityIcon,
+    icon: ArrowsOutSimple,
   },
   {
     title: 'Network-aligned incentives',
     body: 'When your traders perform, the network rewards your firm with Alpha\u00a0emissions',
-    icon: CoinsVertical,
+    icon: Lightning,
   },
 ]
 
@@ -121,21 +121,13 @@ function PageHero() {
           Hyperscaled lets operators launch a fully branded prop trading business without building any infrastructure. You bring traders. You set your pricing. You collect revenue. The network handles evaluation, enforcement, and&nbsp;payouts.
         </p>
 
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div className="mt-8">
           <a
             href="mailto:partners@hyperscaled.trade"
             className="shiny-cta inline-flex items-center justify-center gap-2 px-6 h-11 rounded-lg text-sm font-semibold text-black bg-teal-400 hover:bg-teal-300 transition-[background-color]"
           >
             Apply to Become a Partner
             <ArrowRight size={16} weight="bold" />
-          </a>
-          <a
-            href="#"
-            className="text-sm text-zinc-400 hover:text-zinc-300 transition-colors inline-flex items-center gap-1.5"
-          >
-            {/* TODO: link to one-pager PDF when available */}
-            Download Partner Overview
-            <ArrowRight size={14} weight="bold" />
           </a>
         </div>
       </div>
@@ -165,13 +157,15 @@ function WhatYouControlSection() {
                 key={item.title}
                 className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 sm:p-6"
               >
-                <div className="flex items-start gap-3 mb-3">
-                  <CheckCircle size={20} weight="fill" className="text-teal-400 shrink-0 mt-0.5" />
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-teal-400/[0.08] border border-teal-400/20 flex items-center justify-center shrink-0">
+                    <Icon size={16} weight="duotone" className="text-teal-400" />
+                  </div>
                   <h3 className="text-sm font-semibold text-white">
                     {item.title}
                   </h3>
                 </div>
-                <p className="text-sm text-zinc-400 leading-relaxed pl-8">
+                <p className="text-sm text-zinc-400 leading-relaxed pl-11">
                   {item.body}
                 </p>
               </div>
@@ -188,7 +182,7 @@ function WhatYouControlSection() {
    ─────────────────────────────────────────────── */
 function RevenueModelSection() {
   return (
-    <section className="px-6 pb-20">
+    <section className="px-6 py-20 bg-white/[0.02] border-y border-white/[0.06]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Revenue Model
@@ -220,18 +214,20 @@ function RevenueModelSection() {
         </div>
 
         {/* Mental model callout */}
-        <div className="mt-8 rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-5 sm:p-6">
-          <div className="font-mono text-sm leading-loose">
-            <p className="text-teal-300">
-              <span className="font-semibold text-teal-400">USDC</span>
-              <span className="text-zinc-500 mx-2">=</span>
-              business revenue + payout&nbsp;liquidity
-            </p>
-            <p className="text-teal-300">
-              <span className="font-semibold text-teal-400">Alpha</span>
-              <span className="text-zinc-500 mx-2">=</span>
-              network funding capacity + scaling&nbsp;collateral
-            </p>
+        <div className="mt-10 rounded-xl border border-teal-400/20 bg-teal-400/[0.06] p-6 sm:p-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <span className="font-mono text-lg sm:text-xl font-bold text-teal-400">USDC</span>
+              <p className="mt-1.5 text-sm text-teal-200/80 leading-relaxed">
+                Business revenue + payout&nbsp;liquidity
+              </p>
+            </div>
+            <div>
+              <span className="font-mono text-lg sm:text-xl font-bold text-teal-400">Alpha</span>
+              <p className="mt-1.5 text-sm text-teal-200/80 leading-relaxed">
+                Network funding capacity + scaling&nbsp;collateral
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -244,7 +240,7 @@ function RevenueModelSection() {
    ─────────────────────────────────────────────── */
 function HowItWorksSection() {
   return (
-    <section className="px-6 pb-20">
+    <section className="px-6 py-20 bg-white/[0.02] border-y border-white/[0.06]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           How It Works
@@ -262,7 +258,7 @@ function HowItWorksSection() {
                   {i + 1}
                 </div>
                 {i < HOW_IT_WORKS_STEPS.length - 1 && (
-                  <div className="w-px flex-1 bg-white/[0.06] my-2" />
+                  <div className="w-[2px] flex-1 bg-teal-400/20 my-2" />
                 )}
               </div>
 
@@ -293,8 +289,8 @@ function ResponsibilitySection() {
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Division of Responsibility
         </span>
-        <h2 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight sr-only">
-          Division of Responsibility
+        <h2 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight">
+          Clear division of&nbsp;responsibility.
         </h2>
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -343,8 +339,8 @@ function FundingCapacitySection() {
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Funding Capacity
         </span>
-        <h2 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight sr-only">
-          Funding Capacity
+        <h2 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight">
+          Funding capacity by account&nbsp;size
         </h2>
         <p className="mt-3 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
           Funded accounts are activated using Alpha tokens. The more Alpha your firm holds, the more traders you can fund&nbsp;simultaneously.
@@ -394,7 +390,7 @@ function FundingCapacitySection() {
           ))}
         </div>
 
-        <p className="mt-4 text-xs text-zinc-500">
+        <p className="mt-4 text-sm text-zinc-400 font-mono">
           $3,500 in funded capital per 1 Alpha&nbsp;token.
         </p>
       </div>
@@ -407,7 +403,7 @@ function FundingCapacitySection() {
    ─────────────────────────────────────────────── */
 function ApplicationCTASection() {
   return (
-    <section className="px-6 pb-24">
+    <section className="px-6 pt-16 pb-24 border-t border-white/[0.06]">
       <div className="max-w-[900px] mx-auto text-center">
         <h2
           className="text-2xl sm:text-3xl font-bold tracking-tight"

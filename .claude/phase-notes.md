@@ -295,6 +295,23 @@ Registration Phase 3 complete. All 3 steps of the registration flow are fully bu
 
   **TODO added**: Partner Overview one-pager PDF link added to docs/TODO_POLISH.md.
 
+- **Phase 8b — Partners Page Polish**:
+  Files changed: 1 (components/marketing/PartnersPage.jsx)
+
+  **Fix 1 — Unique icons**: Replaced uniform CheckCircle on all 6 feature cards with unique per-card Phosphor icons (CurrencyDollar, ChartPie, Wallet, PaintBrush, ArrowsOutSimple, Lightning). Icons rendered in duotone weight inside teal-tinted 32px square containers. Removed dead imports (CoinsVertical, InfinityIcon, ChartLineUp).
+
+  **Fix 2 — Visual rhythm**: Revenue Model and How It Works sections now have full-width tinted backgrounds (bg-white/[0.02] + border-y border-white/[0.06]). Creates alternating content → tinted → content → tinted rhythm. Bottom CTA gets border-t + pt-16 separation.
+
+  **Fix 3 — Visible headings**: Removed sr-only from Responsibility ("Clear division of responsibility.") and Funding Capacity ("Funding capacity by account size") h2 elements. Now matches the label + heading pattern used on every other section site-wide.
+
+  **Fix 4 — Dead CTA removed**: Removed "Download Partner Overview" secondary CTA that linked to href="#". Hero now has single clean "Apply to Become a Partner" button. PDF link tracked in TODO_POLISH.md.
+
+  **Fix 5 — Bold mental model callout**: Callout redesigned from inline monospace text to two-column grid with large (text-lg/xl) bold labels (USDC / Alpha) and descriptive subtext. Increased padding and background opacity. This is now the screenshotable element.
+
+  **Fix 6 — Timeline connector**: Increased from w-px bg-white/[0.06] to w-[2px] bg-teal-400/20 for visibility across displays.
+
+  **Fix 7 — Minor**: Funding note bumped from text-xs text-zinc-500 to text-sm text-zinc-400 font-mono.
+
 ## In progress
 
 Nothing currently in progress.
