@@ -64,7 +64,7 @@ function FAQItem({ item, isOpen, onToggle }) {
   )
 }
 
-export default function FAQAccordion({ items, grouped = false }) {
+export default function FAQAccordion({ items, grouped = false, sectionIds = false }) {
   const [openId, setOpenId] = useState(null)
 
   const toggle = (id) => {
@@ -73,24 +73,30 @@ export default function FAQAccordion({ items, grouped = false }) {
 
   if (grouped) {
     return (
-      <div className="space-y-10">
-        {items.map((group) => (
-          <div key={group.category}>
-            <h3 className="text-xs text-zinc-500 tracking-widest uppercase mb-4 font-medium">
-              {group.category}
-            </h3>
-            <div className="divide-y divide-white/[0.06] border-t border-white/[0.06]">
-              {group.items.map((item) => (
-                <FAQItem
-                  key={item.id}
-                  item={item}
-                  isOpen={openId === item.id}
-                  onToggle={() => toggle(item.id)}
-                />
-              ))}
+      <div className="space-y-14">
+        {items.map((group) => {
+          const id = sectionIds
+            ? group.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '')
+            : undefined
+
+          return (
+            <div key={group.category} id={id} className={sectionIds ? 'scroll-mt-24' : undefined}>
+              <h2 className="text-2xl font-bold tracking-tight mb-2">
+                {group.category}
+              </h2>
+              <div className="divide-y divide-white/[0.06] border-t border-white/[0.06]">
+                {group.items.map((item) => (
+                  <FAQItem
+                    key={item.id}
+                    item={item}
+                    isOpen={openId === item.id}
+                    onToggle={() => toggle(item.id)}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     )
   }

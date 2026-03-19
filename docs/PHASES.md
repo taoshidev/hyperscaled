@@ -13,7 +13,7 @@ Last updated: 2026-03-17
 | 4 | Pricing Page (`/pricing`) | Done | Phase 1, 2 |
 | 5 | How It Works Page (`/how-it-works`) | Done | Phase 1, 2 |
 | 6 | Rules Page (`/rules`) | Done | Phase 1, 2 |
-| 7 | FAQ Page (`/faq`) | Not Started | Phase 1, 2 |
+| 7 | FAQ Page (`/faq`) | Done | Phase 1, 2 |
 | 8 | Partners Page (`/partners`) | Not Started | Phase 1, 2 |
 
 ## Workflow Rules

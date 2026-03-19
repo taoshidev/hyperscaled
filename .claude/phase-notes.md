@@ -258,13 +258,29 @@ Registration Phase 3 complete. All 3 steps of the registration flow are fully bu
 
   **Minor fixes**: Deleted unused SCALING_TABLE_ROWS const. Added disqualification intro text. Fixed &amp; to & in KYC label. Replaced middot bullets with CheckCircle icons in scaling qualifications.
 
+- **Phase 7 — FAQ Page**:
+  Files created: 2 (app/faq/page.jsx, components/marketing/FAQPage.jsx)
+  Files changed: 1 (components/shared/FAQAccordion.jsx)
+
+  **Page Hero**: "Questions traders actually ask." + subtext about Hyperscaled Evaluation.
+
+  **FAQ Accordion**: Uses FAQAccordion in grouped mode with new `sectionIds` prop. All 22 items across 5 categories rendered from FAQ_ITEMS constant. Single-open accordion behavior shared across all categories. Category headings rendered as h2 with section IDs for anchor linking.
+
+  **Sticky TOC**: Matches Rules page pattern exactly. Desktop = fixed left sidebar with IntersectionObserver-driven active state. Mobile = sticky horizontal pill bar with horizontal scroll (scrollbar-hide). Both use anchor links to category section IDs with scroll-mt-24.
+
+  **Contact Section**: Two links at bottom — "Still have questions? Join our Discord →" (teal, DiscordLogo icon, external) + "Email us →" (secondary, Envelope icon, mailto:support@hyperscaled.trade). Centered on mobile, side-by-side on desktop.
+
+  **FAQAccordion Enhancement**: Added `sectionIds` prop to grouped mode. When enabled, generates slug IDs from category names and adds scroll-mt-24 for anchor offset. Changed grouped heading from h3 to h2 for proper document outline. Only the FAQ page uses grouped mode.
+
+  **Patterns**: No scroll animations — matches Rules page documentation tone. &nbsp; for widow prevention. textWrap: 'balance' on hero. max-w-[900px] content container. No shiny-cta, no Framer Motion entrance animations.
+
 ## In progress
 
 Nothing currently in progress.
 
 ## Next action
 
-Phase 7 — FAQ Page (see docs/PHASES.md).
+Phase 8 — Partners Page (see docs/PHASES.md).
 
 ## Known issues
 
