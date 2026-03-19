@@ -22,7 +22,7 @@ Last updated: 2026-03-17
 | ShinyButton CTA | Done |
 | Leaderboard preview | Not on home page — Component exists at `/leaderboard` but is NOT rendered in the home page marketing compose list (`components/marketing.jsx`). Spec does not require it on home page. |
 | Compliance (copy/design rules) | Done — 72 violations fixed (9 Vanta, 1 Built on Bittensor, 2 Up to 100%, 2 Chrome Extension, 1 funding language, 1 copyright, 41 text-[10px], 7 transition-all, 8 min-h-screen) |
-| Missing pages | In Progress — `/pricing` done (Phase 4), `/how-it-works` done (Phase 5), `/rules` done (Phase 6). Remaining: `/partners`, `/faq` |
+| Missing pages | In Progress — `/pricing` done (Phase 4), `/how-it-works` done (Phase 5), `/rules` done (Phase 6), `/faq` done (Phase 7). Remaining: `/partners` |
 | Legal pages (`/terms`, `/privacy`, `/risk`) | Done — placeholder pages with "Coming soon." Content pending. |
 | TODO Polish tracker | Done — `docs/TODO_POLISH.md` tracks deferred URLs + legal content |
 
@@ -41,7 +41,7 @@ Last updated: 2026-03-17
 | Pricing FAQ mini (3 items) | Done |
 | Responsive layout | Done |
 
-**Next action**: Phase 7 — FAQ Page (see docs/PHASES.md)
+**Next action**: Phase 8 — Partners Page (see docs/PHASES.md)
 
 ## How It Works Page (`/how-it-works`)
 
@@ -60,7 +60,7 @@ Last updated: 2026-03-17
 | Bottom CTA | Done |
 | Responsive layout | Done |
 
-**Next action**: Phase 7 — FAQ Page
+**Next action**: Phase 8 — Partners Page
 
 ## Rules Page (`/rules`)
 
@@ -81,7 +81,23 @@ Last updated: 2026-03-17
 | Protocol transparency + CTA | Done |
 | Responsive layout | Done |
 
-**Next action**: Phase 7 — FAQ Page
+**Next action**: Phase 8 — Partners Page
+
+## FAQ Page (`/faq`)
+
+**Status**: Complete — Phase 7
+
+| Item | State |
+|------|-------|
+| Page route + metadata | Done |
+| Page hero | Done |
+| FAQ accordion (grouped, 5 categories, 22 items) | Done |
+| Sticky sidebar TOC (desktop) + mobile pill bar | Done |
+| IntersectionObserver active section tracking | Done |
+| Bottom contact links (Discord + email) | Done |
+| Responsive layout | Done |
+
+**Next action**: Phase 8 — Partners Page
 
 ## Shared Constants (`lib/constants.js`)
 

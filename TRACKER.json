@@ -1,6 +1,6 @@
 {
   "project": "Hyperscaled Marketing Website",
-  "lastUpdated": "2026-03-18T20:00:00Z",
+  "lastUpdated": "2026-03-19T12:00:00Z",
   "phases": [
     {
       "id": 0, "name": "Global Compliance Sweep", "status": "done",
@@ -113,13 +113,15 @@
       ]
     },
     {
-      "id": 7, "name": "FAQ Page", "status": "not_started",
+      "id": 7, "name": "FAQ Page", "status": "done",
       "scope": "app/faq/", "estSessions": "1 session", "estHours": 2,
-      "dependsOn": [1, 2], "sessions": [],
+      "dependsOn": [1, 2],
+      "sessions": [{ "session": 9, "date": "2026-03-19", "notes": "FAQ page — grouped accordion with 22 items across 5 categories, sticky TOC sidebar + mobile pill bar, Discord + email contact links" }],
       "items": [
-        { "name": "Page hero", "status": "pending" },
-        { "name": "Full accordion by category", "status": "pending" },
-        { "name": "Discord + email links", "status": "pending" }
+        { "name": "Page hero", "status": "done" },
+        { "name": "Full accordion by category", "status": "done" },
+        { "name": "Sticky TOC navigation", "status": "done" },
+        { "name": "Discord + email links", "status": "done" }
       ]
     },
     {
@@ -144,7 +146,7 @@
     { "path": "/rules", "label": "Rules", "status": "complete", "phase": 6, "note": "Eval rules, funded rules, scaling, disqualification, KYC, protocol transparency" },
     { "path": "/leaderboard", "label": "Leaderboard", "status": "complete", "phase": null, "note": "No changes needed" },
     { "path": "/partners", "label": "Partners", "status": "missing", "phase": 8 },
-    { "path": "/faq", "label": "FAQ", "status": "missing", "phase": 7 },
+    { "path": "/faq", "label": "FAQ", "status": "complete", "phase": 7, "note": "Grouped accordion, 5 categories, 22 items, sticky TOC" },
     { "path": "/register", "label": "Register", "status": "complete", "phase": null, "note": "3-step flow, working" },
     { "path": "/dashboard", "label": "Dashboard", "status": "complete", "phase": null, "note": "SSE streaming, working" },
     { "path": "/miner/[slug]", "label": "Miner Detail", "status": "complete", "phase": null, "note": "Dynamic route, working" },
