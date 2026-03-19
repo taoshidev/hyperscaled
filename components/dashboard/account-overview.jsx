@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
-import { formatUSD, formatReturn, formatPercent, pnlColor } from "@/lib/format";
+import { formatUSD, formatReturn, pnlColor } from "@/lib/format";
 
 function StatCard({ label, value, className }) {
   return (

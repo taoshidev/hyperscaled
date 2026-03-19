@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { reportError, reportCritical, SEVERITY } from "@/lib/errors";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import {
   encodePaymentRequiredHeader,
@@ -125,9 +126,11 @@ export async function POST(request) {
   let verifyResult;
   try {
     verifyResult = await facilitator.verify(paymentPayload, requirements);
-    console.log("[x402] Verify result:", JSON.stringify(verifyResult));
   } catch (err) {
-    console.error("[x402] Facilitator verify error:", err);
+    reportCritical(err, {
+      source: "api/register",
+      metadata: { step: "facilitator_verify" },
+    });
     return NextResponse.json(
       { error: `Payment verification failed: ${err?.message || "unknown error"}` },
       { status: 502 },
@@ -135,7 +138,11 @@ export async function POST(request) {
   }
 
   if (!verifyResult?.isValid) {
-    console.warn("[x402] Verify invalid:", verifyResult?.invalidReason);
+    reportError(new Error("Payment verification invalid"), {
+      source: "api/register",
+      severity: SEVERITY.ERROR,
+      metadata: { step: "facilitator_verify", reason: verifyResult?.invalidReason },
+    });
     const encoded = encodePaymentRequiredHeader(paymentRequired);
     return new Response(
       JSON.stringify({ ...paymentRequired, error: verifyResult?.invalidReason || "Payment verification failed" }),
@@ -152,9 +159,11 @@ export async function POST(request) {
   let settleResult;
   try {
     settleResult = await facilitator.settle(paymentPayload, requirements);
-    console.log("[x402] Settle result:", JSON.stringify(settleResult));
   } catch (err) {
-    console.error("[x402] Facilitator settle error:", err);
+    reportCritical(err, {
+      source: "api/register",
+      metadata: { step: "facilitator_settle" },
+    });
     return NextResponse.json(
       {
         error: "Payment settlement failed",
@@ -165,7 +174,10 @@ export async function POST(request) {
   }
 
   if (!settleResult?.success) {
-    console.error("[x402] Settlement unsuccessful:", JSON.stringify(settleResult));
+    reportCritical(new Error("Payment settlement unsuccessful"), {
+      source: "api/register",
+      metadata: { step: "facilitator_settle", reason: settleResult?.errorReason },
+    });
     return NextResponse.json(
       {
         error: "Payment settlement was not successful",
@@ -203,7 +215,7 @@ export async function POST(request) {
       userId = newUser.id;
     }
   } catch (err) {
-    console.warn("[register] User upsert failed:", err.message);
+    reportError(err, { source: "api/register", metadata: { step: "user_upsert" } });
   }
 
   // Call miner API
@@ -225,11 +237,14 @@ export async function POST(request) {
         registered = true;
       } else {
         const errText = await res.text().catch(() => "");
-        console.warn(`[register] Miner API returned ${res.status}:`, errText);
+        reportError(new Error("Miner API error response"), {
+          source: "api/register",
+          metadata: { step: "miner_api", apiStatus: res.status },
+        });
         statusDetail = { reason: "miner_api_error", error: errText, apiStatus: res.status };
       }
     } catch (err) {
-      console.warn("[register] Miner API unreachable:", err.message);
+      reportError(err, { source: "api/register", metadata: { step: "miner_api_unreachable" } });
       statusDetail = { reason: "miner_api_unreachable", error: err.message };
     }
   }
@@ -249,7 +264,7 @@ export async function POST(request) {
       statusDetail,
     });
   } catch (err) {
-    console.warn("[register] Registration insert failed:", err.message);
+    reportError(err, { source: "api/register", metadata: { step: "registration_insert" } });
   }
 
   const resendKey = process.env.RESEND_API_KEY;

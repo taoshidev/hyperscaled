@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isValidEvmAddress } from "@/lib/validation";
 import { STUB_ENABLED } from "@/lib/gateway-stubs";
+import { reportError } from "@/lib/errors";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -40,7 +41,8 @@ export async function GET(request) {
       );
     }
     traderData = await traderRes.json();
-  } catch {
+  } catch (err) {
+    reportError(err, { source: "api/registration-status", userId: hlAddress, metadata: { step: "trader_lookup" } });
     return NextResponse.json({ error: "Could not reach validator" }, { status: 502 });
   }
 
@@ -74,7 +76,8 @@ export async function GET(request) {
       status: subaccountStatus,
       hl_address: hlAddress,
     });
-  } catch {
+  } catch (err) {
+    reportError(err, { source: "api/registration-status", userId: hlAddress, metadata: { step: "subaccount_lookup" } });
     return NextResponse.json({ error: "Could not reach validator" }, { status: 502 });
   }
 }

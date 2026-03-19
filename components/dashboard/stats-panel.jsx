@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { formatUSD, formatPercent, formatReturn } from "@/lib/format";
+import { formatUSD, formatReturn } from "@/lib/format";
 
 function StatRow({ label, value }) {
   return (
