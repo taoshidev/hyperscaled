@@ -3,6 +3,8 @@ import { sanitizeSentryEvent } from "@/lib/errors-sanitize";
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  environment: process.env.NODE_ENV,
+  release: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA,
 
   // Low sample rate — adjust when traffic warrants it
   tracesSampleRate: 0.1,
