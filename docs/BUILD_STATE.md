@@ -47,43 +47,45 @@ Last updated: 2026-03-20
 
 ## How It Works Page (`/how-it-works`)
 
-**Status**: Complete — Phase 5
+**Status**: Complete — Phase 5 + Copy Review B
 
 | Item | State |
 |------|-------|
 | Page route + metadata | Done |
-| Page hero + CTA | Done |
-| 4-step flow (register, trade, track, pass) | Done |
-| Key details boxes per step | Done |
-| Scaling path visual + tier note | Done |
-| Non-custodial explainer + comparison | Done |
-| Payout mechanics + flow diagram | Done |
+| Page hero + CTA | Done — CRB: headline "Trade on Hyperliquid. Get funded by the network.", subtext shortened |
+| 4-step flow (register, trade, track, pass) | Done — CRB: all titles/bodies/details rewritten, step 01 has "Get started" CTA |
+| Key details boxes per step | Done — CRB: simplified labels, Chrome Plugin mention |
+| Scaling path visual + tier note | Done — CRB: body shortened |
+| Non-custodial explainer + comparison | Done — CRB: removed body paragraphs, added callout bar above comparison |
+| Payout mechanics + flow diagram | Done — CRB: headline "Automated. Weekly. Onchain.", body + KYC note shortened |
 | Callout box (100% profit) | Done |
-| Bottom CTA | Done |
+| PricingPreview widget | Done — CRB: added between payout mechanics and bottom CTA |
+| Bottom CTA | Done — CRB: removed "View Pricing" link |
 | Responsive layout | Done |
 
-**Next action**: All marketing pages complete. Polish pass next.
+**Next action**: All copywriter changes applied. Polish pass next.
 
 ## Rules Page (`/rules`)
 
-**Status**: Complete — Phase 6
+**Status**: Complete — Phase 6 + Copy Review B
 
 | Item | State |
 |------|-------|
 | Page route + metadata | Done |
-| Page hero | Done |
-| Evaluation rules table (EVAL_RULES) | Done |
+| Page hero | Done — CRB: "Rules and Trading Objectives", subtext shortened |
+| Evaluation rules table (EVAL_RULES) | Done — CRB: added Consistency Criteria + Weekend Trading rows |
 | Breach callout box | Done |
-| Funded account rules table (FUNDED_RULES) | Done |
+| Funded account rules table (FUNDED_RULES) | Done — CRB: removed redundant Drawdown Limit row |
 | Scaling rules (qualifications, bonus, tier note) | Done |
 | Scaling path table (SCALING_PATH) | Done |
-| Scaling path visual | Done |
+| Scaling path visual | Removed — CRB: table is sufficient on this documentation page |
 | Disqualification rules (does/does not, side-by-side) | Done |
+| Section headings | Done — CRB: removed redundant h2 headings (kept teal labels as anchors) |
 | KYC & payouts section | Done |
 | Protocol transparency + CTA | Done |
 | Responsive layout | Done |
 
-**Next action**: All marketing pages complete. Polish pass next.
+**Next action**: All copywriter changes applied. Polish pass next.
 
 ## FAQ Page (`/faq`)
 
@@ -103,21 +105,22 @@ Last updated: 2026-03-20
 
 ## Partners Page (`/partners`)
 
-**Status**: Complete — Phase 8
+**Status**: Complete — Phase 8 + Copy Review B
 
 | Item | State |
 |------|-------|
 | Page route + metadata | Done |
-| Page hero + badge pill + dual CTAs | Done |
-| What You Control (6 feature cards, teal checkmarks) | Done |
-| Revenue model (USDC + Alpha, mental model callout) | Done |
-| How It Works (4-step vertical timeline) | Done |
-| Division of responsibility (two-column) | Done |
+| Page hero | Done — CRB: removed badge pill, body copy combined |
+| What You Control (6 feature cards) | Done — CRB: feature 6 body updated |
+| Revenue model (USDC + Alpha, mental model callout) | Done — CRB: stream 2 body updated |
+| How It Works (4-step vertical timeline) | Done — CRB: steps 1 + 4 body updated |
+| Division of responsibility (two-column) | Done — CRB: headline "Designed for your success.", handles bullet updated |
 | Funding capacity table (desktop table + mobile cards) | Done |
-| Application CTA | Done |
+| Application CTA | Done — CRB: body shortened |
+| Trust signals | Done — CRB: 4 compact indicators below CTA button |
 | Responsive layout | Done |
 
-**Next action**: All marketing pages complete. Polish pass next.
+**Next action**: All copywriter changes applied. Polish pass next.
 
 ## Shared Constants (`lib/constants.js`)
 

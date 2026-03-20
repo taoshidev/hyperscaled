@@ -370,13 +370,53 @@ Registration Phase 3 complete. All 3 steps of the registration flow are fully bu
   - New ModelSection: "A MODEL BUILT FOR TRADERS" label, left column with bullet list + bold line, right column with EvalProgressWidget mockup (profit target bar, high water mark, drawdown bar, completion %)
   - Most Popular badge now on $100K card (via PRICING_TIERS.popular flag change)
 
+- **Copy Review B — How It Works + Rules + Partners**:
+  Files changed: 4 (HowItWorksPage.jsx, RulesPage.jsx, PartnersPage.jsx, lib/constants.js)
+
+  **Constants (lib/constants.js)**:
+  - EVAL_RULES: added Consistency Criteria (None) and Weekend Trading (Allowed)
+  - FUNDED_RULES: removed redundant Drawdown Limit row (covered by Daily Loss + EOD Trailing)
+
+  **HowItWorksPage (HowItWorksPage.jsx)**:
+  - Hero: headline → "Trade on Hyperliquid. Get funded by the network.", subtext shortened
+  - Step 01: title "Register & Choose Your Size", body shortened, added "Get started" CTA link, details: "Challenge: One-Step", "KYC Required: None"
+  - Step 02: title removed "(Your Normal Workflow)", body shortened, details simplified
+  - Step 03: title "Track in Real Time", body mentions Chrome plugin, details: "Platform: Hyperscaled App & Chrome Plugin", "Updates: Always in real-time", removed Tracked metrics row
+  - Step 04: title punctuated "Pass. Get Funded. Get Paid.", body shortened, "Max Drawdown (Funded): 8% daily / 8% EOD trailing", "25% bonus" label
+  - Scaling body: removed "no re-evaluation"
+  - Non-custodial explainer: removed 3 body paragraphs + label/heading, replaced with callout bar "Your wallet. Your keys..." above comparison boxes
+  - Payout mechanics: headline "Automated. Weekly. Onchain.", body rewritten, KYC note shortened
+  - Bottom CTA: removed "View Pricing" secondary link
+  - Added PricingPreview component between PayoutMechanics and BottomCTA
+
+  **RulesPage (RulesPage.jsx)**:
+  - Hero: headline → "Rules and Trading Objectives", subtext shortened
+  - Removed redundant h2 headings for Evaluation, Funded, Scaling, Disqualification (kept teal labels as section anchors)
+  - Kept h2 headings for KYC and Protocol sections
+  - Removed ScalingPathVisual from scaling section (From/To table sufficient)
+  - Removed unused ScalingPathVisual import
+
+  **PartnersPage (PartnersPage.jsx)**:
+  - Removed badge pill from hero
+  - Body: combined "You bring traders. You set your pricing. You collect revenue." into single sentence
+  - Feature 6: "network rewards your firm with Alpha emissions" → "underlying network directly rewards your firm"
+  - Revenue stream 2: "Hyperscaled network emits Alpha tokens to your firm's miner" → "Hyperscaled's decentralized funding engine emits Alpha tokens to your firm"
+  - How It Works step 1: removed "miner deployment" from onboarding list
+  - How It Works step 4: "More traders. More revenue." → "More traders = more revenue."
+  - Responsibility headline: "Clear division of responsibility." → "Designed for your success."
+  - Hyperscaled handles bullet 4: "Miner deployment and network coordination" → "Infrastructure coordination and deployment"
+  - Application CTA body: shortened to "full whiteglove onboarding with support from the Hyperscaled team"
+  - Added 4 trust signals below CTA button (CheckCircle icons)
+
+  3.8 polish items already completed in Phase 8b — verified: unique icons, no dead CTA, visible headings, strong callout, tinted sections, timeline connector, note styling.
+
 ## In progress
 
 Nothing currently in progress.
 
 ## Next action
 
-Copy Review Session B (How It Works page + other pages) next. Polish pass after.
+All copywriter changes applied. Polish pass next.
 
 ## Known issues
 
