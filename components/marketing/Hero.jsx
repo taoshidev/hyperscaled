@@ -4,7 +4,6 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight, TrendUp, ArrowsClockwise } from '@phosphor-icons/react'
 import LiquidCrystalBg from './LiquidCrystalBg'
-import { HERO_STATS } from '@/lib/constants'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -86,18 +85,6 @@ export default function Hero() {
               </Link>
             </motion.div>
 
-            {/* Stats row */}
-            <motion.div
-              variants={itemVariants}
-              className="flex flex-wrap items-center gap-8 pt-8 border-t border-white/[0.06]"
-            >
-              {HERO_STATS.map((s) => (
-                <div key={s.label}>
-                  <div className="text-xl font-bold tracking-tight text-white">{s.value}</div>
-                  <div className="text-xs text-zinc-500 mt-0.5">{s.label}</div>
-                </div>
-              ))}
-            </motion.div>
           </motion.div>
 
           {/* Right column — Dashboard card */}
