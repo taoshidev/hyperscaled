@@ -59,9 +59,9 @@ export default function Problem() {
           <span className="text-xs text-zinc-500 tracking-widest uppercase block mb-4">
             The Problem
           </span>
-          <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-2xl mb-5">
-            Prop firms take up to 30%.{' '}
-            <span className="text-zinc-500">Then ghost you on&nbsp;payouts.</span>
+          <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold mb-5">
+            <span className="block">Prop firms take up to 30%.</span>
+            <span className="block text-zinc-500">Then ghost you on&nbsp;payouts.</span>
           </h2>
           <p className="text-base text-zinc-400 leading-relaxed max-w-[60ch]">
             Funded trading is broken by design. KYC barriers, payout denials, and centralized

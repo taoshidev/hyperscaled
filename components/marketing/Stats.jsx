@@ -44,13 +44,13 @@ function useCounter(rawNum, active, duration = 1300) {
   return count
 }
 
-function StatItem({ stat, isLast }) {
+function StatItem({ stat }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
   const count = useCounter(stat.rawNum, inView)
 
   return (
-    <div ref={ref} className={`flex flex-col ${isLast ? '' : 'lg:border-r lg:border-white/[0.08]'}`}>
+    <div ref={ref} className="flex flex-col lg:text-center">
       <div className="text-3xl lg:text-5xl font-bold tracking-tighter text-white">
         {stat.prefix}{count}{stat.suffix}
       </div>

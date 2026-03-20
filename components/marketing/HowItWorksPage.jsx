@@ -11,6 +11,9 @@ import {
   ChartLineUp,
   Target,
   CurrencyDollar,
+  Eye,
+  ClockCountdown,
+  ShieldCheck,
 } from '@phosphor-icons/react'
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import PricingPreview from '@/components/marketing/PricingPreview'
@@ -64,9 +67,22 @@ function PageHero() {
 /* ───────────────────────────────────────────────
    Key Details Box (reusable within step cards)
    ─────────────────────────────────────────────── */
-function KeyDetails({ rows }) {
+function KeyDetails({ rows, inline }) {
+  if (inline) {
+    return (
+      <div className="w-full flex flex-wrap gap-x-6 gap-y-2">
+        {rows.map((row) => (
+          <div key={row.label} className="flex items-center gap-2 text-sm">
+            <span className="text-zinc-500">{row.label}:</span>
+            <span className="font-medium text-zinc-200">{row.value}</span>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
+    <div className="w-full rounded-xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
       {rows.map((row, i) => (
         <div
           key={row.label}
@@ -116,6 +132,7 @@ const STEPS = [
     icon: Target,
     title: 'Track in Real Time',
     body: 'Your dashboard and Hyperscaled Chrome plugin show your live P&L, drawdown, profit target progress, and expected payout. Updates in real time as you\u00a0trade.',
+    compact: true,
     details: [
       { label: 'Platform', value: 'Hyperscaled App & Chrome Plugin' },
       { label: 'Updates', value: 'Always in real-time' },
@@ -132,12 +149,16 @@ const STEPS = [
       { label: 'Max Drawdown (Funded)', value: '8% daily / 8% EOD trailing' },
       { label: 'Payout Cycle', value: 'Every 7 days' },
       { label: 'Profit Split', value: '100% — Hyperscaled takes 0%' },
-      { label: 'Max Account Size', value: '$2.5M' },
-      { label: 'Funded Account Profit Target', value: 'None' },
-      { label: 'Scaling Qualification', value: '5% quarterly return + all-time Sharpe ratio > 1' },
-      { label: '25% bonus', value: '2% quarterly return + all-time Sharpe ratio > 1' },
     ],
   },
+]
+
+/* Scaling qualification rows — displayed in ScalingSection */
+const SCALING_QUALIFICATIONS = [
+  { label: 'Scaling Qualification', value: '5% quarterly return + all-time Sharpe ratio > 1' },
+  { label: '25% Bonus', value: '2% quarterly return + all-time Sharpe ratio > 1' },
+  { label: 'Max Account Size', value: '$2.5M' },
+  { label: 'Funded Account Profit Target', value: 'None' },
 ]
 
 function StepCard({ step, index }) {
@@ -145,6 +166,44 @@ function StepCard({ step, index }) {
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
   const Icon = step.icon
+
+  /* Compact layout for Step 03 (few detail rows) */
+  if (step.compact) {
+    return (
+      <motion.div
+        ref={ref}
+        initial={{ opacity: 0, y: 24 }}
+        animate={inView ? { opacity: 1, y: 0 } : {}}
+        transition={{ ...spring, delay: index * 0.06 }}
+        className="rounded-2xl border border-white/[0.08] bg-[#09090b] p-6 sm:py-6 sm:px-8"
+      >
+        <div className="flex flex-col lg:flex-row lg:items-center gap-5 lg:gap-8">
+          {/* Left — icon + title + body */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-teal-400/10 border border-teal-400/20 flex items-center justify-center shrink-0">
+                <Icon size={20} weight="fill" className="text-teal-400" />
+              </div>
+              <span className="text-xs font-mono text-zinc-500 tracking-wider uppercase">
+                Step {step.number}
+              </span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold tracking-tight leading-tight mb-3">
+              {step.title}
+            </h3>
+            <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
+              {step.body}
+            </p>
+          </div>
+
+          {/* Right — inline details */}
+          <div className="lg:w-[400px] shrink-0">
+            <KeyDetails rows={step.details} />
+          </div>
+        </div>
+      </motion.div>
+    )
+  }
 
   return (
     <motion.div
@@ -154,7 +213,7 @@ function StepCard({ step, index }) {
       transition={{ ...spring, delay: index * 0.06 }}
       className="rounded-2xl border border-white/[0.08] bg-[#09090b] p-6 sm:p-8"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,400px)] gap-8">
         {/* Left — text */}
         <div>
           <div className="flex items-center gap-3 mb-4">
@@ -183,7 +242,7 @@ function StepCard({ step, index }) {
         </div>
 
         {/* Right — key details */}
-        <div className="flex items-start">
+        <div className="flex items-start w-full">
           <KeyDetails rows={step.details} />
         </div>
       </div>
@@ -227,6 +286,17 @@ function ScalingSection() {
           </p>
         </motion.div>
         <ScalingPathVisual />
+
+        {/* Scaling qualifications — moved from Step 04 */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ ...spring, delay: 0.12 }}
+          className="mt-8 max-w-[540px] mx-auto"
+        >
+          <KeyDetails rows={SCALING_QUALIFICATIONS} />
+        </motion.div>
+
         <p className="mt-6 text-xs text-zinc-500 text-center max-w-[72ch] mx-auto leading-relaxed">
           This path applies to Tier III ($100K) accounts. Tier I ($25K) and Tier II ($50K) accounts scale up to $100K maximum, at which point the full scaling path&nbsp;applies.
         </p>
@@ -319,11 +389,11 @@ function NonCustodialExplainer() {
    ─────────────────────────────────────────────── */
 
 const PAYOUT_STEPS = [
-  'You trade on HL',
-  'Hyperscaled reads performance',
-  '7-day cycle closes',
-  'USDC sent to your wallet',
-  'Verifiable onchain',
+  { label: 'You trade on HL', icon: ChartLineUp, detail: null },
+  { label: 'Hyperscaled reads performance', icon: Eye, detail: null },
+  { label: '7-day cycle closes', icon: ClockCountdown, detail: null },
+  { label: 'USDC sent to wallet', icon: Wallet, detail: '+$2,847.32 USDC' },
+  { label: 'Verifiable onchain', icon: ShieldCheck, detail: '0x7a3...f4e2' },
 ]
 
 function PayoutMechanics() {
@@ -371,39 +441,57 @@ function PayoutMechanics() {
           className="mb-12"
         >
           {/* Desktop: horizontal */}
-          <div className="hidden md:flex items-center justify-center gap-0">
-            {PAYOUT_STEPS.map((step, i) => (
-              <div key={step} className="flex items-center">
-                <div className="flex flex-col items-center text-center">
-                  <div className="w-12 h-12 rounded-full bg-teal-400/10 border border-teal-400/20 flex items-center justify-center">
-                    <span className="text-sm font-bold font-mono text-teal-400">{i + 1}</span>
+          <div className="hidden md:flex items-start justify-center gap-0">
+            {PAYOUT_STEPS.map((step, i) => {
+              const Icon = step.icon
+              return (
+                <div key={step.label} className="flex items-start">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="w-12 h-12 rounded-full bg-teal-400/10 border border-teal-400/20 flex items-center justify-center">
+                      <Icon size={20} weight="fill" className="text-teal-400" />
+                    </div>
+                    <span className="mt-3 text-xs text-zinc-400 max-w-[120px] leading-snug">
+                      {step.label}
+                    </span>
+                    {step.detail && (
+                      <span className="mt-1 text-xs font-mono text-teal-400/80">
+                        {step.detail}
+                      </span>
+                    )}
                   </div>
-                  <span className="mt-3 text-xs text-zinc-400 max-w-[110px] leading-snug">
-                    {step}
-                  </span>
+                  {i < PAYOUT_STEPS.length - 1 && (
+                    <div className="w-10 lg:w-16 h-px bg-white/[0.15] mx-2 lg:mx-3 mt-6" />
+                  )}
                 </div>
-                {i < PAYOUT_STEPS.length - 1 && (
-                  <div className="w-10 lg:w-16 h-px bg-white/[0.1] mx-2 lg:mx-3 -mt-6" />
-                )}
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           {/* Mobile: vertical */}
           <div className="flex md:hidden flex-col items-start gap-0 pl-4">
-            {PAYOUT_STEPS.map((step, i) => (
-              <div key={step} className="flex items-start gap-4">
-                <div className="flex flex-col items-center">
-                  <div className="w-10 h-10 rounded-full bg-teal-400/10 border border-teal-400/20 flex items-center justify-center shrink-0">
-                    <span className="text-sm font-bold font-mono text-teal-400">{i + 1}</span>
+            {PAYOUT_STEPS.map((step, i) => {
+              const Icon = step.icon
+              return (
+                <div key={step.label} className="flex items-start gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="w-10 h-10 rounded-full bg-teal-400/10 border border-teal-400/20 flex items-center justify-center shrink-0">
+                      <Icon size={18} weight="fill" className="text-teal-400" />
+                    </div>
+                    {i < PAYOUT_STEPS.length - 1 && (
+                      <div className="w-px h-8 bg-white/[0.15]" />
+                    )}
                   </div>
-                  {i < PAYOUT_STEPS.length - 1 && (
-                    <div className="w-px h-8 bg-white/[0.1]" />
-                  )}
+                  <div className="pt-2">
+                    <span className="text-sm text-zinc-400">{step.label}</span>
+                    {step.detail && (
+                      <span className="block text-xs font-mono text-teal-400/80 mt-0.5">
+                        {step.detail}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <span className="text-sm text-zinc-400 pt-2.5">{step}</span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </motion.div>
 
@@ -424,52 +512,6 @@ function PayoutMechanics() {
 }
 
 /* ───────────────────────────────────────────────
-   Section 5 — Bottom CTA
-   ─────────────────────────────────────────────── */
-function BottomCTA() {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '-60px' })
-
-  return (
-    <section ref={ref} className="px-6 pb-24">
-      <div className="max-w-[600px] mx-auto text-center">
-        <motion.h2
-          initial={{ opacity: 0, y: 16 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={spring}
-          className="text-2xl sm:text-3xl font-bold tracking-tight"
-        >
-          Ready to&nbsp;start?
-        </motion.h2>
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ ...spring, delay: 0.08 }}
-          className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed"
-          style={{ textWrap: 'balance' }}
-        >
-          One-step evaluation. No KYC to begin. USDC payouts every 7&nbsp;days.
-        </motion.p>
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ ...spring, delay: 0.16 }}
-          className="mt-8 flex flex-col items-center gap-4"
-        >
-          <Link
-            href="/register"
-            className="shiny-cta inline-flex items-center gap-1.5 px-6 py-3"
-          >
-            Start Your Evaluation
-            <ArrowRight size={15} weight="bold" />
-          </Link>
-        </motion.div>
-      </div>
-    </section>
-  )
-}
-
-/* ───────────────────────────────────────────────
    Page Compose
    ─────────────────────────────────────────────── */
 export default function HowItWorksPage() {
@@ -481,7 +523,6 @@ export default function HowItWorksPage() {
       <NonCustodialExplainer />
       <PayoutMechanics />
       <PricingPreview />
-      <BottomCTA />
     </>
   )
 }
