@@ -10,9 +10,42 @@ import { isValidHLAddress, isValidEvmAddress } from "@/lib/validation";
 import { USDC_ADDRESS, USDC_DECIMALS, USDC_EIP712_NAME, USDC_EIP712_VERSION, BASE_NETWORK, FACILITATOR_URL, BASESCAN_URL } from "@/lib/constants";
 import { db } from "@/lib/db";
 import { users, registrations } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 
 const facilitator = new HTTPFacilitatorClient({ url: FACILITATOR_URL });
+
+function sanitizeApiKey(key) {
+  if (key == null) return null;
+  const t = String(key)
+    .trim()
+    .replace(/[\u200B-\u200D\uFEFF]/g, "");
+  return t || null;
+}
+
+/** Prefer DB (entity_miners.api_key); env only when DB has no key. */
+function resolveMinerApiKey(miner) {
+  const fromDb = sanitizeApiKey(miner.apiKey);
+  if (fromDb) return fromDb;
+  const slugEnv = `ENTITY_MINER_API_KEY_${miner.slug.replace(/-/g, "_").toUpperCase()}`;
+  return sanitizeApiKey(process.env[slugEnv]) || sanitizeApiKey(process.env.ENTITY_MINER_API_KEY) || null;
+}
+
+/**
+ * Vanta entity miner (vanta-network EntityMinerRestServer) only reads `Authorization`
+ * (Bearer + key, or raw key). Keys must exist in the miner's api_keys.json — see
+ * vanta_api/base_rest_server.py::_get_api_key_safe and api_key_refresh.APIKeyMixin.
+ */
+async function postCreateHlSubaccount(baseUrl, payload, apiKey) {
+  const headers = { "Content-Type": "application/json" };
+  if (apiKey) {
+    headers.Authorization = `Bearer ${apiKey}`;
+  }
+  return fetch(`${baseUrl}/api/create-hl-subaccount`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+  });
+}
 
 function buildPaymentRequirements(miner, tier, requestUrl) {
   const minerWallet = miner.usdcWallet;
@@ -91,6 +124,32 @@ export async function POST(request) {
   }
 
   const tier = activeTiers[tierIndex];
+
+  // Reject duplicate registrations — don't let users pay twice for the same miner + HL address
+  try {
+    const [existing] = await db
+      .select({ id: registrations.id, status: registrations.status })
+      .from(registrations)
+      .where(
+        and(
+          eq(registrations.minerHotkey, miner.hotkey),
+          eq(registrations.hlAddress, hlAddress),
+          inArray(registrations.status, ["registered", "pending"]),
+        ),
+      )
+      .limit(1);
+
+    if (existing) {
+      const msg =
+        existing.status === "registered"
+          ? "This HL address is already registered with this miner."
+          : "A registration for this HL address is already being processed. Please wait for it to complete.";
+      return NextResponse.json({ error: msg }, { status: 409 });
+    }
+  } catch (err) {
+    console.error("[register] Duplicate check failed:", err.message);
+    // Continue — better to risk a duplicate than block a legitimate registration
+  }
 
   const { requirements, paymentRequired, minerWallet, price } = buildPaymentRequirements(
     miner,
@@ -212,15 +271,28 @@ export async function POST(request) {
 
   if (miner.apiUrl) {
     try {
-      const res = await fetch(`${miner.apiUrl}/create_hl_subaccount`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const apiKey = resolveMinerApiKey(miner);
+      const hadDbKey = Boolean(sanitizeApiKey(miner.apiKey));
+      if (!apiKey) {
+        console.warn(
+          `[register] No API key for miner slug=${miner.slug}; set entity_miners.api_key or ENTITY_MINER_API_KEY_${miner.slug.replace(/-/g, "_").toUpperCase()}`,
+        );
+      }
+      const baseUrl = miner.apiUrl.replace(/\/+$/, "");
+      const res = await postCreateHlSubaccount(
+        baseUrl,
+        {
           hl_address: hlAddress,
           account_size: accountSize,
           payout_address: effectivePayoutAddress,
-        }),
-      });
+        },
+        apiKey,
+      );
+      if (!res.ok && res.status === 401 && apiKey) {
+        console.warn(
+          `[register] Miner API 401 Unauthorized: key must match an entry in the entity miner's api_keys.json (same string as entity_miners.api_key; from DB=${hadDbKey}, len=${apiKey.length})`,
+        );
+      }
       if (res.ok) {
         registered = true;
       } else {
