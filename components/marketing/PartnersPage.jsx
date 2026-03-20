@@ -43,7 +43,7 @@ const WHAT_YOU_CONTROL = [
   },
   {
     title: 'Network-aligned incentives',
-    body: 'When your traders perform, the network rewards your firm with Alpha\u00a0emissions',
+    body: 'When your traders perform, the underlying network directly rewards your\u00a0firm.',
     icon: Lightning,
   },
 ]
@@ -51,7 +51,7 @@ const WHAT_YOU_CONTROL = [
 const HOW_IT_WORKS_STEPS = [
   {
     title: 'Apply and get onboarded',
-    body: 'Submit your application. Hyperscaled whitegloves your firm setup, miner deployment, and infrastructure\u00a0configuration.',
+    body: 'Submit your application. Hyperscaled whitegloves your firm setup and infrastructure\u00a0configuration.',
   },
   {
     title: 'Configure your firm',
@@ -63,7 +63,7 @@ const HOW_IT_WORKS_STEPS = [
   },
   {
     title: 'Scale with the network',
-    body: 'As your traders perform, you earn Alpha emissions that expand your funding capacity. More traders. More\u00a0revenue.',
+    body: 'As your traders perform, you earn Alpha emissions that expand your funding capacity. More traders = more\u00a0revenue.',
   },
 ]
 
@@ -78,7 +78,7 @@ const HYPERSCALED_RESPONSIBILITIES = [
   'Trader onboarding infrastructure',
   'Evaluation tracking and rule enforcement',
   'Automated payout rails',
-  'Miner deployment and network coordination',
+  'Infrastructure coordination and deployment',
   'Technical operations and ongoing support',
 ]
 
@@ -95,12 +95,6 @@ function PageHero() {
   return (
     <section className="pt-32 pb-16 px-6">
       <div className="max-w-[800px] mx-auto text-center">
-        {/* Badge pill */}
-        <span className="inline-flex items-center gap-2 text-xs font-mono text-teal-400 tracking-widest uppercase mb-6 px-3 py-1.5 rounded-full border border-teal-400/20 bg-teal-400/[0.06]">
-          <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
-          Partner Program
-        </span>
-
         <h1
           className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1]"
           style={{ textWrap: 'balance' }}
@@ -116,7 +110,7 @@ function PageHero() {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[62ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          Hyperscaled lets operators launch a fully branded prop trading business without building any infrastructure. You bring traders. You set your pricing. You collect revenue. The network handles evaluation, enforcement, and&nbsp;payouts.
+          Hyperscaled lets operators launch a fully branded prop trading business without building any infrastructure. You bring traders, set your pricing, and collect revenue. The network handles evaluation, enforcement, and&nbsp;payouts.
         </p>
 
         <div className="mt-8">
@@ -206,7 +200,7 @@ function RevenueModelSection() {
               Network Rewards (Alpha Emissions)
             </h3>
             <p className="text-sm text-zinc-400 leading-relaxed">
-              When your traders generate profits, the Hyperscaled network emits Alpha tokens to your firm&rsquo;s miner. Alpha represents your firm&rsquo;s funding capacity on the network. More Alpha means more traders you can fund&nbsp;simultaneously.
+              When your traders generate profits, Hyperscaled&rsquo;s decentralized funding engine emits Alpha tokens to your firm. Alpha represents your firm&rsquo;s funding capacity on the network. More Alpha means more traders you can fund&nbsp;simultaneously.
             </p>
           </div>
         </div>
@@ -288,7 +282,7 @@ function ResponsibilitySection() {
           Division of Responsibility
         </span>
         <h2 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight">
-          Clear division of&nbsp;responsibility.
+          Designed for your&nbsp;success.
         </h2>
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -413,7 +407,7 @@ function ApplicationCTASection() {
           className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed max-w-[56ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          Applications are reviewed within 48 hours. Approved partners receive full whiteglove onboarding — miner deployment, infrastructure setup, and go-to-market support from the Hyperscaled&nbsp;team.
+          Applications are reviewed within 48 hours. Approved partners receive full whiteglove onboarding with support from the Hyperscaled&nbsp;team.
         </p>
         <div className="mt-8">
           <a
@@ -423,6 +417,21 @@ function ApplicationCTASection() {
             Apply to Become a Partner
             <ArrowRight size={16} weight="bold" />
           </a>
+        </div>
+
+        {/* Trust signals */}
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+          {[
+            '48-hour application review',
+            'Whiteglove onboarding included',
+            'No infrastructure buildout required',
+            'Revenue starts on day one',
+          ].map((signal) => (
+            <span key={signal} className="flex items-center gap-1.5 text-xs text-zinc-400">
+              <CheckCircle size={14} weight="fill" className="text-teal-400 shrink-0" />
+              {signal}
+            </span>
+          ))}
         </div>
       </div>
     </section>

@@ -9,7 +9,6 @@ import {
   Warning,
 } from '@phosphor-icons/react'
 import RulesTable from '@/components/shared/RulesTable'
-import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import { EVAL_RULES, FUNDED_RULES, SCALING_PATH } from '@/lib/constants'
 
 /* ───────────────────────────────────────────────
@@ -120,13 +119,13 @@ function PageHero() {
           className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1]"
           style={{ textWrap: 'balance' }}
         >
-          The rules. All of them. No fine&nbsp;print.
+          Rules and Trading&nbsp;Objectives
         </h1>
         <p
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[62ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          Every evaluation rule is fixed, published, and enforced automatically by the protocol. No discretionary overrides. No hidden clauses. What you see here is exactly how Hyperscaled&nbsp;operates.
+          Every rule is published open-source and enforced automatically by the protocol. What you see here is exactly how Hyperscaled&nbsp;operates.
         </p>
       </div>
     </section>
@@ -143,10 +142,7 @@ function EvalRulesSection() {
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Evaluation Phase
         </span>
-        <h2 className="mt-2 text-2xl font-bold tracking-tight">
-          Evaluation Rules
-        </h2>
-        <p className="mt-3 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
+        <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
           The Hyperscaled evaluation is a one-step challenge. Rules are consistent across all account&nbsp;sizes.
         </p>
 
@@ -174,10 +170,7 @@ function FundedRulesSection() {
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Funded Account Phase
         </span>
-        <h2 className="mt-2 text-2xl font-bold tracking-tight">
-          Funded Account Rules
-        </h2>
-        <p className="mt-3 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
+        <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
           Once you pass the evaluation, your funded account is activated immediately. These rules apply for the duration of your funded&nbsp;trading.
         </p>
 
@@ -213,10 +206,7 @@ function ScalingRulesSection() {
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Account Scaling
         </span>
-        <h2 className="mt-2 text-2xl font-bold tracking-tight">
-          Scaling Rules
-        </h2>
-        <p className="mt-3 text-sm sm:text-base text-zinc-400 leading-relaxed mb-10">
+        <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-10">
           Consistent performance on your funded account unlocks access to progressively larger account sizes, up to a maximum of $2.5M. Scaling is automatic and based on performance thresholds — no application required, no additional&nbsp;fees.
         </p>
 
@@ -319,8 +309,7 @@ function ScalingRulesSection() {
           </div>
         </div>
 
-        {/* Scaling path visual */}
-        <ScalingPathVisual />
+        {/* Scaling path visual removed — table is sufficient for this page */}
       </div>
     </section>
   )
@@ -336,10 +325,7 @@ function DisqualificationSection() {
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Disqualification
         </span>
-        <h2 className="mt-2 text-2xl font-bold tracking-tight">
-          Disqualification
-        </h2>
-        <p className="mt-3 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
+        <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
           Not every risk leads to disqualification. Here is what does and does not end your evaluation or funded&nbsp;account.
         </p>
 

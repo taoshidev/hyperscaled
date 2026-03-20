@@ -13,6 +13,7 @@ import {
   CurrencyDollar,
 } from '@phosphor-icons/react'
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
+import PricingPreview from '@/components/marketing/PricingPreview'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -30,7 +31,7 @@ function PageHero() {
           className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1]"
           style={{ textWrap: 'balance' }}
         >
-          From Hyperliquid trader to funded account — here&rsquo;s exactly how it&nbsp;works.
+          Trade on Hyperliquid. Get funded by the&nbsp;network.
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 16 }}
@@ -39,7 +40,7 @@ function PageHero() {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[62ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          No API keys. No custody. No separate platform. Hyperscaled wraps around your existing Hyperliquid workflow and evaluates your performance&nbsp;onchain.
+          No API keys. No custody. Just Hyperliquid, your wallet, and your trades — we handle the&nbsp;rest.
         </motion.p>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -88,53 +89,53 @@ const STEPS = [
   {
     number: '01',
     icon: Wallet,
-    title: 'Register and Select Your Account Size',
-    body: 'Go to app.hyperscaled.trade. Connect your Hyperliquid wallet by signing a cryptographic message — no personal information required. Select your account size: $25K, $50K, or $100K. Pay the one-time USDC registration fee. Your evaluation starts immediately.',
+    title: 'Register & Choose Your Size',
+    body: 'Visit our app, connect your wallet, and pay the one-time fee to immediately begin your\u00a0challenge.',
+    cta: true,
     details: [
       { label: 'Account Sizes', value: '$25K / $50K / $100K' },
-      { label: 'Registration Fee', value: 'One-time, paid in USDC' },
-      { label: 'KYC Required', value: 'None to start' },
+      { label: 'Challenge', value: 'One-Step' },
+      { label: 'KYC Required', value: 'None' },
       { label: 'Activation', value: 'Immediate' },
     ],
   },
   {
     number: '02',
     icon: ChartLineUp,
-    title: 'Trade on Hyperliquid (Your Normal Workflow)',
-    body: 'Open Hyperliquid and trade exactly as you normally would. Hyperscaled reads your fills from Hyperliquid\u2019s public data stream in real time — no API keys, no custody, no permissions required. Your trades are mirrored into a simulated funded account at your selected size. Nothing about your trading workflow changes.',
+    title: 'Trade on Hyperliquid',
+    body: 'Open Hyperliquid and trade as you normally would. Hyperscaled reads your fills from the public data stream — nothing about your workflow\u00a0changes.',
     details: [
-      { label: 'Platform', value: 'Hyperliquid — no change to your workflow' },
-      { label: 'Data Access', value: 'Public trade data only — no API keys needed' },
-      { label: 'Custody', value: 'None — you never send funds to Hyperscaled' },
-      { label: 'Minimum capital to trade', value: '$1,000 in your HL account' },
+      { label: 'Platform', value: 'Hyperliquid' },
+      { label: 'Data Access', value: 'Public data only, no API keys needed' },
+      { label: 'Custody', value: 'Your funds always stay with you' },
+      { label: 'Minimum Trading Capital', value: '$1,000 in Hyperliquid' },
     ],
   },
   {
     number: '03',
     icon: Target,
-    title: 'Track Your Progress',
-    body: 'The Hyperscaled dashboard at app.hyperscaled.trade shows your real-time evaluation progress — funded account P&L, current drawdown, profit target completion, and expected payout. Everything updates live as you trade.',
+    title: 'Track in Real Time',
+    body: 'Your dashboard and Hyperscaled Chrome plugin show your live P&L, drawdown, profit target progress, and expected payout. Updates in real time as you\u00a0trade.',
     details: [
-      { label: 'Dashboard', value: 'app.hyperscaled.trade' },
-      { label: 'Updates', value: 'Real-time' },
-      { label: 'Tracked metrics', value: 'P&L, drawdown %, profit target %, expected payout' },
+      { label: 'Platform', value: 'Hyperscaled App & Chrome Plugin' },
+      { label: 'Updates', value: 'Always in real-time' },
     ],
   },
   {
     number: '04',
     icon: CurrencyDollar,
-    title: 'Pass, Get Funded, Get Paid',
-    body: 'Hit the 10% profit target while keeping daily drawdown under 5%. Your funded account activates immediately — no review period, no waiting. Once funded, trade in 7-day cycles and receive USDC payouts directly to your wallet at the end of each cycle. Scale your account up to $2.5M by consistently hitting quarterly performance thresholds.',
+    title: 'Pass. Get Funded. Get Paid.',
+    body: 'Hit the 10% profit target with drawdown under 5% to immediately activate your funded account. Keep 100% of profits with payouts delivered in USDC weekly. Scale to $2.5M with continued\u00a0performance.',
     details: [
       { label: 'Profit Target', value: '10%' },
       { label: 'Max Drawdown (Evaluation)', value: '5% daily / 5% EOD trailing' },
-      { label: 'Max Drawdown (Funded)', value: '8%' },
+      { label: 'Max Drawdown (Funded)', value: '8% daily / 8% EOD trailing' },
       { label: 'Payout Cycle', value: 'Every 7 days' },
       { label: 'Profit Split', value: '100% — Hyperscaled takes 0%' },
       { label: 'Max Account Size', value: '$2.5M' },
       { label: 'Funded Account Profit Target', value: 'None' },
       { label: 'Scaling Qualification', value: '5% quarterly return + all-time Sharpe ratio > 1' },
-      { label: '25% Bonus Qualification', value: '2% quarterly return + all-time Sharpe ratio > 1' },
+      { label: '25% bonus', value: '2% quarterly return + all-time Sharpe ratio > 1' },
     ],
   },
 ]
@@ -170,6 +171,15 @@ function StepCard({ step, index }) {
           <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
             {step.body}
           </p>
+          {step.cta && (
+            <Link
+              href="/register"
+              className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-teal-400 hover:text-teal-300 transition-colors"
+            >
+              Get started
+              <ArrowRight size={14} weight="bold" />
+            </Link>
+          )}
         </div>
 
         {/* Right — key details */}
@@ -213,7 +223,7 @@ function ScalingSection() {
             Scaling path: $100K to&nbsp;$2.5M
           </h2>
           <p className="mt-4 text-sm sm:text-base text-zinc-400 max-w-[56ch] mx-auto leading-relaxed" style={{ textWrap: 'balance' }}>
-            Consistently hit quarterly performance targets and your funded account grows automatically — no additional fees, no&nbsp;re-evaluation.
+            Consistently hit quarterly performance targets and your funded account grows automatically with no additional&nbsp;fees.
           </p>
         </motion.div>
         <ScalingPathVisual />
@@ -250,36 +260,15 @@ function NonCustodialExplainer() {
   return (
     <section ref={ref} className="px-6 pb-24">
       <div className="max-w-[1100px] mx-auto">
-        {/* Label + headline */}
+        {/* Callout bar */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={spring}
-          className="text-center mb-10"
+          className="mb-10 border-l-2 border-teal-400 pl-5 py-1"
         >
-          <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
-            Why This Is Different
-          </span>
-          <h2 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight">
-            Your wallet. Your trades. Your&nbsp;keys.
-          </h2>
-        </motion.div>
-
-        {/* Body copy */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ ...spring, delay: 0.08 }}
-          className="max-w-[700px] mx-auto mb-14 space-y-4 text-sm sm:text-base text-zinc-400 leading-relaxed"
-        >
-          <p>
-            Every traditional prop firm requires you to trade on their platform, with their simulated liquidity. You hand over control of your execution&nbsp;environment.
-          </p>
-          <p>
-            Hyperscaled works differently. You trade on your own Hyperliquid account, with your own funds, using your own wallet. Hyperscaled only reads your public trade data — it never touches your capital, never executes on your behalf, and never holds custody of&nbsp;anything.
-          </p>
-          <p>
-            Your Hyperliquid account is yours. Hyperscaled evaluates your performance against funded account parameters. When you qualify, the network rewards you in&nbsp;USDC.
+          <p className="text-sm font-semibold text-teal-300 leading-relaxed max-w-[65ch]">
+            <span className="text-teal-400">●</span> Your wallet. Your keys. Hyperscaled only reads your public trade data — it never touches your&nbsp;capital.
           </p>
         </motion.div>
 
@@ -355,7 +344,7 @@ function PayoutMechanics() {
             Payout Mechanics
           </span>
           <h2 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight">
-            Automated. Onchain. Every 7&nbsp;days.
+            Automated. Weekly.&nbsp;Onchain.
           </h2>
         </motion.div>
 
@@ -367,10 +356,10 @@ function PayoutMechanics() {
           className="max-w-[700px] mx-auto mb-14 space-y-4 text-sm sm:text-base text-zinc-400 leading-relaxed"
         >
           <p>
-            Once your funded account is active, payouts are calculated automatically at the end of each 7-day trading cycle based on your realized profits. USDC is sent directly to your connected wallet — no manual request required, no withdrawal fees, no&nbsp;delays.
+            Funded account payouts are calculated automatically on a weekly basis for your realized profits. USDC is sent directly to your connected wallet, with no delays or&nbsp;discretion.
           </p>
           <p>
-            KYC is required only at the point of first payout — a simple cryptographic wallet verification. No passport scans, no bank account&nbsp;details.
+            A brief KYC is required only for your first payout — just a simple cryptographic wallet&nbsp;verification.
           </p>
         </motion.div>
 
@@ -474,13 +463,6 @@ function BottomCTA() {
             Start Your Evaluation
             <ArrowRight size={15} weight="bold" />
           </Link>
-          <Link
-            href="/pricing"
-            className="text-sm text-zinc-400 hover:text-white transition-colors inline-flex items-center gap-1"
-          >
-            View Pricing
-            <ArrowRight size={13} weight="bold" />
-          </Link>
         </motion.div>
       </div>
     </section>
@@ -498,6 +480,7 @@ export default function HowItWorksPage() {
       <ScalingSection />
       <NonCustodialExplainer />
       <PayoutMechanics />
+      <PricingPreview />
       <BottomCTA />
     </>
   )
