@@ -28,7 +28,7 @@ const features = [
   {
     icon: CheckCircle,
     title: 'One-Step Evaluation',
-    body: 'Trade, perform, and unlock funded capital through a transparent, rules-based evaluation. Hit 10% profit, keep drawdown under 5%. One step — no second phase, no\u00a0retakes.',
+    body: 'Trade, perform, and unlock funded capital through our one-step\u00a0challenge.',
     span: 'md:col-span-7',
     large: true,
     extra: (
@@ -53,7 +53,7 @@ const features = [
   {
     icon: TrendUp,
     title: 'Grow Your Account',
-    body: 'Hit a 5% quarterly return with a Sharpe ratio above 1 and your account scales automatically — no application, no fees. $100K accounts scale all the way to\u00a0$2.5M.',
+    body: 'Hit a 5% quarterly return with a Sharpe ratio above 1 and your account will automatically grow with zero fees. $100K accounts can scale all the way to\u00a0$2.5M.',
     span: 'md:col-span-5',
     large: false,
     extra: (
@@ -65,7 +65,7 @@ const features = [
   {
     icon: CurrencyDollar,
     title: 'USDC In, USDC Out',
-    body: 'Pay your registration fee in USDC and receive performance rewards in USDC — directly to your wallet with no withdrawal fees, no delays, no\u00a0intermediaries.',
+    body: 'Pay your registration fee in USDC, receive payouts in USDC. Direct to your wallet and verifiable\u00a0onchain.',
     span: 'md:col-span-5',
     large: false,
     extra: (
@@ -81,7 +81,7 @@ const features = [
   {
     icon: LinkSimple,
     title: 'Onchain Transparency',
-    body: 'Every payout is tracked onchain. No exceptions. No black boxes. Every rule, every reward — fully\u00a0auditable.',
+    body: 'Every payout is tracked onchain. No\u00a0exceptions.',
     span: 'md:col-span-7',
     large: false,
     extra: (
@@ -100,19 +100,19 @@ const features = [
   {
     icon: Lightning,
     title: 'Trade on Hyperliquid',
-    body: 'Use the platform you already trade on. Same order book. Same fills. Same execution. No new platform to learn — just bring your\u00a0edge.',
+    body: 'Use the platform you already know and love. Just bring your trading\u00a0skill.',
     span: 'md:col-span-6',
     large: false,
   },
   {
     icon: FileText,
     title: 'Transparent Rules',
-    body: 'All evaluation rules are clear, fixed, and published. Nothing hidden, nothing\u00a0discretionary.',
+    body: 'All evaluation rules are clear upfront and open-source. Full transparency, like traders\u00a0deserve.',
     span: 'md:col-span-6',
     large: false,
     extra: (
       <div className="mt-4 flex flex-col gap-1.5">
-        {['Rules published onchain', 'No hidden clauses', 'Dispute resolution: automated'].map((r) => (
+        {['Rules published onchain', 'No hidden clauses'].map((r) => (
           <div key={r} className="flex items-center gap-2 text-xs text-zinc-400">
             <CheckCircle size={13} className="text-teal-400 shrink-0" />
             {r}
@@ -141,7 +141,7 @@ export default function Features() {
             Features
           </span>
           <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-xl">
-            Built for traders who trade with an&nbsp;edge.
+            Built for traders with an&nbsp;edge.
           </h2>
         </motion.div>
 

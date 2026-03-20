@@ -115,8 +115,8 @@ const steps = [
   {
     number: '01',
     icon: CurrencyDollar,
-    title: 'Start Your Evaluation',
-    body: 'Choose your account size — $25K, $50K, or $100K. Pay a one-time USDC registration fee. No recurring charges, no\u00a0subscriptions.',
+    title: 'Start your Challenge',
+    body: 'Choose your account size — $25K, $50K, or $100K. Pay a one-time fee. No recurring charges or\u00a0subscriptions.',
     mockup: <TierSelectorMockup />,
   },
   {
@@ -130,7 +130,7 @@ const steps = [
     number: '03',
     icon: Trophy,
     title: 'Hit the Target. Get Paid.',
-    body: 'Hit the 10% profit target while keeping drawdown under 5%. Pass and your funded account activates immediately. Payouts are automated onchain to your wallet every 7\u00a0days. Keep 100% of everything you\u00a0earn.',
+    body: 'Hit the 10% profit target to pass the Hyperscaled Challenge and activate your funded account immediately. Payouts are delivered to your wallet every 7 days, and you keep 100% of everything you\u00a0earn.',
     mockup: <PayoutMockup />,
   },
 ]
@@ -159,7 +159,7 @@ export default function HowItWorks() {
           </span>
           <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-2xl">
             Trade on Hyperliquid.{' '}
-            <span className="text-zinc-500">Get funded by the&nbsp;network.</span>
+            <span className="text-zinc-500">Earn a funded trading&nbsp;account.</span>
           </h2>
         </motion.div>
 

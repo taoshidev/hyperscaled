@@ -2,22 +2,21 @@
 
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
-import { CheckCircle, ArrowRight } from '@phosphor-icons/react'
+import {
+  CheckCircle,
+  ArrowRight,
+  ListChecks,
+  Target,
+  CalendarCheck,
+  Wallet,
+  Lightning,
+  LinkSimple,
+} from '@phosphor-icons/react'
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import FAQAccordion from '@/components/shared/FAQAccordion'
 import { PRICING_TIERS, PRICING_FAQ } from '@/lib/constants'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
-
-const INCLUDED_ITEMS = [
-  'One-step evaluation',
-  '100% profit split',
-  'No time limit',
-  'News trading allowed',
-  'USDC payouts',
-  'Scaling to $2.5M',
-  'No KYC to start',
-]
 
 /* ── Launch Pricing Banner ── */
 function LaunchBanner() {
@@ -25,8 +24,7 @@ function LaunchBanner() {
     <div className="bg-teal-400/10 border-b border-teal-400/20">
       <div className="max-w-[1400px] mx-auto px-6 py-3 text-center">
         <p className="text-sm text-teal-400 font-medium" style={{ textWrap: 'balance' }}>
-          <span className="inline-block w-2 h-2 rounded-full bg-teal-400 mr-2 align-middle" />
-          Launch Pricing Active — Save up to 50%. Standard pricing takes effect after the launch window&nbsp;closes.
+          🟢 Launch Pricing Active — Save up to 50% for a limited&nbsp;time.
         </p>
       </div>
     </div>
@@ -54,7 +52,7 @@ function PricingHero() {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[60ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          Pay a one-time USDC registration fee to enter the evaluation. No subscriptions. No monthly charges. No profit cuts&nbsp;— ever.
+          Pay a one-time USDC registration fee to take the Hyperscaled challenge. No hidden&nbsp;fees.
         </motion.p>
       </div>
     </section>
@@ -155,26 +153,197 @@ function PricingCards() {
   )
 }
 
-/* ── What's Included ── */
-function WhatsIncluded() {
+/* ── What's Included Feature Grid ── */
+const INCLUDED_FEATURES = [
+  {
+    icon: ListChecks,
+    title: 'One-Step Evaluation',
+    desc: 'All evaluations are one phase. No second phase, ever.',
+  },
+  {
+    icon: Target,
+    title: 'Consistent Rules',
+    desc: '10% profit target, 5% max drawdown, no time limit.',
+  },
+  {
+    icon: CalendarCheck,
+    title: 'Weekly Payouts',
+    desc: 'Funded traders receive USDC payouts every 7 days.',
+  },
+  {
+    icon: Wallet,
+    title: '100% Profit Split',
+    desc: 'Every dollar of profit goes directly to your wallet.',
+  },
+  {
+    icon: Lightning,
+    title: 'Trade on Hyperliquid',
+    desc: 'Use the platform you already know and love.',
+  },
+  {
+    icon: LinkSimple,
+    title: 'Onchain Always',
+    desc: 'Every payout is verifiable onchain. No exceptions.',
+  },
+]
+
+function WhatsIncludedGrid() {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
 
   return (
     <section ref={ref} className="px-6 pb-20">
       <div className="max-w-[1100px] mx-auto">
+        <motion.h2
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={spring}
+          className="text-2xl sm:text-3xl font-bold tracking-tight text-center mb-10"
+        >
+          What&apos;s included
+        </motion.h2>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ ...spring, delay: 0.08 }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+        >
+          {INCLUDED_FEATURES.map((feat) => {
+            const Icon = feat.icon
+            return (
+              <div
+                key={feat.title}
+                className="flex items-start gap-4 p-5 rounded-xl border border-white/[0.06] bg-white/[0.02]"
+              >
+                <div className="w-9 h-9 rounded-lg bg-teal-400/8 border border-teal-400/20 flex items-center justify-center shrink-0">
+                  <Icon size={18} className="text-teal-400" />
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-white mb-0.5">{feat.title}</div>
+                  <div className="text-sm text-zinc-400">{feat.desc}</div>
+                </div>
+              </div>
+            )
+          })}
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+/* ── Evaluation Progress Widget Mockup ── */
+function EvalProgressWidget() {
+  return (
+    <div
+      className="rounded-xl border border-white/[0.08] bg-zinc-900 overflow-hidden"
+      aria-hidden="true"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06]">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-teal-400 shrink-0" style={{ boxShadow: '0 0 6px rgba(0,198,167,0.7)' }} />
+          <span className="text-sm font-semibold text-white">Evaluation Progress</span>
+        </div>
+        <span className="text-xs text-zinc-500 font-mono">$100K Account</span>
+      </div>
+
+      <div className="p-5 space-y-5">
+        {/* Profit Target */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-zinc-500">Profit Target</span>
+            <span className="text-xs font-mono text-teal-400">$7,420 / $10,000</span>
+          </div>
+          <div className="h-2 rounded-full bg-white/[0.06]">
+            <div className="h-2 rounded-full bg-teal-400 w-[74%]" />
+          </div>
+          <div className="text-right mt-1">
+            <span className="text-xs font-mono text-teal-400 font-semibold">74.2%</span>
+          </div>
+        </div>
+
+        {/* High Water Mark */}
+        <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+          <span className="text-xs text-zinc-500">High Water Mark</span>
+          <span className="text-sm font-mono font-semibold text-white">$107,420</span>
+        </div>
+
+        {/* Max Drawdown */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-zinc-500">Max Drawdown</span>
+            <span className="text-xs font-mono text-zinc-300">$1,230 / $5,000</span>
+          </div>
+          <div className="h-2 rounded-full bg-white/[0.06]">
+            <div
+              className="h-2 rounded-full w-[24%]"
+              style={{ background: 'linear-gradient(90deg, #2DD4BF, #14B8A6)' }}
+            />
+          </div>
+          <div className="flex items-center justify-between mt-1">
+            <span className="text-xs text-zinc-600">Safe</span>
+            <span className="text-xs font-mono text-zinc-400">24.6% used</span>
+          </div>
+        </div>
+
+        {/* Profit Target Completion */}
+        <div className="flex items-center justify-between pt-3 border-t border-white/[0.06]">
+          <span className="text-xs text-zinc-500">Profit Target Completion</span>
+          <span className="text-lg font-bold font-mono text-teal-400">74.2%</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── A Model Built for Traders ── */
+function ModelSection() {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-60px' })
+
+  const bullets = [
+    'A funded account upon evaluation completion',
+    'Verifiable payouts through onchain technology',
+    '100% profit split — you keep your earnings',
+    'A system designed for trader success',
+  ]
+
+  return (
+    <section ref={ref} className="px-6 pb-24">
+      <div className="max-w-[1100px] mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={spring}
-          className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3"
         >
-          {INCLUDED_ITEMS.map((item) => (
-            <span key={item} className="flex items-center gap-2 text-sm text-zinc-300">
-              <CheckCircle size={18} weight="fill" className="text-teal-400 shrink-0" />
-              {item}
-            </span>
-          ))}
+          <span className="text-xs text-zinc-500 tracking-widest uppercase block mb-4">
+            A Model Built for Traders
+          </span>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start">
+            {/* Left column — text */}
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">
+                Your evaluation fee grants access&nbsp;to:
+              </h2>
+              <ul className="space-y-3 mb-6">
+                {bullets.map((b) => (
+                  <li key={b} className="flex items-start gap-3 text-sm text-zinc-300">
+                    <CheckCircle size={18} weight="fill" className="text-teal-400 shrink-0 mt-0.5" />
+                    {b}
+                  </li>
+                ))}
+              </ul>
+              <p className="text-sm font-semibold text-white">
+                No hidden rules, opaque processes, or denied&nbsp;payouts.
+              </p>
+            </div>
+
+            {/* Right column — eval progress widget */}
+            <div>
+              <EvalProgressWidget />
+            </div>
+          </div>
         </motion.div>
       </div>
     </section>
@@ -243,7 +412,8 @@ export default function PricingPage() {
       <LaunchBanner />
       <PricingHero />
       <PricingCards />
-      <WhatsIncluded />
+      <WhatsIncludedGrid />
+      <ModelSection />
       <ScalingSection />
       <PricingFAQSection />
     </>
