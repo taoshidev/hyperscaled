@@ -40,11 +40,8 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-16">
           {/* Brand column */}
           <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="flex items-center gap-2.5 mb-4">
-              <div className="w-7 h-7 rounded-lg bg-teal-400/10 border border-teal-400/30 flex items-center justify-center">
-                <div className="w-3 h-3 rounded-sm bg-teal-400" />
-              </div>
-              <span className="text-sm font-bold tracking-tight">Hyperscaled</span>
+            <Link href="/" className="block mb-4">
+              <img src="/hyperscaled-logo.svg" alt="Hyperscaled" className="h-7 w-auto" />
             </Link>
             <p className="text-xs text-zinc-500 leading-relaxed max-w-[24ch]">
               Permissionless funded trading on&nbsp;Hyperliquid.

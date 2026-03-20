@@ -7,6 +7,8 @@ import { PRICING_TIERS } from '@/lib/constants'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
+const TIER_LABELS = { 'tier-1': 'Tier I', 'tier-2': 'Tier II', 'tier-3': 'Tier III' }
+
 export default function PricingPreview() {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
@@ -52,8 +54,8 @@ export default function PricingPreview() {
               )}
 
               {/* Tier label */}
-              <div className="text-xs text-zinc-500 tracking-widest uppercase mb-1 mt-1">
-                {tier.id === 'tier-1' ? 'Tier I' : tier.id === 'tier-2' ? 'Tier II' : 'Tier III'}
+              <div className="text-xs font-semibold text-zinc-500 tracking-widest uppercase mb-1 mt-1">
+                {TIER_LABELS[tier.id]}
               </div>
 
               {/* Account size */}
@@ -65,6 +67,7 @@ export default function PricingPreview() {
                   ${tier.launchPrice}
                 </ins>
                 <del className="text-sm text-zinc-600 font-mono">${tier.standardPrice}</del>
+                <span className="text-xs text-zinc-500 font-medium">USDC</span>
                 <span className="sr-only">
                   Launch price {tier.launchPrice} USDC, was {tier.standardPrice} USDC
                 </span>
@@ -82,7 +85,7 @@ export default function PricingPreview() {
                 }`}
               >
                 {tier.cta}
-                {!tier.popular && <ArrowRight size={14} weight="bold" />}
+                <ArrowRight size={14} weight="bold" />
               </a>
             </motion.div>
           ))}

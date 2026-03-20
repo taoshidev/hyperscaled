@@ -11,12 +11,15 @@ import {
   Wallet,
   Lightning,
   LinkSimple,
+  Star,
 } from '@phosphor-icons/react'
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import FAQAccordion from '@/components/shared/FAQAccordion'
 import { PRICING_TIERS, PRICING_FAQ } from '@/lib/constants'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
+
+const TIER_LABELS = { 'tier-1': 'Tier I', 'tier-2': 'Tier II', 'tier-3': 'Tier III' }
 
 /* ── Launch Pricing Banner ── */
 function LaunchBanner() {
@@ -89,22 +92,28 @@ function PricingCard({ tier, index }) {
       {/* Popular badge */}
       {tier.popular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <span className="inline-block bg-teal-400 text-[#09090b] text-xs font-bold tracking-wide uppercase px-4 py-1 rounded-full">
+          <span className="inline-flex items-center gap-1 bg-teal-400 text-[#09090b] text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full">
+            <Star size={12} weight="fill" />
             Most Popular
           </span>
         </div>
       )}
 
+      {/* Tier label */}
+      <div className="text-xs font-semibold text-zinc-500 tracking-widest uppercase mt-2 mb-1">
+        {TIER_LABELS[tier.id]}
+      </div>
+
       {/* Tier name */}
-      <h3 className="text-lg font-semibold mt-2">{tier.name}</h3>
+      <h3 className="text-lg font-semibold">{tier.name}</h3>
 
       {/* Pricing */}
-      <div className="mt-4 flex items-baseline gap-3">
-        <ins className="text-3xl sm:text-4xl font-bold font-mono no-underline">
+      <div className="mt-4 flex items-baseline gap-2">
+        <ins className="text-3xl sm:text-4xl font-bold font-mono no-underline text-white">
           ${tier.launchPrice}
         </ins>
-        <span className="text-sm text-zinc-500">USDC</span>
         <del className="text-sm text-zinc-600 font-mono">${tier.standardPrice}</del>
+        <span className="text-xs text-zinc-500 font-medium">USDC</span>
         <span className="sr-only">
           Launch price {tier.launchPrice} USDC, was {tier.standardPrice} USDC
         </span>
@@ -125,16 +134,14 @@ function PricingCard({ tier, index }) {
         href="https://app.hyperscaled.trade"
         target="_blank"
         rel="noopener noreferrer"
-        className={`mt-8 flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold transition-colors ${
+        className={`mt-8 flex items-center justify-center gap-1.5 h-12 rounded-xl text-sm font-semibold transition-colors ${
           tier.popular
             ? 'shiny-cta px-6 py-3'
             : 'bg-white/[0.06] border border-white/[0.08] text-white hover:bg-white/[0.1]'
         }`}
       >
-        <span className="flex items-center gap-1.5">
-          {tier.cta}
-          {!tier.popular && <ArrowRight size={14} weight="bold" />}
-        </span>
+        {tier.cta}
+        <ArrowRight size={14} weight="bold" />
       </a>
     </motion.div>
   )
