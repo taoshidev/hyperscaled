@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isValidEvmAddress } from "@/lib/validation";
 import { getUserByWallet } from "@/lib/sumsub";
+import { reportError } from "@/lib/errors";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -32,7 +33,7 @@ export async function GET(request) {
       verifiedAt: user.kycVerifiedAt,
     });
   } catch (err) {
-    console.error("[kyc/status] Error:", err.message);
+    reportError(err, { source: "api/kyc/status" });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

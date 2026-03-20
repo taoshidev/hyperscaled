@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isValidEvmAddress } from "@/lib/validation";
+import { reportError } from "@/lib/errors";
 import {
   getUserByWallet,
   getApplicant,
@@ -55,7 +56,7 @@ export async function POST(request) {
       kycStatus: user.kycStatus,
     });
   } catch (err) {
-    console.error("[kyc/token] Error:", err.message);
+    reportError(err, { source: "api/kyc/token" });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

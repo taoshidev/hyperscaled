@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyWebhookSignature, updateKycStatus } from "@/lib/sumsub";
+import { reportError } from "@/lib/errors";
 
 export async function POST(request) {
   const rawBody = await request.text();
@@ -42,7 +43,7 @@ export async function POST(request) {
     }
     // Other event types are acknowledged but ignored
   } catch (err) {
-    console.error("[kyc/webhook] Error processing event:", err.message);
+    reportError(err, { source: "api/kyc/webhook", metadata: { eventType: type } });
   }
 
   return NextResponse.json({ ok: true });

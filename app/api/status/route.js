@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isValidEvmAddress } from "@/lib/validation";
 import { STUB_ENABLED, stubStatus } from "@/lib/gateway-stubs";
+import { reportError } from "@/lib/errors";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -48,7 +49,7 @@ export async function GET(request) {
       { status: 502 },
     );
   } catch (err) {
-    console.error("[status] Validator API unreachable:", err.message);
+    reportError(err, { source: "api/status", userId: hlAddress });
     return NextResponse.json(
       { error: "Could not reach validator" },
       { status: 502 },

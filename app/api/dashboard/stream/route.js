@@ -1,5 +1,6 @@
 import { resolveEndpointUrl } from "@/lib/gateway";
 import { STUB_ENABLED, stubDashboard } from "@/lib/gateway-stubs";
+import { reportError } from "@/lib/errors";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,7 @@ export async function GET(request) {
   try {
     ({ endpoint_url, hl_address } = await resolveEndpointUrl(hlAddress));
   } catch (err) {
+    reportError(err, { source: "api/dashboard/stream", userId: hlAddress });
     return new Response(JSON.stringify({ error: err.message }), {
       status: err.status || 500,
       headers: { "Content-Type": "application/json" },
@@ -42,7 +44,8 @@ export async function GET(request) {
     upstream = await fetch(`${endpoint_url}/api/hl/${hl_address}/stream`, {
       signal: request.signal,
     });
-  } catch {
+  } catch (err) {
+    reportError(err, { source: "api/dashboard/stream", userId: hlAddress });
     return new Response(JSON.stringify({ error: "Could not reach gateway" }), {
       status: 502,
       headers: { "Content-Type": "application/json" },

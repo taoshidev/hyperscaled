@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { reportError } from "@/lib/errors";
 
 export async function GET() {
   const validatorUrl = process.env.VALIDATOR_API_URL;
@@ -21,7 +22,8 @@ export async function GET() {
 
     const data = await res.json();
     return NextResponse.json(data, { status: 200 });
-  } catch {
+  } catch (err) {
+    reportError(err, { source: "api/leaderboard" });
     return NextResponse.json(
       { error: "Could not reach validator" },
       { status: 502 },
