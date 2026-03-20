@@ -44,6 +44,7 @@ export async function PATCH(request) {
   if (body.slug !== undefined) minerUpdate.slug = body.slug;
   if (body.usdcWallet !== undefined) minerUpdate.usdcWallet = body.usdcWallet;
   if (body.apiUrl !== undefined) minerUpdate.apiUrl = body.apiUrl;
+  if (body.apiKey !== undefined) minerUpdate.apiKey = body.apiKey;
   if (body.color !== undefined) minerUpdate.color = body.color;
   if (body.payoutCadenceDays !== undefined) minerUpdate.payoutCadenceDays = body.payoutCadenceDays;
 

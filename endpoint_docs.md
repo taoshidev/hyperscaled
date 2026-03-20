@@ -20,6 +20,8 @@ Or as a raw key:
 Authorization: YOUR_API_KEY
 ```
 
+**Entity miner host:** The gateway loads allowed keys from **`vanta_api/api_keys.json`** on the machine running `EntityMinerRestServer` (see `vanta-network/vanta_api/api_key_refresh.py`). The string you send in `Authorization` must match a `key` field in that file **exactly**. Storing the key in Hyperscaled’s database does not register it on the miner; operators must add the same value to `api_keys.json` (or rely on the refresh thread picking up edits, typically within ~15s).
+
 ### API Key Tiers
 
 The validator uses tiered access:
