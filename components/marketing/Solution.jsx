@@ -25,7 +25,7 @@ const pillars = [
   {
     icon: LinkSimple,
     title: 'Onchain Payouts',
-    desc: 'USDC direct to your wallet on a 7-day cycle. Fully verifiable.',
+    desc: 'USDC paid directly to your wallet every week. Fully transparent.',
   },
   {
     icon: Globe,
@@ -35,7 +35,7 @@ const pillars = [
   {
     icon: Fingerprint,
     title: 'Cryptographic Identity',
-    desc: "Connect your Hyperliquid wallet. Sign cryptographically. That's all we\u00a0need.",
+    desc: "Connect your Hyperliquid wallet. Sign cryptographically. It\u2019s that\u00a0simple.",
   },
 ]
 
@@ -43,7 +43,7 @@ const compareRows = [
   { label: 'Profit Target',       hs: '10%',        ftmo: '15%' },
   { label: 'Evaluation',          hs: '1-Step',     ftmo: '2-Step' },
   { label: 'Non-Custodial',       hs: 'Yes',        ftmo: 'No' },
-  { label: 'KYC Required',        hs: 'None',       ftmo: 'Full KYC' },
+  { label: 'KYC Required',        hs: 'No',         ftmo: 'Full KYC' },
   { label: 'Profit Split',        hs: '100%',       ftmo: 'Up to 90%' },
   { label: 'Payout Verification', hs: 'Onchain',    ftmo: 'Centralized' },
   { label: 'Max Account',         hs: '$2.5M',      ftmo: '$400K' },
@@ -51,7 +51,7 @@ const compareRows = [
   { label: 'Weekend Trading',     hs: 'Allowed',    ftmo: 'Restricted' },
 ]
 
-const hsBest = new Set(['10%', '1-Step', 'Yes', 'None', '100%', 'Onchain', '$2.5M', 'Allowed'])
+const hsBest = new Set(['10%', '1-Step', 'Yes', 'No', '100%', 'Onchain', '$2.5M', 'Allowed'])
 
 export default function Solution() {
   const ref = useRef(null)
@@ -95,11 +95,11 @@ export default function Solution() {
                 The Hyperscaled Protocol
               </span>
               <h2 className="text-4xl md:text-5xl tracking-tighter leading-none font-bold mb-5">
-                Permissionless.<br />No middlemen.
+                Decentralized.<br />Transparent.
               </h2>
               <p className="text-base text-zinc-400 leading-relaxed max-w-[52ch]">
-                Hyperscaled mirrors your Hyperliquid trades into a protocol-funded simulated account
-                and pays out performance rewards in USDC — onchain, automatically, on a 7-day&nbsp;cycle.
+                Hyperscaled mirrors your Hyperliquid trades into a funded account on our network
+                and pays out performance rewards in USDC — weekly, automatically, and&nbsp;onchain.
               </p>
             </motion.div>
 

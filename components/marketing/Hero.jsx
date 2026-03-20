@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight, TrendUp, ArrowsClockwise } from '@phosphor-icons/react'
+import { HERO_STATS } from '@/lib/constants'
 import LiquidCrystalBg from './LiquidCrystalBg'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
@@ -83,6 +84,16 @@ export default function Hero() {
                 Learn More
                 <ArrowRight size={15} weight="bold" />
               </Link>
+            </motion.div>
+
+            {/* Inline stats */}
+            <motion.div variants={itemVariants} className="flex flex-wrap gap-x-8 gap-y-3">
+              {HERO_STATS.map((stat) => (
+                <div key={stat.label} className="flex items-baseline gap-2">
+                  <span className="text-lg font-bold tracking-tight text-white">{stat.value}</span>
+                  <span className="text-sm text-zinc-500">{stat.label}</span>
+                </div>
+              ))}
             </motion.div>
 
           </motion.div>

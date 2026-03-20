@@ -19,7 +19,7 @@ const painPoints = [
   {
     number: '01',
     title: 'KYC and geographic bans lock out most of the\u00a0world.',
-    body: 'Every major prop firm requires passport scans, proof of address, and a compliant bank account. Traders in 150+ countries are rejected outright — no exceptions, no\u00a0appeals.',
+    body: 'Many prop firms immediately reject traders in 150+ countries, blocking them from access to\u00a0capital.',
     accentColor: 'text-red-400',
     tagBg: 'bg-red-400/8 border-red-400/20',
     tag: 'Rejected',
@@ -27,7 +27,7 @@ const painPoints = [
   {
     number: '02',
     title: 'You earn 70%. They take 30% for doing\u00a0nothing.',
-    body: 'Legacy prop firms extract 10–30% of your profits permanently. No accountability, no transparency — they keep a cut of every winning trade you\u00a0make.',
+    body: 'Legacy prop firms keep 10–30% of your profits permanently. No accountability or transparency, they take a cut of every winning trade you\u00a0make.',
     accentColor: 'text-amber-400',
     tagBg: 'bg-amber-400/8 border-amber-400/20',
     tag: 'Up to 30% cut',
@@ -35,7 +35,7 @@ const painPoints = [
   {
     number: '03',
     title: 'Discretionary payouts. They may not even pay\u00a0you.',
-    body: 'Centralized prop firms control your earnings under full discretion — they can delay, dispute, or deny payouts with zero accountability. No guarantees, no\u00a0transparency.',
+    body: 'Centralized prop firms control your earnings under full, centralized discretion — they can delay, dispute, or deny payouts with zero accountability. There\u2019s no guarantee you receive a\u00a0payout.',
     accentColor: 'text-amber-400',
     tagBg: 'bg-amber-400/8 border-amber-400/20',
     tag: 'No guarantees',
@@ -64,7 +64,7 @@ export default function Problem() {
             <span className="text-zinc-500">Then ghost you on&nbsp;payouts.</span>
           </h2>
           <p className="text-base text-zinc-400 leading-relaxed max-w-[60ch]">
-            Legacy funded trading is broken by design. KYC walls, profit extraction, and centralized
+            Funded trading is broken by design. KYC barriers, payout denials, and centralized
             discretion mean profitable traders are systematically&nbsp;underserved.
           </p>
         </motion.div>
@@ -113,7 +113,7 @@ export default function Problem() {
           className="mt-10 border-l-2 border-teal-400 pl-5 py-1"
         >
           <p className="text-sm font-semibold text-teal-300 leading-relaxed max-w-[65ch]">
-            Hyperscaled pays 100% performance rewards because the network is aligned with trader success — not extracting your&nbsp;edge.
+            Hyperscaled pays 100% performance of rewards because our decentralized network is aligned with your success. No&nbsp;exceptions.
           </p>
         </motion.div>
       </div>

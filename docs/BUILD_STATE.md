@@ -1,18 +1,19 @@
 # Build State
 
-Last updated: 2026-03-19
+Last updated: 2026-03-20
 
 ## Marketing Site (`/`)
 
-**Status**: Complete — Phase 3 home page overhaul done
+**Status**: Complete — Phase 3 home page overhaul + Copy Review A
 
 | Item | State |
 |------|-------|
-| Hero + CTA | Done — Phase 3/5: CTA to /register (was external), "Learn More" secondary, updated widget header (7d cycle), updated subhead copy |
-| Features section | Done — Phase 3: 6 cards rewritten per spec, ScalingPathVisual in "Grow Your Account" card |
-| How It Works | Done — Phase 3: 3 new steps (Start Evaluation → Trade on Hyperliquid → Hit the Target), TierSelectorMockup, DashboardMockup, PayoutMockup |
-| Problem / Solution | Done — Phase 3: Problem = 3 equal columns + teal callout bar. Solution = Hyperscaled vs FTMO comparison table (9 rows), 4 protocol pillars, banner tagline |
-| Stats section | Done — Phase 3: badges removed, imports from NETWORK_STATS |
+| Hero + CTA | Done — Phase 3/5/CRA: CTA to /register, "Learn More" secondary, widget header (7d cycle), hero stats row (1-Step Evaluation, 100% Profit Split, $30M+ Rewards) |
+| Features section | Done — Phase 3/CRA: 6 cards, copy shortened per copywriter review, removed "Dispute resolution" bullet |
+| How It Works | Done — Phase 3/CRA: headline "Earn a funded trading account", Step 01 "Start your Challenge", Step 03 Hyperscaled Challenge phrasing |
+| Problem / Solution | Done — Phase 3/CRA: Problem copy updated (KYC barriers, shortened cards, callout bar). Solution headline "Decentralized. Transparent.", KYC None→No |
+| Stats section | Done — Phase 3/CRA: 5,500+ Traders (was 4,200+ Funded Traders) |
+| PricingPreview | Done — CRA: 3 condensed pricing cards between Features and PartnersCTA |
 | FAQ | Done — Phase 3: "View full FAQ →" link added to sticky sidebar |
 | PartnersCTA | Done — Phase 3: new section between Features and FAQ, links to /partners |
 | Footer | Done — 4-column layout (Brand, Protocol, Community, Legal), social icons, "Built on Hyperliquid · Powered by Bittensor", © 2026. Phase 4: all social/docs URLs patched, Audit Report removed, Contact Support mailto added. |
@@ -28,20 +29,21 @@ Last updated: 2026-03-19
 
 ## Pricing Page (`/pricing`)
 
-**Status**: Complete — Phase 4
+**Status**: Complete — Phase 4 + Copy Review A
 
 | Item | State |
 |------|-------|
 | Page route + metadata | Done |
-| Launch pricing banner | Done |
-| Page hero | Done |
-| 3-tier pricing cards (shiny-border on popular) | Done |
-| What's Included row (7 items, CheckCircle) | Done |
+| Launch pricing banner | Done — CRA: updated to "Save up to 50% for a limited time" |
+| Page hero | Done — CRA: subtext "take the Hyperscaled challenge. No hidden fees." |
+| 3-tier pricing cards (shiny-border on popular) | Done — CRA: Most Popular moved to $100K, tier I/II scaling → $100K, payout cycle → Weekly |
+| What's Included feature grid | Done — CRA: replaced badge row with 6-card grid (icons + title + desc) |
+| A Model Built for Traders section | Done — CRA: bullet list + EvalProgressWidget mockup |
 | Scaling path visual | Done |
 | Pricing FAQ mini (3 items) | Done |
 | Responsive layout | Done |
 
-**Next action**: All marketing pages complete. Polish pass next.
+**Next action**: Copy Review Session B next.
 
 ## How It Works Page (`/how-it-works`)
 
@@ -124,12 +126,12 @@ Last updated: 2026-03-19
 | Item | State |
 |------|-------|
 | NETWORK_STATS | Done — 5 stats (value/label/description) |
-| HERO_STATS | Done — 3 inline hero stats |
+| HERO_STATS | Done — CRA: 1-Step Evaluation, 100% Profit Split, $30M+ Rewards |
 | EVAL_RULES | Done — 8 evaluation rules |
 | FUNDED_RULES | Done — 7 funded account rules |
 | SCALING_PATH | Done — 9 steps ($100K → $2.5M) |
 | SCALING_MILESTONES | Done — 12 milestones ($25K → $2.5M) |
-| PRICING_TIERS | Done — 3 tiers with full spec details |
+| PRICING_TIERS | Done — CRA: popular moved to tier-3, tier I/II scaling → $100K, payout → Weekly |
 | FAQ_ITEMS | Done — 5 categories, 22 entries |
 | HOME_FAQ_IDS | Done — 5-item subset for home page |
 | PRICING_FAQ / PRICING_FAQ_IDS | Done — 3 pricing-specific entries |

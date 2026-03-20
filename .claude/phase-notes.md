@@ -312,13 +312,71 @@ Registration Phase 3 complete. All 3 steps of the registration flow are fully bu
 
   **Fix 7 — Minor**: Funding note bumped from text-xs text-zinc-500 to text-sm text-zinc-400 font-mono.
 
+- **Copy Review A — Home + Pricing**:
+  Files changed: 7 (lib/constants.js, Hero.jsx, Problem.jsx, Solution.jsx, HowItWorks.jsx, Features.jsx, PricingPage.jsx, marketing.jsx)
+  Files created: 1 (components/marketing/PricingPreview.jsx)
+
+  **Constants (lib/constants.js)**:
+  - HERO_STATS: stat1 → 1-Step/Evaluation, stat2 → 100%/Profit Split, stat3 unchanged
+  - NETWORK_STATS: "4,200+ Funded Traders" → "5,500+ Traders"
+  - PRICING_TIERS: tier-1/2 scalingPath → "Up to $100K", all payoutCycle → "Weekly", popular moved from tier-2 to tier-3, strikethrough prices verified ($299/$549/$999)
+
+  **Hero (Hero.jsx)**:
+  - Added hero stats row back below CTAs (was removed in prior commit), importing from HERO_STATS
+  - Stats display: 1-Step Evaluation · 100% Profit Split · $30M+ Rewards Distributed
+
+  **Problem (Problem.jsx)**:
+  - Subtext: "Legacy funded trading" → "Funded trading", "KYC walls, profit extraction" → "KYC barriers, payout denials"
+  - Card 1 body: shortened to single sentence about 150+ countries
+  - Card 2 body: "extract" → "keep", "No accountability, no transparency —" → "No accountability or transparency,"
+  - Card 3 body: "full discretion" → "full, centralized discretion", ending changed to "no guarantee you receive a payout"
+  - Callout: "100% performance rewards" → "100% performance of rewards", "network is aligned with trader success" → "decentralized network is aligned with your success. No exceptions."
+
+  **Solution (Solution.jsx)**:
+  - Headline: "Permissionless. No middlemen." → "Decentralized. Transparent."
+  - Body: "protocol-funded simulated account" → "funded account on our network", "onchain, automatically, on a 7-day cycle" → "weekly, automatically, and onchain"
+  - Feature 2: "7-day cycle. Fully verifiable." → "every week. Fully transparent."
+  - Feature 4: "That's all we need." → "It's that simple."
+  - Comparison table KYC: "None" → "No" (also updated hsBest Set)
+
+  **HowItWorks (HowItWorks.jsx)**:
+  - Headline: "Get funded by the network." → "Earn a funded trading account."
+  - Step 01 title: "Start Your Evaluation" → "Start your Challenge"
+  - Step 01 body: removed "USDC registration fee", simplified to "Pay a one-time fee. No recurring charges or subscriptions."
+  - Step 03 body: restructured around "Hyperscaled Challenge" phrasing
+
+  **Features (Features.jsx)**:
+  - Headline: "Built for traders who trade with an edge." → "Built for traders with an edge."
+  - Card 1 body: shortened to "Trade, perform, and unlock funded capital through our one-step challenge."
+  - Card 2 body: "scales automatically — no application, no fees" → "will automatically grow with zero fees"
+  - Card 3 body: simplified to "Pay your registration fee in USDC, receive payouts in USDC. Direct to your wallet and verifiable onchain."
+  - Card 4 body: shortened to "Every payout is tracked onchain. No exceptions."
+  - Card 5 body: "Same order book. Same fills. Same execution." → "Use the platform you already know and love."
+  - Card 6 body: "clear, fixed, and published" → "clear upfront and open-source"
+  - Card 6 extra: removed "Dispute resolution: automated" bullet
+
+  **PricingPreview (new — components/marketing/PricingPreview.jsx)**:
+  - 3 condensed horizontal pricing cards with tier label, account name, launch price, strikethrough, CTA
+  - Tier III gets "Most Popular" badge with Star icon
+  - All CTAs link to https://app.hyperscaled.trade
+  - Below cards: "Launch pricing active. Limited-time pricing."
+  - Added to marketing.jsx between Features and PartnersCTA
+
+  **PricingPage (PricingPage.jsx)**:
+  - Launch banner: green emoji + "Save up to 50% for a limited time." (was "Standard pricing takes effect...")
+  - Hero subtext: "Pay a one-time USDC registration fee to take the Hyperscaled challenge. No hidden fees."
+  - Removed WhatsIncluded badge row entirely
+  - New WhatsIncludedGrid: 6-card compact grid with Phosphor icons (ListChecks, Target, CalendarCheck, Wallet, Lightning, LinkSimple) + title + 1-line desc
+  - New ModelSection: "A MODEL BUILT FOR TRADERS" label, left column with bullet list + bold line, right column with EvalProgressWidget mockup (profit target bar, high water mark, drawdown bar, completion %)
+  - Most Popular badge now on $100K card (via PRICING_TIERS.popular flag change)
+
 ## In progress
 
 Nothing currently in progress.
 
 ## Next action
 
-All marketing pages complete. Polish pass next.
+Copy Review Session B (How It Works page + other pages) next. Polish pass after.
 
 ## Known issues
 
