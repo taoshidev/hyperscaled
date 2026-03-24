@@ -12,8 +12,13 @@ import { USDC_ADDRESS, USDC_DECIMALS, USDC_EIP712_NAME, USDC_EIP712_VERSION, BAS
 import { db } from "@/lib/db";
 import { users, registrations } from "@/lib/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
+import { facilitator as cdpFacilitator } from "@coinbase/x402";
 
-const facilitator = new HTTPFacilitatorClient({ url: FACILITATOR_URL });
+const USE_TESTNET = process.env.NEXT_PUBLIC_USE_TESTNET === "true";
+
+const facilitator = USE_TESTNET
+  ? new HTTPFacilitatorClient({ url: FACILITATOR_URL })
+  : new HTTPFacilitatorClient(cdpFacilitator);
 
 function sanitizeApiKey(key) {
   if (key == null) return null;
