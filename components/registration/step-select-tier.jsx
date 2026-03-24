@@ -1,9 +1,9 @@
 "use client";
 
 import { useRef, useCallback } from "react";
-import { Check, ArrowRight, Star } from "@phosphor-icons/react";
-import { TIERS } from "@/lib/constants";
+import { Check, ArrowRight } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import { formatAccountSize } from "@/lib/format";
 
 function formatPrice(price) {
   return `$${price}`;
@@ -14,7 +14,7 @@ function formatShortName(accountSize) {
   return `$${accountSize / 1000}K Account`;
 }
 
-export function StepSelectTier({ selectedTier, onSelect, onContinue }) {
+export function StepSelectTier({ tiers, selectedTier, onSelect, onContinue }) {
   const cardRefs = useRef([]);
 
   const handleKeyDown = useCallback(
@@ -71,7 +71,6 @@ export function StepSelectTier({ selectedTier, onSelect, onContinue }) {
           : tiers.map((tier, i) => {
           const isSelected = selectedTier?.id === tier.id;
           const isPopular = tier.badge !== null;
-          const savings = tier.fullPrice ? savingsPercent(tier.fullPrice, tier.promoPrice) : null;
 
           return (
             <div
