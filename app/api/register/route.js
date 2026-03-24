@@ -14,7 +14,7 @@ import { users, registrations } from "@/lib/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { facilitator as cdpFacilitator } from "@coinbase/x402";
 
-const USE_TESTNET = process.env.NEXT_PUBLIC_USE_TESTNET === "true";
+const USE_TESTNET = process.env.USE_TESTNET === "true";
 
 const facilitator = USE_TESTNET
   ? new HTTPFacilitatorClient({ url: FACILITATOR_URL })
