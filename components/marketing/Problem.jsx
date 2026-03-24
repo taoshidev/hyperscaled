@@ -2,45 +2,43 @@
 
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
-import { IdentificationCard, ChartLineDown, ClockCountdown, X } from '@phosphor-icons/react'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
 const containerVariants = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.12, delayChildren: 0.05 } },
+  visible: { transition: { staggerChildren: 0.15, delayChildren: 0.1 } },
 }
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: spring },
 }
 
 const painPoints = [
   {
-    icon: IdentificationCard,
-    title: 'KYC and geographic bans lock out most of the world',
-    body: 'Every major prop firm requires passport scans, proof of address, and a compliant bank account. Traders in 150+ countries are rejected outright — no exceptions, no appeals.',
+    number: '01',
+    title: 'KYC and geographic bans lock out most of the\u00a0world.',
+    body: 'Many prop firms immediately reject traders in 150+ countries, blocking them from access to\u00a0capital.',
+    accentColor: 'text-red-400',
+    tagBg: 'bg-red-400/8 border-red-400/20',
     tag: 'Rejected',
-    tagColor: 'text-red-400 bg-red-400/10 border-red-400/20',
-    span: 'md:col-span-2',
   },
   {
-    icon: ChartLineDown,
-    title: 'You earn 70%. They take up to 30% for doing nothing.',
-    body: 'Legacy prop firms extract 10–30% of your profits permanently. No accountability, no transparency — they just keep a cut of every winning trade you make, even though its simulated accounts.',
-    tag: 'Up to 30% Cut',
-    tagColor: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
-    span: 'md:col-span-1',
+    number: '02',
+    title: 'You earn 70%. They take 30% for doing\u00a0nothing.',
+    body: 'Legacy prop firms keep 10–30% of your profits permanently. No accountability or transparency, they take a cut of every winning trade you\u00a0make.',
+    accentColor: 'text-amber-400',
+    tagBg: 'bg-amber-400/8 border-amber-400/20',
+    tag: 'Up to 30% cut',
   },
   {
-    icon: ClockCountdown,
-    title: 'Discretionary payouts. They may not even pay you.',
-    body: 'Centralized prop firms control your earnings under full discretion — they can delay, dispute, or deny payouts with zero accountability. No guarantees, no appeals, no transparency.',
-    body2: 'Hyperscaled gives 100% payouts because we live trade the best traders. When traders win, the network wins.',
-    tag: 'No Guarantee',
-    tagColor: 'text-zinc-400 bg-zinc-400/10 border-zinc-400/20',
-    span: 'md:col-span-2',
+    number: '03',
+    title: 'Discretionary payouts. They may not even pay\u00a0you.',
+    body: 'Centralized prop firms control your earnings under full, centralized discretion — they can delay, dispute, or deny payouts with zero accountability. There\u2019s no guarantee you receive a\u00a0payout.',
+    accentColor: 'text-amber-400',
+    tagBg: 'bg-amber-400/8 border-amber-400/20',
+    tag: 'No guarantees',
   },
 ]
 
@@ -56,79 +54,67 @@ export default function Problem() {
           initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={spring}
-          className="mb-12"
+          className="mb-16"
         >
           <span className="text-xs text-zinc-500 tracking-widest uppercase block mb-4">
             The Problem
           </span>
-          <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-2xl mb-5">
-            Prop firms take up to 30%.{' '}
-            <span className="text-zinc-500">Then ghost you on payouts.</span>
+          <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold mb-5">
+            <span className="block">Prop firms take up to 30%.</span>
+            <span className="block text-zinc-500">Then ghost you on&nbsp;payouts.</span>
           </h2>
           <p className="text-base text-zinc-400 leading-relaxed max-w-[60ch]">
-            Legacy funded trading is broken by design. KYC walls, profit extraction, and centralized
-            discretion mean profitable traders are systematically underserved.
+            Funded trading is broken by design. KYC barriers, payout denials, and centralized
+            discretion mean profitable traders are systematically&nbsp;underserved.
           </p>
         </motion.div>
 
-        {/* Pain point cards — asymmetric grid */}
+        {/* Editorial pain points — no cards, just rows */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate={inView ? 'visible' : 'hidden'}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+          className="divide-y divide-white/[0.06]"
         >
-          {painPoints.map((pt) => {
-            const Icon = pt.icon
-            return (
-              <motion.div
-                key={pt.title}
-                variants={itemVariants}
-                className={`${pt.span} relative bg-zinc-900/40 border border-white/[0.06] rounded-2xl p-6 md:p-8
-                  group hover:border-white/[0.10] transition-all overflow-hidden`}
-              >
-                {/* Subtle glow on hover */}
-                <div
-                  className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  style={{
-                    background: 'radial-gradient(circle at 15% 15%, rgba(255,60,60,0.04), transparent 60%)',
-                  }}
-                />
+          {painPoints.map((pt) => (
+            <motion.div
+              key={pt.number}
+              variants={itemVariants}
+              className="grid grid-cols-1 md:grid-cols-[4rem_1fr_1fr] gap-3 md:gap-8 py-8 first:pt-0 last:pb-0"
+            >
+              {/* Number */}
+              <div className={`text-sm font-mono ${pt.accentColor} md:pt-1`}>
+                {pt.number}
+              </div>
 
-                <div className="relative">
-                  {/* Icon + tag row */}
-                  <div className="flex items-start justify-between mb-5">
-                    <div className="w-10 h-10 rounded-xl bg-zinc-800 border border-white/[0.06] flex items-center justify-center">
-                      <Icon size={20} className="text-zinc-300" />
-                    </div>
-                    <span
-                      className={`flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-semibold ${pt.tagColor}`}
-                    >
-                      <X size={9} weight="bold" />
-                      {pt.tag}
-                    </span>
-                  </div>
+              {/* Title + tag */}
+              <div>
+                <h3 className="text-xl md:text-2xl font-bold tracking-tight text-white leading-snug">
+                  {pt.title}
+                </h3>
+                <span className={`inline-flex items-center mt-3 px-2 py-0.5 rounded border text-xs font-semibold ${pt.accentColor} ${pt.tagBg}`}>
+                  {pt.tag}
+                </span>
+              </div>
 
-                  <h3 className="text-base font-semibold text-white tracking-tight mb-3 leading-snug">
-                    {pt.title}
-                  </h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed mb-4">{pt.body}</p>
-                  {pt.body2 && (
-                    <div className="relative rounded-xl border border-teal-400/25 bg-teal-400/[0.06] px-4 py-3.5 overflow-hidden">
-                      <div
-                        className="absolute inset-0 pointer-events-none"
-                        style={{ background: 'radial-gradient(circle at 0% 50%, rgba(0,198,167,0.12), transparent 70%)' }}
-                      />
-                      <div className="relative flex items-start gap-3">
-                        <span className="mt-0.5 shrink-0 w-1.5 h-1.5 rounded-full bg-teal-400 pulse-teal" />
-                        <p className="text-sm font-semibold text-teal-300 leading-relaxed">{pt.body2}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            )
-          })}
+              {/* Body */}
+              <p className="text-sm text-zinc-400 leading-relaxed md:pt-1.5">
+                {pt.body}
+              </p>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Callout — left border accent, no card */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ ...spring, delay: 0.5 }}
+          className="mt-10 border-l-2 border-teal-400 pl-5 py-1"
+        >
+          <p className="text-sm font-semibold text-teal-300 leading-relaxed max-w-[65ch]">
+            Hyperscaled pays 100% performance of rewards because our decentralized network is aligned with your success. No&nbsp;exceptions.
+          </p>
         </motion.div>
       </div>
     </section>

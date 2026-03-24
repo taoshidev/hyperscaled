@@ -42,13 +42,381 @@ Registration Phase 3 complete. All 3 steps of the registration flow are fully bu
   - "Go to Dashboard" changed from outline Button to plain text link with arrow icon below receipt
   - Confirmation container widened from max-w-3xl to max-w-5xl on step 2 to accommodate two-column layout
 
+- **Phase 0 — Global Compliance + Design Rule Sweep**:
+  Files changed: 17
+  - `components/marketing/HowItWorks.jsx` — "Vanta Trading" → "Arcline Capital", Chrome Extension step → "Trade on Hyperliquid", text-[10px] ×4, transition-all ×1
+  - `components/marketing/Leaderboard.jsx` — "Vanta Network" → "Hyperscaled network", text-[10px] ×6
+  - `components/marketing/Hero.jsx` — Chrome Extension CTA → "View Leaderboard", removed DownloadSimple import, text-[10px] ×12
+  - `components/marketing/Footer.jsx` — "Built on Bittensor" removed from tagline, copyright 2025→2026, transition-all ×1
+  - `components/marketing/Solution.jsx` — "Up to 100%" → "100%" ×2 (compareRows + hsBest)
+  - `components/marketing/Features.jsx` — "we bring the funding" → "the network provides funded account access", text-[10px] ×3, transition-all ×1
+  - `components/marketing/Problem.jsx` — text-[10px] ×1, transition-all ×1
+  - `components/marketing/WaitlistForm.jsx` — transition-all ×1
+  - `components/marketing/Stats.jsx` — text-[10px] ×1
+  - `components/marketing/TraderDashboard.jsx` — text-[10px] ×14, text-[9px] ×2, text-[8px] ×1
+  - `components/registration/step-confirmation.jsx` — "Vanta Network Dashboard" → "Hyperscaled Dashboard", "Vanta Network" → "Hyperscaled"
+  - `components/registration/step-connect-pay.jsx` — VANTA_USDC_WALLET → HYPERSCALED_USDC_WALLET
+  - `components/dashboard/dashboard.jsx` — min-h-screen → min-h-[100dvh] ×5
+  - `components/dashboard/account-overview.jsx` — transition-all ×2
+  - `components/status/status-checker.jsx` — min-h-screen → min-h-[100dvh]
+  - `app/leaderboard/page.jsx` — min-h-screen → min-h-[100dvh] ×2
+  - `lib/constants.js` — VANTA_USDC_WALLET → HYPERSCALED_USDC_WALLET
+  - `lib/db/seed.js` — "Vanta Trading" / "vanta" → "Arcline Capital" / "arcline"
+  - `endpoint_docs.md` — "Vanta Network API Endpoints" → "Hyperscaled API Endpoints"
+  - `docs/COPY_DECK.md` — updated "Vanta" references to match new names
+
+  Fix counts:
+  - Vanta references removed: 9
+  - Built on Bittensor removed: 1 (tagline; "Powered by" kept in footer + hero)
+  - Up to 100% fixed: 2
+  - Chrome Extension refs removed: 2 (hero CTA + HowItWorks step)
+  - Funding language fixed: 1
+  - Copyright year fixed: 1
+  - text-[10px] fixed: 41 (all replaced with text-xs)
+  - text-[9px] fixed: 2, text-[8px] fixed: 1 (also bumped to text-xs)
+  - transition-all fixed: 7
+  - min-h-screen fixed: 8
+
+  Intentionally left:
+  - Chrome Extension in registration confirmation (step-confirmation.jsx lines 382, 396) — flagged as open decision #2 in PHASES.md
+  - "vanta-cli" references in endpoint_docs.md — these refer to the external CLI tool, not the product brand
+
+- **Phase 1 — Nav + Footer Overhaul**:
+  Files changed: 3 (Nav.jsx, Footer.jsx, TODO_POLISH.md)
+  Files created: 3 (app/terms/page.jsx, app/privacy/page.jsx, app/risk/page.jsx)
+
+  **Nav (before → after)**:
+  - Before: 4 links (Protocol, Features, Dashboard, Status) using scroll anchors, "Extension" CTA, search input
+  - After: 6 route-based links (How It Works, Pricing, Rules, Leaderboard, Partners, FAQ), "Start Evaluation" CTA linking to https://app.hyperscaled.trade (external), mobile hamburger menu (AnimatePresence), search removed (deferred to backlog)
+
+  **Footer (before → after)**:
+  - Before: Single-row with dead social links, "Built on Bittensor" tagline, © 2025
+  - After: 4-column grid (Brand, Protocol, Community, Legal). Brand column has logo + tagline + social icon buttons. Protocol column has 6 links (How It Works, Pricing, Rules, Leaderboard, Evaluation Rules, Docs). Community column has Twitter/X, Discord, GitHub with icons. Legal column has Terms, Privacy, Risk Disclosure, Audit Report. Bottom bar: "© 2026 Hyperscaled. All rights reserved." + "Built on Hyperliquid · Powered by Bittensor". Internal links use Next.js Link, external use target="_blank". Placeholder URLs have TODO comments.
+
+  **Legal placeholder pages**: /terms, /privacy, /risk — minimal pages with metadata, min-h-[100dvh], "Coming soon." text.
+
+  **TODO_POLISH.md**: Created to track deferred items — missing URLs (Twitter, Discord, GitHub, Docs, Audit Report), nav search field, legal page content.
+
+  **Decisions**:
+  - Nav search removed from Phase 1 scope — needs UX decision on cross-page behavior
+  - All social/external URLs use # placeholder with TODO comments
+  - CTA points to https://app.hyperscaled.trade (external app), not /register
+  - Nav links are all route-based (no scroll anchors)
+
+- **Phase 2 — Shared Constants + Components**:
+  Files changed: 4 (lib/constants.js, Stats.jsx, Hero.jsx, FAQ.jsx)
+  Files created: 3 (components/shared/ScalingPathVisual.jsx, FAQAccordion.jsx, RulesTable.jsx)
+
+  **Constants added to lib/constants.js**:
+  - NETWORK_STATS — 5 stats (value/label/description) for Stats section + reuse
+  - HERO_STATS — 3 inline stats for Hero section
+  - EVAL_RULES — 8 evaluation phase rules (rule/parameter)
+  - FUNDED_RULES — 7 funded account rules (rule/parameter)
+  - SCALING_PATH — 9 steps from $100K → $2.5M (from/to)
+  - SCALING_MILESTONES — 12 milestones from $25K → $2.5M
+  - PRICING_TIERS — 3 tiers with full spec details (launch/standard pricing, targets, drawdowns, CTAs)
+  - FAQ_ITEMS — 5 categories, 22 total FAQ entries with id/question/answer
+  - HOME_FAQ_IDS — 5 IDs for Home page condensed FAQ
+  - PRICING_FAQ_IDS — 3 IDs for Pricing page mini FAQ
+  - PRICING_FAQ — 3 pricing-specific FAQ entries
+
+  **Existing components updated**:
+  - Stats.jsx — imports NETWORK_STATS, parses value strings into rawNum/prefix/suffix for counter animation
+  - Hero.jsx — imports HERO_STATS, replaces hardcoded `stats` array
+  - FAQ.jsx — imports FAQ_ITEMS + HOME_FAQ_IDS, filters flat items by ID subset
+
+  **New shared components created**:
+  - ScalingPathVisual.jsx — horizontal stepped bar chart from SCALING_MILESTONES, Framer Motion staggered entry, optional highlightFrom prop, big-jump indicators at $750K/$1M, responsive horizontal scroll on mobile
+  - FAQAccordion.jsx — reusable accordion with single-item-open, optional `grouped` prop for category headings, CaretDown icon with rotation, teal active state, aria-expanded + aria-controls + role="region", Framer Motion height animation
+  - RulesTable.jsx — two-column table (desktop) / stacked cards (mobile), optional label prop, dark theme with subtle borders
+
+  **Decisions**:
+  - FAQ answers use \u00a0 (non-breaking space) before last word to prevent typographic widows
+  - Stats component preserves existing counter animation by parsing NETWORK_STATS value strings
+  - ScalingPathVisual uses non-linear bar heights (32px base + 10px per step) to visually communicate scaling
+
+- **Phase 3 — Home Page Overhaul**:
+  Files changed: 7 (Hero.jsx, Stats.jsx, Problem.jsx, Solution.jsx, HowItWorks.jsx, Features.jsx, FAQ.jsx, marketing.jsx)
+  Files created: 1 (components/marketing/PartnersCTA.jsx)
+
+  **Hero**:
+  - Primary CTA → external `https://app.hyperscaled.trade` (anchor, not Link)
+  - Secondary CTA → "Learn More" linking to `/how-it-works`
+  - Widget header: removed "HL · Bittensor", replaced with "7d cycle"
+  - Updated subheadline copy per spec
+
+  **Stats**: Removed all badges (STAT_BADGES set to null array). Still imports from NETWORK_STATS.
+
+  **Problem**: Changed from asymmetric 2+1 grid to 3 equal columns (`md:grid-cols-3`). Removed `body2` field. Added standalone teal callout bar at bottom. Updated tags and copy per spec.
+
+  **Solution/Protocol**: Changed from 3-column comparison (Hyperscaled/FTMO/Typical) to 2-column (Hyperscaled/FTMO). Added new rows: Profit Target, Evaluation, Weekend Trading. Changed LockOpen → Fingerprint icon. Updated payout copy to "7-day cycle". Added ✅ checkmarks via `Set` lookup. Added full-width banner tagline above ("Permissionless. Open-Source. Onchain.").
+
+  **HowItWorks**: 3 new steps with mockup components:
+  - Step 01: "Start Your Evaluation" + TierSelectorMockup ($25K/$50K/$100K)
+  - Step 02: "Trade on Hyperliquid" + DashboardMockup (status + progress)
+  - Step 03: "Hit the Target. Get Paid." + PayoutMockup (bar chart + payout row)
+  - Icons: CurrencyDollar, TrendUp, Trophy
+
+  **Features**: All 6 cards rewritten per spec. "Grow Your Account" card uses ScalingPathVisual from shared components.
+
+  **PartnersCTA** (new): Dark card section between Features and FAQ. "FOR OPERATORS & INSTITUTIONS" label, "Run your own funded trading firm." headline, CTA linking to /partners.
+
+  **FAQ**: Added `Link` import, "View full FAQ →" link to `/faq` in left sticky panel.
+
+  **Responsive**: Verified at 375px (mobile), 768px (tablet), 1280px (desktop). No horizontal overflow, cards stack on mobile, comparison table readable, text legible at all breakpoints.
+
+- **Phase 4 — Pricing Page**:
+  Files changed: 3 (Footer.jsx, TODO_POLISH.md, PHASES.md)
+  Files created: 2 (app/pricing/page.jsx, components/marketing/PricingPage.jsx)
+
+  **Step 0 — Nav + Footer URL Patch**:
+  - Social icons (brand column): Twitter→x.com/hyperscaledhq, Discord→discord.gg/hyperscaledhq, GitHub→github.com/taoshidev. Added aria-label to each.
+  - Community column links: same URLs, plus new "Contact Support" → mailto:support@hyperscaled.trade
+  - Protocol column: Docs → https://docs.taoshi.io (external, target="_blank")
+  - Legal column: Audit Report removed entirely (no report exists)
+  - mailto links: excluded from target="_blank" and ArrowUpRight icon treatment
+  - TODO_POLISH.md: 5 URL items marked resolved, only "Nav search field" remains pending
+  - Verified: zero `href="#"` remaining in Nav.jsx and Footer.jsx
+
+  **Pricing Page**:
+  - Page route: app/pricing/page.jsx with metadata, imports PricingPage component
+  - No Providers wrapper (marketing page, no wallet connection)
+  - LaunchBanner: teal-400/10 bg, centered text with green dot indicator, "Save up to 50%" copy
+  - PricingHero: "One fee. One evaluation. Keep everything you earn." + subtext
+  - PricingCards: 3-column grid from PRICING_TIERS, $50K card has shiny-border + "Most Popular" pill badge. Each card: tier name, launch price (ins) + strikethrough standard (del) + sr-only context, 7 detail rows (account size, profit target with $amount, drawdown with $limit, profit split, payout cycle, scaling path, time limit), CTA button linking to app.hyperscaled.trade. Popular card CTA uses shiny-cta class.
+  - WhatsIncluded: 7 items with CheckCircle icons in a flex-wrap centered row
+  - ScalingSection: headline + body + ScalingPathVisual from shared components
+  - PricingFAQSection: "Common questions" heading + FAQAccordion with 3 PRICING_FAQ items
+  - All sections use Framer Motion useInView for entrance animations
+  - Responsive: cards stack single-column on mobile, flex-wrap on included items
+
+  **Decisions**:
+  - Popular card uses shiny-border (animated border class), non-popular cards use plain border
+  - Pricing uses ins/del with sr-only for screen reader context (per design-rules.md)
+  - Contact Support uses plain <a> (no target="_blank" for mailto)
+
+- **Phase 5 — How It Works Page**:
+  Files created: 2 (app/how-it-works/page.jsx, components/marketing/HowItWorksPage.jsx)
+
+  **Step 0 — CTA Link Fix**: Changed all generic "Start Your Evaluation" / "Start Evaluation" CTAs from external app.hyperscaled.trade to /register. Affected: Nav.jsx, Hero.jsx, HowItWorksPage.jsx (hero + bottom CTA). PricingPage tier-specific CTAs kept external (correct). Rule: generic "Start Your Evaluation" → /register, tier-specific "Start $25K Evaluation" → https://app.hyperscaled.trade.
+
+  **Page Hero**: Headline "From Hyperliquid trader to funded account — here's exactly how it works.", subtext about no API keys/custody/separate platform, CTA to /register.
+
+  **4-Step Flow**: Full-width cards with left text + right key details box.
+  - Step 01: Register and Select Account Size (4 detail rows: sizes, fee, KYC, activation)
+  - Step 02: Trade on Hyperliquid (4 rows: platform, data access, custody, minimum capital)
+  - Step 03: Track Your Progress (3 rows: dashboard, updates, tracked metrics)
+  - Step 04: Pass, Get Funded, Get Paid (9 rows: profit target, drawdown eval/funded, payout cycle, profit split, max size, funded profit target, scaling qualification, bonus qualification)
+
+  **Scaling Path Visual**: Reuses ScalingPathVisual from shared components. Includes note about Tier I/II scaling to $100K before full path applies.
+
+  **Non-Custodial Explainer**: "WHY THIS IS DIFFERENT" label, "Your wallet. Your trades. Your keys." headline, 3-paragraph body, two-column comparison (Legacy Prop Firm with XCircle red icons vs Hyperscaled with CheckCircle teal icons, 4 items each).
+
+  **Payout Mechanics**: "PAYOUT MECHANICS" label, "Automated. Onchain. Every 7 days." headline, 2-paragraph body (includes KYC note), horizontal 5-node flow diagram (stacks vertically on mobile), teal callout box "100% of profits go to you."
+
+  **Bottom CTA**: "Ready to start?" headline, subtext, primary shiny-cta to app.hyperscaled.trade, secondary "View Pricing" link to /pricing.
+
+  **Responsive**: All step cards stack text above details on mobile. Comparison columns stack on mobile. Payout flow stacks vertically on mobile. CTAs centered on all breakpoints.
+
+  **Patterns**: Uses same spring animation config as PricingPage. useInView for scroll-triggered animations. Framer Motion enter transitions on all sections. &nbsp; for widow prevention. textWrap: 'balance' on body copy.
+
+- **Phase 6 — Rules Page**:
+  Files created: 2 (app/rules/page.jsx, components/marketing/RulesPage.jsx)
+
+  **Page Hero**: "The rules. All of them. No fine print." + subtext about protocol enforcement.
+
+  **Evaluation Rules**: EVALUATION PHASE label, intro text, RulesTable with EVAL_RULES (8 rows), red breach callout box with Warning icon.
+
+  **Funded Account Rules**: FUNDED ACCOUNT PHASE label, intro text, RulesTable with FUNDED_RULES (7 rows).
+
+  **Scaling Rules**: ACCOUNT SCALING label, body text, two qualification blocks (5% quarterly + Sharpe > 1 for scaling, 2% quarterly + Sharpe > 1 for 25% bonus), tier note (Tier I/II cap at $100K, Tier III scales to $2.5M), custom From/To table with SCALING_PATH (9 rows, desktop table + mobile cards with ArrowRight), ScalingPathVisual component.
+
+  **Disqualification**: Two-column layout (stacks on mobile). Left: "What causes disqualification" with XCircle red icons (3 items). Right: "What does not cause disqualification" with CheckCircle teal icons (6 items). Same pattern as HowItWorksPage non-custodial comparison.
+
+  **KYC & Payouts**: KYC & PAYOUTS label, two paragraphs about KYC-only-for-payouts and wallet verification flow.
+
+  **Protocol Transparency**: PROTOCOL label, body about programmatic enforcement, "Start Your Evaluation →" CTA linking to /register (shiny-cta).
+
+  **Patterns**: No scroll animations — this is the one page with zero Framer Motion (restraint = authority). &nbsp; for widow prevention. textWrap: 'balance' on hero. All sections use max-w-[900px] container (slightly narrower than other pages to suit text-heavy content).
+
+- **Phase 6b — Rules Page Polish**:
+  Files changed: 2 (components/marketing/RulesPage.jsx, app/globals.css)
+
+  **Sticky TOC**: Desktop = fixed left sidebar with IntersectionObserver-driven active state highlight. Mobile = sticky horizontal pill bar below nav with horizontal scroll (scrollbar-hide utility added to globals.css). Both use anchor links to section IDs with scroll-mt-24.
+
+  **Section headings**: Added h2 below every teal label — "Evaluation Rules", "Funded Account Rules", "Scaling Rules", "Disqualification", "KYC & Payout Eligibility", "Protocol Transparency". Style: text-2xl font-bold tracking-tight.
+
+  **Removed all animations**: Stripped every useInView, motion.div, and Framer Motion import. All sections render immediately. Only import remaining is framer-motion-free. This page is now the only marketing page with zero motion — intentional restraint for protocol documentation tone.
+
+  **Scaling qualifications in callout boxes**: Replaced plain h3 + bullet list with two side-by-side bordered callout boxes. Scaling qualification = teal-tinted border + bg. Bonus qualification = neutral border. Both use CheckCircle icons instead of middot bullets.
+
+  **KYC section visual weight**: Body text wrapped in bordered card container (rounded-xl border bg-white/[0.02]).
+
+  **Protocol section visual weight**: Body text wrapped in teal-tinted callout box (border-teal-400/20 bg-teal-400/[0.04]). Text color elevated to zinc-300.
+
+  **Bottom CTA downgraded**: Replaced shiny-cta button with plain teal text link "Start Your Evaluation →". On-brand for documentation tone — no flourishes.
+
+  **Minor fixes**: Deleted unused SCALING_TABLE_ROWS const. Added disqualification intro text. Fixed &amp; to & in KYC label. Replaced middot bullets with CheckCircle icons in scaling qualifications.
+
+- **Phase 7 — FAQ Page**:
+  Files created: 2 (app/faq/page.jsx, components/marketing/FAQPage.jsx)
+  Files changed: 1 (components/shared/FAQAccordion.jsx)
+
+  **Page Hero**: "Questions traders actually ask." + subtext about Hyperscaled Evaluation.
+
+  **FAQ Accordion**: Uses FAQAccordion in grouped mode with new `sectionIds` prop. All 22 items across 5 categories rendered from FAQ_ITEMS constant. Single-open accordion behavior shared across all categories. Category headings rendered as h2 with section IDs for anchor linking.
+
+  **Sticky TOC**: Matches Rules page pattern exactly. Desktop = fixed left sidebar with IntersectionObserver-driven active state. Mobile = sticky horizontal pill bar with horizontal scroll (scrollbar-hide). Both use anchor links to category section IDs with scroll-mt-24.
+
+  **Contact Section**: Two links at bottom — "Still have questions? Join our Discord →" (teal, DiscordLogo icon, external) + "Email us →" (secondary, Envelope icon, mailto:support@hyperscaled.trade). Centered on mobile, side-by-side on desktop.
+
+  **FAQAccordion Enhancement**: Added `sectionIds` prop to grouped mode. When enabled, generates slug IDs from category names and adds scroll-mt-24 for anchor offset. Changed grouped heading from h3 to h2 for proper document outline. Only the FAQ page uses grouped mode.
+
+  **Patterns**: No scroll animations — matches Rules page documentation tone. &nbsp; for widow prevention. textWrap: 'balance' on hero. max-w-[900px] content container. No shiny-cta, no Framer Motion entrance animations.
+
+- **Phase 8 — Partners Page**:
+  Files created: 2 (app/partners/page.jsx, components/marketing/PartnersPage.jsx)
+
+  **Page Hero**: Badge pill ("Partner Program" with teal dot), headline "Run your own funded trading firm. Powered by Hyperscaled infrastructure." (second line in zinc-400), subtext about launching without infrastructure, dual CTAs (mailto:partners@hyperscaled.trade primary, Download Partner Overview secondary with TODO for PDF link).
+
+  **What You Control**: 6 feature cards in 3x2 grid (lg) / 2x3 (sm) / 1-col (mobile). Each card: CheckCircle teal icon + title + description. Items: pricing, profit split, direct payments, white-label branding, permissionless scaling, network-aligned incentives.
+
+  **Revenue Model**: Two cards side by side — Trader Registration Fees (USDC) and Network Rewards (Alpha Emissions). Below: teal-tinted mental model callout box with monospace text (USDC = business revenue + payout liquidity, Alpha = network funding capacity + scaling collateral).
+
+  **How It Works**: 4-step vertical timeline with numbered teal circles and connecting line. Steps: apply → configure → bring traders → scale. Different layout from trader How It Works page (vertical timeline vs horizontal step cards).
+
+  **Division of Responsibility**: Two-column card layout matching Rules page disqualification pattern. Left card (neutral border): operator responsibilities (4 items). Right card (teal-tinted border): Hyperscaled responsibilities (5 items). Both use CheckCircle icons.
+
+  **Funding Capacity Table**: Desktop table with Account Size / Alpha Required columns (3 rows: $25K/7.14, $50K/14.28, $100K/28.5). Mobile stacked cards. Below: "$3,500 in funded capital per 1 Alpha token."
+
+  **Application CTA**: Centered headline "Ready to launch your firm?", body about 48-hour review + whiteglove onboarding, shiny-cta mailto button.
+
+  **Patterns**: No scroll animations — matches Rules/FAQ documentation tone. &nbsp; for widow prevention. textWrap: 'balance' on hero and CTA. max-w-[900px] content container. No Framer Motion. Uses 'use client' for Phosphor Icons only.
+
+  **TODO added**: Partner Overview one-pager PDF link added to docs/TODO_POLISH.md.
+
+- **Phase 8b — Partners Page Polish**:
+  Files changed: 1 (components/marketing/PartnersPage.jsx)
+
+  **Fix 1 — Unique icons**: Replaced uniform CheckCircle on all 6 feature cards with unique per-card Phosphor icons (CurrencyDollar, ChartPie, Wallet, PaintBrush, ArrowsOutSimple, Lightning). Icons rendered in duotone weight inside teal-tinted 32px square containers. Removed dead imports (CoinsVertical, InfinityIcon, ChartLineUp).
+
+  **Fix 2 — Visual rhythm**: Revenue Model and How It Works sections now have full-width tinted backgrounds (bg-white/[0.02] + border-y border-white/[0.06]). Creates alternating content → tinted → content → tinted rhythm. Bottom CTA gets border-t + pt-16 separation.
+
+  **Fix 3 — Visible headings**: Removed sr-only from Responsibility ("Clear division of responsibility.") and Funding Capacity ("Funding capacity by account size") h2 elements. Now matches the label + heading pattern used on every other section site-wide.
+
+  **Fix 4 — Dead CTA removed**: Removed "Download Partner Overview" secondary CTA that linked to href="#". Hero now has single clean "Apply to Become a Partner" button. PDF link tracked in TODO_POLISH.md.
+
+  **Fix 5 — Bold mental model callout**: Callout redesigned from inline monospace text to two-column grid with large (text-lg/xl) bold labels (USDC / Alpha) and descriptive subtext. Increased padding and background opacity. This is now the screenshotable element.
+
+  **Fix 6 — Timeline connector**: Increased from w-px bg-white/[0.06] to w-[2px] bg-teal-400/20 for visibility across displays.
+
+  **Fix 7 — Minor**: Funding note bumped from text-xs text-zinc-500 to text-sm text-zinc-400 font-mono.
+
+- **Copy Review A — Home + Pricing**:
+  Files changed: 7 (lib/constants.js, Hero.jsx, Problem.jsx, Solution.jsx, HowItWorks.jsx, Features.jsx, PricingPage.jsx, marketing.jsx)
+  Files created: 1 (components/marketing/PricingPreview.jsx)
+
+  **Constants (lib/constants.js)**:
+  - HERO_STATS: stat1 → 1-Step/Evaluation, stat2 → 100%/Profit Split, stat3 unchanged
+  - NETWORK_STATS: "4,200+ Funded Traders" → "5,500+ Traders"
+  - PRICING_TIERS: tier-1/2 scalingPath → "Up to $100K", all payoutCycle → "Weekly", popular moved from tier-2 to tier-3, strikethrough prices verified ($299/$549/$999)
+
+  **Hero (Hero.jsx)**:
+  - Added hero stats row back below CTAs (was removed in prior commit), importing from HERO_STATS
+  - Stats display: 1-Step Evaluation · 100% Profit Split · $30M+ Rewards Distributed
+
+  **Problem (Problem.jsx)**:
+  - Subtext: "Legacy funded trading" → "Funded trading", "KYC walls, profit extraction" → "KYC barriers, payout denials"
+  - Card 1 body: shortened to single sentence about 150+ countries
+  - Card 2 body: "extract" → "keep", "No accountability, no transparency —" → "No accountability or transparency,"
+  - Card 3 body: "full discretion" → "full, centralized discretion", ending changed to "no guarantee you receive a payout"
+  - Callout: "100% performance rewards" → "100% performance of rewards", "network is aligned with trader success" → "decentralized network is aligned with your success. No exceptions."
+
+  **Solution (Solution.jsx)**:
+  - Headline: "Permissionless. No middlemen." → "Decentralized. Transparent."
+  - Body: "protocol-funded simulated account" → "funded account on our network", "onchain, automatically, on a 7-day cycle" → "weekly, automatically, and onchain"
+  - Feature 2: "7-day cycle. Fully verifiable." → "every week. Fully transparent."
+  - Feature 4: "That's all we need." → "It's that simple."
+  - Comparison table KYC: "None" → "No" (also updated hsBest Set)
+
+  **HowItWorks (HowItWorks.jsx)**:
+  - Headline: "Get funded by the network." → "Earn a funded trading account."
+  - Step 01 title: "Start Your Evaluation" → "Start your Challenge"
+  - Step 01 body: removed "USDC registration fee", simplified to "Pay a one-time fee. No recurring charges or subscriptions."
+  - Step 03 body: restructured around "Hyperscaled Challenge" phrasing
+
+  **Features (Features.jsx)**:
+  - Headline: "Built for traders who trade with an edge." → "Built for traders with an edge."
+  - Card 1 body: shortened to "Trade, perform, and unlock funded capital through our one-step challenge."
+  - Card 2 body: "scales automatically — no application, no fees" → "will automatically grow with zero fees"
+  - Card 3 body: simplified to "Pay your registration fee in USDC, receive payouts in USDC. Direct to your wallet and verifiable onchain."
+  - Card 4 body: shortened to "Every payout is tracked onchain. No exceptions."
+  - Card 5 body: "Same order book. Same fills. Same execution." → "Use the platform you already know and love."
+  - Card 6 body: "clear, fixed, and published" → "clear upfront and open-source"
+  - Card 6 extra: removed "Dispute resolution: automated" bullet
+
+  **PricingPreview (new — components/marketing/PricingPreview.jsx)**:
+  - 3 condensed horizontal pricing cards with tier label, account name, launch price, strikethrough, CTA
+  - Tier III gets "Most Popular" badge with Star icon
+  - All CTAs link to https://app.hyperscaled.trade
+  - Below cards: "Launch pricing active. Limited-time pricing."
+  - Added to marketing.jsx between Features and PartnersCTA
+
+  **PricingPage (PricingPage.jsx)**:
+  - Launch banner: green emoji + "Save up to 50% for a limited time." (was "Standard pricing takes effect...")
+  - Hero subtext: "Pay a one-time USDC registration fee to take the Hyperscaled challenge. No hidden fees."
+  - Removed WhatsIncluded badge row entirely
+  - New WhatsIncludedGrid: 6-card compact grid with Phosphor icons (ListChecks, Target, CalendarCheck, Wallet, Lightning, LinkSimple) + title + 1-line desc
+  - New ModelSection: "A MODEL BUILT FOR TRADERS" label, left column with bullet list + bold line, right column with EvalProgressWidget mockup (profit target bar, high water mark, drawdown bar, completion %)
+  - Most Popular badge now on $100K card (via PRICING_TIERS.popular flag change)
+
+- **Copy Review B — How It Works + Rules + Partners**:
+  Files changed: 4 (HowItWorksPage.jsx, RulesPage.jsx, PartnersPage.jsx, lib/constants.js)
+
+  **Constants (lib/constants.js)**:
+  - EVAL_RULES: added Consistency Criteria (None) and Weekend Trading (Allowed)
+  - FUNDED_RULES: removed redundant Drawdown Limit row (covered by Daily Loss + EOD Trailing)
+
+  **HowItWorksPage (HowItWorksPage.jsx)**:
+  - Hero: headline → "Trade on Hyperliquid. Get funded by the network.", subtext shortened
+  - Step 01: title "Register & Choose Your Size", body shortened, added "Get started" CTA link, details: "Challenge: One-Step", "KYC Required: None"
+  - Step 02: title removed "(Your Normal Workflow)", body shortened, details simplified
+  - Step 03: title "Track in Real Time", body mentions Chrome plugin, details: "Platform: Hyperscaled App & Chrome Plugin", "Updates: Always in real-time", removed Tracked metrics row
+  - Step 04: title punctuated "Pass. Get Funded. Get Paid.", body shortened, "Max Drawdown (Funded): 8% daily / 8% EOD trailing", "25% bonus" label
+  - Scaling body: removed "no re-evaluation"
+  - Non-custodial explainer: removed 3 body paragraphs + label/heading, replaced with callout bar "Your wallet. Your keys..." above comparison boxes
+  - Payout mechanics: headline "Automated. Weekly. Onchain.", body rewritten, KYC note shortened
+  - Bottom CTA: removed "View Pricing" secondary link
+  - Added PricingPreview component between PayoutMechanics and BottomCTA
+
+  **RulesPage (RulesPage.jsx)**:
+  - Hero: headline → "Rules and Trading Objectives", subtext shortened
+  - Removed redundant h2 headings for Evaluation, Funded, Scaling, Disqualification (kept teal labels as section anchors)
+  - Kept h2 headings for KYC and Protocol sections
+  - Removed ScalingPathVisual from scaling section (From/To table sufficient)
+  - Removed unused ScalingPathVisual import
+
+  **PartnersPage (PartnersPage.jsx)**:
+  - Removed badge pill from hero
+  - Body: combined "You bring traders. You set your pricing. You collect revenue." into single sentence
+  - Feature 6: "network rewards your firm with Alpha emissions" → "underlying network directly rewards your firm"
+  - Revenue stream 2: "Hyperscaled network emits Alpha tokens to your firm's miner" → "Hyperscaled's decentralized funding engine emits Alpha tokens to your firm"
+  - How It Works step 1: removed "miner deployment" from onboarding list
+  - How It Works step 4: "More traders. More revenue." → "More traders = more revenue."
+  - Responsibility headline: "Clear division of responsibility." → "Designed for your success."
+  - Hyperscaled handles bullet 4: "Miner deployment and network coordination" → "Infrastructure coordination and deployment"
+  - Application CTA body: shortened to "full whiteglove onboarding with support from the Hyperscaled team"
+  - Added 4 trust signals below CTA button (CheckCircle icons)
+
+  3.8 polish items already completed in Phase 8b — verified: unique icons, no dead CTA, visible headings, strong callout, tinted sections, timeline connector, note styling.
+
 ## In progress
 
 Nothing currently in progress.
 
 ## Next action
 
-UI polish pass across other pages (dashboard, leaderboard, miner detail).
+All copywriter changes applied. Polish pass next.
 
 ## Known issues
 

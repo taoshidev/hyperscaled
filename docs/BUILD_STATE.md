@@ -1,27 +1,155 @@
 # Build State
 
-Last updated: 2026-03-12
+Last updated: 2026-03-20
 
 ## Marketing Site (`/`)
 
-**Status**: Complete (first pass)
+**Status**: Complete — Phase 3 home page overhaul + Copy Review A
 
 | Item | State |
 |------|-------|
-| Hero + CTA | Done |
-| Features section | Done |
-| How It Works | Done |
-| Problem / Solution | Done |
-| Stats section | Done |
-| FAQ | Done |
-| Footer | Done |
-| Nav | Done |
-| Waitlist form | Done |
+| Hero + CTA | Done — Phase 3/5/CRA: CTA to /register, "Learn More" secondary, widget header (7d cycle), hero stats row (1-Step Evaluation, 100% Profit Split, $30M+ Rewards) |
+| Features section | Done — Phase 3/CRA: 6 cards, copy shortened per copywriter review, removed "Dispute resolution" bullet |
+| How It Works | Done — Phase 3/CRA: headline "Earn a funded trading account", Step 01 "Start your Challenge", Step 03 Hyperscaled Challenge phrasing |
+| Problem / Solution | Done — Phase 3/CRA: Problem copy updated (KYC barriers, shortened cards, callout bar). Solution headline "Decentralized. Transparent.", KYC None→No |
+| Stats section | Done — Phase 3/CRA: 5,500+ Traders (was 4,200+ Funded Traders) |
+| PricingPreview | Done — CRA: 3 condensed pricing cards between Features and PartnersCTA |
+| FAQ | Done — Phase 3: "View full FAQ →" link added to sticky sidebar |
+| PartnersCTA | Done — Phase 3: new section between Features and FAQ, links to /partners |
+| Footer | Done — 4-column layout (Brand, Protocol, Community, Legal), social icons, "Built on Hyperliquid · Powered by Bittensor", © 2026. Phase 4: all social/docs URLs patched, Audit Report removed, Contact Support mailto added. |
+| Nav | Done — 6 route-based links (How It Works, Pricing, Rules, Leaderboard, Partners, FAQ), "Start Evaluation" CTA → /register (Phase 5 fix), mobile hamburger menu. Search removed (backlog). No placeholder URLs. |
+| Waitlist form | Done (to be removed) — spec has no waitlist form |
 | LiquidCrystal background | Done |
 | ShinyButton CTA | Done |
-| Leaderboard preview | Done |
+| Leaderboard preview | Not on home page — Component exists at `/leaderboard` but is NOT rendered in the home page marketing compose list (`components/marketing.jsx`). Spec does not require it on home page. |
+| Compliance (copy/design rules) | Done — 72 violations fixed (9 Vanta, 1 Built on Bittensor, 2 Up to 100%, 2 Chrome Extension, 1 funding language, 1 copyright, 41 text-[10px], 7 transition-all, 8 min-h-screen) |
+| Missing pages | Done — `/pricing` (Phase 4), `/how-it-works` (Phase 5), `/rules` (Phase 6), `/faq` (Phase 7), `/partners` (Phase 8). All marketing pages complete. |
+| Legal pages (`/terms`, `/privacy`, `/risk`) | Done — placeholder pages with "Coming soon." Content pending. |
+| TODO Polish tracker | Done — `docs/TODO_POLISH.md` tracks deferred URLs + legal content |
 
-**Next action**: Review for copy polish and responsive edge cases
+## Pricing Page (`/pricing`)
+
+**Status**: Complete — Phase 4 + Copy Review A
+
+| Item | State |
+|------|-------|
+| Page route + metadata | Done |
+| Launch pricing banner | Done — CRA: updated to "Save up to 50% for a limited time" |
+| Page hero | Done — CRA: subtext "take the Hyperscaled challenge. No hidden fees." |
+| 3-tier pricing cards (shiny-border on popular) | Done — CRA: Most Popular moved to $100K, tier I/II scaling → $100K, payout cycle → Weekly |
+| What's Included feature grid | Done — CRA: replaced badge row with 6-card grid (icons + title + desc) |
+| A Model Built for Traders section | Done — CRA: bullet list + EvalProgressWidget mockup |
+| Scaling path visual | Done |
+| Pricing FAQ mini (3 items) | Done |
+| Responsive layout | Done |
+
+**Next action**: Copy Review Session B next.
+
+## How It Works Page (`/how-it-works`)
+
+**Status**: Complete — Phase 5 + Copy Review B
+
+| Item | State |
+|------|-------|
+| Page route + metadata | Done |
+| Page hero + CTA | Done — CRB: headline "Trade on Hyperliquid. Get funded by the network.", subtext shortened |
+| 4-step flow (register, trade, track, pass) | Done — CRB: all titles/bodies/details rewritten, step 01 has "Get started" CTA |
+| Key details boxes per step | Done — CRB: simplified labels, Chrome Plugin mention |
+| Scaling path visual + tier note | Done — CRB: body shortened |
+| Non-custodial explainer + comparison | Done — CRB: removed body paragraphs, added callout bar above comparison |
+| Payout mechanics + flow diagram | Done — CRB: headline "Automated. Weekly. Onchain.", body + KYC note shortened |
+| Callout box (100% profit) | Done |
+| PricingPreview widget | Done — CRB: added between payout mechanics and bottom CTA |
+| Bottom CTA | Done — CRB: removed "View Pricing" link |
+| Responsive layout | Done |
+
+**Next action**: All copywriter changes applied. Polish pass next.
+
+## Rules Page (`/rules`)
+
+**Status**: Complete — Phase 6 + Copy Review B
+
+| Item | State |
+|------|-------|
+| Page route + metadata | Done |
+| Page hero | Done — CRB: "Rules and Trading Objectives", subtext shortened |
+| Evaluation rules table (EVAL_RULES) | Done — CRB: added Consistency Criteria + Weekend Trading rows |
+| Breach callout box | Done |
+| Funded account rules table (FUNDED_RULES) | Done — CRB: removed redundant Drawdown Limit row |
+| Scaling rules (qualifications, bonus, tier note) | Done |
+| Scaling path table (SCALING_PATH) | Done |
+| Scaling path visual | Removed — CRB: table is sufficient on this documentation page |
+| Disqualification rules (does/does not, side-by-side) | Done |
+| Section headings | Done — CRB: removed redundant h2 headings (kept teal labels as anchors) |
+| KYC & payouts section | Done |
+| Protocol transparency + CTA | Done |
+| Responsive layout | Done |
+
+**Next action**: All copywriter changes applied. Polish pass next.
+
+## FAQ Page (`/faq`)
+
+**Status**: Complete — Phase 7
+
+| Item | State |
+|------|-------|
+| Page route + metadata | Done |
+| Page hero | Done |
+| FAQ accordion (grouped, 5 categories, 22 items) | Done |
+| Sticky sidebar TOC (desktop) + mobile pill bar | Done |
+| IntersectionObserver active section tracking | Done |
+| Bottom contact links (Discord + email) | Done |
+| Responsive layout | Done |
+
+**Next action**: All marketing pages complete. Polish pass next.
+
+## Partners Page (`/partners`)
+
+**Status**: Complete — Phase 8 + Copy Review B
+
+| Item | State |
+|------|-------|
+| Page route + metadata | Done |
+| Page hero | Done — CRB: removed badge pill, body copy combined |
+| What You Control (6 feature cards) | Done — CRB: feature 6 body updated |
+| Revenue model (USDC + Alpha, mental model callout) | Done — CRB: stream 2 body updated |
+| How It Works (4-step vertical timeline) | Done — CRB: steps 1 + 4 body updated |
+| Division of responsibility (two-column) | Done — CRB: headline "Designed for your success.", handles bullet updated |
+| Funding capacity table (desktop table + mobile cards) | Done |
+| Application CTA | Done — CRB: body shortened |
+| Trust signals | Done — CRB: 4 compact indicators below CTA button |
+| Responsive layout | Done |
+
+**Next action**: All copywriter changes applied. Polish pass next.
+
+## Shared Constants (`lib/constants.js`)
+
+**Status**: Done
+
+| Item | State |
+|------|-------|
+| NETWORK_STATS | Done — 5 stats (value/label/description) |
+| HERO_STATS | Done — CRA: 1-Step Evaluation, 100% Profit Split, $30M+ Rewards |
+| EVAL_RULES | Done — 8 evaluation rules |
+| FUNDED_RULES | Done — 7 funded account rules |
+| SCALING_PATH | Done — 9 steps ($100K → $2.5M) |
+| SCALING_MILESTONES | Done — 12 milestones ($25K → $2.5M) |
+| PRICING_TIERS | Done — CRA: popular moved to tier-3, tier I/II scaling → $100K, payout → Weekly |
+| FAQ_ITEMS | Done — 5 categories, 22 entries |
+| HOME_FAQ_IDS | Done — 5-item subset for home page |
+| PRICING_FAQ / PRICING_FAQ_IDS | Done — 3 pricing-specific entries |
+
+## Shared Components (`components/shared/`)
+
+**Status**: Done
+
+| Item | State |
+|------|-------|
+| ScalingPathVisual | Done — horizontal stepped bar, Framer Motion, highlightFrom prop |
+| FAQAccordion | Done — single-open, grouped mode, a11y, Framer Motion |
+| RulesTable | Done — desktop table / mobile stacked cards, label prop |
+
+**Next action**: Mount on pages during Phases 4–8
 
 ## Dashboard (`/dashboard`)
 
@@ -152,4 +280,4 @@ Last updated: 2026-03-12
 | Hooks (pre-write, post-edit) | Done |
 | Phase notes | Done |
 
-**Next action**: Begin Phase 1 — UI polish pass
+**Next action**: See docs/PHASES.md for launch plan

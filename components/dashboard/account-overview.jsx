@@ -37,7 +37,7 @@ function ChallengeProgressBar({ challengeProgress }) {
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
               <div
-                className="h-full rounded-full bg-green-500 transition-all"
+                className="h-full rounded-full bg-green-500 transition-[width]"
                 style={{ width: `${Math.min(completion, 100)}%` }}
               />
             </div>
@@ -49,7 +49,7 @@ function ChallengeProgressBar({ challengeProgress }) {
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all ${
+                className={`h-full rounded-full transition-[width,background-color] ${
                   drawdownUsage > 80 ? "bg-red-500" : drawdownUsage > 50 ? "bg-yellow-500" : "bg-blue-500"
                 }`}
                 style={{ width: `${Math.min(drawdownUsage, 100)}%` }}

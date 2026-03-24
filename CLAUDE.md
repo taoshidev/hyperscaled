@@ -43,10 +43,11 @@ public/                       ← Logos, miner avatars
 1. Read CLAUDE.md (this file)
 2. Read docs/ARCHITECTURE.md
 3. Read docs/BUILD_STATE.md
-4. Read .claude/design-rules.md
-5. If working on a specific module, read that module's phase-notes
-6. Confirm pwd and worktree are clean
-7. Then proceed
+4. Read docs/PHASES.md
+5. Read .claude/design-rules.md
+6. If working on a specific module, read that module's phase-notes
+7. Confirm pwd and worktree are clean
+8. Then proceed
 
 For detailed context:
 - System design: docs/ARCHITECTURE.md
@@ -91,3 +92,25 @@ Every session prompt must follow:
 8. **Phosphor Icons for new work** — Lucide only where shadcn components already use it.
 9. **No hardcoded secrets** — API keys, wallet addresses, etc. go in .env.
 10. **Don't touch API routes** — mock API routes are stable. UI work only unless explicitly told otherwise.
+
+## Post-Session (MANDATORY)
+
+After completing any phase work, before committing:
+
+1. Update TRACKER.json:
+
+   - Set the completed phase status to "done"
+
+   - Set all completed items to "done" status  
+
+   - Add a session entry with session number, today's date, and a 1-line summary
+
+   - Update lastUpdated to current ISO timestamp
+
+   - If any items are partially done, set phase status to "in_progress"
+
+2. Run ./generate-dashboard.sh
+
+3. Include TRACKER.json and docs/hyperscaled-dashboard.html in the commit
+
+This is not optional. Every phase commit must include updated tracker files.

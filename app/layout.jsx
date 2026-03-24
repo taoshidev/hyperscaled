@@ -13,8 +13,9 @@ export default function RootLayout({ children }) {
           href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600,700,800,900&display=swap"
           rel="stylesheet"
         />
+        <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
       </head>
-      <body style={{ fontFamily: "'Satoshi', ui-sans-serif, system-ui, sans-serif" }}>
+      <body className="font-sans antialiased">
         {children}
       </body>
     </html>

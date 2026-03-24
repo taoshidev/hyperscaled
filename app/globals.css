@@ -57,8 +57,11 @@
 @theme inline {
   --color-teal-400: #00C6A7;
   --color-teal-500: #00A88D;
-  --font-family-sans: 'Satoshi', ui-sans-serif, system-ui, sans-serif;
-  --font-family-mono: ui-monospace, 'SF Mono', 'Fira Code', monospace;
+}
+
+@theme {
+  --font-sans: 'Satoshi', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Fira Code', monospace;
 }
 
 @layer base {
@@ -74,6 +77,25 @@
     height: 100%;
     scroll-behavior: smooth;
   }
+}
+
+/* Respect reduced-motion preference for all custom CSS animations */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Scrollbar hide utility ── */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 /* ── Skeleton shimmer loader ── */
@@ -154,7 +176,6 @@
   overflow: hidden;
   cursor: pointer;
   outline-offset: 4px;
-  font-family: 'Satoshi', ui-sans-serif, system-ui, sans-serif;
   font-size: 0.875rem;
   line-height: 1.2;
   font-weight: 600;

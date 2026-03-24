@@ -7,6 +7,11 @@ import { sanitize } from "@/lib/errors-sanitize";
 // Catches crashes in the root layout — must include its own <html> and <body>
 // since the layout is unavailable when this renders.
 export default function GlobalError({ error, reset }) {
+  // In development, let Next.js's built-in error overlay handle errors
+  if (process.env.NODE_ENV === "development") {
+    throw error;
+  }
+
   useEffect(() => {
     Sentry.captureException(error);
   }, [error]);
