@@ -2,7 +2,7 @@ import "./globals.css";
 
 export const metadata = {
   title: "Hyperscaled",
-  description: "The decentralized prop trading network",
+  description: "The decentralized prop trading network.",
 };
 
 export default function RootLayout({ children }) {
