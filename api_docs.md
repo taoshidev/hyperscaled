@@ -1042,5 +1042,4 @@ Endpoints that accept `version` or `ptncli_version` (collateral, asset selection
 |---------|--------------|
 | Entity Miner REST | 8089 |
 | Validator REST | 48888 |
-| Validator WebSocket | 8765 |
- 
+| Validator WebSocket | 8765 | 
