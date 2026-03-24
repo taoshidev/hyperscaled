@@ -6,7 +6,6 @@ import {
   useAccount,
   useReadContract,
   useWalletClient,
-  usePublicClient,
   useSwitchChain,
 } from "wagmi";
 import { parseUnits, formatUnits } from "viem";
@@ -27,26 +26,47 @@ import {
 } from "@/lib/constants";
 import { usdcAbi } from "@/lib/usdc-abi";
 import { formatAccountSize, truncateAddress } from "@/lib/format";
+import { ExactEvmScheme } from "@x402/evm/exact/client";
+import {
+  decodePaymentRequiredHeader,
+  encodePaymentSignatureHeader,
+} from "@x402/core/http";
 
 function formatRulesSummary(details) {
   return details.map((d) => `${d.value} ${d.label.toLowerCase()}`).join(" · ");
 }
 
-export function StepConnectAndPay({ selectedTier, paymentWallet, onPaymentComplete, onPaymentProcessing, onBack }) {
+function isValidEmail(v) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+}
+
+export function StepConnectAndPay({
+  selectedTier,
+  tierIndex,
+  minerSlug,
+  paymentWallet,
+  email,
+  onEmailChange,
+  onPaymentComplete,
+  onPaymentProcessing,
+  onBack,
+}) {
   const { address, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
   const { data: walletClient } = useWalletClient();
-  const publicClient = usePublicClient();
 
   const [paymentState, setPaymentState] = useState("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [showAltWallet, setShowAltWallet] = useState(false);
   const [altAddress, setAltAddress] = useState("");
   const [altTouched, setAltTouched] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
 
   const price = selectedTier.promoPrice;
   const altValid = isValidHLAddress(altAddress);
   const showAltError = altTouched && altAddress.length > 0 && !altValid;
+  const emailValid = isValidEmail(email);
+  const showEmailError = emailTouched && email.length > 0 && !emailValid;
 
   // The HL address is the alt address if provided, otherwise the connected wallet
   const resolvedHlAddress =
@@ -73,35 +93,90 @@ export function StepConnectAndPay({ selectedTier, paymentWallet, onPaymentComple
   const isOnBase = chainId === BASE_CHAIN_ID;
 
   const handlePay = useCallback(async () => {
-    if (!walletClient || !publicClient) return;
+    if (!walletClient) return;
 
     setPaymentState("processing");
     setErrorMessage("");
     onPaymentProcessing?.(true);
 
     try {
-      // TODO: Replace with x402 payment flow when API is confirmed
-      // Using direct USDC transfer as fallback — x402 requires a 402 endpoint
-      // which is not yet wired. The import structure is preserved for easy swap.
-      const amount = parseUnits(String(price), USDC_DECIMALS);
+      const body = {
+        minerSlug,
+        hlAddress: resolvedHlAddress,
+        accountSize: selectedTier.accountSize,
+        payoutAddress: address,
+        email,
+        tierIndex,
+      };
 
-      const txHash = await walletClient.writeContract({
-        address: USDC_ADDRESS,
-        abi: usdcAbi,
-        functionName: "transfer",
-        args: [paymentWallet, amount],
-        chain: walletClient.chain,
+      // Step 1: Initial POST — get payment requirements (expect 402)
+      const probeRes = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       });
 
-      await publicClient.waitForTransactionReceipt({ hash: txHash });
+      if (probeRes.status === 409) {
+        const data = await probeRes.json().catch(() => ({}));
+        throw new Error(data.error || "You are already registered with this miner.");
+      }
+
+      if (probeRes.status !== 402) {
+        const data = await probeRes.json().catch(() => ({}));
+        throw new Error(data.error || "Unexpected response from registration server.");
+      }
+
+      // Step 2: Parse payment requirements from 402
+      const paymentRequiredHeader = probeRes.headers.get("PAYMENT-REQUIRED");
+      if (!paymentRequiredHeader) throw new Error("No payment requirements received.");
+      const paymentRequired = decodePaymentRequiredHeader(paymentRequiredHeader);
+      const requirements = paymentRequired.accepts?.[0];
+      if (!requirements) throw new Error("No valid payment requirement in response.");
+
+      // Step 3: Sign EIP-3009 authorization (no on-chain tx from user)
+      const signer = {
+        address: walletClient.account.address,
+        signTypedData: (args) => walletClient.signTypedData(args),
+      };
+      const scheme = new ExactEvmScheme(signer);
+      const partialPayload = await scheme.createPaymentPayload(
+        paymentRequired.x402Version,
+        requirements,
+      );
+      const fullPayload = {
+        x402Version: partialPayload.x402Version,
+        payload: partialPayload.payload,
+        resource: paymentRequired.resource,
+        accepted: requirements,
+      };
+
+      // Step 4: Re-POST with signed payment header
+      const registerRes = await fetch("/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "payment-signature": encodePaymentSignatureHeader(fullPayload),
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!registerRes.ok) {
+        const data = await registerRes.json().catch(() => ({}));
+        throw new Error(
+          data.error || data.message || "Registration failed. Please contact support.",
+        );
+      }
+
+      const result = await registerRes.json();
 
       setPaymentState("success");
       onPaymentProcessing?.(false);
 
       setTimeout(() => {
         onPaymentComplete({
-          txHash,
+          txHash: result.txHash || "",
           hlAddress: resolvedHlAddress,
+          registrationStatus: result.status,
         });
       }, 1500);
     } catch (err) {
@@ -112,29 +187,29 @@ export function StepConnectAndPay({ selectedTier, paymentWallet, onPaymentComple
         err.message?.includes("User rejected") ||
         err.message?.includes("denied")
       ) {
-        setErrorMessage(
-          "Transaction rejected — you can try again when ready.",
-        );
-      } else if (
-        err.message?.includes("insufficient") ||
-        err.message?.includes("exceeds balance")
-      ) {
-        setErrorMessage("Insufficient USDC balance for this transaction.");
+        setErrorMessage("Signature rejected — you can try again when ready.");
       } else {
-        setErrorMessage(
-          err.shortMessage ||
-            err.message ||
-            "Payment failed — please try again.",
-        );
+        setErrorMessage(err.message || "Payment failed — please try again.");
       }
     }
-  }, [walletClient, publicClient, price, paymentWallet, onPaymentComplete, onPaymentProcessing, resolvedHlAddress]);
+  }, [
+    walletClient,
+    minerSlug,
+    selectedTier,
+    email,
+    tierIndex,
+    address,
+    resolvedHlAddress,
+    onPaymentComplete,
+    onPaymentProcessing,
+  ]);
 
   const canPay =
     isConnected &&
     isOnBase &&
     hasEnough &&
     hlAddressReady &&
+    emailValid &&
     !!paymentWallet &&
     paymentState !== "processing";
 
@@ -182,11 +257,42 @@ export function StepConnectAndPay({ selectedTier, paymentWallet, onPaymentComple
         </p>
       </div>
 
+      {/* Email input — always visible */}
+      <div className="w-full max-w-lg mt-6 space-y-1.5">
+        <label htmlFor="reg-email" className="text-xs font-medium text-muted-foreground">
+          Email address
+        </label>
+        <input
+          id="reg-email"
+          type="email"
+          value={email}
+          onChange={(e) => onEmailChange(e.target.value)}
+          onBlur={() => setEmailTouched(true)}
+          placeholder="you@example.com"
+          aria-label="Email address for registration confirmation"
+          aria-describedby="email-error"
+          aria-invalid={showEmailError ? "true" : undefined}
+          className={`
+            w-full rounded-xl border bg-card p-4 text-sm
+            placeholder:text-muted-foreground/50
+            outline-none
+            focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
+            transition-[border-color,box-shadow] duration-200
+            ${showEmailError ? "border-destructive" : "border-border hover:border-white/[0.15]"}
+          `}
+        />
+        <div id="email-error" role="alert" className="min-h-[1.25rem]">
+          {showEmailError && (
+            <p className="text-xs text-destructive">Enter a valid email address.</p>
+          )}
+        </div>
+      </div>
+
       {/* Wallet connection section */}
-      <div className="w-full max-w-lg space-y-4 mt-8">
+      <div className="w-full max-w-lg space-y-4 mt-4">
         {/* Status region for screen readers */}
         <div aria-live="polite" className="sr-only">
-          {paymentState === "processing" && "Confirming transaction..."}
+          {paymentState === "processing" && "Confirming payment..."}
           {paymentState === "success" && "Payment confirmed"}
         </div>
 
@@ -236,8 +342,8 @@ export function StepConnectAndPay({ selectedTier, paymentWallet, onPaymentComple
                     Connect your wallet to pay
                   </h3>
                   <p className="text-sm text-muted-foreground text-balance max-w-md mx-auto">
-                    You&#8217;ll pay with USDC on Base. Your connected wallet
-                    will also be registered as your Hyperliquid
+                    You&#8217;ll sign a gasless USDC authorization on Base. Your
+                    connected wallet will also be registered as your Hyperliquid
                     trading&nbsp;address.
                   </p>
                 </div>
@@ -321,11 +427,13 @@ export function StepConnectAndPay({ selectedTier, paymentWallet, onPaymentComple
                     <>
                       <span className="skeleton absolute inset-0 rounded-[inherit]" />
                       <span className="relative">
-                        Confirming transaction...
+                        Confirming payment...
                       </span>
                     </>
                   ) : !hasEnough ? (
                     "Insufficient USDC balance"
+                  ) : !emailValid ? (
+                    "Enter your email to continue"
                   ) : (
                     `Pay $${price} USDC`
                   )}
@@ -419,6 +527,7 @@ export function StepConnectAndPay({ selectedTier, paymentWallet, onPaymentComple
             onPaymentComplete({
               txHash: "0xdev123456789abcdef0123456789abcdef01234567",
               hlAddress: "0xdev456789abcdef0123456789abcdef0123456789",
+              registrationStatus: "registered",
             })
           }
           className="mt-2 text-xs text-muted-foreground/50 underline h-11 cursor-pointer"
