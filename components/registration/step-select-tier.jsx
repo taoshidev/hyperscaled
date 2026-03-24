@@ -3,7 +3,7 @@
 import { useRef, useCallback } from "react";
 import { Check, ArrowRight } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
-import { formatAccountSize } from "@/lib/format";
+// import { formatAccountSize } from "@/lib/format";
 
 function formatPrice(price) {
   return `$${price}`;
