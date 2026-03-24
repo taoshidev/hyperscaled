@@ -6,6 +6,7 @@ const footerLinks = {
   Protocol: [
     { label: 'How It Works', href: '#how-it-works' },
     { label: 'Features', href: '#features' },
+    { label: 'For Agents', href: '/agents' },
     { label: 'Leaderboard', href: '#leaderboard' },
     { label: 'Evaluation Rules', href: '#rules' },
     { label: 'Docs', href: 'https://docs.hyperscaled.trade', external: true },

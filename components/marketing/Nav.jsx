@@ -82,6 +82,7 @@ export default function Nav({ onSearch }) {
           <a href="/dashboard" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-colors">Dashboard</a>
           <a href="#" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-colors">Rules</a>
           <a href="/status" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-colors">Status</a>
+          <Link href="/agents" className="hidden md:block text-sm text-zinc-400 hover:text-white transition-colors">For Agents</Link>
           <Link
             href="/register"
             className="shiny-cta px-5 py-2"
