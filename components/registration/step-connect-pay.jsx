@@ -24,7 +24,6 @@ import {
   USDC_DECIMALS,
   BASE_CHAIN_ID,
   CHAIN_LABEL,
-  VANTA_USDC_WALLET,
 } from "@/lib/constants";
 import { usdcAbi } from "@/lib/usdc-abi";
 import { formatAccountSize, truncateAddress } from "@/lib/format";
@@ -33,7 +32,7 @@ function formatRulesSummary(details) {
   return details.map((d) => `${d.value} ${d.label.toLowerCase()}`).join(" · ");
 }
 
-export function StepConnectAndPay({ selectedTier, onPaymentComplete, onPaymentProcessing, onBack }) {
+export function StepConnectAndPay({ selectedTier, paymentWallet, onPaymentComplete, onPaymentProcessing, onBack }) {
   const { address, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
   const { data: walletClient } = useWalletClient();
@@ -90,7 +89,7 @@ export function StepConnectAndPay({ selectedTier, onPaymentComplete, onPaymentPr
         address: USDC_ADDRESS,
         abi: usdcAbi,
         functionName: "transfer",
-        args: [VANTA_USDC_WALLET, amount],
+        args: [paymentWallet, amount],
         chain: walletClient.chain,
       });
 
@@ -129,13 +128,14 @@ export function StepConnectAndPay({ selectedTier, onPaymentComplete, onPaymentPr
         );
       }
     }
-  }, [walletClient, publicClient, price, onPaymentComplete, onPaymentProcessing, resolvedHlAddress]);
+  }, [walletClient, publicClient, price, paymentWallet, onPaymentComplete, onPaymentProcessing, resolvedHlAddress]);
 
   const canPay =
     isConnected &&
     isOnBase &&
     hasEnough &&
     hlAddressReady &&
+    !!paymentWallet &&
     paymentState !== "processing";
 
   return (

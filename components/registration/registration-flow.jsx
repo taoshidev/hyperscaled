@@ -9,6 +9,7 @@ import { StepConnectAndPay } from "./step-connect-pay";
 import { StepConfirmation } from "./step-confirmation";
 
 const STEP_LABELS = ["Select Plan", "Connect & Pay", "Confirmation"];
+const MINER_SLUG = "vanta";
 
 export function RegistrationFlow() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -16,6 +17,20 @@ export function RegistrationFlow() {
   const [txHash, setTxHash] = useState(null);
   const [hlAddress, setHlAddress] = useState(null);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [minerTiers, setMinerTiers] = useState(null);
+  const [paymentWallet, setPaymentWallet] = useState(null);
+
+  useEffect(() => {
+    fetch(`/api/miners/${MINER_SLUG}`)
+      .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+      .then((data) => {
+        setMinerTiers(data.tiers);
+        setPaymentWallet(data.usdcWallet);
+      })
+      .catch((err) => {
+        console.error("[RegistrationFlow] Failed to load miner data:", err);
+      });
+  }, []);
 
   // B1: Browser refresh guard — only during active payment processing
   // Note: beforeunload only fires during active payment processing.
@@ -74,6 +89,7 @@ export function RegistrationFlow() {
           {/* Step 0: Tier selection */}
           {currentStep === 0 && (
             <StepSelectTier
+              tiers={minerTiers}
               selectedTier={selectedTier}
               onSelect={setSelectedTier}
               onContinue={() => setCurrentStep(1)}
@@ -84,6 +100,7 @@ export function RegistrationFlow() {
           {currentStep === 1 && (
             <StepConnectAndPay
               selectedTier={selectedTier}
+              paymentWallet={paymentWallet}
               onPaymentProcessing={setPaymentProcessing}
               onPaymentComplete={({ txHash: hash, hlAddress: addr }) => {
                 setPaymentProcessing(false);

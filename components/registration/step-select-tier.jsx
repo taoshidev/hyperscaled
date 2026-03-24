@@ -2,7 +2,6 @@
 
 import { useRef, useCallback } from "react";
 import { Check, ArrowRight } from "@phosphor-icons/react";
-import { TIERS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { formatAccountSize } from "@/lib/format";
 
@@ -14,27 +13,28 @@ function formatPrice(price) {
   return `$${price}`;
 }
 
-export function StepSelectTier({ selectedTier, onSelect, onContinue }) {
+export function StepSelectTier({ tiers, selectedTier, onSelect, onContinue }) {
   const cardRefs = useRef([]);
 
   const handleKeyDown = useCallback(
     (e, tier, index) => {
+      if (!tiers) return;
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         onSelect(tier);
       } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
         e.preventDefault();
-        const next = (index + 1) % TIERS.length;
+        const next = (index + 1) % tiers.length;
         cardRefs.current[next]?.focus();
-        onSelect(TIERS[next]);
+        onSelect(tiers[next]);
       } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
         e.preventDefault();
-        const prev = (index - 1 + TIERS.length) % TIERS.length;
+        const prev = (index - 1 + tiers.length) % tiers.length;
         cardRefs.current[prev]?.focus();
-        onSelect(TIERS[prev]);
+        onSelect(tiers[prev]);
       }
     },
-    [onSelect],
+    [onSelect, tiers],
   );
 
   return (
@@ -63,10 +63,14 @@ export function StepSelectTier({ selectedTier, onSelect, onContinue }) {
         aria-label="Choose your funded account size"
         className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10"
       >
-        {TIERS.map((tier, i) => {
+        {!tiers
+          ? [0, 1, 2].map((i) => (
+              <div key={i} className="skeleton rounded-2xl h-72" />
+            ))
+          : tiers.map((tier, i) => {
           const isSelected = selectedTier?.id === tier.id;
           const isPopular = tier.badge !== null;
-          const savings = savingsPercent(tier.fullPrice, tier.promoPrice);
+          const savings = tier.fullPrice ? savingsPercent(tier.fullPrice, tier.promoPrice) : null;
 
           return (
             <div
@@ -130,24 +134,30 @@ export function StepSelectTier({ selectedTier, onSelect, onContinue }) {
               {/* Pricing */}
               <div className="flex items-baseline gap-2.5 mb-1">
                 <ins className="no-underline">
-                  <span className="sr-only">Sale price: </span>
+                  <span className="sr-only">{tier.fullPrice ? "Sale price: " : "Price: "}</span>
                   <span className="text-2xl font-bold text-teal-400">
                     {formatPrice(tier.promoPrice)}
                   </span>
                 </ins>
-                <del>
-                  <span className="sr-only">Original price: </span>
-                  <span className="text-sm text-[oklch(0.65_0_0)]">
-                    {formatPrice(tier.fullPrice)}
-                  </span>
-                </del>
+                {tier.fullPrice != null && (
+                  <del>
+                    <span className="sr-only">Original price: </span>
+                    <span className="text-sm text-[oklch(0.65_0_0)]">
+                      {formatPrice(tier.fullPrice)}
+                    </span>
+                  </del>
+                )}
               </div>
 
               {/* Savings badge */}
               <div className="mb-5">
-                <span className="inline-block px-2 py-0.5 rounded text-xs font-semibold bg-teal-400/10 text-teal-400 border border-teal-400/20">
-                  {savings}% off
-                </span>
+                {savings != null ? (
+                  <span className="inline-block px-2 py-0.5 rounded text-xs font-semibold bg-teal-400/10 text-teal-400 border border-teal-400/20">
+                    {savings}% off
+                  </span>
+                ) : (
+                  <span className="inline-block h-5" />
+                )}
               </div>
 
               {/* Separator */}
