@@ -5,6 +5,11 @@ import { reportError, SEVERITY } from "@/lib/errors";
 import { sanitize } from "@/lib/errors-sanitize";
 
 export default function ErrorBoundary({ error, reset }) {
+  // In development, let Next.js's built-in error overlay handle errors
+  if (process.env.NODE_ENV === "development") {
+    throw error;
+  }
+
   useEffect(() => {
     reportError(error, {
       source: "error-boundary",

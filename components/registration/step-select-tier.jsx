@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useCallback } from "react";
-import { Check, ArrowRight } from "@phosphor-icons/react";
+import { Check, ArrowRight, Star } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 // import { formatAccountSize } from "@/lib/format";
 
