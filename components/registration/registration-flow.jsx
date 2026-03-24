@@ -14,8 +14,11 @@ const MINER_SLUG = "vanta";
 export function RegistrationFlow() {
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedTier, setSelectedTier] = useState(null);
+  const [selectedTierIndex, setSelectedTierIndex] = useState(null);
+  const [email, setEmail] = useState("");
   const [txHash, setTxHash] = useState(null);
   const [hlAddress, setHlAddress] = useState(null);
+  const [registrationStatus, setRegistrationStatus] = useState(null);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [minerTiers, setMinerTiers] = useState(null);
   const [paymentWallet, setPaymentWallet] = useState(null);
@@ -91,7 +94,10 @@ export function RegistrationFlow() {
             <StepSelectTier
               tiers={minerTiers}
               selectedTier={selectedTier}
-              onSelect={setSelectedTier}
+              onSelect={(tier) => {
+                setSelectedTier(tier);
+                setSelectedTierIndex(minerTiers ? minerTiers.findIndex((t) => t.id === tier.id) : 0);
+              }}
               onContinue={() => setCurrentStep(1)}
             />
           )}
@@ -100,12 +106,17 @@ export function RegistrationFlow() {
           {currentStep === 1 && (
             <StepConnectAndPay
               selectedTier={selectedTier}
+              tierIndex={selectedTierIndex}
+              minerSlug={MINER_SLUG}
               paymentWallet={paymentWallet}
+              email={email}
+              onEmailChange={setEmail}
               onPaymentProcessing={setPaymentProcessing}
-              onPaymentComplete={({ txHash: hash, hlAddress: addr }) => {
+              onPaymentComplete={({ txHash: hash, hlAddress: addr, registrationStatus: status }) => {
                 setPaymentProcessing(false);
                 setTxHash(hash);
                 setHlAddress(addr);
+                setRegistrationStatus(status);
                 setCurrentStep(2);
               }}
               onBack={() => setCurrentStep(0)}
@@ -118,6 +129,7 @@ export function RegistrationFlow() {
               selectedTier={selectedTier}
               hlAddress={hlAddress}
               txHash={txHash}
+              registrationStatus={registrationStatus}
             />
           )}
         </div>
