@@ -59,12 +59,12 @@ export default function Problem() {
           <span className="text-xs text-zinc-500 tracking-widest uppercase block mb-4">
             The Problem
           </span>
-          <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold mb-5">
-            <span className="block">Prop firms take up to 30%.</span>
-            <span className="block text-zinc-500">Then ghost you on&nbsp;payouts.</span>
+          <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-2xl mb-5 text-balance">
+            Prop firms take up to 30%.{' '}
+            <span className="text-zinc-500">Then ghost you on&nbsp;payouts.</span>
           </h2>
-          <p className="text-base text-zinc-400 leading-relaxed max-w-[60ch]">
-            Funded trading is broken by design. KYC barriers, payout denials, and centralized
+          <p className="text-base text-zinc-400 leading-relaxed max-w-[60ch] [text-wrap:pretty]">
+            Legacy funded trading is broken by design. KYC walls, profit extraction, and centralized
             discretion mean profitable traders are systematically&nbsp;underserved.
           </p>
         </motion.div>
@@ -98,7 +98,7 @@ export default function Problem() {
               </div>
 
               {/* Body */}
-              <p className="text-sm text-zinc-400 leading-relaxed md:pt-1.5">
+              <p className="text-sm text-zinc-400 leading-relaxed md:pt-1.5 [text-wrap:pretty]">
                 {pt.body}
               </p>
             </motion.div>

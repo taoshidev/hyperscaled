@@ -99,7 +99,7 @@ export default function Leaderboard({ onSelectTrader }) {
           className="mb-14"
         >
           <span className="text-xs text-zinc-500 tracking-widest uppercase block mb-4">Leaderboard</span>
-          <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-2xl">
+          <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-2xl text-balance">
             Top traders on{' '}
             <span className="text-teal-400">the network.</span>
           </h2>
@@ -121,8 +121,8 @@ export default function Leaderboard({ onSelectTrader }) {
           <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
             {networkStats.map((s) => (
               <div key={s.label} className="bg-zinc-900/40 border border-white/[0.06] rounded-xl p-4">
-                <div className="text-xs text-zinc-500 uppercase tracking-widest mb-1.5">{s.label}</div>
-                <div className={`text-xl font-bold tracking-tight ${s.color}`}>{s.value}</div>
+                <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1.5">{s.label}</div>
+                <div className={`text-xl font-bold tracking-tight tabular-nums ${s.color}`}>{s.value}</div>
               </div>
             ))}
           </div>
@@ -181,7 +181,7 @@ export default function Leaderboard({ onSelectTrader }) {
             {activeTab === 'funded' && (
               <div className="bg-zinc-900/40 border border-white/[0.06] rounded-2xl overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[900px]">
+                  <table className="w-full min-w-[900px] tabular-nums">
                     <thead>
                       <tr className="border-b border-white/[0.06]">
                         {['#', 'Address', 'PnL', 'Funding', 'Sharpe', 'Trades', 'Win%', 'Payouts', 'Since'].map((h) => (
@@ -219,7 +219,7 @@ export default function Leaderboard({ onSelectTrader }) {
             {activeTab === 'challenge' && (
               <div className="bg-zinc-900/40 border border-white/[0.06] rounded-2xl overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[750px]">
+                  <table className="w-full min-w-[750px] tabular-nums">
                     <thead>
                       <tr className="border-b border-white/[0.06]">
                         {['Address', 'PnL', 'Progress', 'Sharpe', 'Trades', 'Win%', 'Drawdown', 'Since'].map((h) => (

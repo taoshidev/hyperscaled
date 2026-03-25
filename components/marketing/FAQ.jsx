@@ -82,10 +82,10 @@ export default function FAQ() {
             <span className="text-xs text-zinc-500 tracking-widest uppercase block mb-4">
               FAQ
             </span>
-            <h2 className="text-4xl md:text-5xl tracking-tighter leading-none font-bold mb-5">
+            <h2 className="text-4xl md:text-5xl tracking-tighter leading-none font-bold mb-5 text-balance">
               Questions traders actually ask.
             </h2>
-            <p className="text-base text-zinc-400 leading-relaxed max-w-[46ch]">
+            <p className="text-base text-zinc-400 leading-relaxed max-w-[46ch] [text-wrap:pretty]">
               No fine print, no vague answers. If something isn&apos;t clear here, it&apos;s spelled
               out in the open-source protocol rules.
             </p>

@@ -43,7 +43,7 @@ export default function Footer() {
             <Link href="/" className="block mb-4">
               <img src="/hyperscaled-logo.svg" alt="Hyperscaled" className="h-7 w-auto" />
             </Link>
-            <p className="text-xs text-zinc-500 leading-relaxed max-w-[24ch]">
+            <p className="text-xs text-zinc-500 leading-relaxed max-w-[24ch] [text-wrap:pretty]">
               Permissionless funded trading on&nbsp;Hyperliquid.
             </p>
             <div className="flex items-center gap-3 mt-5">
@@ -54,7 +54,7 @@ export default function Footer() {
                   aria-label={label}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-8 h-8 rounded-lg bg-zinc-900 border border-white/[0.06] flex items-center justify-center text-zinc-400 hover:text-white hover:border-white/[0.14] transition-colors"
+                  className="relative w-8 h-8 rounded-lg bg-zinc-900 shadow-[0_0_0_1px_rgba(255,255,255,0.06)] flex items-center justify-center text-zinc-400 hover:text-white hover:shadow-[0_0_0_1px_rgba(255,255,255,0.14)] transition-[color,box-shadow] duration-150 active:scale-[0.96] after:absolute after:top-1/2 after:left-1/2 after:size-10 after:-translate-1/2"
                 >
                   <Icon size={15} />
                 </a>
@@ -66,7 +66,7 @@ export default function Footer() {
           {Object.entries(footerLinks).map(([section, links]) => (
             <div key={section}>
               <div className="text-xs text-zinc-500 tracking-widest uppercase mb-4">{section}</div>
-              <ul className="space-y-2.5">
+              <ul className="space-y-0.5">
                 {links.map((link) => {
                   const IconComp = link.icon
                   const isExternal = link.external
@@ -83,14 +83,14 @@ export default function Footer() {
                       <Wrapper
                         href={link.href}
                         {...extraProps}
-                        className="text-sm text-zinc-400 hover:text-white transition-colors flex items-center gap-1.5 group"
+                        className="text-sm text-zinc-400 hover:text-white transition-colors flex items-center gap-1.5 group py-1.5"
                       >
                         {IconComp && <IconComp size={13} className="text-zinc-600 group-hover:text-zinc-400 transition-colors" />}
                         {link.label}
                         {isExternal && !isMail && (
                           <ArrowUpRight
                             size={10}
-                            className="text-zinc-700 group-hover:text-zinc-500 transition-colors"
+                            className="text-zinc-700 group-hover:text-zinc-500 group-hover:translate-x-px group-hover:-translate-y-px transition-[color,transform] duration-150"
                           />
                         )}
                       </Wrapper>
