@@ -73,7 +73,7 @@ export default function Hero() {
                 className="shiny-cta px-6 py-3 whitespace-nowrap"
               >
                 <span className="flex items-center gap-1.5">
-                  Start Your Evaluation
+                  Start Your Challenge
                   <ArrowRight size={15} weight="bold" />
                 </span>
               </Link>

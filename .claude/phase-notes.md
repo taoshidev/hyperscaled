@@ -410,13 +410,65 @@ Registration Phase 3 complete. All 3 steps of the registration flow are fully bu
 
   3.8 polish items already completed in Phase 8b — verified: unique icons, no dead CTA, visible headings, strong callout, tinted sections, timeline connector, note styling.
 
+- **Updates A — Global Eval→Challenge Rename + Nav Restructure**:
+  Files changed: 22 (lib/constants.js, Nav.jsx, Hero.jsx, Features.jsx, Footer.jsx, Solution.jsx, PricingPage.jsx, RulesPage.jsx, HowItWorksPage.jsx, FAQPage.jsx, TraderDashboard.jsx, AgentsPage.jsx, PartnersPage.jsx, PartnersCTA.jsx, step-confirmation.jsx, step-connect-pay.jsx, step-select-tier.jsx, app/register/page.jsx, app/(marketing)/pricing/page.jsx, app/(marketing)/rules/page.jsx, app/(marketing)/faq/page.jsx, app/(marketing)/partners/page.jsx)
+
+  **Global Rename — "Evaluation" → "Challenge" (50+ replacements)**:
+  - HERO_STATS label: Evaluation → Challenge
+  - EVAL_RULES: Evaluation Phases → Challenge Phases
+  - FUNDED_RULES: re-enter the evaluation → re-enter the challenge
+  - PRICING_TIERS: Start $25K/$50K/$100K Evaluation → Challenge
+  - FAQ_ITEMS category: The Evaluation → The Challenge
+  - FAQ_ITEMS: 10 answer strings updated (pass the evaluation → challenge, enter the evaluation → challenge, evaluation dashboard → challenge dashboard, etc.)
+  - FAQ IDs: how-evaluation-works → how-challenge-works, retry-evaluation → retry-challenge
+  - PRICING_FAQ: 2 strings updated
+  - HOME_FAQ_IDS / PRICING_FAQ_IDS: ID references updated
+  - Hero.jsx: Start Your Evaluation → Start Your Challenge
+  - Nav.jsx: Start Evaluation → Start Challenge
+  - Footer.jsx: Evaluation Rules → Challenge Rules
+  - Features.jsx: One-Step Evaluation → One-Step Challenge, Evaluation Phases → Challenge Phases, evaluation rules → challenge rules
+  - Solution.jsx: Evaluation → Challenge (comparison row)
+  - PricingPage.jsx: 6 instances (hero, included features, progress widget, model section)
+  - RulesPage.jsx: 12 instances (TOC, section ID, labels, body copy, disqualification text, KYC, CTA)
+  - HowItWorksPage.jsx: 2 instances (hero CTA, max drawdown label)
+  - FAQPage.jsx: hero subtext
+  - TraderDashboard.jsx: 3 instances (badge, section header)
+  - AgentsPage.jsx: 1 instance (pre-submission validation body)
+  - PartnersPage.jsx: 2 instances (responsibility, hero body)
+  - PartnersCTA.jsx: 1 instance
+  - step-confirmation.jsx: Evaluation starts now → Challenge starts now
+  - step-connect-pay.jsx: 2 instances (fee label, pay button aria-label)
+  - step-select-tier.jsx: 2 instances (promo banner, subtext)
+  - Page metadata: 5 files updated (register, pricing, rules, faq, partners)
+  - Comment: constants.js section comment updated (Evaluation & Funded → Challenge & Funded)
+
+  **Intentionally left unchanged**:
+  - Code variable names (EVAL_RULES, EvalRulesSection, EvalProgressWidget, etc.) — const names kept for code stability per instructions
+  - Component file names (no renames)
+  - The word "evaluates" in FAQ answer for 'what-is-hyperscaled' — this is a verb describing what the system does ("Hyperscaled evaluates your performance"), not a branded process name
+
+  **Nav Restructure**:
+  - Links reordered to: How It Works · Pricing · For Agents · Rules · Leaderboard · Partners · FAQ
+  - For Agents link added → /agents (existing page)
+  - Progressive responsive collapse:
+    - xl+ (>1280px): all 7 links, no hamburger
+    - lg–xl (1024–1280px): How It Works, Pricing, For Agents, Rules visible; Leaderboard, Partners, FAQ in hamburger
+    - md–lg (768–1024px): How It Works, Pricing, For Agents visible; rest in hamburger
+    - <md (<768px): all links in hamburger only
+  - Hamburger always contains ALL 7 links regardless of which are visible in desktop nav
+  - Search input removed (was already backlogged in TODO_POLISH.md — interfered with progressive collapse layout)
+  - Old left/right link split removed — single NAV_LINKS array with per-link visibility classes
+  - Removed unused imports (useRouter, MagnifyingGlass)
+
+  **Build note**: Pre-existing build failure from missing backend deps (google-cloud/cloud-sql-connector, google-auth-library) in lib/db/index.js — not from our changes.
+
 ## In progress
 
 Nothing currently in progress.
 
 ## Next action
 
-All copywriter changes applied. Polish pass next.
+Updates B next (page-specific changes).
 
 ## Known issues
 

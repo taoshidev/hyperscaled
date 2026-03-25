@@ -55,7 +55,7 @@ function PageHero() {
             href="/register"
             className="shiny-cta inline-flex items-center gap-1.5 px-6 py-3"
           >
-            Start Your Evaluation
+            Start Your Challenge
             <ArrowRight size={15} weight="bold" />
           </Link>
         </motion.div>
@@ -145,7 +145,7 @@ const STEPS = [
     body: 'Hit the 10% profit target with drawdown under 5% to immediately activate your funded account. Keep 100% of profits with payouts delivered in USDC weekly. Scale to $2.5M with continued\u00a0performance.',
     details: [
       { label: 'Profit Target', value: '10%' },
-      { label: 'Max Drawdown (Evaluation)', value: '5% daily / 5% EOD trailing' },
+      { label: 'Max Drawdown (Challenge)', value: '5% daily / 5% EOD trailing' },
       { label: 'Max Drawdown (Funded)', value: '8% daily / 8% EOD trailing' },
       { label: 'Payout Cycle', value: 'Every 7 days' },
       { label: 'Profit Split', value: '100% — Hyperscaled takes 0%' },

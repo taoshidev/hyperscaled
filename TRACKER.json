@@ -1,6 +1,6 @@
 {
   "project": "Hyperscaled Marketing Website",
-  "lastUpdated": "2026-03-20T14:00:00Z",
+  "lastUpdated": "2026-03-25T12:00:00Z",
   "phases": [
     {
       "id": 0, "name": "Global Compliance Sweep", "status": "done",
@@ -182,6 +182,23 @@
         { "name": "Partners remove badge pill", "status": "done" },
         { "name": "Partners copy changes (body, features, revenue, steps, responsibility)", "status": "done" },
         { "name": "Partners trust signals below CTA", "status": "done" }
+      ]
+    },
+    {
+      "id": 11, "name": "Updates A — Global Eval→Challenge + Nav Restructure", "status": "done",
+      "scope": "Global rename + Nav.jsx", "estSessions": "1 session", "estHours": 1,
+      "dependsOn": [1, 9, 10],
+      "sessions": [{ "session": 13, "date": "2026-03-25", "notes": "Global Evaluation→Challenge rename across 22 files (50+ replacements), Nav restructured with 7 links + progressive responsive collapse + For Agents link, search removed" }],
+      "items": [
+        { "name": "Global Evaluation→Challenge rename", "status": "done" },
+        { "name": "Nav: add For Agents link", "status": "done" },
+        { "name": "Nav: 7 links in correct order", "status": "done" },
+        { "name": "Nav: progressive responsive collapse", "status": "done" },
+        { "name": "Nav: remove search (already backlogged)", "status": "done" },
+        { "name": "Page metadata updated", "status": "done" },
+        { "name": "Footer: Evaluation Rules → Challenge Rules", "status": "done" },
+        { "name": "Constants: display strings updated", "status": "done" },
+        { "name": "FAQ category: The Evaluation → The Challenge", "status": "done" }
       ]
     }
   ],

@@ -41,7 +41,7 @@ const pillars = [
 
 const compareRows = [
   { label: 'Profit Target',       hs: '10%',        ftmo: '15%' },
-  { label: 'Evaluation',          hs: '1-Step',     ftmo: '2-Step' },
+  { label: 'Challenge',           hs: '1-Step',     ftmo: '2-Step' },
   { label: 'Non-Custodial',       hs: 'Yes',        ftmo: 'No' },
   { label: 'KYC Required',        hs: 'No',         ftmo: 'Full KYC' },
   { label: 'Profit Split',        hs: '100%',       ftmo: 'Up to 90%' },

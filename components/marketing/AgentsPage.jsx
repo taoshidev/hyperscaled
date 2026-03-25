@@ -389,7 +389,7 @@ const whyFeatures = [
   {
     icon: CheckCircle,
     title: 'Pre-Submission Validation',
-    body: "Catch rule violations before they hit the network. Agents don't blow evaluations on avoidable mistakes.",
+    body: "Catch rule violations before they hit the network. Agents don't blow challenges on avoidable mistakes.",
     span: 'md:col-span-7',
     extra: (
       <div className="mt-5 grid grid-cols-2 gap-3">

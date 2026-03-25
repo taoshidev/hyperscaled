@@ -35,7 +35,7 @@ export default function PartnersCTA() {
             <p className="text-base text-zinc-400 leading-relaxed max-w-[50ch] mb-8">
               Hyperscaled lets operators launch a fully branded prop trading business on decentralized
               infrastructure. Set your own pricing. Collect revenue directly. The network handles
-              evaluation, enforcement, and&nbsp;payouts.
+              the challenge, enforcement, and&nbsp;payouts.
             </p>
             <Link
               href="/partners"

@@ -116,7 +116,7 @@ function PageHero() {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[62ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          Answers for everything you need to know before starting your Hyperscaled&nbsp;Evaluation.
+          Answers for everything you need to know before starting your Hyperscaled&nbsp;Challenge.
         </p>
       </div>
     </section>

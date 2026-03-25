@@ -3,40 +3,31 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { ArrowRight, MagnifyingGlass, List, X } from '@phosphor-icons/react'
+import { ArrowRight, List, X } from '@phosphor-icons/react'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
-const leftLinks = [
-  { label: 'How It Works', href: '/how-it-works' },
-  { label: 'Features', href: '/features' },
-  { label: 'Partners', href: '/partners' },
-  { label: 'FAQ', href: '/faq' },
-]
+/*
+  Progressive responsive collapse:
+  - xl+ (>1280px): all 7 links visible, no hamburger
+  - lg–xl (1024–1280px): How It Works, Pricing, For Agents, Rules visible
+  - md–lg (768–1024px): How It Works, Pricing, For Agents visible
+  - <md (<768px): all links in hamburger only
 
-const rightLinks = [
-  { label: 'Leaderboard', href: '/leaderboard' },
-  { label: 'Dashboard', href: '/dashboard' },
-  { label: 'Rules', href: '/rules' },
-  { label: 'For Agents', href: '/agents' },
+  Priority (stays visible longest): How It Works → Pricing → For Agents
+*/
+const NAV_LINKS = [
+  { label: 'How It Works', href: '/how-it-works', visibility: 'hidden md:block' },
+  { label: 'Pricing', href: '/pricing', visibility: 'hidden md:block' },
+  { label: 'For Agents', href: '/agents', visibility: 'hidden md:block' },
+  { label: 'Rules', href: '/rules', visibility: 'hidden lg:block' },
+  { label: 'Leaderboard', href: '/leaderboard', visibility: 'hidden xl:block' },
+  { label: 'Partners', href: '/partners', visibility: 'hidden xl:block' },
+  { label: 'FAQ', href: '/faq', visibility: 'hidden xl:block' },
 ]
-
-const allLinks = [...leftLinks, ...rightLinks]
 
 export default function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [query, setQuery] = useState('')
-  const router = useRouter()
-
-  function handleSearch(e) {
-    e.preventDefault()
-    const trimmed = query.trim()
-    if (trimmed) {
-      router.push(`/miner/${encodeURIComponent(trimmed)}`)
-      setQuery('')
-    }
-  }
 
   return (
     <motion.header
@@ -51,62 +42,32 @@ export default function Nav() {
           <img src="/hyperscaled-logo.svg" alt="Hyperscaled" className="h-7 w-auto" />
         </Link>
 
-        {/* Desktop: left links */}
-        <nav className="hidden xl:flex items-center gap-6">
-          {leftLinks.map((l) => (
+        {/* Desktop nav — progressively visible links */}
+        <nav className="flex items-center gap-6">
+          {NAV_LINKS.map((l) => (
             <Link
               key={l.label}
               href={l.href}
-              className="text-sm text-zinc-400 hover:text-white transition-colors"
+              className={`text-sm text-zinc-400 hover:text-white transition-colors whitespace-nowrap ${l.visibility}`}
             >
               {l.label}
             </Link>
           ))}
         </nav>
 
-        {/* Search input */}
-        <form onSubmit={handleSearch} className="hidden md:flex items-center">
-          <div className="relative">
-            <MagnifyingGlass
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"
-            />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="0x...."
-              className="w-40 lg:w-48 h-9 pl-8 pr-3 rounded-lg bg-white/[0.04] border border-white/[0.08] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-white/[0.16] transition-colors"
-            />
-          </div>
-        </form>
-
-        {/* Desktop: right links */}
-        <nav className="hidden xl:flex items-center gap-6">
-          {rightLinks.map((l) => (
-            <Link
-              key={l.label}
-              href={l.href}
-              className="text-sm text-zinc-400 hover:text-white transition-colors"
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
-
-        {/* CTA + mobile toggle */}
-        <div className="flex items-center gap-4 shrink-0">
+        {/* CTA + hamburger */}
+        <div className="flex items-center gap-3 shrink-0">
           <Link
             href="/register"
             className="shiny-cta px-5 py-2"
           >
             <span className="flex items-center gap-1.5">
-              Start Evaluation
+              Start Challenge
               <ArrowRight size={15} weight="bold" />
             </span>
           </Link>
 
-          {/* Mobile menu toggle */}
+          {/* Hamburger — visible when any links are hidden (below xl) */}
           <button
             type="button"
             onClick={() => setMobileOpen((prev) => !prev)}
@@ -119,7 +80,7 @@ export default function Nav() {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Hamburger menu — always contains ALL links */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.nav
@@ -129,25 +90,8 @@ export default function Nav() {
             transition={{ duration: 0.2 }}
             className="xl:hidden border-t border-white/[0.06] bg-[#09090b]/95 backdrop-blur-xl px-6 pb-6 pt-4"
           >
-            {/* Mobile search */}
-            <form onSubmit={(e) => { handleSearch(e); setMobileOpen(false) }} className="mb-4 md:hidden">
-              <div className="relative">
-                <MagnifyingGlass
-                  size={14}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"
-                />
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="0x...."
-                  className="w-full h-10 pl-8 pr-3 rounded-lg bg-white/[0.04] border border-white/[0.08] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-white/[0.16] transition-colors"
-                />
-              </div>
-            </form>
-
             <div className="flex flex-col gap-1">
-              {allLinks.map((l) => (
+              {NAV_LINKS.map((l) => (
                 <Link
                   key={l.label}
                   href={l.href}

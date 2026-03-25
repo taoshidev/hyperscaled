@@ -296,7 +296,7 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
           />
           <div>
             <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight leading-tight text-balance">
-              You&#8217;re in. Evaluation starts&nbsp;now.
+              You&#8217;re in. Challenge starts&nbsp;now.
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
               Your funded account is being provisioned on Hyperscaled.

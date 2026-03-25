@@ -43,7 +43,7 @@ export function StepSelectTier({ tiers, selectedTier, onSelect, onContinue }) {
       {/* Promo banner */}
       <div className="flex justify-center">
         <p className="bg-teal-400/10 text-teal-400 text-sm font-medium px-4 py-2 rounded-lg text-center text-balance">
-          Launch pricing — up to 55% off all evaluations
+          Launch pricing — up to 55% off all challenges
         </p>
       </div>
 
@@ -53,7 +53,7 @@ export function StepSelectTier({ tiers, selectedTier, onSelect, onContinue }) {
           Choose your funded account size
         </h2>
         <p className="text-sm text-muted-foreground max-w-md mx-auto text-balance">
-          One evaluation. No recurring fees. 100%&nbsp;of performance
+          One challenge. No recurring fees. 100%&nbsp;of performance
           rewards are&nbsp;yours.
         </p>
       </div>

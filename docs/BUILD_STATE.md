@@ -1,6 +1,6 @@
 # Build State
 
-Last updated: 2026-03-20
+Last updated: 2026-03-25
 
 ## Marketing Site (`/`)
 
@@ -8,7 +8,7 @@ Last updated: 2026-03-20
 
 | Item | State |
 |------|-------|
-| Hero + CTA | Done — Phase 3/5/CRA: CTA to /register, "Learn More" secondary, widget header (7d cycle), hero stats row (1-Step Evaluation, 100% Profit Split, $30M+ Rewards) |
+| Hero + CTA | Done — Phase 3/5/CRA/UA: CTA to /register "Start Your Challenge", hero stats row (1-Step Challenge, 100% Profit Split, $30M+ Rewards) |
 | Features section | Done — Phase 3/CRA: 6 cards, copy shortened per copywriter review, removed "Dispute resolution" bullet |
 | How It Works | Done — Phase 3/CRA: headline "Earn a funded trading account", Step 01 "Start your Challenge", Step 03 Hyperscaled Challenge phrasing |
 | Problem / Solution | Done — Phase 3/CRA: Problem copy updated (KYC barriers, shortened cards, callout bar). Solution headline "Decentralized. Transparent.", KYC None→No |
@@ -17,7 +17,7 @@ Last updated: 2026-03-20
 | FAQ | Done — Phase 3: "View full FAQ →" link added to sticky sidebar |
 | PartnersCTA | Done — Phase 3: new section between Features and FAQ, links to /partners |
 | Footer | Done — 4-column layout (Brand, Protocol, Community, Legal), social icons, "Built on Hyperliquid · Powered by Bittensor", © 2026. Phase 4: all social/docs URLs patched, Audit Report removed, Contact Support mailto added. |
-| Nav | Done — 6 route-based links (How It Works, Pricing, Rules, Leaderboard, Partners, FAQ), "Start Evaluation" CTA → /register (Phase 5 fix), mobile hamburger menu. Search removed (backlog). No placeholder URLs. |
+| Nav | Done — UA: 7 links (How It Works, Pricing, For Agents, Rules, Leaderboard, Partners, FAQ), "Start Challenge" CTA → /register, progressive responsive collapse (md/lg/xl breakpoints), hamburger always contains all links. Search removed (backlog). |
 | Waitlist form | Done (to be removed) — spec has no waitlist form |
 | LiquidCrystal background | Done |
 | ShinyButton CTA | Done |
@@ -129,13 +129,13 @@ Last updated: 2026-03-20
 | Item | State |
 |------|-------|
 | NETWORK_STATS | Done — 5 stats (value/label/description) |
-| HERO_STATS | Done — CRA: 1-Step Evaluation, 100% Profit Split, $30M+ Rewards |
-| EVAL_RULES | Done — 8 evaluation rules |
+| HERO_STATS | Done — CRA/UA: 1-Step Challenge, 100% Profit Split, $30M+ Rewards |
+| EVAL_RULES | Done — 10 challenge rules (UA: Evaluation→Challenge rename) |
 | FUNDED_RULES | Done — 7 funded account rules |
 | SCALING_PATH | Done — 9 steps ($100K → $2.5M) |
 | SCALING_MILESTONES | Done — 12 milestones ($25K → $2.5M) |
 | PRICING_TIERS | Done — CRA: popular moved to tier-3, tier I/II scaling → $100K, payout → Weekly |
-| FAQ_ITEMS | Done — 5 categories, 22 entries |
+| FAQ_ITEMS | Done — 5 categories (UA: "The Evaluation"→"The Challenge"), 22 entries |
 | HOME_FAQ_IDS | Done — 5-item subset for home page |
 | PRICING_FAQ / PRICING_FAQ_IDS | Done — 3 pricing-specific entries |
 

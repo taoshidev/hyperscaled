@@ -76,7 +76,7 @@ const OPERATOR_RESPONSIBILITIES = [
 
 const HYPERSCALED_RESPONSIBILITIES = [
   'Trader onboarding infrastructure',
-  'Evaluation tracking and rule enforcement',
+  'Challenge tracking and rule enforcement',
   'Automated payout rails',
   'Infrastructure coordination and deployment',
   'Technical operations and ongoing support',
@@ -110,7 +110,7 @@ function PageHero() {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[62ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          Hyperscaled lets operators launch a fully branded prop trading business without building any infrastructure. You bring traders, set your pricing, and collect revenue. The network handles evaluation, enforcement, and&nbsp;payouts.
+          Hyperscaled lets operators launch a fully branded prop trading business without building any infrastructure. You bring traders, set your pricing, and collect revenue. The network handles the challenge, enforcement, and&nbsp;payouts.
         </p>
 
         <div className="mt-8">
