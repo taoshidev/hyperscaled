@@ -4,6 +4,25 @@ import { reportError } from "@/lib/errors";
 
 export const dynamic = "force-dynamic";
 
+const SSE_HEADERS = {
+  "Content-Type": "text/event-stream",
+  "Cache-Control": "no-cache",
+  Connection: "keep-alive",
+};
+
+/** Return a valid SSE response containing a single error event, then close. */
+function sseError(message) {
+  const encoder = new TextEncoder();
+  const payload = JSON.stringify({ type: "error", message });
+  const body = new ReadableStream({
+    start(controller) {
+      controller.enqueue(encoder.encode(`data: ${payload}\n\n`));
+      controller.close();
+    },
+  });
+  return new Response(body, { headers: SSE_HEADERS });
+}
+
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const hlAddress = searchParams.get("hl_address");
@@ -19,13 +38,7 @@ export async function GET(request) {
         request.signal.addEventListener("abort", () => controller.close());
       },
     });
-    return new Response(body, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
-    });
+    return new Response(body, { headers: SSE_HEADERS });
   }
 
   let endpoint_url, hl_address;
@@ -33,10 +46,7 @@ export async function GET(request) {
     ({ endpoint_url, hl_address } = await resolveEndpointUrl(hlAddress));
   } catch (err) {
     reportError(err, { source: "api/dashboard/stream", userId: hlAddress });
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: err.status || 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return sseError(err.message);
   }
 
   let upstream;
@@ -46,20 +56,11 @@ export async function GET(request) {
     });
   } catch (err) {
     reportError(err, { source: "api/dashboard/stream", userId: hlAddress });
-    return new Response(JSON.stringify({ error: "Could not reach gateway" }), {
-      status: 502,
-      headers: { "Content-Type": "application/json" },
-    });
+    return sseError("Could not reach gateway");
   }
 
   if (!upstream.ok) {
-    return new Response(
-      JSON.stringify({ error: `Gateway returned ${upstream.status}` }),
-      {
-        status: 502,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return sseError(`Gateway returned ${upstream.status}`);
   }
 
   const body = new ReadableStream({
