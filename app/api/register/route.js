@@ -344,25 +344,17 @@ export async function POST(request) {
     reportError(err, { source: "api/register", metadata: { step: "registration_insert" } });
   }
 
-  const resendKey = process.env.RESEND_API_KEY;
-  if (resendKey) {
+  if (process.env.SMTP_USER) {
     try {
-      await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${resendKey}`,
-        },
-        body: JSON.stringify({
-          from: "Hyperscaled <noreply@hyperscaled.com>",
-          to: [email],
-          subject: registered
-            ? `\u2713 Registered with ${miner.name}`
-            : `\u231B Registration Pending \u2014 ${miner.name}`,
-          html: registered
-            ? registeredEmailHtml(miner, accountSize, hlAddress, effectivePayoutAddress, txHash)
-            : pendingEmailHtml(miner, accountSize, hlAddress, effectivePayoutAddress, txHash),
-        }),
+      const { sendEmail } = await import("@/lib/email");
+      await sendEmail({
+        to: email,
+        subject: registered
+          ? `\u2713 Registered with ${miner.name}`
+          : `\u231B Registration Pending \u2014 ${miner.name}`,
+        html: registered
+          ? registeredEmailHtml(miner, accountSize, hlAddress, effectivePayoutAddress, txHash)
+          : pendingEmailHtml(miner, accountSize, hlAddress, effectivePayoutAddress, txHash),
       });
     } catch {
       // Email send failure is non-blocking
