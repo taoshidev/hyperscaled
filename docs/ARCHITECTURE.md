@@ -2,7 +2,7 @@
 
 ## Overview
 
-Hyp erscaled  frontend is a Next.js 15 App Router application. Pages are server components by default; interactive sections wrap in client components. Web3 wallet connection (RainbowKit/wagmi) is provided via a `<Providers>` wrapper applied per-layout to routes that need it (dashboard, miner, status — but not marketing).
+Hyperscaled  frontend is a Next.js 15 App Router application. Pages are server components by default; interactive sections wrap in client components. Web3 wallet connection (RainbowKit/wagmi) is provided via a `<Providers>` wrapper applied per-layout to routes that need it (dashboard, miner, status — but not marketing).
 
 ```
 Browser
