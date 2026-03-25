@@ -110,7 +110,7 @@ function PageHero() {
         <div className="mt-8">
           <a
             href="mailto:partners@hyperscaled.trade"
-            className="shiny-cta inline-flex items-center justify-center gap-2 px-6 h-11 rounded-lg text-sm font-semibold text-black bg-teal-400 hover:bg-teal-300 transition-[background-color]"
+            className="shiny-cta inline-flex items-center justify-center gap-2 px-6 min-h-12 rounded-lg text-sm font-semibold text-black bg-teal-400 hover:bg-teal-300 transition-[background-color]"
           >
             Apply to Become a Partner
             <ArrowRight size={16} weight="bold" />
@@ -337,7 +337,7 @@ function ApplicationCTASection() {
         <div className="mt-8">
           <a
             href="mailto:partners@hyperscaled.trade"
-            className="shiny-cta inline-flex items-center justify-center gap-2 px-6 h-11 rounded-lg text-sm font-semibold text-black bg-teal-400 hover:bg-teal-300 transition-[background-color]"
+            className="shiny-cta inline-flex items-center justify-center gap-2 px-6 min-h-12 rounded-lg text-sm font-semibold text-black bg-teal-400 hover:bg-teal-300 transition-[background-color]"
           >
             Apply to Become a Partner
             <ArrowRight size={16} weight="bold" />

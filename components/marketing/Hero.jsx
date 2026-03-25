@@ -67,19 +67,19 @@ export default function Hero() {
             </motion.p>
 
             {/* CTA buttons */}
-            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-3 mb-10">
+            <motion.div variants={itemVariants} className="flex flex-col items-center sm:items-start sm:flex-row gap-3 mb-10">
               <Link
                 href="/register"
-                className="shiny-cta px-6 py-3 whitespace-nowrap"
+                className="shiny-cta px-6 py-3 min-h-12 whitespace-nowrap text-center"
               >
-                <span className="flex items-center gap-1.5">
+                <span className="flex items-center justify-center gap-1.5">
                   Start Your Challenge
                   <ArrowRight size={15} weight="bold" />
                 </span>
               </Link>
               <Link
                 href="/how-it-works"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-white/[0.12] text-white text-sm font-medium hover:border-white/[0.24] hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-teal-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 active:scale-[0.98] transition-[border-color,background-color,transform] duration-200"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 min-h-12 rounded-xl border border-white/[0.12] text-white text-sm font-medium hover:border-white/[0.24] hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-teal-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 active:scale-[0.98] transition-[border-color,background-color,transform] duration-200"
               >
                 Learn More
                 <ArrowRight size={15} weight="bold" />

@@ -2,6 +2,7 @@
 
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
+import Link from 'next/link'
 import { ArrowRight, Star } from '@phosphor-icons/react'
 import { PRICING_TIERS } from '@/lib/constants'
 
@@ -76,11 +77,9 @@ function PricingCard({ tier, index }) {
       </ul>
 
       {/* CTA */}
-      <a
-        href="https://app.hyperscaled.trade"
-        target="_blank"
-        rel="noopener noreferrer"
-        className={`mt-8 flex items-center justify-center gap-1.5 h-12 rounded-xl text-sm font-semibold transition-colors ${
+      <Link
+        href="/register"
+        className={`mt-8 flex items-center justify-center gap-1.5 min-h-12 rounded-xl text-sm font-semibold transition-colors ${
           tier.popular
             ? 'shiny-cta px-6 py-3'
             : 'bg-white/[0.06] border border-white/[0.08] text-white hover:bg-white/[0.1]'
@@ -88,7 +87,7 @@ function PricingCard({ tier, index }) {
       >
         {tier.cta}
         <ArrowRight size={14} weight="bold" />
-      </a>
+      </Link>
     </motion.div>
   )
 }

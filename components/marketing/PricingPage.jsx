@@ -134,7 +134,7 @@ function PricingCard({ tier, index }) {
         href="https://app.hyperscaled.trade"
         target="_blank"
         rel="noopener noreferrer"
-        className={`mt-8 flex items-center justify-center gap-1.5 h-12 rounded-xl text-sm font-semibold transition-colors ${
+        className={`mt-8 flex items-center justify-center gap-1.5 min-h-12 rounded-xl text-sm font-semibold transition-colors ${
           tier.popular
             ? 'shiny-cta px-6 py-3'
             : 'bg-white/[0.06] border border-white/[0.08] text-white hover:bg-white/[0.1]'

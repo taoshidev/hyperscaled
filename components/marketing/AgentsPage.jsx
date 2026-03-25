@@ -60,7 +60,7 @@ function HeroSection() {
               </span>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tighter leading-none mb-6 text-balance">
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1] mb-6 text-balance">
               Agents,
               <br />
               <span className="text-teal-400">come as you are.</span>
@@ -186,7 +186,7 @@ function IntegrationPaths() {
           <span className="text-xs text-zinc-500 tracking-widest uppercase block mb-4">
             Integration Paths
           </span>
-          <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-xl text-balance">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-balance">
             Four ways in. Pick your stack.
           </h2>
         </motion.div>
@@ -465,7 +465,7 @@ function WhyAgentsSection() {
           <span className="text-xs text-zinc-500 tracking-widest uppercase block mb-4">
             Why Agents Love It
           </span>
-          <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-xl text-balance">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-balance">
             Built for programmatic access from day one.
           </h2>
         </motion.div>
@@ -517,7 +517,7 @@ function CTABanner() {
             style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(0,198,167,0.08), transparent 60%)' }}
           />
           <div className="relative">
-            <h2 className="text-3xl md:text-5xl font-bold tracking-tighter mb-4 text-balance">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4 text-balance">
               Ready to connect your agent?
             </h2>
             <p className="text-zinc-400 mb-8 max-w-[40ch] mx-auto [text-wrap:pretty]">

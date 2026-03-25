@@ -39,7 +39,7 @@ export default function PartnersCTA() {
             </p>
             <Link
               href="/partners"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-teal-400 transition-colors min-h-11 group"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-teal-400 transition-colors min-h-12 group"
             >
               Learn About the Partner Program
               <ArrowRight size={15} weight="bold" className="group-hover:translate-x-0.5 transition-transform" />

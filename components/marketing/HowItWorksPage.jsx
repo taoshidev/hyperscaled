@@ -53,7 +53,7 @@ function PageHero() {
         >
           <Link
             href="/register"
-            className="shiny-cta inline-flex items-center gap-1.5 px-6 py-3"
+            className="shiny-cta inline-flex items-center gap-1.5 px-6 py-3 min-h-12"
           >
             Start Your Challenge
             <ArrowRight size={15} weight="bold" />
@@ -336,8 +336,8 @@ function NonCustodialExplainer() {
           transition={spring}
           className="mb-6 border-l-2 border-teal-400 pl-5 py-1"
         >
-          <p className="text-sm font-semibold text-teal-300 leading-relaxed max-w-[65ch]">
-            <span className="text-teal-400">●</span> Your wallet. Your keys. Hyperscaled only reads your public trade data — it never touches your&nbsp;capital.
+          <p className="text-sm font-semibold text-teal-300 leading-relaxed">
+            Your wallet. Your keys. Hyperscaled only reads your public trade data and never touches your&nbsp;capital.
           </p>
         </motion.div>
 
