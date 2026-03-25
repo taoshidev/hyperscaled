@@ -11,7 +11,7 @@ function LeaderboardContent() {
   const [selectedTrader, setSelectedTrader] = useState(() => searchParams.get('addr'))
 
   return (
-    <div className="bg-[#09090b] text-white font-sans min-h-screen">
+    <div className="bg-[#09090b] text-white font-sans min-h-[100dvh]">
       <Nav onSearch={setSelectedTrader} />
       <main className="pt-16">
         <Leaderboard onSelectTrader={setSelectedTrader} />
@@ -23,7 +23,7 @@ function LeaderboardContent() {
 
 export default function LeaderboardPage() {
   return (
-    <Suspense fallback={<div className="bg-[#09090b] min-h-screen" />}>
+    <Suspense fallback={<div className="bg-[#09090b] min-h-[100dvh]" />}>
       <LeaderboardContent />
     </Suspense>
   )

@@ -1,0 +1,259 @@
+{
+  "project": "Hyperscaled Marketing Website",
+  "lastUpdated": "2026-03-20T14:00:00Z",
+  "phases": [
+    {
+      "id": 0, "name": "Global Compliance Sweep", "status": "done",
+      "scope": "All existing files", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [],
+      "sessions": [{ "session": 1, "date": "2026-03-15", "notes": "All 9 compliance items fixed across 23 files (75 total fixes)" }],
+      "items": [
+        { "name": "Remove Vanta branding", "status": "done", "count": 9 },
+        { "name": "Remove Built on Bittensor", "status": "done", "count": 1 },
+        { "name": "Fix Up to 100%", "status": "done", "count": 2 },
+        { "name": "Remove Chrome Extension refs", "status": "done", "count": 2 },
+        { "name": "Fix funding language", "status": "done", "count": 1 },
+        { "name": "Fix copyright year", "status": "done", "count": 1 },
+        { "name": "Fix text-[10px]", "status": "done", "count": 44 },
+        { "name": "Fix transition-all", "status": "done", "count": 7 },
+        { "name": "Fix min-h-screen", "status": "done", "count": 8 }
+      ]
+    },
+    {
+      "id": 1, "name": "Nav + Footer Overhaul", "status": "done",
+      "scope": "Nav.jsx, Footer.jsx", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [0],
+      "sessions": [{ "session": 2, "date": "2026-03-16", "notes": "Nav + footer rebuilt, search removed to backlog" }],
+      "items": [
+        { "name": "Nav 6 route-based links", "status": "done" },
+        { "name": "Remove old nav links", "status": "done" },
+        { "name": "Start Evaluation CTA", "status": "done" },
+        { "name": "All links to standalone routes", "status": "done" },
+        { "name": "Footer 4-column layout", "status": "done" },
+        { "name": "Footer bottom bar copy", "status": "done" },
+        { "name": "Social placeholders + TODO_POLISH.md", "status": "done" }
+      ]
+    },
+    {
+      "id": 2, "name": "Shared Constants + Components", "status": "done",
+      "scope": "lib/constants.js, shared/", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [0],
+      "sessions": [{ "session": 3, "date": "2026-03-17", "notes": "11 constants in lib/constants.js, Stats/Hero/FAQ updated, new ScalingPathVisual + FAQAccordion + RulesTable components" }],
+      "items": [
+        { "name": "SCALING_PATH constant", "status": "done" },
+        { "name": "EVAL_RULES + FUNDED_RULES constants", "status": "done" },
+        { "name": "FAQ_ITEMS constant", "status": "done" },
+        { "name": "PRICING_TIERS constant", "status": "done" },
+        { "name": "NETWORK_STATS constant", "status": "done" },
+        { "name": "Rename VANTA_USDC_WALLET", "status": "done" },
+        { "name": "ScalingPathVisual component", "status": "done" },
+        { "name": "FAQAccordion component", "status": "done" }
+      ]
+    },
+    {
+      "id": 3, "name": "Home Page Overhaul", "status": "done",
+      "scope": "components/marketing/*", "estSessions": "2–3 sessions", "estHours": 5,
+      "dependsOn": [1, 2],
+      "sessions": [
+        { "session": 4, "date": "2026-03-17", "notes": "Full home page overhaul — hero, stats, problem, solution, how-it-works, features, partners-cta, faq" },
+        { "session": 5, "date": "2026-03-17", "notes": "Design polish — de-carded Stats/Problem/PartnersCTA, emoji→icon fix, Satoshi font fix" }
+      ],
+      "items": [
+        { "name": "Hero section", "status": "done" },
+        { "name": "Network Stats Bar", "status": "done" },
+        { "name": "Problem cards", "status": "done" },
+        { "name": "Protocol/Comparison", "status": "done" },
+        { "name": "How It Works 3 steps", "status": "done" },
+        { "name": "Features 6 cards", "status": "done" },
+        { "name": "Partners CTA section", "status": "done" },
+        { "name": "FAQ condensed", "status": "done" }
+      ]
+    },
+    {
+      "id": 4, "name": "Pricing Page", "status": "done",
+      "scope": "app/pricing/", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [1, 2],
+      "sessions": [{ "session": 6, "date": "2026-03-18", "notes": "Pricing page with launch tiers, scaling visual, FAQ mini; patched nav/footer URLs" }],
+      "items": [
+        { "name": "Launch pricing banner", "status": "done" },
+        { "name": "Page hero", "status": "done" },
+        { "name": "3-tier pricing cards", "status": "done" },
+        { "name": "Whats Included row", "status": "done" },
+        { "name": "Scaling path visual", "status": "done" },
+        { "name": "Pricing FAQ mini", "status": "done" },
+        { "name": "Nav/Footer URL patch", "status": "done" }
+      ]
+    },
+    {
+      "id": 5, "name": "How It Works Page", "status": "done",
+      "scope": "app/how-it-works/", "estSessions": "1–2 sessions", "estHours": 3,
+      "dependsOn": [1, 2],
+      "sessions": [{ "session": 7, "date": "2026-03-18", "notes": "Full how-it-works page — 4-step flow, scaling visual, non-custodial explainer, payout mechanics, bottom CTA; fixed generic Start Evaluation CTAs globally to /register" }],
+      "items": [
+        { "name": "Page hero + CTA", "status": "done" },
+        { "name": "4-step expanded flow", "status": "done" },
+        { "name": "Non-custodial explainer", "status": "done" },
+        { "name": "Payout mechanics", "status": "done" },
+        { "name": "Bottom CTA", "status": "done" }
+      ]
+    },
+    {
+      "id": 6, "name": "Rules Page", "status": "done",
+      "scope": "app/rules/", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [1, 2],
+      "sessions": [{ "session": 8, "date": "2026-03-18", "notes": "Rules page — eval rules, funded rules, scaling path + qualifications, disqualification, KYC, protocol transparency + CTA" }],
+      "items": [
+        { "name": "Page hero", "status": "done" },
+        { "name": "Evaluation rules table", "status": "done" },
+        { "name": "Funded account rules table", "status": "done" },
+        { "name": "Scaling rules", "status": "done" },
+        { "name": "Disqualification rules", "status": "done" },
+        { "name": "KYC and payouts", "status": "done" },
+        { "name": "Protocol transparency + CTA", "status": "done" }
+      ]
+    },
+    {
+      "id": 7, "name": "FAQ Page", "status": "done",
+      "scope": "app/faq/", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [1, 2],
+      "sessions": [{ "session": 9, "date": "2026-03-19", "notes": "FAQ page — grouped accordion with 22 items across 5 categories, sticky TOC sidebar + mobile pill bar, Discord + email contact links" }],
+      "items": [
+        { "name": "Page hero", "status": "done" },
+        { "name": "Full accordion by category", "status": "done" },
+        { "name": "Sticky TOC navigation", "status": "done" },
+        { "name": "Discord + email links", "status": "done" }
+      ]
+    },
+    {
+      "id": 8, "name": "Partners Page", "status": "done",
+      "scope": "app/partners/", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [1, 2],
+      "sessions": [{ "session": 10, "date": "2026-03-19", "notes": "Partners page — hero with badge pill, 6 feature cards, dual revenue model with mental model callout, 4-step vertical timeline, responsibility split, funding capacity table, application CTA" }],
+      "items": [
+        { "name": "Page hero with CTAs", "status": "done" },
+        { "name": "What You Control cards", "status": "done" },
+        { "name": "Revenue model", "status": "done" },
+        { "name": "How it works 4 steps", "status": "done" },
+        { "name": "Division of responsibility", "status": "done" },
+        { "name": "Funding capacity table", "status": "done" },
+        { "name": "Application CTA", "status": "done" }
+      ]
+    }
+    ,{
+      "id": 9, "name": "Copy Review A — Home + Pricing", "status": "done",
+      "scope": "Homepage + Pricing page copy", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [3, 4],
+      "sessions": [{ "session": 11, "date": "2026-03-20", "notes": "Copywriter-reviewed changes across home + pricing: copy swaps, new PricingPreview widget, What's Included feature grid, Model Built for Traders section, Most Popular badge moved to Tier III" }],
+      "items": [
+        { "name": "Hero stats updated", "status": "done" },
+        { "name": "Network stats bar updated", "status": "done" },
+        { "name": "Problem section copy", "status": "done" },
+        { "name": "Solution section copy + comparison", "status": "done" },
+        { "name": "HowItWorks section copy", "status": "done" },
+        { "name": "Features section copy + bullet removal", "status": "done" },
+        { "name": "PricingPreview widget (new)", "status": "done" },
+        { "name": "Pricing hero subtext", "status": "done" },
+        { "name": "Most Popular badge → Tier III", "status": "done" },
+        { "name": "Scaling path fix Tier I/II", "status": "done" },
+        { "name": "Payout cycle → Weekly", "status": "done" },
+        { "name": "Remove WhatsIncluded badges", "status": "done" },
+        { "name": "WhatsIncluded feature grid (new)", "status": "done" },
+        { "name": "Model Built for Traders section (new)", "status": "done" },
+        { "name": "Launch banner text updated", "status": "done" }
+      ]
+    },
+    {
+      "id": 10, "name": "Copy Review B — HIW + Rules + Partners", "status": "done",
+      "scope": "How It Works, Rules, Partners page copy", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [5, 6, 8],
+      "sessions": [{ "session": 12, "date": "2026-03-20", "notes": "Copywriter-reviewed changes across HIW, Rules, Partners: condensed HIW steps, removed non-custodial explainer body, cleaned rules headings, added eval rules, trust signals on partners" }],
+      "items": [
+        { "name": "HIW hero copy", "status": "done" },
+        { "name": "HIW steps 1-4 titles/bodies/details", "status": "done" },
+        { "name": "HIW non-custodial section → callout bar", "status": "done" },
+        { "name": "HIW payout mechanics copy", "status": "done" },
+        { "name": "HIW PricingPreview widget added", "status": "done" },
+        { "name": "HIW bottom CTA simplified", "status": "done" },
+        { "name": "Rules hero copy", "status": "done" },
+        { "name": "Rules remove redundant h2 headings", "status": "done" },
+        { "name": "Rules add Consistency Criteria + Weekend Trading", "status": "done" },
+        { "name": "Rules remove Drawdown Limit from funded", "status": "done" },
+        { "name": "Rules remove ScalingPathVisual", "status": "done" },
+        { "name": "Partners remove badge pill", "status": "done" },
+        { "name": "Partners copy changes (body, features, revenue, steps, responsibility)", "status": "done" },
+        { "name": "Partners trust signals below CTA", "status": "done" }
+      ]
+    }
+  ],
+  "routes": [
+    { "path": "/", "label": "Home", "status": "complete", "phase": 3, "note": "Full overhaul done + design polish" },
+    { "path": "/how-it-works", "label": "How It Works", "status": "complete", "phase": 5, "note": "4-step flow, non-custodial explainer, payout mechanics" },
+    { "path": "/pricing", "label": "Pricing", "status": "complete", "phase": 4, "note": "Launch tiers, scaling visual, FAQ mini" },
+    { "path": "/rules", "label": "Rules", "status": "complete", "phase": 6, "note": "Eval rules, funded rules, scaling, disqualification, KYC, protocol transparency" },
+    { "path": "/leaderboard", "label": "Leaderboard", "status": "complete", "phase": null, "note": "No changes needed" },
+    { "path": "/partners", "label": "Partners", "status": "complete", "phase": 8, "note": "Hero, features, revenue model, how it works, responsibilities, funding capacity, application CTA" },
+    { "path": "/faq", "label": "FAQ", "status": "complete", "phase": 7, "note": "Grouped accordion, 5 categories, 22 items, sticky TOC" },
+    { "path": "/register", "label": "Register", "status": "complete", "phase": null, "note": "3-step flow, working" },
+    { "path": "/dashboard", "label": "Dashboard", "status": "complete", "phase": null, "note": "SSE streaming, working" },
+    { "path": "/miner/[slug]", "label": "Miner Detail", "status": "complete", "phase": null, "note": "Dynamic route, working" },
+    { "path": "/status", "label": "Status", "status": "complete", "phase": null, "note": "Working" }
+  ],
+  "violations": [
+    { "name": "Vanta branding", "fixed": 9, "total": 9, "severity": "high" },
+    { "name": "Built on Bittensor", "fixed": 1, "total": 1, "severity": "high" },
+    { "name": "Up to 100%", "fixed": 2, "total": 2, "severity": "high" },
+    { "name": "Chrome Extension", "fixed": 2, "total": 2, "severity": "high" },
+    { "name": "Funding language", "fixed": 1, "total": 1, "severity": "high" },
+    { "name": "Copyright year", "fixed": 1, "total": 1, "severity": "high" },
+    { "name": "text-[10px]", "fixed": 44, "total": 44, "severity": "med" },
+    { "name": "transition-all", "fixed": 7, "total": 7, "severity": "med" },
+    { "name": "min-h-screen", "fixed": 8, "total": 8, "severity": "low" }
+  ],
+  "decisions": [
+    { "name": "Nav search behavior", "status": "resolved", "resolution": "Removed, backlogged" },
+    { "name": "Chrome Extension CTA on registration", "status": "open", "resolution": null },
+    { "name": "Social link URLs", "status": "resolved", "resolution": "Phase 4: x.com/hyperscaledhq, discord.gg/hyperscaledhq, github.com/taoshidev" },
+    { "name": "Docs link URL", "status": "resolved", "resolution": "Phase 4: docs.taoshi.io" },
+    { "name": "Legal pages", "status": "resolved", "resolution": "Placeholder pages created" },
+    { "name": "Partner application", "status": "resolved", "resolution": "mailto: partners@hyperscaled.trade" }
+  ],
+  "todoPolish": [
+    { "item": "Replace social link placeholders with real URLs", "priority": "medium" },
+    { "item": "Replace Docs link placeholder with real URL", "priority": "medium" },
+    { "item": "Resolve Chrome Extension CTA decision", "priority": "high" },
+    { "item": "Final accessibility pass on all pages", "priority": "low" },
+    { "item": "Performance audit (Lighthouse)", "priority": "low" },
+    { "item": "SEO meta tags for all routes", "priority": "medium" }
+  ],
+  "repoScan": {
+    "date": "2026-03-17",
+    "buildClean": true,
+    "buildNotes": "No errors, no warnings",
+    "deps": [
+      { "pkg": "next", "version": "15.3.x", "ok": true },
+      { "pkg": "react", "version": "19.x", "ok": true },
+      { "pkg": "tailwindcss", "version": "4.x", "ok": true },
+      { "pkg": "framer-motion", "version": "latest", "ok": true },
+      { "pkg": "@tanstack/react-query", "version": "latest", "ok": true },
+      { "pkg": "wagmi + viem + rainbowkit", "version": "latest", "ok": true }
+    ],
+    "solid": [
+      "Build passes clean — no errors",
+      "All deps current (Next 15.3, React 19, TW4)",
+      "Registration flow complete (3-step)",
+      "Dashboard + SSE streaming working",
+      "Leaderboard page — no changes needed",
+      "Design system (shiny-cta, skeleton, etc) solid",
+      "Miner detail page working",
+      "Status page working"
+    ],
+    "blockers": [
+      { "icon": "🔴", "text": "5 marketing pages don't exist yet", "detail": "/how-it-works, /pricing, /rules, /partners, /faq" },
+      { "icon": "🔴", "text": "Home page needs full overhaul", "detail": "Hero, stats, problem, protocol, features — all off-spec" },
+      { "icon": "🟡", "text": "Shared constants not centralized", "detail": "Pricing tiers, FAQ, rules, stats still hardcoded in components" },
+      { "icon": "🟡", "text": "No reusable ScalingPathVisual or FAQAccordion", "detail": "Needed by Pricing, FAQ, Home, Rules pages" },
+      { "icon": "🟡", "text": "1 open decision needs team input", "detail": "Chrome Extension CTA on registration" },
+      { "icon": "🟢", "text": "All 75 compliance violations fixed in P0", "detail": "Vanta branding, Bittensor, funding language, CSS issues" }
+    ]
+  }
+}

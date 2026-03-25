@@ -1,16 +1,17 @@
 "use client";
 
 import { useRef, useCallback } from "react";
-import { Check, ArrowRight } from "@phosphor-icons/react";
+import { Check, ArrowRight, Star } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
-import { formatAccountSize } from "@/lib/format";
-
-function savingsPercent(full, promo) {
-  return Math.round(((full - promo) / full) * 100);
-}
+// import { formatAccountSize } from "@/lib/format";
 
 function formatPrice(price) {
   return `$${price}`;
+}
+
+function formatShortName(accountSize) {
+  if (accountSize >= 1000000) return `$${accountSize / 1000000}M Account`;
+  return `$${accountSize / 1000}K Account`;
 }
 
 export function StepSelectTier({ tiers, selectedTier, onSelect, onContinue }) {
@@ -70,7 +71,6 @@ export function StepSelectTier({ tiers, selectedTier, onSelect, onContinue }) {
           : tiers.map((tier, i) => {
           const isSelected = selectedTier?.id === tier.id;
           const isPopular = tier.badge !== null;
-          const savings = tier.fullPrice ? savingsPercent(tier.fullPrice, tier.promoPrice) : null;
 
           return (
             <div
@@ -80,7 +80,7 @@ export function StepSelectTier({ tiers, selectedTier, onSelect, onContinue }) {
               }}
               role="radio"
               aria-checked={isSelected}
-              aria-label={`${tier.name} plan — ${formatAccountSize(tier.accountSize)} funded account — ${formatPrice(tier.promoPrice)}`}
+              aria-label={`${tier.name} — ${formatShortName(tier.accountSize)} funded account — ${formatPrice(tier.promoPrice)}`}
               tabIndex={isSelected || (!selectedTier && i === 0) ? 0 : -1}
               onClick={() => onSelect(tier)}
               onKeyDown={(e) => handleKeyDown(e, tier, i)}
@@ -111,7 +111,8 @@ export function StepSelectTier({ tiers, selectedTier, onSelect, onContinue }) {
               {/* Popular badge */}
               {isPopular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap bg-teal-400 text-zinc-950">
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap bg-teal-400 text-zinc-950">
+                    <Star size={12} weight="fill" />
                     {tier.badge}
                   </span>
                 </div>
@@ -119,45 +120,29 @@ export function StepSelectTier({ tiers, selectedTier, onSelect, onContinue }) {
 
               {/* Tier name */}
               <div className={`${isPopular ? "mt-2" : ""}`}>
-                <span className="text-xs font-semibold uppercase tracking-widest text-[oklch(0.65_0_0)]">
+                <span className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
                   {tier.name}
                 </span>
               </div>
 
-              {/* Account size */}
-              <div className="mt-2 mb-4">
-                <span className="text-3xl font-bold tracking-tight">
-                  {formatAccountSize(tier.accountSize)}
-                </span>
+              {/* Account size label */}
+              <div className="text-lg font-semibold text-white mt-1">
+                {formatShortName(tier.accountSize)}
               </div>
 
               {/* Pricing */}
-              <div className="flex items-baseline gap-2.5 mb-1">
+              <div className="flex items-baseline gap-2 mt-3 mb-5">
                 <ins className="no-underline">
-                  <span className="sr-only">{tier.fullPrice ? "Sale price: " : "Price: "}</span>
-                  <span className="text-2xl font-bold text-teal-400">
+                  <span className="sr-only">Sale price: </span>
+                  <span className="text-3xl font-bold font-mono text-white">
                     {formatPrice(tier.promoPrice)}
                   </span>
                 </ins>
-                {tier.fullPrice != null && (
-                  <del>
-                    <span className="sr-only">Original price: </span>
-                    <span className="text-sm text-[oklch(0.65_0_0)]">
-                      {formatPrice(tier.fullPrice)}
-                    </span>
-                  </del>
-                )}
-              </div>
-
-              {/* Savings badge */}
-              <div className="mb-5">
-                {savings != null ? (
-                  <span className="inline-block px-2 py-0.5 rounded text-xs font-semibold bg-teal-400/10 text-teal-400 border border-teal-400/20">
-                    {savings}% off
-                  </span>
-                ) : (
-                  <span className="inline-block h-5" />
-                )}
+                <del className="text-sm text-zinc-600 font-mono" style={{ textDecorationThickness: '1px', textUnderlineOffset: '-3px' }}>
+                  <span className="sr-only">Original price: </span>
+                  {formatPrice(tier.fullPrice)}
+                </del>
+                <span className="text-xs text-zinc-500 font-medium">USDC</span>
               </div>
 
               {/* Separator */}
@@ -168,9 +153,9 @@ export function StepSelectTier({ tiers, selectedTier, onSelect, onContinue }) {
                 {tier.details.map((detail) => (
                   <div
                     key={detail.label}
-                    className="flex items-center justify-between text-xs"
+                    className="flex items-center justify-between text-sm"
                   >
-                    <span className="text-[oklch(0.65_0_0)]">
+                    <span className="text-zinc-500">
                       {detail.label}
                     </span>
                     <span className="text-foreground font-medium font-mono">

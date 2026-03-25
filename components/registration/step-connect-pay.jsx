@@ -22,7 +22,7 @@ import {
   USDC_ADDRESS,
   USDC_DECIMALS,
   BASE_CHAIN_ID,
-  CHAIN_LABEL,
+  CHAIN_LABEL
 } from "@/lib/constants";
 import { usdcAbi } from "@/lib/usdc-abi";
 import { formatAccountSize, truncateAddress } from "@/lib/format";

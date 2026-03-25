@@ -115,13 +115,13 @@ export default function Leaderboard({ onSelectTrader }) {
           <div className="flex items-center gap-3 mb-4">
             <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Network</span>
             <span className="h-px flex-1 bg-white/[0.06]" />
-            <span className="text-[10px] text-zinc-600">Aggregated across all of Vanta Network</span>
+            <span className="text-xs text-zinc-600">Aggregated across the Hyperscaled network</span>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
             {networkStats.map((s) => (
               <div key={s.label} className="bg-zinc-900/40 border border-white/[0.06] rounded-xl p-4">
-                <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1.5">{s.label}</div>
+                <div className="text-xs text-zinc-500 uppercase tracking-widest mb-1.5">{s.label}</div>
                 <div className={`text-xl font-bold tracking-tight ${s.color}`}>{s.value}</div>
               </div>
             ))}
@@ -154,7 +154,7 @@ export default function Leaderboard({ onSelectTrader }) {
             <div className="flex items-center gap-3 mb-5">
               <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Hyperscaled</span>
               <span className="h-px flex-1 bg-white/[0.06]" />
-              <span className="text-[10px] text-zinc-600">Traders registered directly on Hyperscaled</span>
+              <span className="text-xs text-zinc-600">Traders registered directly on Hyperscaled</span>
             </div>
 
             {/* Tabs */}
@@ -185,7 +185,7 @@ export default function Leaderboard({ onSelectTrader }) {
                     <thead>
                       <tr className="border-b border-white/[0.06]">
                         {['#', 'Address', 'PnL', 'Funding', 'Sharpe', 'Trades', 'Win%', 'Payouts', 'Since'].map((h) => (
-                          <th key={h} className="text-left text-[10px] text-zinc-500 font-medium uppercase tracking-widest px-4 py-3">{h}</th>
+                          <th key={h} className="text-left text-xs text-zinc-500 font-medium uppercase tracking-widest px-4 py-3">{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -223,7 +223,7 @@ export default function Leaderboard({ onSelectTrader }) {
                     <thead>
                       <tr className="border-b border-white/[0.06]">
                         {['Address', 'PnL', 'Progress', 'Sharpe', 'Trades', 'Win%', 'Drawdown', 'Since'].map((h) => (
-                          <th key={h} className="text-left text-[10px] text-zinc-500 font-medium uppercase tracking-widest px-4 py-3">{h}</th>
+                          <th key={h} className="text-left text-xs text-zinc-500 font-medium uppercase tracking-widest px-4 py-3">{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -248,7 +248,7 @@ export default function Leaderboard({ onSelectTrader }) {
                                     style={{ width: `${Math.min(100, pct)}%` }}
                                   />
                                 </div>
-                                <span className="text-[10px] text-zinc-500">{pct.toFixed(1)}%</span>
+                                <span className="text-xs text-zinc-500">{pct.toFixed(1)}%</span>
                               </div>
                             </td>
                             <td className="px-4 py-3 text-sm text-zinc-300">{t.sharpe != null ? t.sharpe.toFixed(2) : '--'}</td>

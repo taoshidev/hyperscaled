@@ -49,7 +49,7 @@ export default function WaitlistForm({ className = '', inputClass = '', btnLabel
             placeholder="your@email.com"
             disabled={isDisabled}
             className={`w-full px-4 py-3 rounded-xl text-sm bg-zinc-900 border outline-none
-              text-white placeholder-zinc-600 transition-all
+              text-white placeholder-zinc-600 transition-[border-color,box-shadow]
               focus:ring-1 focus:ring-teal-400/20
               disabled:opacity-50 disabled:cursor-not-allowed
               ${status === 'error'
