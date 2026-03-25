@@ -27,7 +27,7 @@ const painPoints = [
   {
     number: '02',
     title: 'You earn 70%. They take 30% for doing\u00a0nothing.',
-    body: 'Legacy prop firms keep 10–30% of your profits permanently. No accountability or transparency, they take a cut of every winning trade you\u00a0make.',
+    body: 'Legacy prop firms keep 10–30% of your profits permanently. With no accountability or transparency, they take a cut of every winning trade you\u00a0make.',
     accentColor: 'text-amber-400',
     tagBg: 'bg-amber-400/8 border-amber-400/20',
     tag: 'Up to 30% cut',
@@ -113,7 +113,7 @@ export default function Problem() {
           className="mt-10 border-l-2 border-teal-400 pl-5 py-1"
         >
           <p className="text-sm font-semibold text-teal-300 leading-relaxed max-w-[65ch]">
-            Hyperscaled pays 100% performance of rewards because our decentralized network is aligned with your success. No&nbsp;exceptions.
+            Hyperscaled pays out 100% of rewards to traders because our decentralized network is aligned with your success. No&nbsp;exceptions.
           </p>
         </motion.div>
       </div>

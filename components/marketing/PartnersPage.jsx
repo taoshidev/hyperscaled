@@ -82,12 +82,6 @@ const HYPERSCALED_RESPONSIBILITIES = [
   'Technical operations and ongoing support',
 ]
 
-const FUNDING_TABLE = [
-  { size: '$25,000', alpha: '7.14 Alpha' },
-  { size: '$50,000', alpha: '14.28 Alpha' },
-  { size: '$100,000', alpha: '28.5 Alpha' },
-]
-
 /* ───────────────────────────────────────────────
    Section 1 — Page Hero
    ─────────────────────────────────────────────── */
@@ -322,75 +316,6 @@ function ResponsibilitySection() {
 }
 
 /* ───────────────────────────────────────────────
-   Section 6 — Funding Capacity Table
-   ─────────────────────────────────────────────── */
-function FundingCapacitySection() {
-  return (
-    <section className="px-6 pb-20">
-      <div className="max-w-[900px] mx-auto">
-        <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
-          Funding Capacity
-        </span>
-        <h2 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight">
-          Funding capacity by account&nbsp;size
-        </h2>
-        <p className="mt-3 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
-          Funded accounts are activated using Alpha tokens. The more Alpha your firm holds, the more traders you can fund&nbsp;simultaneously.
-        </p>
-
-        {/* Desktop table */}
-        <div className="hidden sm:block rounded-lg border border-white/[0.06] overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/[0.06] bg-white/[0.02]">
-                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">
-                  Account Size
-                </th>
-                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">
-                  Alpha Required
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {FUNDING_TABLE.map((row, i) => (
-                <tr
-                  key={row.size}
-                  className={i < FUNDING_TABLE.length - 1 ? 'border-b border-white/[0.04]' : ''}
-                >
-                  <td className="px-4 py-3 text-white font-medium font-mono whitespace-nowrap">
-                    {row.size}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-400 font-mono">
-                    {row.alpha}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Mobile stacked cards */}
-        <div className="sm:hidden space-y-3">
-          {FUNDING_TABLE.map((row) => (
-            <div
-              key={row.size}
-              className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-4 flex items-center justify-between"
-            >
-              <span className="text-white font-medium font-mono text-sm">{row.size}</span>
-              <span className="text-zinc-400 font-mono text-sm">{row.alpha}</span>
-            </div>
-          ))}
-        </div>
-
-        <p className="mt-4 text-sm text-zinc-400 font-mono">
-          $3,500 in funded capital per 1 Alpha&nbsp;token.
-        </p>
-      </div>
-    </section>
-  )
-}
-
-/* ───────────────────────────────────────────────
    Section 7 — Application CTA
    ─────────────────────────────────────────────── */
 function ApplicationCTASection() {
@@ -449,7 +374,6 @@ export default function PartnersPage() {
       <RevenueModelSection />
       <HowItWorksSection />
       <ResponsibilitySection />
-      <FundingCapacitySection />
       <ApplicationCTASection />
     </>
   )

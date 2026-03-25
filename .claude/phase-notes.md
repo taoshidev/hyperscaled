@@ -462,13 +462,50 @@ Registration Phase 3 complete. All 3 steps of the registration flow are fully bu
 
   **Build note**: Pre-existing build failure from missing backend deps (google-cloud/cloud-sql-connector, google-auth-library) in lib/db/index.js — not from our changes.
 
+- **Updates B — Homepage Reorder + Page-Specific Fixes**:
+  Files changed: 5 (marketing.jsx, Problem.jsx, HowItWorksPage.jsx, PartnersPage.jsx, lib/constants.js)
+  Files created: 1 (components/marketing/HomePricing.jsx)
+
+  **Homepage Section Reorder (marketing.jsx)**:
+  - New order: Hero → HowItWorks → HomePricing → Features → Solution → Problem → PartnersCTA → FAQ
+  - Removed: Stats import and component (Network Stats Bar was standalone section; key stats already in hero row)
+  - Removed: PricingPreview import (replaced by HomePricing)
+
+  **HomePricing (new — components/marketing/HomePricing.jsx)**:
+  - Full detailed pricing cards matching /pricing page — not the compact PricingPreview widget
+  - Section label "PRICING", headline "Choose your account size."
+  - 3 cards with all 7 spec rows (Account Size, Profit Target, Max Drawdown, Profit Split, Payout Cycle, Scaling Path, Time Limit)
+  - Most Popular badge on $100K / Tier III
+  - Tier-specific CTAs linking to https://app.hyperscaled.trade
+  - "Launch pricing active. Limited-time pricing." note below cards
+
+  **Copy Fixes**:
+  - NETWORK_STATS label: "Rewards Distributed" → "Network Rewards Distributed"
+  - Problem card 2 body: "No accountability or transparency" → "With no accountability or transparency"
+  - Problem callout bar: "pays 100% performance of rewards" → "pays out 100% of rewards to traders"
+
+  **How It Works Page (HowItWorksPage.jsx)**:
+  - Removed "Minimum Trading Capital: $1,000 in Hyperliquid" row from Step 02 key details
+  - Tightened teal callout bar spacing: mb-10 → mb-6 (sits closer to comparison boxes)
+
+  **Partners Page (PartnersPage.jsx)**:
+  - Removed entire FundingCapacitySection: teal label, heading, body text, desktop table, mobile cards, footnote
+  - Removed FUNDING_TABLE data constant
+  - Clean removal — no leftover spacing
+
+  **FAQ Updates (lib/constants.js)**:
+  - Added to "Technical & Platform" category: "What pairs are available to trade?" with answer listing 13 crypto perpetuals
+  - Removed "minimum-capital" question from "Getting Started" category (was not in HOME_FAQ_IDS so no homepage impact)
+
+  **Build note**: Same pre-existing build failure from missing backend deps — not from our changes.
+
 ## In progress
 
 Nothing currently in progress.
 
 ## Next action
 
-Updates B next (page-specific changes).
+Polish pass next.
 
 ## Known issues
 

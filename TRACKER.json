@@ -1,6 +1,6 @@
 {
   "project": "Hyperscaled Marketing Website",
-  "lastUpdated": "2026-03-25T12:00:00Z",
+  "lastUpdated": "2026-03-25T18:00:00Z",
   "phases": [
     {
       "id": 0, "name": "Global Compliance Sweep", "status": "done",
@@ -199,6 +199,25 @@
         { "name": "Footer: Evaluation Rules → Challenge Rules", "status": "done" },
         { "name": "Constants: display strings updated", "status": "done" },
         { "name": "FAQ category: The Evaluation → The Challenge", "status": "done" }
+      ]
+    },
+    {
+      "id": 12, "name": "Updates B — Homepage Reorder + Page Fixes", "status": "done",
+      "scope": "Homepage, HIW, Partners, FAQ, constants", "estSessions": "1 session", "estHours": 1,
+      "dependsOn": [11],
+      "sessions": [{ "session": 14, "date": "2026-03-25", "notes": "Homepage reorder with full pricing cards replacing PricingPreview, Stats bar removed, copy fixes on Problem section, HIW min capital row removed + callout tightened, Partners funding capacity section removed, FAQ trading pairs added + min capital removed" }],
+      "items": [
+        { "name": "Homepage section reorder (8 sections)", "status": "done" },
+        { "name": "Replace PricingPreview with full pricing cards", "status": "done" },
+        { "name": "Remove Network Stats Bar from homepage", "status": "done" },
+        { "name": "Copy fix: Rewards Distributed → Network Rewards Distributed", "status": "done" },
+        { "name": "Copy fix: Problem card 2 body (No → With no)", "status": "done" },
+        { "name": "Copy fix: Problem callout bar updated", "status": "done" },
+        { "name": "HIW: remove Minimum Trading Capital row", "status": "done" },
+        { "name": "HIW: tighten callout bar spacing", "status": "done" },
+        { "name": "Partners: remove Funding Capacity section", "status": "done" },
+        { "name": "FAQ: add trading pairs question", "status": "done" },
+        { "name": "FAQ: remove minimum capital question", "status": "done" }
       ]
     }
   ],

@@ -4,18 +4,20 @@ Last updated: 2026-03-25
 
 ## Marketing Site (`/`)
 
-**Status**: Complete — Phase 3 home page overhaul + Copy Review A
+**Status**: Complete — Phase 3 home page overhaul + Copy Review A + Updates B
 
 | Item | State |
 |------|-------|
 | Hero + CTA | Done — Phase 3/5/CRA/UA: CTA to /register "Start Your Challenge", hero stats row (1-Step Challenge, 100% Profit Split, $30M+ Rewards) |
+| How It Works (condensed 3-step) | Done — Phase 3/CRA/UB: second section after Hero |
+| Full Pricing Cards | Done — UB: replaced PricingPreview with full detailed pricing cards (7 spec rows, Most Popular badge on $100K, tier-specific CTAs) |
 | Features section | Done — Phase 3/CRA: 6 cards, copy shortened per copywriter review, removed "Dispute resolution" bullet |
-| How It Works | Done — Phase 3/CRA: headline "Earn a funded trading account", Step 01 "Start your Challenge", Step 03 Hyperscaled Challenge phrasing |
-| Problem / Solution | Done — Phase 3/CRA: Problem copy updated (KYC barriers, shortened cards, callout bar). Solution headline "Decentralized. Transparent.", KYC None→No |
-| Stats section | Done — Phase 3/CRA: 5,500+ Traders (was 4,200+ Funded Traders) |
-| PricingPreview | Done — CRA: 3 condensed pricing cards between Features and PartnersCTA |
+| The Hyperscaled Protocol (comparison) | Done — Phase 3/CRA: "Decentralized. Transparent.", KYC None→No |
+| The Problem | Done — Phase 3/CRA/UB: copy updated, callout bar "pays out 100% of rewards to traders" |
+| For Operators & Institutions | Done — Phase 3: links to /partners |
 | FAQ | Done — Phase 3: "View full FAQ →" link added to sticky sidebar |
-| PartnersCTA | Done — Phase 3: new section between Features and FAQ, links to /partners |
+| Stats section | Removed — UB: Network Stats Bar removed as standalone section (key stats already in hero row) |
+| PricingPreview | Removed — UB: replaced by full pricing cards |
 | Footer | Done — 4-column layout (Brand, Protocol, Community, Legal), social icons, "Built on Hyperliquid · Powered by Bittensor", © 2026. Phase 4: all social/docs URLs patched, Audit Report removed, Contact Support mailto added. |
 | Nav | Done — UA: 7 links (How It Works, Pricing, For Agents, Rules, Leaderboard, Partners, FAQ), "Start Challenge" CTA → /register, progressive responsive collapse (md/lg/xl breakpoints), hamburger always contains all links. Search removed (backlog). |
 | Waitlist form | Done (to be removed) — spec has no waitlist form |
@@ -47,23 +49,23 @@ Last updated: 2026-03-25
 
 ## How It Works Page (`/how-it-works`)
 
-**Status**: Complete — Phase 5 + Copy Review B
+**Status**: Complete — Phase 5 + Copy Review B + Updates B
 
 | Item | State |
 |------|-------|
 | Page route + metadata | Done |
 | Page hero + CTA | Done — CRB: headline "Trade on Hyperliquid. Get funded by the network.", subtext shortened |
-| 4-step flow (register, trade, track, pass) | Done — CRB: all titles/bodies/details rewritten, step 01 has "Get started" CTA |
+| 4-step flow (register, trade, track, pass) | Done — CRB/UB: all titles/bodies/details rewritten, step 01 has "Get started" CTA, step 02 Minimum Trading Capital row removed |
 | Key details boxes per step | Done — CRB: simplified labels, Chrome Plugin mention |
 | Scaling path visual + tier note | Done — CRB: body shortened |
-| Non-custodial explainer + comparison | Done — CRB: removed body paragraphs, added callout bar above comparison |
+| Non-custodial explainer + comparison | Done — CRB/UB: callout bar above comparison, spacing tightened (mb-6) |
 | Payout mechanics + flow diagram | Done — CRB: headline "Automated. Weekly. Onchain.", body + KYC note shortened |
 | Callout box (100% profit) | Done |
 | PricingPreview widget | Done — CRB: added between payout mechanics and bottom CTA |
 | Bottom CTA | Done — CRB: removed "View Pricing" link |
 | Responsive layout | Done |
 
-**Next action**: All copywriter changes applied. Polish pass next.
+**Next action**: Polish pass next.
 
 ## Rules Page (`/rules`)
 
@@ -105,7 +107,7 @@ Last updated: 2026-03-25
 
 ## Partners Page (`/partners`)
 
-**Status**: Complete — Phase 8 + Copy Review B
+**Status**: Complete — Phase 8 + Copy Review B + Updates B
 
 | Item | State |
 |------|-------|
@@ -115,12 +117,12 @@ Last updated: 2026-03-25
 | Revenue model (USDC + Alpha, mental model callout) | Done — CRB: stream 2 body updated |
 | How It Works (4-step vertical timeline) | Done — CRB: steps 1 + 4 body updated |
 | Division of responsibility (two-column) | Done — CRB: headline "Designed for your success.", handles bullet updated |
-| Funding capacity table (desktop table + mobile cards) | Done |
+| Funding capacity table | Removed — UB: entire section removed (teal label, heading, body, table, footnote) |
 | Application CTA | Done — CRB: body shortened |
 | Trust signals | Done — CRB: 4 compact indicators below CTA button |
 | Responsive layout | Done |
 
-**Next action**: All copywriter changes applied. Polish pass next.
+**Next action**: Polish pass next.
 
 ## Shared Constants (`lib/constants.js`)
 
@@ -128,14 +130,14 @@ Last updated: 2026-03-25
 
 | Item | State |
 |------|-------|
-| NETWORK_STATS | Done — 5 stats (value/label/description) |
+| NETWORK_STATS | Done — 5 stats (value/label/description). UB: label "Rewards Distributed" → "Network Rewards Distributed" |
 | HERO_STATS | Done — CRA/UA: 1-Step Challenge, 100% Profit Split, $30M+ Rewards |
 | EVAL_RULES | Done — 10 challenge rules (UA: Evaluation→Challenge rename) |
 | FUNDED_RULES | Done — 7 funded account rules |
 | SCALING_PATH | Done — 9 steps ($100K → $2.5M) |
 | SCALING_MILESTONES | Done — 12 milestones ($25K → $2.5M) |
 | PRICING_TIERS | Done — CRA: popular moved to tier-3, tier I/II scaling → $100K, payout → Weekly |
-| FAQ_ITEMS | Done — 5 categories (UA: "The Evaluation"→"The Challenge"), 22 entries |
+| FAQ_ITEMS | Done — 5 categories (UA: "The Evaluation"→"The Challenge"), 22 entries. UB: removed minimum-capital, added trading-pairs |
 | HOME_FAQ_IDS | Done — 5-item subset for home page |
 | PRICING_FAQ / PRICING_FAQ_IDS | Done — 3 pricing-specific entries |
 
@@ -280,4 +282,4 @@ Last updated: 2026-03-25
 | Hooks (pre-write, post-edit) | Done |
 | Phase notes | Done |
 
-**Next action**: See docs/PHASES.md for launch plan
+**Next action**: Polish pass next

@@ -124,7 +124,6 @@ const STEPS = [
       { label: 'Platform', value: 'Hyperliquid' },
       { label: 'Data Access', value: 'Public data only, no API keys needed' },
       { label: 'Custody', value: 'Your funds always stay with you' },
-      { label: 'Minimum Trading Capital', value: '$1,000 in Hyperliquid' },
     ],
   },
   {
@@ -335,7 +334,7 @@ function NonCustodialExplainer() {
           initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={spring}
-          className="mb-10 border-l-2 border-teal-400 pl-5 py-1"
+          className="mb-6 border-l-2 border-teal-400 pl-5 py-1"
         >
           <p className="text-sm font-semibold text-teal-300 leading-relaxed max-w-[65ch]">
             <span className="text-teal-400">●</span> Your wallet. Your keys. Hyperscaled only reads your public trade data — it never touches your&nbsp;capital.
