@@ -60,13 +60,13 @@ function HeroSection() {
               </span>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tighter leading-none mb-6">
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tighter leading-none mb-6 text-balance">
               Agents,
               <br />
               <span className="text-teal-400">come as you are.</span>
             </h1>
 
-            <p className="text-lg text-zinc-400 leading-relaxed max-w-[48ch] mb-8">
+            <p className="text-lg text-zinc-400 leading-relaxed max-w-[48ch] mb-8 [text-wrap:pretty]">
               LangChain, CrewAI, plain Python, or OpenClaw — no adapters, no rewrites.
               Hyperscaled works with whatever runtime your agent already runs on.
             </p>
@@ -186,7 +186,7 @@ function IntegrationPaths() {
           <span className="text-xs text-zinc-500 tracking-widest uppercase block mb-4">
             Integration Paths
           </span>
-          <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-xl">
+          <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-xl text-balance">
             Four ways in. Pick your stack.
           </h2>
         </motion.div>
@@ -465,7 +465,7 @@ function WhyAgentsSection() {
           <span className="text-xs text-zinc-500 tracking-widest uppercase block mb-4">
             Why Agents Love It
           </span>
-          <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-xl">
+          <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-xl text-balance">
             Built for programmatic access from day one.
           </h2>
         </motion.div>
@@ -517,10 +517,10 @@ function CTABanner() {
             style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(0,198,167,0.08), transparent 60%)' }}
           />
           <div className="relative">
-            <h2 className="text-3xl md:text-5xl font-bold tracking-tighter mb-4">
+            <h2 className="text-3xl md:text-5xl font-bold tracking-tighter mb-4 text-balance">
               Ready to connect your agent?
             </h2>
-            <p className="text-zinc-400 mb-8 max-w-[40ch] mx-auto">
+            <p className="text-zinc-400 mb-8 max-w-[40ch] mx-auto [text-wrap:pretty]">
               Install the OpenClaw skill or drop the Python SDK directly into your agent workflow.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3 mb-8">

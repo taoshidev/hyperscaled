@@ -156,7 +156,7 @@ export default function Features() {
           <span className="text-xs text-zinc-500 tracking-widest uppercase block mb-4">
             Features
           </span>
-          <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-xl">
+          <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-xl text-balance">
             Built for traders who trade with an edge.
           </h2>
         </motion.div>
@@ -196,7 +196,7 @@ export default function Features() {
                   >
                     {feat.title}
                   </h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed">{feat.body}</p>
+                  <p className="text-sm text-zinc-400 leading-relaxed [text-wrap:pretty]">{feat.body}</p>
                   {feat.extra}
                 </div>
               </motion.div>

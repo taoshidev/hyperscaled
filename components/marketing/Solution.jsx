@@ -91,10 +91,10 @@ export default function Solution() {
               <span className="text-xs text-zinc-500 tracking-widest uppercase block mb-4">
                 The Hyperscaled Protocol
               </span>
-              <h2 className="text-4xl md:text-5xl tracking-tighter leading-none font-bold mb-5">
+              <h2 className="text-4xl md:text-5xl tracking-tighter leading-none font-bold mb-5 text-balance">
                 Permissionless.<br />No middlemen.
               </h2>
-              <p className="text-base text-zinc-400 leading-relaxed max-w-[52ch]">
+              <p className="text-base text-zinc-400 leading-relaxed max-w-[52ch] [text-wrap:pretty]">
                 Hyperscaled mirrors your Hyperliquid trades into a protocol-funded simulated account
                 and pays out performance rewards in USDC — onchain, automatically, monthly.
               </p>

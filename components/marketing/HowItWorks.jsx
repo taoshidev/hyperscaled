@@ -181,7 +181,7 @@ export default function HowItWorks() {
           <span className="text-xs text-zinc-500 tracking-widest uppercase block mb-4">
             How It Works
           </span>
-          <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-2xl">
+          <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-2xl text-balance">
             Trade on Hyperliquid.{' '}
             <span className="text-zinc-500">Get funded by the network.</span>
           </h2>
@@ -210,10 +210,10 @@ export default function HowItWorks() {
                       Step {step.number}
                     </span>
                   </div>
-                  <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-white mb-3">
+                  <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-white mb-3 text-balance">
                     {step.title}
                   </h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed max-w-[46ch]">
+                  <p className="text-sm text-zinc-400 leading-relaxed max-w-[46ch] [text-wrap:pretty]">
                     {step.body}
                   </p>
                 </div>
