@@ -9,8 +9,7 @@ const footerLinks = {
     { label: 'Pricing', href: '/pricing' },
     { label: 'Rules', href: '/rules' },
     { label: 'Leaderboard', href: '/leaderboard' },
-    { label: 'Evaluation Rules', href: '/rules' },
-    { label: 'Docs', href: 'https://docs.taoshi.io', external: true },
+    { label: 'For Agents', href: '/agents' },
   ],
   Community: [
     { label: 'Twitter / X', href: 'https://x.com/hyperscaledhq', external: true, icon: TwitterLogo },

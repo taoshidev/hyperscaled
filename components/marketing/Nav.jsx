@@ -3,40 +3,32 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { ArrowRight, MagnifyingGlass, List, X } from '@phosphor-icons/react'
+import { ArrowRight, DownloadSimple, List, X } from '@phosphor-icons/react'
+import { CHROME_EXTENSION_URL } from '@/lib/constants'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
-const leftLinks = [
-  { label: 'How It Works', href: '/how-it-works' },
-  { label: 'Features', href: '/features' },
-  { label: 'Partners', href: '/partners' },
-  { label: 'FAQ', href: '/faq' },
-]
+/*
+  Progressive responsive collapse:
+  - xl+ (>1280px): all 7 links visible, no hamburger
+  - lg–xl (1024–1280px): How It Works, Pricing, For Agents, Rules visible
+  - md–lg (768–1024px): How It Works, Pricing, For Agents visible
+  - <md (<768px): all links in hamburger only
 
-const rightLinks = [
-  { label: 'Leaderboard', href: '/leaderboard' },
-  { label: 'Dashboard', href: '/dashboard' },
-  { label: 'Rules', href: '/rules' },
-  { label: 'For Agents', href: '/agents' },
+  Priority (stays visible longest): How It Works → Pricing → For Agents
+*/
+const NAV_LINKS = [
+  { label: 'How It Works', href: '/how-it-works', visibility: 'hidden md:block' },
+  { label: 'Pricing', href: '/pricing', visibility: 'hidden md:block' },
+  { label: 'For Agents', href: '/agents', visibility: 'hidden md:block' },
+  { label: 'Rules', href: '/rules', visibility: 'hidden lg:block' },
+  { label: 'Leaderboard', href: '/leaderboard', visibility: 'hidden xl:block' },
+  { label: 'Partners', href: '/partners', visibility: 'hidden xl:block' },
+  { label: 'FAQ', href: '/faq', visibility: 'hidden xl:block' },
 ]
-
-const allLinks = [...leftLinks, ...rightLinks]
 
 export default function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [query, setQuery] = useState('')
-  const router = useRouter()
-
-  function handleSearch(e) {
-    e.preventDefault()
-    const trimmed = query.trim()
-    if (trimmed) {
-      router.push(`/miner/${encodeURIComponent(trimmed)}`)
-      setQuery('')
-    }
-  }
 
   return (
     <motion.header
@@ -45,68 +37,50 @@ export default function Nav() {
       transition={spring}
       className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-[#09090b]/60 border-b border-white/[0.06]"
     >
-      <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between gap-4">
+      <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between gap-4 relative">
         {/* Logo */}
-        <Link href="/" className="flex items-center shrink-0">
+        <Link href="/" className="flex items-center gap-2 shrink-0 relative z-10">
           <img src="/hyperscaled-logo.svg" alt="Hyperscaled" className="h-7 w-auto" />
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-teal-400 border border-teal-400/30 bg-teal-400/10 rounded px-1.5 py-0.5 leading-none">Beta</span>
         </Link>
 
-        {/* Desktop: left links */}
-        <nav className="hidden xl:flex items-center gap-6">
-          {leftLinks.map((l) => (
+        {/* Desktop nav — absolutely centered in header */}
+        <nav className="hidden md:flex items-center justify-center gap-6 absolute inset-0 pointer-events-none">
+          <div className="flex items-center gap-6 pointer-events-auto">
+          {NAV_LINKS.map((l) => (
             <Link
               key={l.label}
               href={l.href}
-              className="text-sm text-zinc-400 hover:text-white transition-colors"
+              className={`text-sm text-zinc-400 hover:text-white transition-colors whitespace-nowrap ${l.visibility}`}
             >
               {l.label}
             </Link>
           ))}
-        </nav>
-
-        {/* Search input */}
-        <form onSubmit={handleSearch} className="hidden md:flex items-center">
-          <div className="relative">
-            <MagnifyingGlass
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"
-            />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="0x...."
-              className="w-40 lg:w-48 h-9 pl-8 pr-3 rounded-lg bg-white/[0.04] border border-white/[0.08] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-white/[0.16] transition-colors"
-            />
           </div>
-        </form>
-
-        {/* Desktop: right links */}
-        <nav className="hidden xl:flex items-center gap-6">
-          {rightLinks.map((l) => (
-            <Link
-              key={l.label}
-              href={l.href}
-              className="text-sm text-zinc-400 hover:text-white transition-colors"
-            >
-              {l.label}
-            </Link>
-          ))}
         </nav>
 
-        {/* CTA + mobile toggle */}
-        <div className="flex items-center gap-4 shrink-0">
+        {/* CTA + hamburger */}
+        <div className="flex items-center gap-3 shrink-0 relative z-10">
+          <a
+            href={CHROME_EXTENSION_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors px-3 py-2 rounded-lg border border-white/[0.08] bg-zinc-900/80"
+          >
+            <DownloadSimple size={15} weight="bold" />
+            Extension
+          </a>
           <Link
             href="/register"
             className="shiny-cta px-5 py-2"
           >
             <span className="flex items-center gap-1.5">
-              Start Evaluation
+              Start Challenge
               <ArrowRight size={15} weight="bold" />
             </span>
           </Link>
 
-          {/* Mobile menu toggle */}
+          {/* Hamburger — visible when any links are hidden (below xl) */}
           <button
             type="button"
             onClick={() => setMobileOpen((prev) => !prev)}
@@ -119,7 +93,7 @@ export default function Nav() {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Hamburger menu — always contains ALL links */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.nav
@@ -129,25 +103,8 @@ export default function Nav() {
             transition={{ duration: 0.2 }}
             className="xl:hidden border-t border-white/[0.06] bg-[#09090b]/95 backdrop-blur-xl px-6 pb-6 pt-4"
           >
-            {/* Mobile search */}
-            <form onSubmit={(e) => { handleSearch(e); setMobileOpen(false) }} className="mb-4 md:hidden">
-              <div className="relative">
-                <MagnifyingGlass
-                  size={14}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"
-                />
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="0x...."
-                  className="w-full h-10 pl-8 pr-3 rounded-lg bg-white/[0.04] border border-white/[0.08] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-white/[0.16] transition-colors"
-                />
-              </div>
-            </form>
-
             <div className="flex flex-col gap-1">
-              {allLinks.map((l) => (
+              {NAV_LINKS.map((l) => (
                 <Link
                   key={l.label}
                   href={l.href}

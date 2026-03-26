@@ -38,6 +38,10 @@ public/                       ← Logos, miner avatars
 - **Data**: TanStack React Query + SSE streaming hook
 - **Font**: Satoshi (Fontshare)
 
+## Dev Server
+
+This project always runs on **port 4568** (`npm run dev` → `http://localhost:4568`).
+
 ## Session Start Protocol
 
 1. Read CLAUDE.md (this file)

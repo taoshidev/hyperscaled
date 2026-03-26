@@ -53,9 +53,9 @@ function PageHero() {
         >
           <Link
             href="/register"
-            className="shiny-cta inline-flex items-center gap-1.5 px-6 py-3"
+            className="shiny-cta inline-flex items-center gap-1.5 px-6 py-3 min-h-12"
           >
-            Start Your Evaluation
+            Start Your Challenge
             <ArrowRight size={15} weight="bold" />
           </Link>
         </motion.div>
@@ -124,7 +124,6 @@ const STEPS = [
       { label: 'Platform', value: 'Hyperliquid' },
       { label: 'Data Access', value: 'Public data only, no API keys needed' },
       { label: 'Custody', value: 'Your funds always stay with you' },
-      { label: 'Minimum Trading Capital', value: '$1,000 in Hyperliquid' },
     ],
   },
   {
@@ -145,7 +144,7 @@ const STEPS = [
     body: 'Hit the 10% profit target with drawdown under 5% to immediately activate your funded account. Keep 100% of profits with payouts delivered in USDC weekly. Scale to $2.5M with continued\u00a0performance.',
     details: [
       { label: 'Profit Target', value: '10%' },
-      { label: 'Max Drawdown (Evaluation)', value: '5% daily / 5% EOD trailing' },
+      { label: 'Max Drawdown (Challenge)', value: '5% daily / 5% EOD trailing' },
       { label: 'Max Drawdown (Funded)', value: '8% daily / 8% EOD trailing' },
       { label: 'Payout Cycle', value: 'Every 7 days' },
       { label: 'Profit Split', value: '100% — Hyperscaled takes 0%' },
@@ -335,10 +334,10 @@ function NonCustodialExplainer() {
           initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={spring}
-          className="mb-10 border-l-2 border-teal-400 pl-5 py-1"
+          className="mb-6 border-l-2 border-teal-400 pl-5 py-1"
         >
-          <p className="text-sm font-semibold text-teal-300 leading-relaxed max-w-[65ch]">
-            <span className="text-teal-400">●</span> Your wallet. Your keys. Hyperscaled only reads your public trade data — it never touches your&nbsp;capital.
+          <p className="text-sm font-semibold text-teal-300 leading-relaxed">
+            Your wallet. Your keys. Hyperscaled only reads your public trade data and never touches your&nbsp;capital.
           </p>
         </motion.div>
 

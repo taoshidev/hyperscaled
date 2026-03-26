@@ -46,7 +46,7 @@ function PricingHero() {
           className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1]"
           style={{ textWrap: 'balance' }}
         >
-          One fee. One evaluation. Keep everything you&nbsp;earn.
+          One fee. One challenge. Keep everything you&nbsp;earn.
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 16 }}
@@ -134,7 +134,7 @@ function PricingCard({ tier, index }) {
         href="https://app.hyperscaled.trade"
         target="_blank"
         rel="noopener noreferrer"
-        className={`mt-8 flex items-center justify-center gap-1.5 h-12 rounded-xl text-sm font-semibold transition-colors ${
+        className={`mt-8 flex items-center justify-center gap-1.5 min-h-12 rounded-xl text-sm font-semibold transition-colors ${
           tier.popular
             ? 'shiny-cta px-6 py-3'
             : 'bg-white/[0.06] border border-white/[0.08] text-white hover:bg-white/[0.1]'
@@ -164,8 +164,8 @@ function PricingCards() {
 const INCLUDED_FEATURES = [
   {
     icon: ListChecks,
-    title: 'One-Step Evaluation',
-    desc: 'All evaluations are one phase. No second phase, ever.',
+    title: 'One-Step Challenge',
+    desc: 'All challenges are one phase. No second phase, ever.',
   },
   {
     icon: Target,
@@ -238,7 +238,7 @@ function WhatsIncludedGrid() {
   )
 }
 
-/* ── Evaluation Progress Widget Mockup ── */
+/* ── Challenge Progress Widget Mockup ── */
 function EvalProgressWidget() {
   return (
     <div
@@ -249,7 +249,7 @@ function EvalProgressWidget() {
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06]">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-teal-400 shrink-0" style={{ boxShadow: '0 0 6px rgba(0,198,167,0.7)' }} />
-          <span className="text-sm font-semibold text-white">Evaluation Progress</span>
+          <span className="text-sm font-semibold text-white">Challenge Progress</span>
         </div>
         <span className="text-xs text-zinc-500 font-mono">$100K Account</span>
       </div>
@@ -309,7 +309,7 @@ function ModelSection() {
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
   const bullets = [
-    'A funded account upon evaluation completion',
+    'A funded account upon challenge completion',
     'Verifiable payouts through onchain technology',
     '100% profit split — you keep your earnings',
     'A system designed for trader success',
@@ -331,7 +331,7 @@ function ModelSection() {
             {/* Left column — text */}
             <div>
               <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">
-                Your evaluation fee grants access&nbsp;to:
+                Your challenge fee grants access&nbsp;to:
               </h2>
               <ul className="space-y-3 mb-6">
                 {bullets.map((b) => (

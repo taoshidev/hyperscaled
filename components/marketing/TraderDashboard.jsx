@@ -77,7 +77,7 @@ export default function TraderDashboard({ addr, onClose }) {
               <h2 className="text-2xl font-bold tracking-tight mb-3">CRYPTO 100K</h2>
               <div className="flex gap-2 flex-wrap">
                 <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-400/10 border border-blue-400/20 text-blue-400">Tier III</span>
-                <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-400/10 border border-teal-400/20 text-teal-400">Evaluation</span>
+                <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-400/10 border border-teal-400/20 text-teal-400">Challenge</span>
                 <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-400/10 border border-amber-400/20 text-amber-400">1.25x Leverage</span>
               </div>
             </div>
@@ -124,9 +124,9 @@ export default function TraderDashboard({ addr, onClose }) {
                 </div>
               </div>
 
-              {/* Evaluation Progress */}
+              {/* Challenge Progress */}
               <div className="bg-zinc-900/50 border border-white/[0.06] rounded-xl p-6 mb-6">
-                <div className="text-xs text-zinc-500 uppercase tracking-widest mb-5">Evaluation Progress</div>
+                <div className="text-xs text-zinc-500 uppercase tracking-widest mb-5">Challenge Progress</div>
                 <div className="bg-zinc-950/50 border border-white/[0.04] rounded-xl p-5">
                   <div className="flex justify-between items-center mb-5 flex-wrap gap-3">
                     <span className="text-sm text-zinc-400">Account Progress</span>

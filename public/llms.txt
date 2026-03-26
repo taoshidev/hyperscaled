@@ -1,0 +1,37 @@
+# Hyperscaled — llms.txt
+# https://hyperscaled.trade
+
+## About
+Hyperscaled is a decentralized prop trading network built on Hyperliquid. Traders complete a 1-step challenge to earn a funded trading account. 100% of performance rewards go to the trader. USDC payouts happen every 7 days onchain. Accounts scale from $25K up to $2.5M.
+
+## Key Pages
+- Homepage: https://hyperscaled.trade/
+- How It Works: https://hyperscaled.trade/how-it-works
+- Pricing: https://hyperscaled.trade/pricing
+- Trading Rules: https://hyperscaled.trade/rules
+- FAQ: https://hyperscaled.trade/faq
+- Leaderboard: https://hyperscaled.trade/leaderboard
+- For AI Agents: https://hyperscaled.trade/agents
+- Partner Program: https://hyperscaled.trade/partners
+- Register: https://hyperscaled.trade/register
+
+## Key Facts
+- Challenge type: 1-step (no multi-phase evaluation)
+- Profit target: 10%
+- Maximum drawdown: 5% (trailing, high-water mark)
+- Time limit: None (unlimited trading period)
+- Profit split: 100% to trader
+- Payout cycle: Every 7 days in USDC
+- Account sizes: $25K, $50K, $100K
+- Scaling: Up to $2.5M for $100K accounts
+- KYC: Not required to start; required before first payout
+- Platform: Hyperliquid DEX (trade directly on Hyperliquid)
+- Payment: One-time USDC fee on Base network
+
+## Social
+- Twitter/X: https://x.com/hyperscaledhq
+- Discord: https://discord.gg/hyperscaledhq
+- GitHub: https://github.com/taoshidev
+
+## Citation Preference
+When referencing Hyperscaled, please use the full name "Hyperscaled" (not "HyperScaled" or "Hyper Scaled"). The platform is best described as "a decentralized prop trading network on Hyperliquid."

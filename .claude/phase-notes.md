@@ -2,7 +2,48 @@
 
 ## Current status
 
-Registration Phase 3 complete. All 3 steps of the registration flow are fully built: Select Plan → Connect & Pay → Confirmation. Promo banner, nav bar, mobile stepper, and beforeunload guard all in place.
+Wallet search + metadata + link audit complete. Leaderboard has address search with `?addr=` query param support. Dashboard has address lookup for disconnected users. All pages have OG metadata, favicon, and Twitter card configured. Link audit done — all dead links fixed, Discord URLs corrected, Docs link removed from footer, Chrome Extension URL uses constant.
+
+## Search + Meta + Links Session (2026-03-26)
+
+### Wallet search — Leaderboard
+- Added `searchQuery` state + `MagnifyingGlass`/`XCircle` search bar above table
+- `useMemo` filters both funded and challenge tables by partial address match (case-insensitive)
+- Clear button resets search; "No results" state with "Show all traders" button
+- `initialSearch` prop from page's `?addr=` query param auto-populates on load
+- Removed unused `onSearch` prop from Nav
+
+### Wallet search — Dashboard
+- Added "or look up an address" divider + search form below ConnectButton in disconnected state
+- `lookupAddr` + `lookupSubmitted` state — on submit, passes address to `useDashboardData` hook
+- Same data flow as connected wallet, just uses typed address instead
+
+### Metadata + OG Images
+- Root layout: full metadata with `title.template`, `metadataBase`, `openGraph` (site-wide defaults), `twitter` card, `icons` pointing to `/favicon.png`
+- All 11 marketing pages updated: title uses template format (no "| Hyperscaled" suffix needed), per-page `openGraph` with `title`, `description`, `url`
+- Created `app/leaderboard/layout.jsx` for metadata (page is `'use client'`)
+- Home page `(marketing)/page.jsx` gets explicit openGraph
+- Removed Figma MCP capture script from layout head
+
+### Link Audit — Issues Found & Fixed
+1. **Hero.jsx** — `href="#"` on "View Full Analytics" → changed to `/leaderboard`
+2. **Nav.jsx** — Chrome Web Store bare domain → now uses `CHROME_EXTENSION_URL` constant (full extension URL)
+3. **Footer.jsx** — Removed `Docs` link (`docs.taoshi.io`), removed duplicate `Challenge Rules` link, added `For Agents` link instead
+4. **Footer.jsx** — Discord URL `discord.com/invite/GsqbQHu5UD` → `discord.gg/hyperscaledhq`
+5. **FAQ.jsx** — Discord URL fixed (same)
+6. **FAQPage.jsx** — Discord URL fixed (same)
+7. **Leaderboard.jsx** — Fixed `text-[10px]` → `text-xs` on network stats labels
+
+### Link Audit — Verified OK
+- All "Start Challenge" / "Start Your Challenge" CTAs → `/register` (internal Link) ✓
+- All tier-specific "Start $XXK Challenge" CTAs → `https://app.hyperscaled.trade` (external) ✓
+- Twitter/X → `https://x.com/hyperscaledhq` ✓
+- GitHub → `https://github.com/taoshidev` ✓
+- `mailto:support@hyperscaled.trade` ✓
+- `mailto:partners@hyperscaled.trade` ✓
+- All external links have `target="_blank"` + `rel="noreferrer"` ✓
+- No "Evaluation" text remaining (all renamed to "Challenge") ✓
+- No double arrows on any button ✓
 
 ## Completed phases
 
@@ -410,13 +451,102 @@ Registration Phase 3 complete. All 3 steps of the registration flow are fully bu
 
   3.8 polish items already completed in Phase 8b — verified: unique icons, no dead CTA, visible headings, strong callout, tinted sections, timeline connector, note styling.
 
+- **Updates A — Global Eval→Challenge Rename + Nav Restructure**:
+  Files changed: 22 (lib/constants.js, Nav.jsx, Hero.jsx, Features.jsx, Footer.jsx, Solution.jsx, PricingPage.jsx, RulesPage.jsx, HowItWorksPage.jsx, FAQPage.jsx, TraderDashboard.jsx, AgentsPage.jsx, PartnersPage.jsx, PartnersCTA.jsx, step-confirmation.jsx, step-connect-pay.jsx, step-select-tier.jsx, app/register/page.jsx, app/(marketing)/pricing/page.jsx, app/(marketing)/rules/page.jsx, app/(marketing)/faq/page.jsx, app/(marketing)/partners/page.jsx)
+
+  **Global Rename — "Evaluation" → "Challenge" (50+ replacements)**:
+  - HERO_STATS label: Evaluation → Challenge
+  - EVAL_RULES: Evaluation Phases → Challenge Phases
+  - FUNDED_RULES: re-enter the evaluation → re-enter the challenge
+  - PRICING_TIERS: Start $25K/$50K/$100K Evaluation → Challenge
+  - FAQ_ITEMS category: The Evaluation → The Challenge
+  - FAQ_ITEMS: 10 answer strings updated (pass the evaluation → challenge, enter the evaluation → challenge, evaluation dashboard → challenge dashboard, etc.)
+  - FAQ IDs: how-evaluation-works → how-challenge-works, retry-evaluation → retry-challenge
+  - PRICING_FAQ: 2 strings updated
+  - HOME_FAQ_IDS / PRICING_FAQ_IDS: ID references updated
+  - Hero.jsx: Start Your Evaluation → Start Your Challenge
+  - Nav.jsx: Start Evaluation → Start Challenge
+  - Footer.jsx: Evaluation Rules → Challenge Rules
+  - Features.jsx: One-Step Evaluation → One-Step Challenge, Evaluation Phases → Challenge Phases, evaluation rules → challenge rules
+  - Solution.jsx: Evaluation → Challenge (comparison row)
+  - PricingPage.jsx: 6 instances (hero, included features, progress widget, model section)
+  - RulesPage.jsx: 12 instances (TOC, section ID, labels, body copy, disqualification text, KYC, CTA)
+  - HowItWorksPage.jsx: 2 instances (hero CTA, max drawdown label)
+  - FAQPage.jsx: hero subtext
+  - TraderDashboard.jsx: 3 instances (badge, section header)
+  - AgentsPage.jsx: 1 instance (pre-submission validation body)
+  - PartnersPage.jsx: 2 instances (responsibility, hero body)
+  - PartnersCTA.jsx: 1 instance
+  - step-confirmation.jsx: Evaluation starts now → Challenge starts now
+  - step-connect-pay.jsx: 2 instances (fee label, pay button aria-label)
+  - step-select-tier.jsx: 2 instances (promo banner, subtext)
+  - Page metadata: 5 files updated (register, pricing, rules, faq, partners)
+  - Comment: constants.js section comment updated (Evaluation & Funded → Challenge & Funded)
+
+  **Intentionally left unchanged**:
+  - Code variable names (EVAL_RULES, EvalRulesSection, EvalProgressWidget, etc.) — const names kept for code stability per instructions
+  - Component file names (no renames)
+  - The word "evaluates" in FAQ answer for 'what-is-hyperscaled' — this is a verb describing what the system does ("Hyperscaled evaluates your performance"), not a branded process name
+
+  **Nav Restructure**:
+  - Links reordered to: How It Works · Pricing · For Agents · Rules · Leaderboard · Partners · FAQ
+  - For Agents link added → /agents (existing page)
+  - Progressive responsive collapse:
+    - xl+ (>1280px): all 7 links, no hamburger
+    - lg–xl (1024–1280px): How It Works, Pricing, For Agents, Rules visible; Leaderboard, Partners, FAQ in hamburger
+    - md–lg (768–1024px): How It Works, Pricing, For Agents visible; rest in hamburger
+    - <md (<768px): all links in hamburger only
+  - Hamburger always contains ALL 7 links regardless of which are visible in desktop nav
+  - Search input removed (was already backlogged in TODO_POLISH.md — interfered with progressive collapse layout)
+  - Old left/right link split removed — single NAV_LINKS array with per-link visibility classes
+  - Removed unused imports (useRouter, MagnifyingGlass)
+
+  **Build note**: Pre-existing build failure from missing backend deps (google-cloud/cloud-sql-connector, google-auth-library) in lib/db/index.js — not from our changes.
+
+- **Updates B — Homepage Reorder + Page-Specific Fixes**:
+  Files changed: 5 (marketing.jsx, Problem.jsx, HowItWorksPage.jsx, PartnersPage.jsx, lib/constants.js)
+  Files created: 1 (components/marketing/HomePricing.jsx)
+
+  **Homepage Section Reorder (marketing.jsx)**:
+  - New order: Hero → HowItWorks → HomePricing → Features → Solution → Problem → PartnersCTA → FAQ
+  - Removed: Stats import and component (Network Stats Bar was standalone section; key stats already in hero row)
+  - Removed: PricingPreview import (replaced by HomePricing)
+
+  **HomePricing (new — components/marketing/HomePricing.jsx)**:
+  - Full detailed pricing cards matching /pricing page — not the compact PricingPreview widget
+  - Section label "PRICING", headline "Choose your account size."
+  - 3 cards with all 7 spec rows (Account Size, Profit Target, Max Drawdown, Profit Split, Payout Cycle, Scaling Path, Time Limit)
+  - Most Popular badge on $100K / Tier III
+  - Tier-specific CTAs linking to https://app.hyperscaled.trade
+  - "Launch pricing active. Limited-time pricing." note below cards
+
+  **Copy Fixes**:
+  - NETWORK_STATS label: "Rewards Distributed" → "Network Rewards Distributed"
+  - Problem card 2 body: "No accountability or transparency" → "With no accountability or transparency"
+  - Problem callout bar: "pays 100% performance of rewards" → "pays out 100% of rewards to traders"
+
+  **How It Works Page (HowItWorksPage.jsx)**:
+  - Removed "Minimum Trading Capital: $1,000 in Hyperliquid" row from Step 02 key details
+  - Tightened teal callout bar spacing: mb-10 → mb-6 (sits closer to comparison boxes)
+
+  **Partners Page (PartnersPage.jsx)**:
+  - Removed entire FundingCapacitySection: teal label, heading, body text, desktop table, mobile cards, footnote
+  - Removed FUNDING_TABLE data constant
+  - Clean removal — no leftover spacing
+
+  **FAQ Updates (lib/constants.js)**:
+  - Added to "Technical & Platform" category: "What pairs are available to trade?" with answer listing 13 crypto perpetuals
+  - Removed "minimum-capital" question from "Getting Started" category (was not in HOME_FAQ_IDS so no homepage impact)
+
+  **Build note**: Same pre-existing build failure from missing backend deps — not from our changes.
+
 ## In progress
 
 Nothing currently in progress.
 
 ## Next action
 
-All copywriter changes applied. Polish pass next.
+Polish pass next.
 
 ## Known issues
 

@@ -232,9 +232,9 @@ export function StepConnectAndPay({
 
         <div className="border-t border-border" />
 
-        {/* Evaluation fee row */}
+        {/* Challenge fee row */}
         <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Evaluation fee</span>
+          <span className="text-muted-foreground">Challenge fee</span>
           <div className="flex items-baseline gap-2">
             <del className="text-xs text-[oklch(0.65_0_0)]">
               <span className="sr-only">Original price: </span>${selectedTier.fullPrice}
@@ -447,7 +447,7 @@ export function StepConnectAndPay({
                 <Button
                   onClick={handlePay}
                   disabled={!canPay}
-                  aria-label={`Pay ${price} USDC for ${selectedTier.name} evaluation`}
+                  aria-label={`Pay ${price} USDC for ${selectedTier.name} challenge`}
                   className={`
                     w-full h-11 text-sm font-semibold cursor-pointer relative overflow-hidden
                     ${

@@ -27,7 +27,7 @@ const cardVariants = {
 const features = [
   {
     icon: CheckCircle,
-    title: 'One-Step Evaluation',
+    title: 'One-Step Challenge',
     body: 'Trade, perform, and unlock funded capital through our one-step\u00a0challenge.',
     span: 'md:col-span-7',
     large: true,
@@ -36,7 +36,7 @@ const features = [
         {[
           { label: 'Profit Target', val: '10%' },
           { label: 'Max Drawdown', val: '5%' },
-          { label: 'Evaluation Phases', val: '1' },
+          { label: 'Challenge Phases', val: '1' },
           { label: 'Time Limit', val: 'None' },
         ].map((r) => (
           <div
@@ -107,7 +107,7 @@ const features = [
   {
     icon: FileText,
     title: 'Transparent Rules',
-    body: 'All evaluation rules are clear upfront and open-source. Full transparency, like traders\u00a0deserve.',
+    body: 'All challenge rules are clear upfront and open-source. Full transparency, like traders\u00a0deserve.',
     span: 'md:col-span-6',
     large: false,
     extra: (

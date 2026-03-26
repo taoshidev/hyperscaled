@@ -15,7 +15,7 @@ import { EVAL_RULES, FUNDED_RULES, SCALING_PATH } from '@/lib/constants'
    TOC sections definition
    ─────────────────────────────────────────────── */
 const TOC_SECTIONS = [
-  { id: 'evaluation', label: 'Evaluation' },
+  { id: 'challenge', label: 'Challenge' },
   { id: 'funded', label: 'Funded Account' },
   { id: 'scaling', label: 'Scaling' },
   { id: 'disqualification', label: 'Disqualification' },
@@ -80,7 +80,7 @@ function TableOfContents({ activeId }) {
    Active section tracker hook
    ─────────────────────────────────────────────── */
 function useActiveSection() {
-  const [activeId, setActiveId] = useState('evaluation')
+  const [activeId, setActiveId] = useState('challenge')
 
   useEffect(() => {
     const ids = TOC_SECTIONS.map((s) => s.id)
@@ -133,17 +133,17 @@ function PageHero() {
 }
 
 /* ───────────────────────────────────────────────
-   Section 2 — Evaluation Rules
+   Section 2 — Challenge Rules
    ─────────────────────────────────────────────── */
 function EvalRulesSection() {
   return (
-    <section id="evaluation" className="px-6 pb-20 scroll-mt-24">
+    <section id="challenge" className="px-6 pb-20 scroll-mt-24">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
-          Evaluation Phase
+          Challenge Phase
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
-          The Hyperscaled evaluation is a one-step challenge. Rules are consistent across all account&nbsp;sizes.
+          The Hyperscaled challenge is one step. Rules are consistent across all account&nbsp;sizes.
         </p>
 
         <RulesTable rules={EVAL_RULES} />
@@ -152,7 +152,7 @@ function EvalRulesSection() {
         <div className="mt-6 rounded-xl border border-red-400/20 bg-red-400/[0.04] p-5 flex items-start gap-3">
           <Warning size={20} weight="fill" className="text-red-400 shrink-0 mt-0.5" />
           <p className="text-sm text-red-300 leading-relaxed">
-            Breaching either drawdown rule results in immediate evaluation termination. You may re-register at any&nbsp;time.
+            Breaching either drawdown rule results in immediate challenge termination. You may re-register at any&nbsp;time.
           </p>
         </div>
       </div>
@@ -171,7 +171,7 @@ function FundedRulesSection() {
           Funded Account Phase
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
-          Once you pass the evaluation, your funded account is activated immediately. These rules apply for the duration of your funded&nbsp;trading.
+          Once you pass the challenge, your funded account is activated immediately. These rules apply for the duration of your funded&nbsp;trading.
         </p>
 
         <RulesTable rules={FUNDED_RULES} />
@@ -185,9 +185,9 @@ function FundedRulesSection() {
    ─────────────────────────────────────────────── */
 
 const DOES_DISQUALIFY = [
-  'Breaching the daily loss limit (5% during evaluation / 8% when funded)',
-  'Breaching the EOD trailing loss limit (5% during evaluation / 8% when funded)',
-  'Attempting to manipulate evaluation performance (wash trading, coordinated cross-account hedging)',
+  'Breaching the daily loss limit (5% during the challenge / 8% when funded)',
+  'Breaching the EOD trailing loss limit (5% during the challenge / 8% when funded)',
+  'Attempting to manipulate challenge performance (wash trading, coordinated cross-account hedging)',
 ]
 
 const DOES_NOT_DISQUALIFY = [
@@ -326,7 +326,7 @@ function DisqualificationSection() {
           Disqualification
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
-          Not every risk leads to disqualification. Here is what does and does not end your evaluation or funded&nbsp;account.
+          Not every risk leads to disqualification. Here is what does and does not end your challenge or funded&nbsp;account.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -380,7 +380,7 @@ function KYCSection() {
         </h2>
         <div className="mt-4 rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 sm:p-6 space-y-4 text-sm sm:text-base text-zinc-400 leading-relaxed">
           <p>
-            KYC is not required to register, trade, or complete the evaluation. It is required only to receive a&nbsp;payout.
+            KYC is not required to register, trade, or complete the challenge. It is required only to receive a&nbsp;payout.
           </p>
           <p>
             When your funded account reaches payout eligibility at the end of a 7-day cycle, you will be prompted to complete a simple cryptographic wallet verification. Payouts are then sent in USDC directly to your connected wallet. The entire payout flow is automated and verifiable&nbsp;onchain.
@@ -415,7 +415,7 @@ function ProtocolSection() {
             href="/register"
             className="text-sm text-teal-400 hover:text-teal-300 transition-colors inline-flex items-center gap-1.5"
           >
-            Start Your Evaluation
+            Start Your Challenge
             <ArrowRight size={14} weight="bold" />
           </Link>
         </div>

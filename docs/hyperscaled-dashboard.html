@@ -111,7 +111,7 @@ td{padding:10px 14px;border-bottom:1px solid var(--rule)}
 // ╚══════════════════════════════════════════════════════════════════╝
 const TRACKER = {
   "project": "Hyperscaled Marketing Website",
-  "lastUpdated": "2026-03-20T14:00:00Z",
+  "lastUpdated": "2026-03-26T18:00:00Z",
   "phases": [
     {
       "id": 0, "name": "Global Compliance Sweep", "status": "done",
@@ -294,6 +294,63 @@ const TRACKER = {
         { "name": "Partners copy changes (body, features, revenue, steps, responsibility)", "status": "done" },
         { "name": "Partners trust signals below CTA", "status": "done" }
       ]
+    },
+    {
+      "id": 11, "name": "Updates A — Global Eval→Challenge + Nav Restructure", "status": "done",
+      "scope": "Global rename + Nav.jsx", "estSessions": "1 session", "estHours": 1,
+      "dependsOn": [1, 9, 10],
+      "sessions": [{ "session": 13, "date": "2026-03-25", "notes": "Global Evaluation→Challenge rename across 22 files (50+ replacements), Nav restructured with 7 links + progressive responsive collapse + For Agents link, search removed" }],
+      "items": [
+        { "name": "Global Evaluation→Challenge rename", "status": "done" },
+        { "name": "Nav: add For Agents link", "status": "done" },
+        { "name": "Nav: 7 links in correct order", "status": "done" },
+        { "name": "Nav: progressive responsive collapse", "status": "done" },
+        { "name": "Nav: remove search (already backlogged)", "status": "done" },
+        { "name": "Page metadata updated", "status": "done" },
+        { "name": "Footer: Evaluation Rules → Challenge Rules", "status": "done" },
+        { "name": "Constants: display strings updated", "status": "done" },
+        { "name": "FAQ category: The Evaluation → The Challenge", "status": "done" }
+      ]
+    },
+    {
+      "id": 12, "name": "Updates B — Homepage Reorder + Page Fixes", "status": "done",
+      "scope": "Homepage, HIW, Partners, FAQ, constants", "estSessions": "1 session", "estHours": 1,
+      "dependsOn": [11],
+      "sessions": [{ "session": 14, "date": "2026-03-25", "notes": "Homepage reorder with full pricing cards replacing PricingPreview, Stats bar removed, copy fixes on Problem section, HIW min capital row removed + callout tightened, Partners funding capacity section removed, FAQ trading pairs added + min capital removed" }],
+      "items": [
+        { "name": "Homepage section reorder (8 sections)", "status": "done" },
+        { "name": "Replace PricingPreview with full pricing cards", "status": "done" },
+        { "name": "Remove Network Stats Bar from homepage", "status": "done" },
+        { "name": "Copy fix: Rewards Distributed → Network Rewards Distributed", "status": "done" },
+        { "name": "Copy fix: Problem card 2 body (No → With no)", "status": "done" },
+        { "name": "Copy fix: Problem callout bar updated", "status": "done" },
+        { "name": "HIW: remove Minimum Trading Capital row", "status": "done" },
+        { "name": "HIW: tighten callout bar spacing", "status": "done" },
+        { "name": "Partners: remove Funding Capacity section", "status": "done" },
+        { "name": "FAQ: add trading pairs question", "status": "done" },
+        { "name": "FAQ: remove minimum capital question", "status": "done" }
+      ]
+    },
+    {
+      "id": 13, "name": "Wallet Search + Metadata + Link Audit", "status": "done",
+      "scope": "Leaderboard, Dashboard, all pages metadata, links", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [11, 12],
+      "sessions": [{ "session": 15, "date": "2026-03-26", "notes": "Leaderboard address search, dashboard address lookup, OG/meta/favicon for all pages, full link audit with 7 fixes" }],
+      "items": [
+        { "name": "Leaderboard wallet address search", "status": "done" },
+        { "name": "Leaderboard ?addr= query param support", "status": "done" },
+        { "name": "Dashboard address lookup (disconnected state)", "status": "done" },
+        { "name": "Root layout metadata (title template, OG defaults, Twitter card)", "status": "done" },
+        { "name": "Favicon config (icons in metadata)", "status": "done" },
+        { "name": "Per-page openGraph for all 11+ pages", "status": "done" },
+        { "name": "Leaderboard metadata (new layout.jsx)", "status": "done" },
+        { "name": "Fix Hero href=# → /leaderboard", "status": "done" },
+        { "name": "Fix Nav Chrome Extension URL (use constant)", "status": "done" },
+        { "name": "Fix Footer: remove Docs link, remove duplicate Challenge Rules, add For Agents", "status": "done" },
+        { "name": "Fix Discord URLs across FAQ, FAQPage, Footer (discord.gg/hyperscaledhq)", "status": "done" },
+        { "name": "Fix Leaderboard text-[10px] → text-xs", "status": "done" },
+        { "name": "Remove Figma MCP capture script from layout", "status": "done" }
+      ]
     }
   ],
   "routes": [
@@ -301,11 +358,11 @@ const TRACKER = {
     { "path": "/how-it-works", "label": "How It Works", "status": "complete", "phase": 5, "note": "4-step flow, non-custodial explainer, payout mechanics" },
     { "path": "/pricing", "label": "Pricing", "status": "complete", "phase": 4, "note": "Launch tiers, scaling visual, FAQ mini" },
     { "path": "/rules", "label": "Rules", "status": "complete", "phase": 6, "note": "Eval rules, funded rules, scaling, disqualification, KYC, protocol transparency" },
-    { "path": "/leaderboard", "label": "Leaderboard", "status": "complete", "phase": null, "note": "No changes needed" },
+    { "path": "/leaderboard", "label": "Leaderboard", "status": "complete", "phase": 13, "note": "Wallet search added, metadata added" },
     { "path": "/partners", "label": "Partners", "status": "complete", "phase": 8, "note": "Hero, features, revenue model, how it works, responsibilities, funding capacity, application CTA" },
     { "path": "/faq", "label": "FAQ", "status": "complete", "phase": 7, "note": "Grouped accordion, 5 categories, 22 items, sticky TOC" },
     { "path": "/register", "label": "Register", "status": "complete", "phase": null, "note": "3-step flow, working" },
-    { "path": "/dashboard", "label": "Dashboard", "status": "complete", "phase": null, "note": "SSE streaming, working" },
+    { "path": "/dashboard", "label": "Dashboard", "status": "complete", "phase": 13, "note": "Wallet lookup added, metadata updated" },
     { "path": "/miner/[slug]", "label": "Miner Detail", "status": "complete", "phase": null, "note": "Dynamic route, working" },
     { "path": "/status", "label": "Status", "status": "complete", "phase": null, "note": "Working" }
   ],
@@ -321,20 +378,20 @@ const TRACKER = {
     { "name": "min-h-screen", "fixed": 8, "total": 8, "severity": "low" }
   ],
   "decisions": [
-    { "name": "Nav search behavior", "status": "resolved", "resolution": "Removed, backlogged" },
+    { "name": "Nav search behavior", "status": "resolved", "resolution": "Search added directly to leaderboard page (not nav). Supports ?addr= query param." },
     { "name": "Chrome Extension CTA on registration", "status": "open", "resolution": null },
     { "name": "Social link URLs", "status": "resolved", "resolution": "Phase 4: x.com/hyperscaledhq, discord.gg/hyperscaledhq, github.com/taoshidev" },
-    { "name": "Docs link URL", "status": "resolved", "resolution": "Phase 4: docs.taoshi.io" },
+    { "name": "Docs link URL", "status": "resolved", "resolution": "Removed from footer. AgentsPage uses docs.hyperscaled.trade." },
     { "name": "Legal pages", "status": "resolved", "resolution": "Placeholder pages created" },
     { "name": "Partner application", "status": "resolved", "resolution": "mailto: partners@hyperscaled.trade" }
   ],
   "todoPolish": [
-    { "item": "Replace social link placeholders with real URLs", "priority": "medium" },
-    { "item": "Replace Docs link placeholder with real URL", "priority": "medium" },
+    { "item": "Replace social link placeholders with real URLs", "priority": "done" },
+    { "item": "Replace Docs link placeholder with real URL", "priority": "done" },
     { "item": "Resolve Chrome Extension CTA decision", "priority": "high" },
     { "item": "Final accessibility pass on all pages", "priority": "low" },
     { "item": "Performance audit (Lighthouse)", "priority": "low" },
-    { "item": "SEO meta tags for all routes", "priority": "medium" }
+    { "item": "SEO meta tags for all routes", "priority": "done" }
   ],
   "repoScan": {
     "date": "2026-03-17",

@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
+import { MagnifyingGlass } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
@@ -19,18 +21,21 @@ import { KycVerification } from "./kyc-verification";
 
 export function Dashboard() {
   const { address, isConnected } = useAccount();
-  const { dashboard, events } = useDashboardData(
-    isConnected ? address : null,
-  );
+  const [lookupAddr, setLookupAddr] = useState("");
+  const [lookupSubmitted, setLookupSubmitted] = useState(false);
+
+  const activeAddress = isConnected ? address : lookupSubmitted ? lookupAddr.trim() : null;
+
+  const { dashboard, events } = useDashboardData(activeAddress);
   const { status: streamStatus } = useDashboardStream(
-    isConnected && dashboard.data ? address : null,
+    activeAddress && dashboard.data ? activeAddress : null,
   );
 
-  // Disconnected
-  if (!isConnected) {
+  // Disconnected — show connect + address lookup
+  if (!isConnected && !lookupSubmitted) {
     return (
       <div className="min-h-[100dvh] flex items-center justify-center p-4">
-        <div className="space-y-6 max-w-md w-full mx-auto text-center">
+        <div className="space-y-8 max-w-md w-full mx-auto text-center">
           <div className="space-y-2">
             <h1 className="text-2xl font-bold">Trading Dashboard</h1>
             <p className="text-muted-foreground text-sm">
@@ -40,6 +45,41 @@ export function Dashboard() {
           <div className="flex justify-center">
             <ConnectButton />
           </div>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-white/[0.06]" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-3 text-zinc-500">or look up an address</span>
+            </div>
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (lookupAddr.trim()) setLookupSubmitted(true);
+            }}
+            className="flex gap-2"
+          >
+            <div className="relative flex-1">
+              <MagnifyingGlass
+                size={16}
+                weight="bold"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"
+              />
+              <input
+                type="text"
+                value={lookupAddr}
+                onChange={(e) => setLookupAddr(e.target.value)}
+                placeholder="Enter HL wallet address\u2026"
+                className="w-full h-11 pl-9 pr-3 rounded-lg bg-zinc-900/60 border border-white/[0.08] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background font-mono transition-[border-color,box-shadow]"
+              />
+            </div>
+            <Button type="submit" className="h-11 px-5" disabled={!lookupAddr.trim()}>
+              Look up
+            </Button>
+          </form>
         </div>
       </div>
     );

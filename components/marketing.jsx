@@ -1,12 +1,11 @@
 'use client'
 
 import Hero from './marketing/Hero'
-import Stats from './marketing/Stats'
-import Problem from './marketing/Problem'
-import Solution from './marketing/Solution'
 import HowItWorks from './marketing/HowItWorks'
+import HomePricing from './marketing/HomePricing'
 import Features from './marketing/Features'
-import PricingPreview from './marketing/PricingPreview'
+import Solution from './marketing/Solution'
+import Problem from './marketing/Problem'
 import PartnersCTA from './marketing/PartnersCTA'
 import FAQ from './marketing/FAQ'
 
@@ -14,12 +13,11 @@ export default function App() {
   return (
     <>
       <Hero />
-      <Stats />
-      <Problem />
-      <Solution />
       <HowItWorks />
+      <HomePricing />
       <Features />
-      <PricingPreview />
+      <Solution />
+      <Problem />
       <PartnersCTA />
       <FAQ />
     </>
