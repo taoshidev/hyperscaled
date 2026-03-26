@@ -12,7 +12,7 @@ import { ConnectionStatus } from "./connection-status";
 import { AccountOverview } from "./account-overview";
 import { OpenPositions } from "./open-positions";
 import { TradeHistory } from "./trade-history";
-import { PendingOrders } from "./pending-orders";
+
 import { OrderEvents } from "./order-events";
 import { StatsPanel } from "./stats-panel";
 import { KycVerification } from "./kyc-verification";
@@ -127,11 +127,8 @@ export function Dashboard() {
         {/* Account Overview */}
         <AccountOverview dashboard={data} />
 
-        {/* Open Positions + Pending Orders */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <OpenPositions positions={data.positions} />
-          <PendingOrders limitOrders={data.limit_orders} />
-        </div>
+        {/* Open Positions */}
+        <OpenPositions positions={data.positions} />
 
         {/* Trade History */}
         <TradeHistory positions={data.positions} />

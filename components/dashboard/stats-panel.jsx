@@ -101,7 +101,11 @@ export function StatsPanel({ drawdown, challengeProgress, limits }) {
                   value={
                     drawdown?.ledger_max_drawdown != null
                       ? `${((1 - drawdown.ledger_max_drawdown) * 100).toFixed(2)}%`
-                      : undefined
+                      : challengeProgress?.max_drawdown_percent != null
+                        ? `${challengeProgress.max_drawdown_percent.toFixed(2)}%`
+                        : challengeProgress?.drawdown_percent != null
+                          ? `${challengeProgress.drawdown_percent.toFixed(2)}%`
+                          : undefined
                   }
                 />
                 <StatRow
