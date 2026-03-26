@@ -34,6 +34,11 @@ export function useDashboardStream(hlAddress) {
     es.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
+        if (msg.type === "error") {
+          // Server sent an explicit error — close and let onerror retry
+          es.close();
+          return;
+        }
         if (msg.type === "dashboard") {
           queryClient.invalidateQueries({ queryKey: ["dashboard", hlAddress] });
         } else if (msg.type === "event") {
@@ -48,7 +53,6 @@ export function useDashboardStream(hlAddress) {
     es.onerror = () => {
       es.close();
       esRef.current = null;
-      setStatus("error");
 
       if (!hasReportedDisconnectRef.current) {
         hasReportedDisconnectRef.current = true;
@@ -58,6 +62,7 @@ export function useDashboardStream(hlAddress) {
         });
       }
 
+      setStatus("error");
       const delay = Math.min(1000 * 2 ** retriesRef.current, 30000);
       retriesRef.current += 1;
       timerRef.current = setTimeout(connect, delay);

@@ -12,8 +12,13 @@ import { USDC_ADDRESS, USDC_DECIMALS, USDC_EIP712_NAME, USDC_EIP712_VERSION, BAS
 import { db } from "@/lib/db";
 import { users, registrations } from "@/lib/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
+import { facilitator as cdpFacilitator } from "@coinbase/x402";
 
-const facilitator = new HTTPFacilitatorClient({ url: FACILITATOR_URL });
+const USE_TESTNET = process.env.USE_TESTNET === "true";
+
+const facilitator = USE_TESTNET
+  ? new HTTPFacilitatorClient({ url: FACILITATOR_URL })
+  : new HTTPFacilitatorClient(cdpFacilitator);
 
 function sanitizeApiKey(key) {
   if (key == null) return null;
@@ -274,7 +279,17 @@ export async function POST(request) {
       userId = newUser.id;
     }
   } catch (err) {
-    reportError(err, { source: "api/register", metadata: { step: "user_upsert" } });
+    reportCritical(err, {
+      source: "api/register",
+      metadata: {
+        step: "user_upsert",
+        wallet: effectivePayoutAddress,
+        email,
+        txHash,
+        dbError: err?.message,
+      },
+    });
+    // Continue — registration insert can still work with userId = null
   }
 
   // Call miner API
@@ -321,7 +336,7 @@ export async function POST(request) {
     }
   }
 
-  // Insert registration record
+  // Insert registration record — this MUST succeed; the user already paid.
   try {
     await db.insert(registrations).values({
       userId,
@@ -336,28 +351,44 @@ export async function POST(request) {
       statusDetail,
     });
   } catch (err) {
-    reportError(err, { source: "api/register", metadata: { step: "registration_insert" } });
+    reportCritical(err, {
+      source: "api/register",
+      metadata: {
+        step: "registration_insert",
+        hlAddress,
+        txHash,
+        accountSize,
+        tierIndex,
+        userId,
+        payoutAddress: effectivePayoutAddress,
+        minerHotkey: miner.hotkey,
+        dbError: err?.message,
+      },
+    });
+
+    // Payment was already settled on-chain — tell the user so they can contact support.
+    return NextResponse.json(
+      {
+        error: "Registration could not be saved",
+        message:
+          "Your payment was processed on-chain but we failed to record your registration. Please contact support with your transaction hash.",
+        txHash,
+      },
+      { status: 500 },
+    );
   }
 
-  const resendKey = process.env.RESEND_API_KEY;
-  if (resendKey) {
+  if (process.env.SMTP_USER) {
     try {
-      await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${resendKey}`,
-        },
-        body: JSON.stringify({
-          from: "Hyperscaled <noreply@hyperscaled.com>",
-          to: [email],
-          subject: registered
-            ? `\u2713 Registered with ${miner.name}`
-            : `\u231B Registration Pending \u2014 ${miner.name}`,
-          html: registered
-            ? registeredEmailHtml(miner, accountSize, hlAddress, effectivePayoutAddress, txHash)
-            : pendingEmailHtml(miner, accountSize, hlAddress, effectivePayoutAddress, txHash),
-        }),
+      const { sendEmail } = await import("@/lib/email");
+      await sendEmail({
+        to: email,
+        subject: registered
+          ? `\u2713 Registered with ${miner.name}`
+          : `\u231B Registration Pending \u2014 ${miner.name}`,
+        html: registered
+          ? registeredEmailHtml(miner, accountSize, hlAddress, effectivePayoutAddress, txHash)
+          : pendingEmailHtml(miner, accountSize, hlAddress, effectivePayoutAddress, txHash),
       });
     } catch {
       // Email send failure is non-blocking
