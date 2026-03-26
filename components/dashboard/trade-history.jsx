@@ -45,7 +45,7 @@ export function TradeHistory({ positions }) {
                 </thead>
                 <tbody>
                   {visible.map((p, i) => {
-                    const direction = p.position_type || p.direction;
+                    const direction = p.direction || (p.position_type !== "FLAT" ? p.position_type : null) || p.position_type;
                     const openTime = p.open_ms || p.opened_at;
                     const closeTime = p.close_ms || p.closed_at;
                     const ret = p.return_at_close ?? p.return;
@@ -59,7 +59,9 @@ export function TradeHistory({ positions }) {
                             className={`inline-block rounded px-1.5 py-0.5 text-xs font-medium ${
                               direction === "LONG"
                                 ? "bg-green-500/20 text-green-400"
-                                : "bg-red-500/20 text-red-400"
+                                : direction === "SHORT"
+                                  ? "bg-red-500/20 text-red-400"
+                                  : "bg-zinc-500/20 text-zinc-400"
                             }`}
                           >
                             {direction}

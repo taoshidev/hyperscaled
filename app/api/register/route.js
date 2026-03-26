@@ -384,8 +384,8 @@ export async function POST(request) {
       await sendEmail({
         to: email,
         subject: registered
-          ? `\u2713 Registered with ${miner.name}`
-          : `\u231B Registration Pending \u2014 ${miner.name}`,
+          ? `\u2713 Registered with Hyperscaled Trading`
+          : `\u231B Registration Pending \u2014 Hyperscaled Trading`,
         html: registered
           ? registeredEmailHtml(miner, accountSize, hlAddress, effectivePayoutAddress, txHash)
           : pendingEmailHtml(miner, accountSize, hlAddress, effectivePayoutAddress, txHash),
@@ -420,7 +420,7 @@ function registeredEmailHtml(miner, accountSize, hlAddress, payoutAddress, txHas
       <div style="text-align: center; margin-bottom: 32px;">
         <div style="font-size: 48px;">\u2705</div>
         <h1 style="font-size: 24px; font-weight: 700; margin: 16px 0 8px;">Registration Complete</h1>
-        <p style="color: #888; font-size: 14px;">Your ${miner.name} trading account is ready</p>
+        <p style="color: #888; font-size: 14px;">Your Hyperscaled Trading account is ready</p>
       </div>
       <div style="background: #1a1a1a; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
         <table style="width: 100%; font-size: 14px;" cellpadding="8">

@@ -1,6 +1,8 @@
 "use client";
 
+import { Info } from "@phosphor-icons/react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { AlertCircle } from "lucide-react";
 import { formatUSD, formatReturn, pnlColor } from "@/lib/format";
 
@@ -44,8 +46,30 @@ function ChallengeProgressBar({ challengeProgress }) {
           </div>
           <div>
             <div className="flex justify-between text-xs mb-1">
-              <span className="text-muted-foreground">Drawdown Usage</span>
-              <span className="font-medium">{drawdownUsage.toFixed(1)}%</span>
+              <span className="text-muted-foreground flex items-center gap-1">
+                Drawdown Usage
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button type="button" className="inline-flex text-muted-foreground hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-sm">
+                      <Info className="w-3 h-3" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <div className="space-y-1.5">
+                      <p className="font-medium">2-Step Drawdown Rules</p>
+                      <p>1. Daily drawdown must not exceed 4% of starting daily equity.</p>
+                      <p>2. Total drawdown must not exceed the account drawdown limit from peak equity.</p>
+                      <p className="text-muted-foreground">Breaching either rule results in account termination.</p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </span>
+              <span className="font-medium">
+                {drawdownUsage.toFixed(1)}%
+                {challengeProgress.drawdown_limit_percent != null
+                  ? ` / ${challengeProgress.drawdown_limit_percent.toFixed(0)}%`
+                  : ""}
+              </span>
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
               <div

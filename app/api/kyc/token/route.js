@@ -3,6 +3,7 @@ import { isValidEvmAddress } from "@/lib/validation";
 import { reportError } from "@/lib/errors";
 import {
   getUserByWallet,
+  createUserByWallet,
   getApplicant,
   createApplicant,
   generateAccessToken,
@@ -27,12 +28,9 @@ export async function POST(request) {
   }
 
   try {
-    const user = await getUserByWallet(wallet);
+    let user = await getUserByWallet(wallet);
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found. Register first." },
-        { status: 404 },
-      );
+      user = await createUserByWallet(wallet);
     }
 
     const externalUserId = wallet.toLowerCase();
