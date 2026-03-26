@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { ArrowRight, List, X } from '@phosphor-icons/react'
+import { ArrowRight, DownloadSimple, List, X } from '@phosphor-icons/react'
+import { CHROME_EXTENSION_URL } from '@/lib/constants'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -36,14 +37,16 @@ export default function Nav() {
       transition={spring}
       className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-[#09090b]/60 border-b border-white/[0.06]"
     >
-      <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between gap-4">
+      <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between gap-4 relative">
         {/* Logo */}
-        <Link href="/" className="flex items-center shrink-0">
+        <Link href="/" className="flex items-center gap-2 shrink-0 relative z-10">
           <img src="/hyperscaled-logo.svg" alt="Hyperscaled" className="h-7 w-auto" />
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-teal-400 border border-teal-400/30 bg-teal-400/10 rounded px-1.5 py-0.5 leading-none">Beta</span>
         </Link>
 
-        {/* Desktop nav — progressively visible links */}
-        <nav className="flex items-center gap-6">
+        {/* Desktop nav — absolutely centered in header */}
+        <nav className="hidden md:flex items-center justify-center gap-6 absolute inset-0 pointer-events-none">
+          <div className="flex items-center gap-6 pointer-events-auto">
           {NAV_LINKS.map((l) => (
             <Link
               key={l.label}
@@ -53,10 +56,20 @@ export default function Nav() {
               {l.label}
             </Link>
           ))}
+          </div>
         </nav>
 
         {/* CTA + hamburger */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-3 shrink-0 relative z-10">
+          <a
+            href={CHROME_EXTENSION_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors px-3 py-2 rounded-lg border border-white/[0.08] bg-zinc-900/80"
+          >
+            <DownloadSimple size={15} weight="bold" />
+            Extension
+          </a>
           <Link
             href="/register"
             className="shiny-cta px-5 py-2"

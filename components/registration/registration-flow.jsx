@@ -7,9 +7,13 @@ import { Stepper } from "./stepper";
 import { StepSelectTier } from "./step-select-tier";
 import { StepConnectAndPay } from "./step-connect-pay";
 import { StepConfirmation } from "./step-confirmation";
+import { TIERS } from "@/lib/constants";
 
 const STEP_LABELS = ["Select Plan", "Connect & Pay", "Confirmation"];
 const MINER_SLUG = "vanta";
+
+const MOCK_WALLET = "0x0000000000000000000000000000000000000000";
+const MOCK_TIERS = TIERS.map((t) => ({ ...t, promoPrice: 1 }));
 
 export function RegistrationFlow() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -31,7 +35,9 @@ export function RegistrationFlow() {
         setPaymentWallet(data.usdcWallet);
       })
       .catch((err) => {
-        console.error("[RegistrationFlow] Failed to load miner data:", err);
+        console.warn("[RegistrationFlow] API unavailable, using mock tiers:", err);
+        setMinerTiers(MOCK_TIERS);
+        setPaymentWallet(MOCK_WALLET);
       });
   }, []);
 

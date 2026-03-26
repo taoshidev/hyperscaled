@@ -2,7 +2,48 @@
 
 ## Current status
 
-Registration Phase 3 complete. All 3 steps of the registration flow are fully built: Select Plan → Connect & Pay → Confirmation. Promo banner, nav bar, mobile stepper, and beforeunload guard all in place.
+Wallet search + metadata + link audit complete. Leaderboard has address search with `?addr=` query param support. Dashboard has address lookup for disconnected users. All pages have OG metadata, favicon, and Twitter card configured. Link audit done — all dead links fixed, Discord URLs corrected, Docs link removed from footer, Chrome Extension URL uses constant.
+
+## Search + Meta + Links Session (2026-03-26)
+
+### Wallet search — Leaderboard
+- Added `searchQuery` state + `MagnifyingGlass`/`XCircle` search bar above table
+- `useMemo` filters both funded and challenge tables by partial address match (case-insensitive)
+- Clear button resets search; "No results" state with "Show all traders" button
+- `initialSearch` prop from page's `?addr=` query param auto-populates on load
+- Removed unused `onSearch` prop from Nav
+
+### Wallet search — Dashboard
+- Added "or look up an address" divider + search form below ConnectButton in disconnected state
+- `lookupAddr` + `lookupSubmitted` state — on submit, passes address to `useDashboardData` hook
+- Same data flow as connected wallet, just uses typed address instead
+
+### Metadata + OG Images
+- Root layout: full metadata with `title.template`, `metadataBase`, `openGraph` (site-wide defaults), `twitter` card, `icons` pointing to `/favicon.png`
+- All 11 marketing pages updated: title uses template format (no "| Hyperscaled" suffix needed), per-page `openGraph` with `title`, `description`, `url`
+- Created `app/leaderboard/layout.jsx` for metadata (page is `'use client'`)
+- Home page `(marketing)/page.jsx` gets explicit openGraph
+- Removed Figma MCP capture script from layout head
+
+### Link Audit — Issues Found & Fixed
+1. **Hero.jsx** — `href="#"` on "View Full Analytics" → changed to `/leaderboard`
+2. **Nav.jsx** — Chrome Web Store bare domain → now uses `CHROME_EXTENSION_URL` constant (full extension URL)
+3. **Footer.jsx** — Removed `Docs` link (`docs.taoshi.io`), removed duplicate `Challenge Rules` link, added `For Agents` link instead
+4. **Footer.jsx** — Discord URL `discord.com/invite/GsqbQHu5UD` → `discord.gg/hyperscaledhq`
+5. **FAQ.jsx** — Discord URL fixed (same)
+6. **FAQPage.jsx** — Discord URL fixed (same)
+7. **Leaderboard.jsx** — Fixed `text-[10px]` → `text-xs` on network stats labels
+
+### Link Audit — Verified OK
+- All "Start Challenge" / "Start Your Challenge" CTAs → `/register` (internal Link) ✓
+- All tier-specific "Start $XXK Challenge" CTAs → `https://app.hyperscaled.trade` (external) ✓
+- Twitter/X → `https://x.com/hyperscaledhq` ✓
+- GitHub → `https://github.com/taoshidev` ✓
+- `mailto:support@hyperscaled.trade` ✓
+- `mailto:partners@hyperscaled.trade` ✓
+- All external links have `target="_blank"` + `rel="noreferrer"` ✓
+- No "Evaluation" text remaining (all renamed to "Challenge") ✓
+- No double arrows on any button ✓
 
 ## Completed phases
 

@@ -93,7 +93,7 @@ export default function FAQ() {
             <div className="mt-8 p-4 rounded-xl bg-zinc-900/50 border border-white/[0.06] space-y-2">
               <div className="text-xs text-zinc-500">Still have questions?</div>
               <a
-                href="https://discord.com/invite/GsqbQHu5UD"
+                href="https://discord.gg/hyperscaledhq"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-teal-400 hover:text-teal-300 transition-colors font-medium block"

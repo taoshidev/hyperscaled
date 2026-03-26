@@ -8,13 +8,17 @@ import TraderDashboard from '@/components/marketing/TraderDashboard'
 
 function LeaderboardContent() {
   const searchParams = useSearchParams()
-  const [selectedTrader, setSelectedTrader] = useState(() => searchParams.get('addr'))
+  const initialAddr = searchParams.get('addr') || ''
+  const [selectedTrader, setSelectedTrader] = useState(() => initialAddr || null)
 
   return (
     <div className="bg-[#09090b] text-white font-sans min-h-[100dvh]">
-      <Nav onSearch={setSelectedTrader} />
+      <Nav />
       <main className="pt-16">
-        <Leaderboard onSelectTrader={setSelectedTrader} />
+        <Leaderboard
+          onSelectTrader={setSelectedTrader}
+          initialSearch={initialAddr}
+        />
       </main>
       <TraderDashboard addr={selectedTrader} onClose={() => setSelectedTrader(null)} />
     </div>

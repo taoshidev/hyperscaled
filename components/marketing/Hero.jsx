@@ -211,7 +211,7 @@ export default function Hero() {
                   <ArrowsClockwise size={11} />
                   Updated just now
                 </div>
-                <a href="#" className="text-xs text-teal-400 hover:text-teal-300 transition-colors flex items-center gap-1">
+                <a href="/leaderboard" className="text-xs text-teal-400 hover:text-teal-300 transition-colors flex items-center gap-1">
                   View Full Analytics
                   <ArrowRight size={10} />
                 </a>

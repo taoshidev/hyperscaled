@@ -1,7 +1,8 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useMemo } from 'react'
 import { motion, useInView } from 'framer-motion'
+import { MagnifyingGlass, XCircle } from '@phosphor-icons/react'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -41,13 +42,14 @@ function fmtCompact(n) {
   return fmtUSD(n)
 }
 
-export default function Leaderboard({ onSelectTrader }) {
+export default function Leaderboard({ onSelectTrader, initialSearch = '' }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
   const [activeTab, setActiveTab] = useState('funded')
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [searchQuery, setSearchQuery] = useState(initialSearch)
 
   useEffect(() => {
     let cancelled = false
@@ -87,15 +89,59 @@ export default function Leaderboard({ onSelectTrader }) {
     { label: 'Network Volume', value: fmtCompact(summary.totalVolume || 0), color: 'text-white' },
   ]
 
+  const query = searchQuery.trim().toLowerCase()
+  const filteredFunded = useMemo(() =>
+    query ? funded.filter((t) => (t.address || t.addr || '').toLowerCase().includes(query)) : funded,
+    [funded, query]
+  )
+  const filteredChallenge = useMemo(() =>
+    query ? challenge.filter((t) => (t.address || t.addr || '').toLowerCase().includes(query)) : challenge,
+    [challenge, query]
+  )
+  const hasResults = filteredFunded.length > 0 || filteredChallenge.length > 0
+
   return (
-    <section id="leaderboard" ref={ref} className="py-24 px-6">
+    <section id="leaderboard" ref={ref} className="pt-12 pb-24 px-6">
       <div className="max-w-[1400px] mx-auto">
+
+        {/* Search */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={spring}
+          className="mb-14 flex justify-center"
+        >
+          <div className="relative w-full max-w-lg">
+            <MagnifyingGlass
+              size={16}
+              weight="bold"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"
+            />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by HL address…"
+              className="w-full h-11 pl-10 pr-10 rounded-xl bg-zinc-900/60 border border-white/[0.08] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090b] font-mono transition-[border-color,box-shadow]"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+              >
+                <XCircle size={18} weight="fill" />
+              </button>
+            )}
+          </div>
+        </motion.div>
 
         {/* Page header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={spring}
+          transition={{ ...spring, delay: 0.04 }}
           className="mb-14"
         >
           <span className="text-xs text-zinc-500 tracking-widest uppercase block mb-4">Leaderboard</span>
@@ -121,12 +167,29 @@ export default function Leaderboard({ onSelectTrader }) {
           <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
             {networkStats.map((s) => (
               <div key={s.label} className="bg-zinc-900/40 border border-white/[0.06] rounded-xl p-4">
-                <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1.5">{s.label}</div>
+                <div className="text-xs text-zinc-500 uppercase tracking-widest mb-1.5">{s.label}</div>
                 <div className={`text-xl font-bold tracking-tight tabular-nums ${s.color}`}>{s.value}</div>
               </div>
             ))}
           </div>
         </motion.div>
+
+        {/* No results */}
+        {!loading && query && !hasResults && (
+          <div className="mb-8 px-4 py-6 rounded-xl bg-zinc-900/40 border border-white/[0.06] text-center">
+            <p className="text-sm text-zinc-400">
+              No results for{' '}
+              <span className="font-mono text-white">{searchQuery}</span>
+            </p>
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="mt-3 text-xs text-teal-400 hover:text-teal-300 transition-colors"
+            >
+              Show all traders
+            </button>
+          </div>
+        )}
 
         {/* Loading state */}
         {loading && (
@@ -160,8 +223,8 @@ export default function Leaderboard({ onSelectTrader }) {
             {/* Tabs */}
             <div className="flex gap-0 border-b border-white/[0.06] mb-5">
               {[
-                ['funded', `Funded (${funded.length})`],
-                ['challenge', `In Challenge (${challenge.length})`],
+                ['funded', `Funded (${filteredFunded.length})`],
+                ['challenge', `In Challenge (${filteredChallenge.length})`],
               ].map(([tab, label]) => (
                 <button
                   key={tab}
@@ -190,7 +253,7 @@ export default function Leaderboard({ onSelectTrader }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {funded.map((t, i) => (
+                      {filteredFunded.map((t, i) => (
                         <tr
                           key={i}
                           onClick={() => onSelectTrader?.(t.address || t.addr)}
@@ -228,7 +291,7 @@ export default function Leaderboard({ onSelectTrader }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {challenge.map((t, i) => {
+                      {filteredChallenge.map((t, i) => {
                         const pct = t.progress != null ? t.progress : Math.max(0, ((t.pnl || 0) / 25000 * 10) * 100)
                         return (
                           <tr

@@ -1,6 +1,6 @@
 # Build State
 
-Last updated: 2026-03-25
+Last updated: 2026-03-26
 
 ## Marketing Site (`/`)
 
@@ -18,8 +18,8 @@ Last updated: 2026-03-25
 | FAQ | Done — Phase 3: "View full FAQ →" link added to sticky sidebar |
 | Stats section | Removed — UB: Network Stats Bar removed as standalone section (key stats already in hero row) |
 | PricingPreview | Removed — UB: replaced by full pricing cards |
-| Footer | Done — 4-column layout (Brand, Protocol, Community, Legal), social icons, "Built on Hyperliquid · Powered by Bittensor", © 2026. Phase 4: all social/docs URLs patched, Audit Report removed, Contact Support mailto added. |
-| Nav | Done — UA: 7 links (How It Works, Pricing, For Agents, Rules, Leaderboard, Partners, FAQ), "Start Challenge" CTA → /register, progressive responsive collapse (md/lg/xl breakpoints), hamburger always contains all links. Search removed (backlog). |
+| Footer | Done — 4-column layout (Brand, Protocol, Community, Legal), social icons, "Built on Hyperliquid · Powered by Bittensor", © 2026. Phase 4: URLs patched. Link audit: Docs link removed, duplicate Challenge Rules removed, For Agents added, Discord URLs corrected to discord.gg/hyperscaledhq. |
+| Nav | Done — UA: 7 links + Extension CTA + "Start Challenge" CTA → /register, progressive responsive collapse. Link audit: Chrome Extension URL now uses CHROME_EXTENSION_URL constant (full extension path). |
 | Waitlist form | Done (to be removed) — spec has no waitlist form |
 | LiquidCrystal background | Done |
 | ShinyButton CTA | Done |
@@ -155,7 +155,7 @@ Last updated: 2026-03-25
 
 ## Dashboard (`/dashboard`)
 
-**Status**: Complete (first pass)
+**Status**: Complete — wallet lookup added, metadata updated
 
 | Item | State |
 |------|-------|
@@ -169,6 +169,8 @@ Last updated: 2026-03-25
 | Dashboard layout/composition | Done |
 | use-dashboard hook (REST) | Done |
 | use-dashboard-stream hook (SSE) | Done |
+| Wallet address lookup | Done — "or look up an address" input in disconnected state, submits to same data flow as connected wallet |
+| Page metadata + OG | Done — title template, description, openGraph |
 
 **Next action**: UI polish pass — loading states, empty states, responsive behavior
 
@@ -224,14 +226,16 @@ Last updated: 2026-03-25
 
 ## Leaderboard (`/leaderboard`)
 
-**Status**: Complete (first pass)
+**Status**: Complete — wallet search added, metadata added
 
 | Item | State |
 |------|-------|
 | Leaderboard page | Done |
 | Mock miner data | Done |
+| Wallet address search | Done — search input above table, filters funded + challenge tabs by partial address match, ?addr= query param support, clear/reset, no-results state |
+| Page metadata + OG | Done — title, description, openGraph with url in leaderboard layout.jsx |
 
-**Next action**: Design polish, filtering/sorting, responsive layout
+**Next action**: Design polish, responsive layout
 
 ## Miner Detail (`/miner/[slug]`)
 
@@ -268,6 +272,20 @@ Last updated: 2026-03-25
 | Skeleton loader (CSS) | Done |
 
 **Next action**: Audit components for consistency, add any missing primitives as needed
+
+## Metadata + SEO
+
+**Status**: Complete
+
+| Item | State |
+|------|-------|
+| Root layout metadata (title template, description, metadataBase) | Done |
+| OpenGraph defaults (site-wide og.png, siteName, type) | Done |
+| Twitter card (summary_large_image, @hyperscaledhq) | Done |
+| Favicon (app/favicon.png, app/favicon.ico, icons config) | Done |
+| Per-page metadata (all 11 marketing pages + dashboard + register) | Done |
+| Per-page openGraph (title, description, url) | Done |
+| Link audit (dead links, Discord URLs, Docs removal) | Done |
 
 ## Infrastructure
 

@@ -146,7 +146,7 @@ function ContactSection() {
     <section className="px-6 pb-24">
       <div className="max-w-[900px] mx-auto flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10">
         <a
-          href="https://discord.com/invite/GsqbQHu5UD"
+          href="https://discord.gg/hyperscaledhq"
           target="_blank"
           rel="noopener noreferrer"
           className="text-sm text-teal-400 hover:text-teal-300 transition-colors inline-flex items-center gap-2"

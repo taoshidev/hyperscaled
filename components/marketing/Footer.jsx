@@ -9,12 +9,11 @@ const footerLinks = {
     { label: 'Pricing', href: '/pricing' },
     { label: 'Rules', href: '/rules' },
     { label: 'Leaderboard', href: '/leaderboard' },
-    { label: 'Challenge Rules', href: '/rules' },
-    { label: 'Docs', href: 'https://docs.taoshi.io', external: true },
+    { label: 'For Agents', href: '/agents' },
   ],
   Community: [
     { label: 'Twitter / X', href: 'https://x.com/hyperscaledhq', external: true, icon: TwitterLogo },
-    { label: 'Discord', href: 'https://discord.com/invite/GsqbQHu5UD', external: true, icon: DiscordLogo },
+    { label: 'Discord', href: 'https://discord.gg/hyperscaledhq', external: true, icon: DiscordLogo },
     { label: 'GitHub', href: 'https://github.com/taoshidev', external: true, icon: GithubLogo },
     { label: 'Contact Support', href: 'mailto:support@hyperscaled.trade', external: true },
   ],
@@ -28,7 +27,7 @@ const footerLinks = {
 /* Social icons in brand column */
 const socialIcons = [
   { Icon: TwitterLogo, href: 'https://x.com/hyperscaledhq', label: 'Twitter' },
-  { Icon: DiscordLogo, href: 'https://discord.com/invite/GsqbQHu5UD', label: 'Discord' },
+  { Icon: DiscordLogo, href: 'https://discord.gg/hyperscaledhq', label: 'Discord' },
   { Icon: GithubLogo, href: 'https://github.com/taoshidev', label: 'GitHub' },
 ]
 
