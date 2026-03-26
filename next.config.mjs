@@ -1,7 +1,11 @@
 import { withSentryConfig } from "@sentry/nextjs";
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  env: {
+    USE_TESTNET: process.env.USE_TESTNET || "false",
+  },
+};
 
 export default withSentryConfig(nextConfig, {
   // For all available options, see:

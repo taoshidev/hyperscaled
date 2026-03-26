@@ -35,7 +35,7 @@ export function OpenPositions({ positions }) {
               </thead>
               <tbody>
                 {open.map((p, i) => {
-                  const direction = p.position_type || p.direction;
+                  const direction = p.direction || (p.position_type !== "FLAT" ? p.position_type : null) || p.position_type;
                   return (
                     <tr key={i} className="border-b border-border/50">
                       <td className="py-2 pr-4 font-medium">
@@ -46,7 +46,9 @@ export function OpenPositions({ positions }) {
                           className={`inline-block rounded px-1.5 py-0.5 text-xs font-medium ${
                             direction === "LONG"
                               ? "bg-green-500/20 text-green-400"
-                              : "bg-red-500/20 text-red-400"
+                              : direction === "SHORT"
+                                ? "bg-red-500/20 text-red-400"
+                                : "bg-zinc-500/20 text-zinc-400"
                           }`}
                         >
                           {direction}

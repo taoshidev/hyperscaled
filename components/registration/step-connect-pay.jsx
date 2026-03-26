@@ -13,7 +13,6 @@ import {
   CheckCircle,
   ArrowLeft,
   Warning,
-  CaretDown,
   Wallet,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
@@ -57,24 +56,21 @@ export function StepConnectAndPay({
 
   const [paymentState, setPaymentState] = useState("idle");
   const [errorMessage, setErrorMessage] = useState("");
-  const [showAltWallet, setShowAltWallet] = useState(false);
-  const [altAddress, setAltAddress] = useState("");
-  const [altTouched, setAltTouched] = useState(false);
+  const [hlWallet, setHlWallet] = useState("");
+  const [hlWalletTouched, setHlWalletTouched] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
 
   const price = selectedTier.promoPrice;
-  const altValid = isValidHLAddress(altAddress);
-  const showAltError = altTouched && altAddress.length > 0 && !altValid;
+  const hlWalletValid = isValidHLAddress(hlWallet);
+  const showHlWalletError = hlWalletTouched && hlWallet.length > 0 && !hlWalletValid;
   const emailValid = isValidEmail(email);
   const showEmailError = emailTouched && email.length > 0 && !emailValid;
 
-  // The HL address is the alt address if provided, otherwise the connected wallet
-  const resolvedHlAddress =
-    showAltWallet && altAddress.length > 0 ? altAddress : address;
+  // The HL address is always the manually entered wallet
+  const resolvedHlAddress = hlWallet;
 
-  // Can only pay if we have a valid HL address
-  const hlAddressReady =
-    !showAltWallet || altAddress.length === 0 || altValid;
+  // Can only pay if HL address is valid
+  const hlAddressReady = hlWallet.length > 0 && hlWalletValid;
 
   const { data: balance } = useReadContract({
     address: USDC_ADDRESS,
@@ -213,6 +209,15 @@ export function StepConnectAndPay({
     !!paymentWallet &&
     paymentState !== "processing";
 
+  // Track which fields are still needed for the pay button label
+  const missingField = !emailValid
+    ? "Enter your email to continue"
+    : !hlAddressReady
+      ? "Enter your Hyperliquid wallet to continue"
+      : !hasEnough
+        ? "Insufficient USDC balance"
+        : null;
+
   return (
     <div className="flex flex-col items-center animate-[fadeInUp_0.35s_ease-out_both]">
       {/* Order summary card */}
@@ -257,7 +262,7 @@ export function StepConnectAndPay({
         </p>
       </div>
 
-      {/* Email input — always visible */}
+      {/* ─── 1. Email address ─── */}
       <div className="w-full max-w-lg mt-6 space-y-1.5">
         <label htmlFor="reg-email" className="text-xs font-medium text-muted-foreground">
           Email address
@@ -288,8 +293,45 @@ export function StepConnectAndPay({
         </div>
       </div>
 
-      {/* Wallet connection section */}
-      <div className="w-full max-w-lg space-y-4 mt-4">
+      {/* ─── 2. Hyperliquid Wallet ─── */}
+      <div className="w-full max-w-lg space-y-1.5">
+        <label htmlFor="hl-wallet" className="text-xs font-medium text-muted-foreground">
+          Hyperliquid wallet
+        </label>
+        <input
+          id="hl-wallet"
+          type="text"
+          value={hlWallet}
+          onChange={(e) => setHlWallet(e.target.value)}
+          onBlur={() => setHlWalletTouched(true)}
+          placeholder="0x..."
+          aria-label="Hyperliquid trading wallet address"
+          aria-describedby="hl-wallet-error"
+          aria-invalid={showHlWalletError ? "true" : undefined}
+          className={`
+            w-full rounded-xl border bg-card p-4 text-sm font-mono
+            placeholder:text-muted-foreground/50
+            outline-none
+            focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
+            transition-[border-color,box-shadow] duration-200
+            ${showHlWalletError ? "border-destructive" : "border-border hover:border-white/[0.15]"}
+          `}
+        />
+        <div id="hl-wallet-error" role="alert" className="min-h-[1.25rem]">
+          {showHlWalletError && (
+            <p className="text-xs text-destructive">
+              Enter a valid address — 0x followed by 40 hex characters
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* ─── 3. Payment Wallet ─── */}
+      <div className="w-full max-w-lg space-y-4">
+        <p className="text-xs font-medium text-muted-foreground">
+          Payment wallet
+        </p>
+
         {/* Status region for screen readers */}
         <div aria-live="polite" className="sr-only">
           {paymentState === "processing" && "Confirming payment..."}
@@ -337,16 +379,9 @@ export function StepConnectAndPay({
             {!isConnected ? (
               /* Not connected */
               <div className="space-y-4 text-center">
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold tracking-tight">
-                    Connect your wallet to pay
-                  </h3>
-                  <p className="text-sm text-muted-foreground text-balance max-w-md mx-auto">
-                    You&#8217;ll sign a gasless USDC authorization on Base. Your
-                    connected wallet will also be registered as your Hyperliquid
-                    trading&nbsp;address.
-                  </p>
-                </div>
+                <p className="text-sm text-muted-foreground text-balance max-w-md mx-auto">
+                  Connect the wallet you&#8217;ll use to pay with USDC on&nbsp;Base.
+                </p>
                 <ConnectButton.Custom>
                   {({ openConnectModal }) => (
                     <div className="flex justify-center">
@@ -384,7 +419,7 @@ export function StepConnectAndPay({
                     </span>
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    Trading &amp; payment wallet
+                    Connected
                   </span>
                 </div>
 
@@ -430,79 +465,14 @@ export function StepConnectAndPay({
                         Confirming payment...
                       </span>
                     </>
-                  ) : !hasEnough ? (
-                    "Insufficient USDC balance"
-                  ) : !emailValid ? (
-                    "Enter your email to continue"
+                  ) : missingField ? (
+                    missingField
                   ) : (
                     `Pay $${price} USDC`
                   )}
                 </Button>
               </div>
             )}
-
-            {/* Different wallet toggle — shown when connected or not */}
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={() => setShowAltWallet((prev) => !prev)}
-                aria-expanded={showAltWallet}
-                aria-controls="alt-wallet-input"
-                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-[color] duration-200 h-11 px-1 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg mx-auto w-full justify-center"
-              >
-                Trading from a different Hyperliquid wallet?
-                <CaretDown
-                  size={12}
-                  weight="bold"
-                  className={`transition-transform duration-200 ${showAltWallet ? "rotate-180" : ""}`}
-                />
-              </button>
-
-              {showAltWallet && (
-                <div id="alt-wallet-input" className="space-y-2">
-                  <label
-                    htmlFor="alt-hl-address"
-                    className="text-xs font-medium text-muted-foreground"
-                  >
-                    Hyperliquid trading address
-                  </label>
-                  <input
-                    id="alt-hl-address"
-                    type="text"
-                    value={altAddress}
-                    onChange={(e) => setAltAddress(e.target.value)}
-                    onBlur={() => setAltTouched(true)}
-                    placeholder="0x..."
-                    aria-label="Hyperliquid trading wallet address"
-                    aria-describedby="alt-address-error"
-                    aria-invalid={showAltError ? "true" : undefined}
-                    className={`
-                      w-full rounded-xl border bg-card p-4 text-sm font-mono
-                      placeholder:text-muted-foreground/50
-                      outline-none
-                      focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
-                      transition-[border-color,box-shadow] duration-200
-                      ${
-                        showAltError
-                          ? "border-destructive"
-                          : "border-border hover:border-white/[0.15]"
-                      }
-                    `}
-                  />
-                  <div
-                    id="alt-address-error"
-                    role="alert"
-                    className="min-h-[1.25rem]"
-                  >
-                    {showAltError && (
-                      <p className="text-xs text-destructive">
-                        Enter a valid address — 0x followed by 40 hex characters
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
           </>
         )}
       </div>

@@ -5,6 +5,7 @@ import { WagmiProvider } from "wagmi";
 import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import { wagmiConfig } from "@/lib/wagmi";
 import { reportError } from "@/lib/errors";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "@rainbow-me/rainbowkit/styles.css";
 
 const queryClient = new QueryClient({
@@ -21,7 +22,9 @@ export function Providers({ children }) {
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider theme={darkTheme()}>
-          {children}
+          <TooltipProvider>
+            {children}
+          </TooltipProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
