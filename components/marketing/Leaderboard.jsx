@@ -43,7 +43,7 @@ function fmtCompact(n) {
   return fmtUSD(n)
 }
 
-export default function Leaderboard({ onSelectTrader, initialSearch = '' }) {
+export default function Leaderboard({ initialSearch = '' }) {
   const router = useRouter()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
