@@ -8,6 +8,19 @@ const TEN_MINUTES_MS = 10 * 60 * 1000;
 const rateMap = new Map();
 const RATE_WINDOW = 60_000;
 const RATE_MAX = 30;
+const CLEANUP_INTERVAL = 60_000; // clean up every 60s
+let lastCleanup = Date.now();
+
+function getClientIp(request) {
+  // In production behind a reverse proxy, use the leftmost untrusted IP
+  // For Vercel/Cloudflare, prefer their verified headers
+  return (
+    request.headers.get("cf-connecting-ip") ||
+    request.headers.get("x-real-ip") ||
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    "unknown"
+  );
+}
 
 /** JSON line: PM2 / systemd often render console object args as `[Object]` past depth 2. */
 function verifyLog(label, payload) {
@@ -86,6 +99,17 @@ function humanReadableNoMatch({
 
 function isRateLimited(ip) {
   const now = Date.now();
+
+  // Periodic cleanup of expired entries
+  if (now - lastCleanup > CLEANUP_INTERVAL) {
+    lastCleanup = now;
+    for (const [key, entry] of rateMap) {
+      if (now - entry.start > RATE_WINDOW) {
+        rateMap.delete(key);
+      }
+    }
+  }
+
   const entry = rateMap.get(ip);
   if (!entry || now - entry.start > RATE_WINDOW) {
     rateMap.set(ip, { start: now, count: 1 });
@@ -96,7 +120,7 @@ function isRateLimited(ip) {
 }
 
 export async function GET(request) {
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const ip = getClientIp(request);
   if (isRateLimited(ip)) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
