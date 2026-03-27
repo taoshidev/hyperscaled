@@ -24,6 +24,7 @@ export function RegistrationFlow() {
   const [hlAddress, setHlAddress] = useState(null);
   const [registrationStatus, setRegistrationStatus] = useState(null);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState(null);
   const [minerTiers, setMinerTiers] = useState(null);
   const [paymentWallet, setPaymentWallet] = useState(null);
 
@@ -39,6 +40,37 @@ export function RegistrationFlow() {
         setMinerTiers(MOCK_TIERS);
         setPaymentWallet(MOCK_WALLET);
       });
+  }, []);
+
+  // Recover completed registration from extension background verification
+  // (handles the case where the tab was closed during HL payment)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("hs_registration_result");
+      if (!raw) return;
+      const result = JSON.parse(raw);
+      if (!result.success || !result.txHash) {
+        localStorage.removeItem("hs_registration_result");
+        return;
+      }
+      // Only honour results from the last 30 minutes
+      if (result.completedAt && Date.now() - result.completedAt > 30 * 60 * 1000) {
+        localStorage.removeItem("hs_registration_result");
+        return;
+      }
+      // Build a minimal tier object for the confirmation screen
+      setSelectedTier({
+        name: result.tierName || "Challenge",
+        accountSize: result.accountSize || 0,
+        details: [],
+      });
+      setTxHash(result.txHash);
+      setHlAddress(result.hlAddress || "");
+      setRegistrationStatus(result.registrationStatus || "registered");
+      setPaymentMethod("hyperliquid");
+      setCurrentStep(2);
+      localStorage.removeItem("hs_registration_result");
+    } catch {}
   }, []);
 
   // B1: Browser refresh guard — only during active payment processing
@@ -118,11 +150,12 @@ export function RegistrationFlow() {
               email={email}
               onEmailChange={setEmail}
               onPaymentProcessing={setPaymentProcessing}
-              onPaymentComplete={({ txHash: hash, hlAddress: addr, registrationStatus: status }) => {
+              onPaymentComplete={({ txHash: hash, hlAddress: addr, registrationStatus: status, paymentMethod: method }) => {
                 setPaymentProcessing(false);
                 setTxHash(hash);
                 setHlAddress(addr);
                 setRegistrationStatus(status);
+                setPaymentMethod(method || null);
                 setCurrentStep(2);
               }}
               onBack={() => setCurrentStep(0)}
@@ -136,6 +169,7 @@ export function RegistrationFlow() {
               hlAddress={hlAddress}
               txHash={txHash}
               registrationStatus={registrationStatus}
+              paymentMethod={paymentMethod}
             />
           )}
         </div>

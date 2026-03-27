@@ -5,6 +5,8 @@ const nextConfig = {
   env: {
     USE_TESTNET: process.env.USE_TESTNET || "false",
   },
+  // Nodemailer is Node-only; keep it external so resolution matches runtime node_modules.
+  serverExternalPackages: ["nodemailer"],
 };
 
 export default withSentryConfig(nextConfig, {

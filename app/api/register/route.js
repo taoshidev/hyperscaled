@@ -103,7 +103,18 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { minerSlug, hlAddress, accountSize, payoutAddress, email, tierIndex, affiliateUtm } = body;
+  const {
+    minerSlug,
+    hlAddress,
+    accountSize,
+    payoutAddress,
+    email,
+    tierIndex,
+    affiliateUtm,
+    paymentMethod,
+    hlTransferHash,
+    hlTransferSender,
+  } = body;
 
   if (!minerSlug || !hlAddress || !accountSize || !email || tierIndex == null) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -157,102 +168,251 @@ export async function POST(request) {
     // Continue — better to risk a duplicate than block a legitimate registration
   }
 
-  const { requirements, paymentRequired, minerWallet, price } = buildPaymentRequirements(
-    miner,
-    tier,
-    request.url,
-  );
+  // Compute wallet and price early — both payment paths need them
+  const minerWallet = miner.usdcWallet;
+  const price = Number(tier.priceUsdc);
 
   if (!minerWallet) {
     return NextResponse.json({ error: "Miner wallet not configured" }, { status: 500 });
   }
 
-  const paymentSignatureHeader = request.headers.get("payment-signature");
+  let txHash;
+  let effectivePayoutAddress;
+  let settleResult = null;
 
-  if (!paymentSignatureHeader) {
-    const encoded = encodePaymentRequiredHeader(paymentRequired);
-    return new Response(JSON.stringify(paymentRequired), {
-      status: 402,
-      headers: {
-        "Content-Type": "application/json",
-        "PAYMENT-REQUIRED": encoded,
-      },
+  // ── Hyperliquid payment path ──────────────────────────────────────────────
+  if (paymentMethod === "hyperliquid") {
+    console.info("[register] hyperliquid branch entered", {
+      minerSlug,
+      minerWallet,
+      hlAddress,
+      payoutAddress,
+      tierIndex,
+      price,
+      hasTransferHash: Boolean(hlTransferHash),
     });
-  }
 
-  let paymentPayload;
-  try {
-    paymentPayload = decodePaymentSignatureHeader(paymentSignatureHeader);
-  } catch {
-    return NextResponse.json({ error: "Invalid payment signature" }, { status: 400 });
-  }
+    if (!hlTransferHash) {
+      return NextResponse.json({ error: "Missing HL transfer hash" }, { status: 400 });
+    }
 
-  let verifyResult;
-  try {
-    verifyResult = await facilitator.verify(paymentPayload, requirements);
-  } catch (err) {
-    reportCritical(err, {
-      source: "api/register",
-      metadata: { step: "facilitator_verify" },
-    });
-    return NextResponse.json(
-      { error: `Payment verification failed: ${err?.message || "unknown error"}` },
-      { status: 502 },
+    const normalizedTxHash = String(hlTransferHash).toLowerCase().startsWith("0x")
+      ? String(hlTransferHash).toLowerCase()
+      : null;
+
+    if (!normalizedTxHash) {
+      return NextResponse.json({ error: "Invalid HL transfer hash format" }, { status: 400 });
+    }
+
+    // Reject reuse — same tx hash must not register twice
+    try {
+      const [existingTx] = await db
+        .select({ id: registrations.id })
+        .from(registrations)
+        .where(eq(registrations.txHash, hlTransferHash))
+        .limit(1);
+
+      if (existingTx) {
+        return NextResponse.json(
+          { error: "This transaction has already been used for a registration." },
+          { status: 409 },
+        );
+      }
+    } catch (err) {
+      console.error("[register] txHash uniqueness check failed:", err.message);
+    }
+
+    // Verify the transfer on Hyperliquid — exact hash match only, no sender-based fallback
+    const hlApiUrl = USE_TESTNET
+      ? "https://api.hyperliquid-testnet.xyz"
+      : "https://api.hyperliquid.xyz";
+
+    let transferVerified = false;
+    try {
+      const verifyRes = await fetch(hlApiUrl + "/info", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "userNonFundingLedgerUpdates",
+          user: minerWallet,
+        }),
+      });
+
+      if (verifyRes.ok) {
+        const updates = await verifyRes.json();
+        const now = Date.now();
+        const TEN_MINUTES = 10 * 60 * 1000;
+
+        if (Array.isArray(updates)) {
+          for (const update of updates) {
+            const delta = update.delta;
+            if (!delta || delta.type !== "send") continue;
+            if (delta.token !== "USDC") continue;
+
+            const updateHash = (update.hash || "").toLowerCase();
+            if (updateHash !== normalizedTxHash) continue;
+
+            // Exact hash matched — validate sender, amount, and recency
+            const transferSender = (delta.user || "").toLowerCase();
+            const transferAmount = Number(delta.amount || delta.usdcValue || 0);
+            const isRecent = (now - (update.time || 0)) < TEN_MINUTES;
+
+            // Log if sender differs from hlAddress (cross-wallet payment is allowed)
+            if (transferSender !== hlAddress.toLowerCase()) {
+              console.info("[register] HL sender differs from hlAddress (cross-wallet payment)", {
+                minerSlug,
+                txHash: update.hash,
+                hlAddress,
+                actualSender: transferSender,
+                claimedSender: hlTransferSender || "not provided",
+              });
+            }
+
+            if (Math.abs(transferAmount - price) >= 0.01) {
+              console.warn("[register] HL amount mismatch on hash match", {
+                minerSlug,
+                txHash: update.hash,
+                expected: price,
+                actual: transferAmount,
+              });
+              return NextResponse.json(
+                { error: "Transfer amount does not match the expected price." },
+                { status: 400 },
+              );
+            }
+
+            if (!isRecent) {
+              console.warn("[register] HL transfer too old", {
+                minerSlug,
+                txHash: update.hash,
+                transferTime: update.time,
+              });
+              return NextResponse.json(
+                { error: "Transfer is too old. Please make a new transfer." },
+                { status: 400 },
+              );
+            }
+
+            transferVerified = true;
+            console.info("[register] hyperliquid transfer verified (exact hash)", {
+              minerSlug,
+              txHash: update.hash,
+              transferSender,
+              transferAmount,
+              transferTime: update.time,
+            });
+            break;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("[register] HL transfer verification error:", err.message);
+    }
+
+    if (!transferVerified) {
+      return NextResponse.json(
+        { error: "Could not verify Hyperliquid transfer. Ensure you sent the correct amount from your registered wallet." },
+        { status: 400 },
+      );
+    }
+
+    txHash = hlTransferHash;
+    effectivePayoutAddress = payoutAddress || hlAddress;
+
+  // ── x402 payment path (Base chain USDC) ───────────────────────────────────
+  } else {
+    const { requirements, paymentRequired } = buildPaymentRequirements(
+      miner,
+      tier,
+      request.url,
     );
-  }
 
-  if (!verifyResult?.isValid) {
-    reportError(new Error("Payment verification invalid"), {
-      source: "api/register",
-      severity: SEVERITY.ERROR,
-      metadata: { step: "facilitator_verify", reason: verifyResult?.invalidReason },
-    });
-    const encoded = encodePaymentRequiredHeader(paymentRequired);
-    return new Response(
-      JSON.stringify({ ...paymentRequired, error: verifyResult?.invalidReason || "Payment verification failed" }),
-      {
+    const paymentSignatureHeader = request.headers.get("payment-signature");
+
+    if (!paymentSignatureHeader) {
+      const encoded = encodePaymentRequiredHeader(paymentRequired);
+      return new Response(JSON.stringify(paymentRequired), {
         status: 402,
         headers: {
           "Content-Type": "application/json",
           "PAYMENT-REQUIRED": encoded,
         },
-      },
-    );
-  }
+      });
+    }
 
-  let settleResult;
-  try {
-    settleResult = await facilitator.settle(paymentPayload, requirements);
-  } catch (err) {
-    reportCritical(err, {
-      source: "api/register",
-      metadata: { step: "facilitator_settle" },
-    });
-    return NextResponse.json(
-      {
-        error: "Payment settlement failed",
-        message: "Your payment was verified but settlement failed. Please contact support.",
-      },
-      { status: 500 },
-    );
-  }
+    let paymentPayload;
+    try {
+      paymentPayload = decodePaymentSignatureHeader(paymentSignatureHeader);
+    } catch {
+      return NextResponse.json({ error: "Invalid payment signature" }, { status: 400 });
+    }
 
-  if (!settleResult?.success) {
-    reportCritical(new Error("Payment settlement unsuccessful"), {
-      source: "api/register",
-      metadata: { step: "facilitator_settle", reason: settleResult?.errorReason },
-    });
-    return NextResponse.json(
-      {
-        error: "Payment settlement was not successful",
-        message: settleResult?.errorReason || settleResult?.errorMessage || "The facilitator could not complete the on-chain transfer. Please try again.",
-      },
-      { status: 500 },
-    );
-  }
+    let verifyResult;
+    try {
+      verifyResult = await facilitator.verify(paymentPayload, requirements);
+    } catch (err) {
+      reportCritical(err, {
+        source: "api/register",
+        metadata: { step: "facilitator_verify" },
+      });
+      return NextResponse.json(
+        { error: `Payment verification failed: ${err?.message || "unknown error"}` },
+        { status: 502 },
+      );
+    }
 
-  const txHash = settleResult?.transaction || "";
-  const effectivePayoutAddress = payoutAddress || paymentPayload?.payload?.authorization?.from;
+    if (!verifyResult?.isValid) {
+      reportError(new Error("Payment verification invalid"), {
+        source: "api/register",
+        severity: SEVERITY.ERROR,
+        metadata: { step: "facilitator_verify", reason: verifyResult?.invalidReason },
+      });
+      const encoded = encodePaymentRequiredHeader(paymentRequired);
+      return new Response(
+        JSON.stringify({ ...paymentRequired, error: verifyResult?.invalidReason || "Payment verification failed" }),
+        {
+          status: 402,
+          headers: {
+            "Content-Type": "application/json",
+            "PAYMENT-REQUIRED": encoded,
+          },
+        },
+      );
+    }
+
+    try {
+      settleResult = await facilitator.settle(paymentPayload, requirements);
+    } catch (err) {
+      reportCritical(err, {
+        source: "api/register",
+        metadata: { step: "facilitator_settle" },
+      });
+      return NextResponse.json(
+        {
+          error: "Payment settlement failed",
+          message: "Your payment was verified but settlement failed. Please contact support.",
+        },
+        { status: 500 },
+      );
+    }
+
+    if (!settleResult?.success) {
+      reportCritical(new Error("Payment settlement unsuccessful"), {
+        source: "api/register",
+        metadata: { step: "facilitator_settle", reason: settleResult?.errorReason },
+      });
+      return NextResponse.json(
+        {
+          error: "Payment settlement was not successful",
+          message: settleResult?.errorReason || settleResult?.errorMessage || "The facilitator could not complete the on-chain transfer. Please try again.",
+        },
+        { status: 500 },
+      );
+    }
+
+    txHash = settleResult?.transaction || "";
+    effectivePayoutAddress = payoutAddress || paymentPayload?.payload?.authorization?.from;
+  }
 
   // Upsert user record
   let userId = null;
@@ -348,7 +508,10 @@ export async function POST(request) {
       priceUsdc: String(price),
       txHash,
       status: registered ? "registered" : "pending",
-      statusDetail,
+      statusDetail: {
+        paymentMethod: paymentMethod || "x402",
+        ...(statusDetail || {}),
+      },
     });
   } catch (err) {
     reportCritical(err, {

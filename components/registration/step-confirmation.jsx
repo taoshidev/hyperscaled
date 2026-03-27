@@ -238,8 +238,9 @@ const itemVariants = {
 
 const POLL_INTERVAL_MS = 5000;
 
-export function StepConfirmation({ selectedTier, hlAddress, txHash, registrationStatus }) {
-  const explorerUrl = `${BASESCAN_URL}/tx/${txHash}`;
+export function StepConfirmation({ selectedTier, hlAddress, txHash, registrationStatus, paymentMethod }) {
+  const isHLPayment = paymentMethod === "hyperliquid";
+  const explorerUrl = isHLPayment ? null : `${BASESCAN_URL}/tx/${txHash}`;
 
   const [status, setStatus] = useState(registrationStatus || "pending");
   const intervalRef = useRef(null);
@@ -336,16 +337,18 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
                 {truncateAddress(txHash)}
               </span>
               <CopyButton text={txHash} label="Copy transaction hash" />
-              <a
-                href={explorerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="View transaction on block explorer"
-                className="ml-1 p-1 min-h-11 min-w-11 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-[color] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-              >
-                <ArrowSquareOut size={14} weight="bold" />
-                <span className="sr-only">(opens in new tab)</span>
-              </a>
+              {explorerUrl && (
+                <a
+                  href={explorerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="View transaction on block explorer"
+                  className="ml-1 p-1 min-h-11 min-w-11 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-[color] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  <ArrowSquareOut size={14} weight="bold" />
+                  <span className="sr-only">(opens in new tab)</span>
+                </a>
+              )}
             </div>
           </div>
           <div className="border-t border-border" />

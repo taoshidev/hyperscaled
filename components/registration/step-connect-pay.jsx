@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import {
   useAccount,
@@ -14,6 +14,8 @@ import {
   ArrowLeft,
   Warning,
   Wallet,
+  CurrencyDollar,
+  GoogleChromeLogo,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { isValidHLAddress } from "@/lib/validation";
@@ -21,10 +23,12 @@ import {
   USDC_ADDRESS,
   USDC_DECIMALS,
   BASE_CHAIN_ID,
-  CHAIN_LABEL
+  CHAIN_LABEL,
+  CHROME_EXTENSION_URL,
 } from "@/lib/constants";
 import { usdcAbi } from "@/lib/usdc-abi";
 import { formatAccountSize, truncateAddress } from "@/lib/format";
+import { useExtensionBridge } from "@/hooks/use-extension-bridge";
 import { ExactEvmScheme } from "@x402/evm/exact/client";
 import {
   decodePaymentRequiredHeader,
@@ -59,6 +63,17 @@ export function StepConnectAndPay({
   const [hlWallet, setHlWallet] = useState("");
   const [hlWalletTouched, setHlWalletTouched] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
+  const [payoutWallet, setPayoutWallet] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState(null); // null | "base" | "hyperliquid"
+
+  const {
+    extensionDetected,
+    paymentStatus,
+    paymentSenderAddress,
+    registrationResult,
+    initiatePayment,
+    resetPaymentStatus,
+  } = useExtensionBridge();
 
   const price = selectedTier.promoPrice;
   const hlWalletValid = isValidHLAddress(hlWallet);
@@ -66,11 +81,9 @@ export function StepConnectAndPay({
   const emailValid = isValidEmail(email);
   const showEmailError = emailTouched && email.length > 0 && !emailValid;
 
-  // The HL address is always the manually entered wallet
   const resolvedHlAddress = hlWallet;
-
-  // Can only pay if HL address is valid
   const hlAddressReady = hlWallet.length > 0 && hlWalletValid;
+  const resolvedPayoutAddress = payoutWallet.length > 0 ? payoutWallet : hlWallet;
 
   const { data: balance } = useReadContract({
     address: USDC_ADDRESS,
@@ -88,7 +101,8 @@ export function StepConnectAndPay({
     balance >= parseUnits(String(price), USDC_DECIMALS);
   const isOnBase = chainId === BASE_CHAIN_ID;
 
-  const handlePay = useCallback(async () => {
+  // ── Base chain (x402) payment handler ─────────────────────────────────────
+  const handlePayBase = useCallback(async () => {
     if (!walletClient) return;
 
     setPaymentState("processing");
@@ -100,12 +114,11 @@ export function StepConnectAndPay({
         minerSlug,
         hlAddress: resolvedHlAddress,
         accountSize: selectedTier.accountSize,
-        payoutAddress: address,
+        payoutAddress: resolvedPayoutAddress || address,
         email,
         tierIndex,
       };
 
-      // Step 1: Initial POST — get payment requirements (expect 402)
       const probeRes = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -122,14 +135,12 @@ export function StepConnectAndPay({
         throw new Error(data.error || "Unexpected response from registration server.");
       }
 
-      // Step 2: Parse payment requirements from 402
       const paymentRequiredHeader = probeRes.headers.get("PAYMENT-REQUIRED");
       if (!paymentRequiredHeader) throw new Error("No payment requirements received.");
       const paymentRequired = decodePaymentRequiredHeader(paymentRequiredHeader);
       const requirements = paymentRequired.accepts?.[0];
       if (!requirements) throw new Error("No valid payment requirement in response.");
 
-      // Step 3: Sign EIP-3009 authorization (no on-chain tx from user)
       const signer = {
         address: walletClient.account.address,
         signTypedData: (args) => walletClient.signTypedData(args),
@@ -146,7 +157,6 @@ export function StepConnectAndPay({
         accepted: requirements,
       };
 
-      // Step 4: Re-POST with signed payment header
       const registerRes = await fetch("/api/register", {
         method: "POST",
         headers: {
@@ -173,6 +183,7 @@ export function StepConnectAndPay({
           txHash: result.txHash || "",
           hlAddress: resolvedHlAddress,
           registrationStatus: result.status,
+          paymentMethod: "base",
         });
       }, 1500);
     } catch (err) {
@@ -196,11 +207,226 @@ export function StepConnectAndPay({
     tierIndex,
     address,
     resolvedHlAddress,
+    resolvedPayoutAddress,
     onPaymentComplete,
     onPaymentProcessing,
   ]);
 
-  const canPay =
+  // ── Hyperliquid payment handler ───────────────────────────────────────────
+  const handlePayHL = useCallback(() => {
+    const normalizedParams = {
+      destination: paymentWallet?.trim() || "",
+      amount: String(price).trim(),
+      sender: (paymentSenderAddress || resolvedHlAddress).trim(),
+      minerSlug,
+      hlAddress: resolvedHlAddress.trim(),
+      accountSize: selectedTier.accountSize,
+      payoutAddress: resolvedPayoutAddress,
+      email,
+      tierIndex,
+    };
+
+    hlPaymentParamsRef.current = normalizedParams;
+
+    setPaymentState("processing");
+    setErrorMessage("");
+    onPaymentProcessing?.(true);
+
+    initiatePayment({
+      destination: normalizedParams.destination,
+      amount: normalizedParams.amount,
+      tierName: selectedTier.name,
+      hlAddress: normalizedParams.hlAddress,
+      payoutAddress: resolvedPayoutAddress,
+      email,
+      minerSlug,
+      accountSize: selectedTier.accountSize,
+      tierIndex,
+    });
+  }, [
+    initiatePayment,
+    paymentWallet,
+    price,
+    selectedTier,
+    resolvedHlAddress,
+    resolvedPayoutAddress,
+    email,
+    minerSlug,
+    tierIndex,
+    paymentSenderAddress,
+    onPaymentProcessing,
+  ]);
+
+  // Store volatile values in refs so the verification watcher stays stable
+  const hlPaymentParamsRef = useRef(null);
+  const verificationRunRef = useRef(0);
+  const callbacksRef = useRef({ onPaymentComplete, onPaymentProcessing });
+  callbacksRef.current = { onPaymentComplete, onPaymentProcessing };
+
+  // Extension reports the actual connected sender wallet after form completion.
+  // Promote it into live verification params as soon as it arrives.
+  useEffect(() => {
+    if (!paymentSenderAddress) return;
+    if (paymentMethod !== "hyperliquid" || paymentState !== "processing") return;
+    if (!hlPaymentParamsRef.current) return;
+    hlPaymentParamsRef.current.sender = paymentSenderAddress.trim();
+  }, [paymentSenderAddress, paymentMethod, paymentState]);
+
+  useEffect(() => {
+    // Start verification watcher as soon as HL payment is processing.
+    if (paymentMethod !== "hyperliquid" || paymentState !== "processing") return;
+    const params = hlPaymentParamsRef.current;
+    if (!params) return;
+
+    const runId = ++verificationRunRef.current;
+    let cancelled = false;
+    const startedAt = Date.now();
+    const timeoutMs = 300000;
+
+    async function verifyAndRegister() {
+      let delayMs = 2000;
+      let attempt = 0;
+
+      while (!cancelled && verificationRunRef.current === runId) {
+        if (Date.now() - startedAt >= timeoutMs) {
+          setPaymentState("error");
+          setErrorMessage(
+            "Payment verification timed out. If you completed the transfer, please contact support."
+          );
+          callbacksRef.current.onPaymentProcessing?.(false);
+          return;
+        }
+
+        attempt += 1;
+
+        let data = null;
+        let shouldStop = false;
+
+        const qs = new URLSearchParams({
+          destination: params.destination.trim(),
+          amount: String(params.amount).trim(),
+          _ts: String(Date.now()),
+        });
+        if (params.sender) {
+          qs.set("sender", params.sender.trim());
+        }
+
+        if (process.env.NODE_ENV === "development") {
+          console.debug("[HL verify] attempt", attempt, Object.fromEntries(qs.entries()));
+        }
+
+        let res;
+        try {
+          res = await fetch(`/api/verify-hl-payment?${qs}`, { cache: "no-store" });
+        } catch (err) {
+          console.error("[HL verify] request error:", err);
+        }
+
+        if (res) {
+          if (!res.ok) {
+            console.warn("[HL verify] non-ok response:", res.status);
+            if (res.status >= 400 && res.status < 500) {
+              setPaymentState("error");
+              setErrorMessage(
+                "Could not verify this payment request. Please confirm the wallet and amount, then try again."
+              );
+              callbacksRef.current.onPaymentProcessing?.(false);
+              return;
+            }
+          } else {
+            try {
+              data = await res.json();
+            } catch (err) {
+              console.error("[HL verify] parse error:", err);
+            }
+          }
+        }
+
+        if (process.env.NODE_ENV === "development" && data) {
+          console.debug("[HL verify] result:", data);
+        }
+
+        if (data?.verified) {
+          shouldStop = true;
+        }
+
+        if (!shouldStop) {
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+          delayMs = Math.min(Math.floor(delayMs * 1.4), 8000);
+          continue;
+        }
+
+        if (cancelled || verificationRunRef.current !== runId) return;
+
+        const regRes = await fetch("/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            minerSlug: params.minerSlug,
+            hlAddress: params.hlAddress,
+            accountSize: params.accountSize,
+            payoutAddress: params.payoutAddress,
+            email: params.email,
+            tierIndex: params.tierIndex,
+            paymentMethod: "hyperliquid",
+            hlTransferHash: data.txHash,
+            hlTransferSender: params.sender,
+          }),
+        });
+
+        if (regRes.ok || regRes.status === 409) {
+          // 409 = background already registered with this tx hash — treat as success
+          const result = await regRes.json().catch(() => ({}));
+          setPaymentState("success");
+          callbacksRef.current.onPaymentProcessing?.(false);
+          setTimeout(() => {
+            callbacksRef.current.onPaymentComplete({
+              txHash: data.txHash || "",
+              hlAddress: params.hlAddress,
+              registrationStatus: result.status || "registered",
+              paymentMethod: "hyperliquid",
+            });
+          }, 1500);
+          return;
+        }
+
+        const errData = await regRes.json().catch(() => ({}));
+        setPaymentState("error");
+        setErrorMessage(errData.error || "Registration failed after payment verification.");
+        callbacksRef.current.onPaymentProcessing?.(false);
+        return;
+      }
+    }
+
+    verifyAndRegister();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [paymentMethod, paymentState]);
+
+  // Background registration completed — the extension verified and registered
+  // while this tab was throttled or backgrounded. Skip straight to success.
+  useEffect(() => {
+    if (!registrationResult || !registrationResult.txHash) return;
+    if (paymentState !== "processing") return;
+
+    // Cancel the client-side verification loop
+    verificationRunRef.current += 1;
+
+    setPaymentState("success");
+    callbacksRef.current.onPaymentProcessing?.(false);
+    setTimeout(() => {
+      callbacksRef.current.onPaymentComplete({
+        txHash: registrationResult.txHash,
+        hlAddress: registrationResult.hlAddress || hlPaymentParamsRef.current?.hlAddress || "",
+        registrationStatus: registrationResult.registrationStatus || "registered",
+        paymentMethod: "hyperliquid",
+      });
+    }, 1500);
+  }, [registrationResult, paymentState]);
+
+  const canPayBase =
     isConnected &&
     isOnBase &&
     hasEnough &&
@@ -209,8 +435,14 @@ export function StepConnectAndPay({
     !!paymentWallet &&
     paymentState !== "processing";
 
-  // Track which fields are still needed for the pay button label
-  const missingField = !emailValid
+  const canPayHL =
+    extensionDetected &&
+    hlAddressReady &&
+    emailValid &&
+    !!paymentWallet &&
+    paymentState !== "processing";
+
+  const missingFieldBase = !emailValid
     ? "Enter your email to continue"
     : !hlAddressReady
       ? "Enter your Hyperliquid wallet to continue"
@@ -218,11 +450,28 @@ export function StepConnectAndPay({
         ? "Insufficient USDC balance"
         : null;
 
+  const missingFieldHL = !emailValid
+    ? "Enter your email to continue"
+    : !hlAddressReady
+      ? "Enter your Hyperliquid wallet to continue"
+      : null;
+
+  // Determine HL payment flow status text
+  const hlFlowStatus =
+    paymentStatus === "navigating"
+      ? "Opening Hyperliquid..."
+      : paymentStatus === "wallet_detected"
+        ? "Wallet detected — filling payment form..."
+        : paymentStatus === "awaiting_confirmation"
+          ? "Payment form filled — confirm the transfer on Hyperliquid"
+          : paymentStatus === "sent"
+            ? "Transfer submitted — verifying receipt..."
+            : null;
+  
   return (
     <div className="flex flex-col items-center animate-[fadeInUp_0.35s_ease-out_both]">
       {/* Order summary card */}
       <div className="w-full max-w-lg rounded-xl border border-border bg-zinc-900/50 p-5 space-y-3">
-        {/* Plan row */}
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Plan</span>
           <span className="font-semibold">
@@ -232,7 +481,6 @@ export function StepConnectAndPay({
 
         <div className="border-t border-border" />
 
-        {/* Challenge fee row */}
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Challenge fee</span>
           <div className="flex items-baseline gap-2">
@@ -248,7 +496,6 @@ export function StepConnectAndPay({
 
         <div className="border-t border-border" />
 
-        {/* Total row */}
         <div className="flex items-center justify-between">
           <span className="font-bold">Total</span>
           <span className="text-xl font-bold font-mono text-teal-400">
@@ -256,7 +503,6 @@ export function StepConnectAndPay({
           </span>
         </div>
 
-        {/* Rules summary */}
         <p className="text-xs text-muted-foreground text-balance">
           {formatRulesSummary(selectedTier.details)}
         </p>
@@ -326,19 +572,120 @@ export function StepConnectAndPay({
         </div>
       </div>
 
-      {/* ─── 3. Payment Wallet ─── */}
-      <div className="w-full max-w-lg space-y-4">
-        <p className="text-xs font-medium text-muted-foreground">
-          Payment wallet
-        </p>
+      {/* ─── 3. Payout Wallet (optional) ─── */}
+      {hlAddressReady && (
+        <div className="w-full max-w-lg space-y-1.5">
+          <label htmlFor="payout-wallet" className="text-xs font-medium text-muted-foreground">
+            Payout wallet <span className="text-muted-foreground/60">(optional)</span>
+          </label>
+          <input
+            id="payout-wallet"
+            type="text"
+            value={payoutWallet}
+            onChange={(e) => setPayoutWallet(e.target.value)}
+            placeholder={hlWallet || "Defaults to your Hyperliquid address"}
+            aria-label="Payout wallet address — defaults to your Hyperliquid address"
+            className={`
+              w-full rounded-xl border bg-card p-4 text-sm font-mono
+              placeholder:text-muted-foreground/50
+              outline-none
+              focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
+              transition-[border-color,box-shadow] duration-200
+              border-border hover:border-white/[0.15]
+            `}
+          />
+          <p className="text-xs text-muted-foreground/60 min-h-[1.25rem]">
+            Defaults to your Hyperliquid address if left blank
+          </p>
+        </div>
+      )}
 
+      {/* ─── 4. Payment Method Selector ─── */}
+      <div className="w-full max-w-lg mt-2 space-y-3">
+        <p className="text-xs font-medium text-muted-foreground">
+          Payment method
+        </p>
+        <div
+          role="radiogroup"
+          aria-label="Select payment method"
+          className="grid grid-cols-2 gap-3"
+        >
+          <button
+            type="button"
+            role="radio"
+            aria-checked={paymentMethod === "base"}
+            onClick={() => {
+              setPaymentMethod("base");
+              resetPaymentStatus();
+              if (paymentState === "error") {
+                setPaymentState("idle");
+                setErrorMessage("");
+              }
+            }}
+            className={`
+              rounded-xl border p-4 text-left cursor-pointer transition-[border-color,box-shadow] duration-200
+              outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
+              ${
+                paymentMethod === "base"
+                  ? "border-teal-400 bg-teal-400/5"
+                  : "border-border bg-card hover:border-white/[0.15]"
+              }
+            `}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${paymentMethod === "base" ? "bg-teal-400/15" : "bg-white/[0.05]"}`}>
+                <Wallet size={20} weight="duotone" className={paymentMethod === "base" ? "text-teal-400" : "text-muted-foreground"} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Pay with Wallet</p>
+                <p className="text-xs text-muted-foreground">USDC on Base</p>
+              </div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            role="radio"
+            aria-checked={paymentMethod === "hyperliquid"}
+            onClick={() => {
+              setPaymentMethod("hyperliquid");
+              if (paymentState === "error") {
+                setPaymentState("idle");
+                setErrorMessage("");
+              }
+            }}
+            className={`
+              rounded-xl border p-4 text-left cursor-pointer transition-[border-color,box-shadow] duration-200
+              outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
+              ${
+                paymentMethod === "hyperliquid"
+                  ? "border-teal-400 bg-teal-400/5"
+                  : "border-border bg-card hover:border-white/[0.15]"
+              }
+            `}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${paymentMethod === "hyperliquid" ? "bg-teal-400/15" : "bg-white/[0.05]"}`}>
+                <CurrencyDollar size={20} weight="duotone" className={paymentMethod === "hyperliquid" ? "text-teal-400" : "text-muted-foreground"} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Pay with Hyperliquid</p>
+                <p className="text-xs text-muted-foreground">USDC transfer</p>
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* ─── 5. Payment UI ─── */}
+      <div className="w-full max-w-lg mt-4 space-y-4">
         {/* Status region for screen readers */}
         <div aria-live="polite" className="sr-only">
           {paymentState === "processing" && "Confirming payment..."}
           {paymentState === "success" && "Payment confirmed"}
         </div>
 
-        {/* Success state */}
+        {/* Success state (both methods) */}
         {paymentState === "success" && (
           <div className="flex flex-col items-center gap-3 py-4">
             <CheckCircle size={48} weight="fill" className="text-teal-400" />
@@ -348,7 +695,7 @@ export function StepConnectAndPay({
           </div>
         )}
 
-        {/* Error state */}
+        {/* Error state (both methods) */}
         {paymentState === "error" && (
           <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-3">
             <div className="flex items-start gap-2.5">
@@ -365,6 +712,8 @@ export function StepConnectAndPay({
               onClick={() => {
                 setPaymentState("idle");
                 setErrorMessage("");
+                resetPaymentStatus();
+                hlPaymentParamsRef.current = null;
               }}
               className="w-full h-11 text-sm font-semibold bg-teal-400 text-zinc-950 hover:bg-teal-400/90 cursor-pointer"
             >
@@ -373,11 +722,10 @@ export function StepConnectAndPay({
           </div>
         )}
 
-        {/* Idle / Processing — wallet + pay */}
-        {paymentState !== "success" && paymentState !== "error" && (
+        {/* ── Base wallet payment flow ── */}
+        {paymentMethod === "base" && paymentState !== "success" && paymentState !== "error" && (
           <>
             {!isConnected ? (
-              /* Not connected */
               <div className="space-y-4 text-center">
                 <p className="text-sm text-muted-foreground text-balance max-w-md mx-auto">
                   Connect the wallet you&#8217;ll use to pay with USDC on&nbsp;Base.
@@ -400,7 +748,6 @@ export function StepConnectAndPay({
                 </ConnectButton.Custom>
               </div>
             ) : !isOnBase ? (
-              /* Wrong chain */
               <Button
                 onClick={() => switchChain({ chainId: BASE_CHAIN_ID })}
                 className="w-full h-11 text-sm font-semibold bg-teal-400 text-zinc-950 hover:bg-teal-400/90 cursor-pointer"
@@ -408,9 +755,7 @@ export function StepConnectAndPay({
                 Switch to {CHAIN_LABEL}
               </Button>
             ) : (
-              /* Connected + correct chain */
               <div className="space-y-4">
-                {/* Connected wallet display */}
                 <div className="rounded-xl border border-border bg-zinc-900/50 px-5 py-3.5 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <span className="w-2 h-2 rounded-full bg-teal-400 shrink-0" />
@@ -423,7 +768,6 @@ export function StepConnectAndPay({
                   </span>
                 </div>
 
-                {/* Balance display */}
                 {formattedBalance != null && (
                   <p className="text-xs text-center text-muted-foreground">
                     Balance:{" "}
@@ -443,10 +787,9 @@ export function StepConnectAndPay({
                   </p>
                 )}
 
-                {/* Pay button */}
                 <Button
-                  onClick={handlePay}
-                  disabled={!canPay}
+                  onClick={handlePayBase}
+                  disabled={!canPayBase}
                   aria-label={`Pay ${price} USDC for ${selectedTier.name} challenge`}
                   className={`
                     w-full h-11 text-sm font-semibold cursor-pointer relative overflow-hidden
@@ -465,12 +808,137 @@ export function StepConnectAndPay({
                         Confirming payment...
                       </span>
                     </>
-                  ) : missingField ? (
-                    missingField
+                  ) : missingFieldBase ? (
+                    missingFieldBase
                   ) : (
                     `Pay $${price} USDC`
                   )}
                 </Button>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── Hyperliquid payment flow ── */}
+        {paymentMethod === "hyperliquid" && paymentState !== "success" && paymentState !== "error" && (
+          <>
+            {!extensionDetected ? (
+              /* Extension not installed */
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5 space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-foreground">
+                    Chrome extension required
+                  </p>
+                  <p className="text-sm text-muted-foreground text-balance">
+                    The Hyperscaled extension connects to Hyperliquid and fills the payment form for you. Install it to continue with this payment method.
+                  </p>
+                </div>
+                <a
+                  href={CHROME_EXTENSION_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shiny-cta h-11 w-full flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  <span className="inline-flex items-center gap-2 text-sm font-semibold">
+                    <GoogleChromeLogo size={18} weight="bold" />
+                    Install Chrome Extension
+                  </span>
+                </a>
+                <p className="text-xs text-muted-foreground text-center">
+                  After installing, refresh this page to continue
+                </p>
+              </div>
+            ) : paymentState === "idle" ? (
+              /* Extension detected, ready to pay */
+              <div className="space-y-4">
+                <div className="rounded-xl border border-border bg-zinc-900/50 px-5 py-3.5 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2 h-2 rounded-full bg-teal-400 shrink-0" />
+                    <span className="text-sm text-foreground">
+                      Extension detected
+                    </span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    Ready
+                  </span>
+                </div>
+
+                <div className="rounded-xl border border-border bg-zinc-900/30 p-4 space-y-2">
+                  <p className="text-xs text-muted-foreground">How it works</p>
+                  <ol className="text-sm text-muted-foreground space-y-1.5 list-decimal list-inside">
+                    <li>The extension opens Hyperliquid and fills the send form</li>
+                    <li>Review the details and confirm the USDC transfer</li>
+                    <li>Return here — your registration completes automatically</li>
+                  </ol>
+                </div>
+
+                <Button
+                  onClick={handlePayHL}
+                  disabled={!canPayHL}
+                  aria-label={`Pay ${price} USDC via Hyperliquid for ${selectedTier.name} challenge`}
+                  className="w-full h-11 text-sm font-semibold bg-teal-400 text-zinc-950 hover:bg-teal-400/90 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {missingFieldHL || `Pay $${price} USDC via Hyperliquid`}
+                </Button>
+              </div>
+            ) : (
+              /* Extension payment in progress */
+              <div className="space-y-4">
+                <div className="rounded-xl border border-border bg-zinc-900/50 p-5 space-y-4">
+                  {/* Status indicator */}
+                  <div className="flex items-center gap-3">
+                    <span className="w-2.5 h-2.5 rounded-full bg-teal-400 pulse-teal shrink-0" />
+                    <p className="text-sm font-semibold text-foreground">
+                      {hlFlowStatus || "Processing..."}
+                    </p>
+                  </div>
+
+                  {/* Transfer details */}
+                  <div className="space-y-2 pt-2 border-t border-border">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Amount</span>
+                      <span className="font-mono font-semibold text-teal-400">${price} USDC</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">To</span>
+                      <span className="font-mono text-foreground">{truncateAddress(paymentWallet)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">From</span>
+                      <span className="font-mono text-foreground">{truncateAddress(resolvedHlAddress)}</span>
+                    </div>
+                  </div>
+
+                  {/* Progress steps */}
+                  <div className="space-y-2 pt-2 border-t border-border">
+                    <PaymentStep
+                      label="Opening Hyperliquid"
+                      done={paymentStatus === "wallet_detected" || paymentStatus === "awaiting_confirmation" || paymentStatus === "sent"}
+                      active={paymentStatus === "navigating" || paymentStatus === "initiating"}
+                    />
+                    <PaymentStep
+                      label="Filling payment form"
+                      done={paymentStatus === "awaiting_confirmation" || paymentStatus === "sent"}
+                      active={paymentStatus === "wallet_detected" || paymentStatus === "navigating"}
+                    />
+                    <PaymentStep
+                      label="Waiting for confirmation"
+                      done={paymentStatus === "sent"}
+                      active={paymentStatus === "awaiting_confirmation"}
+                    />
+                    <PaymentStep
+                      label="Verifying receipt"
+                      done={false}
+                      active={paymentStatus === "sent"}
+                    />
+                  </div>
+                </div>
+
+                {paymentStatus === "awaiting_confirmation" && (
+                  <p className="text-xs text-muted-foreground text-center text-balance">
+                    Switch to the Hyperliquid tab to review and confirm the transfer
+                  </p>
+                )}
               </div>
             )}
           </>
@@ -498,6 +966,7 @@ export function StepConnectAndPay({
               txHash: "0xdev123456789abcdef0123456789abcdef01234567",
               hlAddress: "0xdev456789abcdef0123456789abcdef0123456789",
               registrationStatus: "registered",
+              paymentMethod: paymentMethod || "base",
             })
           }
           className="mt-2 text-xs text-muted-foreground/50 underline h-11 cursor-pointer"
@@ -505,6 +974,26 @@ export function StepConnectAndPay({
           Skip payment (dev only)
         </button>
       )}
+    </div>
+  );
+}
+
+/* Small inline component for the HL payment progress steps */
+function PaymentStep({ label, done, active }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      {done ? (
+        <CheckCircle size={16} weight="fill" className="text-teal-400 shrink-0" />
+      ) : active ? (
+        <span className="w-4 h-4 rounded-full border-2 border-teal-400 shrink-0 flex items-center justify-center">
+          <span className="w-1.5 h-1.5 rounded-full bg-teal-400 pulse-teal" />
+        </span>
+      ) : (
+        <span className="w-4 h-4 rounded-full border-2 border-white/10 shrink-0" />
+      )}
+      <span className={`text-sm ${done ? "text-teal-400" : active ? "text-foreground" : "text-muted-foreground/50"}`}>
+        {label}
+      </span>
     </div>
   );
 }
