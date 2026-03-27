@@ -16,11 +16,21 @@ import { EVAL_RULES, FUNDED_RULES, SCALING_PATH } from '@/lib/constants'
    ─────────────────────────────────────────────── */
 const TOC_SECTIONS = [
   { id: 'challenge', label: 'Challenge' },
+  { id: 'pairs', label: 'Available Pairs' },
   { id: 'funded', label: 'Funded Account' },
   { id: 'scaling', label: 'Scaling' },
   { id: 'disqualification', label: 'Disqualification' },
   { id: 'kyc', label: 'KYC & Payouts' },
   { id: 'protocol', label: 'Protocol' },
+]
+
+const AVAILABLE_PAIRS = [
+  { base: 'ADA', quote: 'USDC' },
+  { base: 'BTC', quote: 'USDC' },
+  { base: 'DOGE', quote: 'USDC' },
+  { base: 'ETH', quote: 'USDC' },
+  { base: 'SOL', quote: 'USDC' },
+  { base: 'XRP', quote: 'USDC' },
 ]
 
 /* ───────────────────────────────────────────────
@@ -183,6 +193,41 @@ function EvalRulesSection() {
             Breaching either drawdown rule results in immediate challenge termination. You may re-register at any&nbsp;time.
           </p>
         </div>
+      </div>
+    </section>
+  )
+}
+
+/* ───────────────────────────────────────────────
+   Section 2b — Available Trading Pairs
+   ─────────────────────────────────────────────── */
+function AvailablePairsSection() {
+  return (
+    <section id="pairs" className="px-6 pb-20 scroll-mt-[110px]">
+      <div className="max-w-[900px] mx-auto">
+        <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
+          Available Pairs
+        </span>
+        <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
+          The following trading pairs are available during both the Challenge and Funded&nbsp;phases.
+        </p>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {AVAILABLE_PAIRS.map((pair) => (
+            <div
+              key={pair.base}
+              className="flex items-center gap-3 px-4 py-3 rounded-lg bg-white/[0.03] border border-white/[0.06]"
+            >
+              <span className="text-sm font-semibold text-zinc-200">{pair.base}</span>
+              <span className="text-xs text-zinc-600">/</span>
+              <span className="text-sm text-zinc-400">{pair.quote}</span>
+            </div>
+          ))}
+        </div>
+
+        <p className="mt-6 text-xs text-zinc-600">
+          Additional pairs may be added as the network expands. All pairs settle in&nbsp;USDC.
+        </p>
       </div>
     </section>
   )
@@ -464,6 +509,7 @@ export default function RulesPage() {
       <TableOfContents activeId={activeId} />
       <div data-toc-content>
         <EvalRulesSection />
+        <AvailablePairsSection />
         <FundedRulesSection />
         <ScalingRulesSection />
         <DisqualificationSection />
