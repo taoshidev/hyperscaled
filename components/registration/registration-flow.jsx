@@ -15,16 +15,43 @@ const MINER_SLUG = "vanta";
 const MOCK_WALLET = "0x0000000000000000000000000000000000000000";
 const MOCK_TIERS = TIERS.map((t) => ({ ...t, promoPrice: 1 }));
 
+function getRecoveredRegistration() {
+  try {
+    const raw = typeof window !== "undefined"
+      ? localStorage.getItem("hs_registration_result")
+      : null;
+    if (!raw) return null;
+    const result = JSON.parse(raw);
+    if (!result.success || !result.txHash) {
+      localStorage.removeItem("hs_registration_result");
+      return null;
+    }
+    if (result.completedAt && Date.now() - result.completedAt > 30 * 60 * 1000) {
+      localStorage.removeItem("hs_registration_result");
+      return null;
+    }
+    localStorage.removeItem("hs_registration_result");
+    return result;
+  } catch {
+    return null;
+  }
+}
+
 export function RegistrationFlow() {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [selectedTier, setSelectedTier] = useState(null);
+  const [recovered] = useState(getRecoveredRegistration);
+  const [currentStep, setCurrentStep] = useState(recovered ? 2 : 0);
+  const [selectedTier, setSelectedTier] = useState(recovered ? {
+    name: recovered.tierName || "Challenge",
+    accountSize: recovered.accountSize || 0,
+    details: [],
+  } : null);
   const [selectedTierIndex, setSelectedTierIndex] = useState(null);
   const [email, setEmail] = useState("");
-  const [txHash, setTxHash] = useState(null);
-  const [hlAddress, setHlAddress] = useState(null);
-  const [registrationStatus, setRegistrationStatus] = useState(null);
+  const [txHash, setTxHash] = useState(recovered?.txHash ?? null);
+  const [hlAddress, setHlAddress] = useState(recovered?.hlAddress ?? null);
+  const [registrationStatus, setRegistrationStatus] = useState(recovered?.registrationStatus ?? null);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState(recovered ? "hyperliquid" : null);
   const [minerTiers, setMinerTiers] = useState(null);
   const [paymentWallet, setPaymentWallet] = useState(null);
 
@@ -42,36 +69,6 @@ export function RegistrationFlow() {
       });
   }, []);
 
-  // Recover completed registration from extension background verification
-  // (handles the case where the tab was closed during HL payment)
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("hs_registration_result");
-      if (!raw) return;
-      const result = JSON.parse(raw);
-      if (!result.success || !result.txHash) {
-        localStorage.removeItem("hs_registration_result");
-        return;
-      }
-      // Only honour results from the last 30 minutes
-      if (result.completedAt && Date.now() - result.completedAt > 30 * 60 * 1000) {
-        localStorage.removeItem("hs_registration_result");
-        return;
-      }
-      // Build a minimal tier object for the confirmation screen
-      setSelectedTier({
-        name: result.tierName || "Challenge",
-        accountSize: result.accountSize || 0,
-        details: [],
-      });
-      setTxHash(result.txHash);
-      setHlAddress(result.hlAddress || "");
-      setRegistrationStatus(result.registrationStatus || "registered");
-      setPaymentMethod("hyperliquid");
-      setCurrentStep(2);
-      localStorage.removeItem("hs_registration_result");
-    } catch {}
-  }, []);
 
   // B1: Browser refresh guard — only during active payment processing
   // Note: beforeunload only fires during active payment processing.
