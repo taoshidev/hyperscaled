@@ -116,40 +116,47 @@ export function StatsPanel({ drawdown, challengePeriod, accountSizeData, limits 
                   }
                 />
                 <StatRow
-                  label="Intraday Usage"
+                  label="Intraday limit usage"
                   tooltip={
                     <div className="space-y-1.5">
-                      <p className="font-medium">Intraday Drawdown Rule</p>
-                      <p>Daily drawdown must not exceed the intraday threshold from starting daily equity.</p>
+                      <p className="font-medium">Share of your intraday allowance</p>
+                      <p>
+                        0–100%: how much of the allowed drawdown from today&apos;s open you have used. 100% means
+                        breach.
+                      </p>
+                      {drawdown.intraday_threshold_pct != null && (
+                        <p className="text-muted-foreground">
+                          Max drawdown from open: {drawdown.intraday_threshold_pct.toFixed(1)}% of equity.
+                        </p>
+                      )}
                       <p className="text-muted-foreground">Breaching this rule results in account termination.</p>
                     </div>
                   }
                   value={
                     drawdown.intraday_usage_pct != null
-                      ? `${drawdown.intraday_usage_pct.toFixed(1)}%${
-                          drawdown.intraday_threshold_pct != null
-                            ? ` / ${drawdown.intraday_threshold_pct.toFixed(0)}%`
-                            : ""
-                        }`
+                      ? `${drawdown.intraday_usage_pct.toFixed(1)}% of limit`
                       : undefined
                   }
                 />
                 <StatRow
-                  label="EOD Usage"
+                  label="EOD limit usage"
                   tooltip={
                     <div className="space-y-1.5">
-                      <p className="font-medium">EOD Trailing Drawdown Rule</p>
-                      <p>End-of-day equity must not fall below the trailing threshold from peak EOD equity.</p>
+                      <p className="font-medium">Share of your EOD trailing allowance</p>
+                      <p>
+                        0–100%: how much of the allowed trailing drawdown from peak you have used. 100% means breach.
+                      </p>
+                      {drawdown.eod_threshold_pct != null && (
+                        <p className="text-muted-foreground">
+                          Max trailing drawdown: {drawdown.eod_threshold_pct.toFixed(1)}% of equity.
+                        </p>
+                      )}
                       <p className="text-muted-foreground">Breaching this rule results in account termination.</p>
                     </div>
                   }
                   value={
                     drawdown.eod_usage_pct != null
-                      ? `${drawdown.eod_usage_pct.toFixed(1)}%${
-                          drawdown.eod_threshold_pct != null
-                            ? ` / ${drawdown.eod_threshold_pct.toFixed(0)}%`
-                            : ""
-                        }`
+                      ? `${drawdown.eod_usage_pct.toFixed(1)}% of limit`
                       : undefined
                   }
                 />

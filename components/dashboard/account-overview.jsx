@@ -27,6 +27,21 @@ function ChallengeProgressBar({ challengePeriod, drawdown }) {
   const eodUsage = drawdown?.eod_usage_pct ?? 0;
   const intradayThreshold = drawdown?.intraday_threshold_pct;
   const eodThreshold = drawdown?.eod_threshold_pct;
+  const intradayDD = drawdown?.intraday_drawdown_pct;
+  const eodDD = drawdown?.eod_drawdown_pct;
+
+  const intradaySummary =
+    intradayDD != null && intradayThreshold != null
+      ? `${intradayDD.toFixed(2)}% of ${intradayThreshold.toFixed(1)}% max`
+      : intradayDD != null
+        ? `${intradayDD.toFixed(2)}%`
+        : "—";
+  const eodSummary =
+    eodDD != null && eodThreshold != null
+      ? `${eodDD.toFixed(2)}% of ${eodThreshold.toFixed(1)}% max`
+      : eodDD != null
+        ? `${eodDD.toFixed(2)}%`
+        : "—";
 
   return (
     <Card className="bg-zinc-900/70 border-white/[0.08]">
@@ -36,26 +51,27 @@ function ChallengeProgressBar({ challengePeriod, drawdown }) {
             ? "Funded Account"
             : "Challenge Period"}
         </p>
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div>
-            <div className="flex justify-between text-xs mb-1">
-              <span className="text-muted-foreground flex items-center gap-1">
-                Intraday Drawdown
+            <div className="flex justify-between items-start gap-2 text-xs mb-1">
+              <span className="text-muted-foreground flex items-center gap-1 shrink-0">
+                Intraday drawdown
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button type="button" className="inline-flex text-muted-foreground hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-sm">
                       <Info className="w-3 h-3" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="top">
-                    Drawdown from today&apos;s opening equity. Breaching this limit results in account termination.
+                  <TooltipContent side="top" className="max-w-xs">
+                    <p className="font-medium mb-1">From today&apos;s opening equity</p>
+                    <p className="text-muted-foreground">
+                      The figure on the right is your current drawdown versus the maximum allowed. The bar fills toward
+                      100% as you use that allowance (same meaning as Intraday limit usage in Statistics).
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               </span>
-              <span className="font-medium">
-                {intradayUsage.toFixed(1)}%
-                {intradayThreshold != null ? ` / ${intradayThreshold.toFixed(0)}%` : ""}
-              </span>
+              <span className="font-medium font-mono text-right leading-tight">{intradaySummary}</span>
             </div>
             <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
               <div
@@ -65,26 +81,30 @@ function ChallengeProgressBar({ challengePeriod, drawdown }) {
                 style={{ width: `${Math.min(intradayUsage, 100)}%` }}
               />
             </div>
+            <p className="text-[11px] text-zinc-500 mt-1">
+              Limit usage: {intradayUsage.toFixed(1)}% · bar reaches 100% at breach
+            </p>
           </div>
           <div>
-            <div className="flex justify-between text-xs mb-1">
-              <span className="text-muted-foreground flex items-center gap-1">
-                EOD Trailing Drawdown
+            <div className="flex justify-between items-start gap-2 text-xs mb-1">
+              <span className="text-muted-foreground flex items-center gap-1 shrink-0">
+                EOD trailing drawdown
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button type="button" className="inline-flex text-muted-foreground hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-sm">
                       <Info className="w-3 h-3" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="top">
-                    End-of-day trailing drawdown from peak equity. Breaching this limit results in account termination.
+                  <TooltipContent side="top" className="max-w-xs">
+                    <p className="font-medium mb-1">From peak equity (high-water mark)</p>
+                    <p className="text-muted-foreground">
+                      The figure on the right is current trailing drawdown versus the maximum allowed. The bar is your
+                      share of that EOD allowance (same meaning as EOD limit usage in Statistics).
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               </span>
-              <span className="font-medium">
-                {eodUsage.toFixed(1)}%
-                {eodThreshold != null ? ` / ${eodThreshold.toFixed(0)}%` : ""}
-              </span>
+              <span className="font-medium font-mono text-right leading-tight">{eodSummary}</span>
             </div>
             <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
               <div
@@ -94,6 +114,9 @@ function ChallengeProgressBar({ challengePeriod, drawdown }) {
                 style={{ width: `${Math.min(eodUsage, 100)}%` }}
               />
             </div>
+            <p className="text-[11px] text-zinc-500 mt-1">
+              Limit usage: {eodUsage.toFixed(1)}% · bar reaches 100% at breach
+            </p>
           </div>
         </div>
       </CardContent>
