@@ -46,7 +46,7 @@ export async function GET(request) {
     return NextResponse.json({ error: "Could not reach validator" }, { status: 502 });
   }
 
-  const syntheticHotkey = traderData.synthetic_hotkey;
+  const syntheticHotkey = traderData.dashboard?.subaccount_info?.synthetic_hotkey;
   if (!syntheticHotkey) {
     return NextResponse.json(
       { error: "No synthetic_hotkey returned from validator" },

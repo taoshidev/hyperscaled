@@ -19,35 +19,27 @@ function StatCard({ label, value, className }) {
   );
 }
 
-function ChallengeProgressBar({ challengeProgress }) {
-  if (!challengeProgress?.in_challenge_period) return null;
+function ChallengeProgressBar({ challengePeriod, drawdown }) {
+  if (!challengePeriod) return null;
 
-  const completion = challengeProgress.challenge_completion_percent ?? 0;
-  const drawdownUsage = challengeProgress.drawdown_usage_percent ?? 0;
+  const intradayUsage = drawdown?.intraday_usage_pct ?? 0;
+  const eodUsage = drawdown?.eod_usage_pct ?? 0;
+  const intradayThreshold = drawdown?.intraday_threshold_pct;
+  const eodThreshold = drawdown?.eod_threshold_pct;
 
   return (
     <Card>
       <CardContent className="p-4 space-y-3">
         <p className="text-xs text-muted-foreground font-medium">
-          Challenge Period
+          {challengePeriod.bucket === "SUBACCOUNT_FUNDED" || challengePeriod.bucket === "SUBACCOUNT_ALPHA"
+            ? "Funded Account"
+            : "Challenge Period"}
         </p>
         <div className="space-y-2">
           <div>
             <div className="flex justify-between text-xs mb-1">
-              <span className="text-muted-foreground">Progress</span>
-              <span className="font-medium">{completion.toFixed(1)}%</span>
-            </div>
-            <div className="h-2 rounded-full bg-muted overflow-hidden">
-              <div
-                className="h-full rounded-full bg-green-500 transition-[width]"
-                style={{ width: `${Math.min(completion, 100)}%` }}
-              />
-            </div>
-          </div>
-          <div>
-            <div className="flex justify-between text-xs mb-1">
               <span className="text-muted-foreground flex items-center gap-1">
-                Drawdown Usage
+                Intraday Drawdown
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button type="button" className="inline-flex text-muted-foreground hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-sm">
@@ -55,28 +47,50 @@ function ChallengeProgressBar({ challengeProgress }) {
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="top">
-                    <div className="space-y-1.5">
-                      <p className="font-medium">2-Step Drawdown Rules</p>
-                      <p>1. Daily drawdown must not exceed 4% of starting daily equity.</p>
-                      <p>2. Total drawdown must not exceed the account drawdown limit from peak equity.</p>
-                      <p className="text-muted-foreground">Breaching either rule results in account termination.</p>
-                    </div>
+                    Drawdown from today&apos;s opening equity. Breaching this limit results in account termination.
                   </TooltipContent>
                 </Tooltip>
               </span>
               <span className="font-medium">
-                {drawdownUsage.toFixed(1)}%
-                {challengeProgress.drawdown_limit_percent != null
-                  ? ` / ${challengeProgress.drawdown_limit_percent.toFixed(0)}%`
-                  : ""}
+                {intradayUsage.toFixed(1)}%
+                {intradayThreshold != null ? ` / ${intradayThreshold.toFixed(0)}%` : ""}
               </span>
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
               <div
                 className={`h-full rounded-full transition-[width,background-color] ${
-                  drawdownUsage > 80 ? "bg-red-500" : drawdownUsage > 50 ? "bg-yellow-500" : "bg-blue-500"
+                  intradayUsage > 80 ? "bg-red-500" : intradayUsage > 50 ? "bg-yellow-500" : "bg-blue-500"
                 }`}
-                style={{ width: `${Math.min(drawdownUsage, 100)}%` }}
+                style={{ width: `${Math.min(intradayUsage, 100)}%` }}
+              />
+            </div>
+          </div>
+          <div>
+            <div className="flex justify-between text-xs mb-1">
+              <span className="text-muted-foreground flex items-center gap-1">
+                EOD Trailing Drawdown
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button type="button" className="inline-flex text-muted-foreground hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-sm">
+                      <Info className="w-3 h-3" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    End-of-day trailing drawdown from peak equity. Breaching this limit results in account termination.
+                  </TooltipContent>
+                </Tooltip>
+              </span>
+              <span className="font-medium">
+                {eodUsage.toFixed(1)}%
+                {eodThreshold != null ? ` / ${eodThreshold.toFixed(0)}%` : ""}
+              </span>
+            </div>
+            <div className="h-2 rounded-full bg-muted overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-[width,background-color] ${
+                  eodUsage > 80 ? "bg-red-500" : eodUsage > 50 ? "bg-yellow-500" : "bg-blue-500"
+                }`}
+                style={{ width: `${Math.min(eodUsage, 100)}%` }}
               />
             </div>
           </div>
@@ -87,13 +101,13 @@ function ChallengeProgressBar({ challengeProgress }) {
 }
 
 export function AccountOverview({ dashboard }) {
-  const { account_size, drawdown, challenge_progress, elimination } = dashboard;
+  const { account_size, drawdown, challenge_period, elimination, account_size_data } = dashboard;
 
-  const currentReturn = challenge_progress?.current_return;
-  const drawdownPct = challenge_progress?.drawdown_percent;
-  const maxDrawdown = drawdown?.ledger_max_drawdown;
-  const challengeCompletion = challenge_progress?.challenge_completion_percent;
-  const drawdownLimit = challenge_progress?.drawdown_limit_percent;
+  const currentEquity = drawdown?.current_equity;
+  const intradayDDPct = drawdown?.intraday_drawdown_pct;
+  const eodDDPct = drawdown?.eod_drawdown_pct;
+  const intradayLimit = drawdown?.intraday_threshold_pct;
+  const balance = account_size_data?.balance;
 
   return (
     <div className="space-y-4">
@@ -112,31 +126,32 @@ export function AccountOverview({ dashboard }) {
           value={formatUSD(account_size)}
         />
         <StatCard
-          label="Current Return"
-          value={currentReturn != null ? formatReturn(currentReturn) : "--"}
-          className={currentReturn != null ? pnlColor(currentReturn - 1) : ""}
+          label="Balance"
+          value={balance != null ? formatUSD(balance) : "--"}
+          className={balance != null ? pnlColor(balance - account_size) : ""}
         />
         <StatCard
-          label="Drawdown"
-          value={drawdownPct != null ? `${drawdownPct.toFixed(2)}%` : "--"}
-          className={drawdownPct != null ? "text-red-400" : ""}
+          label="Current Equity"
+          value={currentEquity != null ? formatReturn(currentEquity) : "--"}
+          className={currentEquity != null ? pnlColor(currentEquity - 1) : ""}
         />
         <StatCard
-          label="Max Drawdown"
-          value={maxDrawdown != null ? `${((1 - maxDrawdown) * 100).toFixed(2)}%` : "--"}
-          className={maxDrawdown != null ? "text-red-400" : ""}
+          label="Intraday DD"
+          value={intradayDDPct != null ? `${intradayDDPct.toFixed(2)}%` : "--"}
+          className={intradayDDPct != null && intradayDDPct > 0 ? "text-red-400" : ""}
         />
         <StatCard
-          label="Challenge Progress"
-          value={challengeCompletion != null ? `${challengeCompletion.toFixed(1)}%` : "--"}
+          label="EOD Trailing DD"
+          value={eodDDPct != null ? `${eodDDPct.toFixed(2)}%` : "--"}
+          className={eodDDPct != null && eodDDPct > 0 ? "text-red-400" : ""}
         />
         <StatCard
-          label="Drawdown Limit"
-          value={drawdownLimit != null ? `${drawdownLimit.toFixed(1)}%` : "--"}
+          label="Intraday DD Limit"
+          value={intradayLimit != null ? `${intradayLimit.toFixed(1)}%` : "--"}
         />
       </div>
 
-      <ChallengeProgressBar challengeProgress={challenge_progress} />
+      <ChallengeProgressBar challengePeriod={challenge_period} drawdown={drawdown} />
     </div>
   );
 }

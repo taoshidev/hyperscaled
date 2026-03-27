@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { formatUSD, formatPrice, formatLeverage, formatReturn, pnlColor } from "@/lib/format";
+import { formatPrice, formatLeverage, formatReturn, pnlColor } from "@/lib/format";
 
 function pairName(tradePair) {
   if (Array.isArray(tradePair)) return tradePair[1] || tradePair[0];
@@ -29,7 +29,6 @@ export function OpenPositions({ positions }) {
                   <th className="pb-2 pr-4">Direction</th>
                   <th className="pb-2 pr-4">Entry Price</th>
                   <th className="pb-2 pr-4">Leverage</th>
-                  <th className="pb-2 pr-4">Unrealized PnL</th>
                   <th className="pb-2">Return</th>
                 </tr>
               </thead>
@@ -37,7 +36,7 @@ export function OpenPositions({ positions }) {
                 {open.map((p, i) => {
                   const direction = p.direction || (p.position_type !== "FLAT" ? p.position_type : null) || p.position_type;
                   return (
-                    <tr key={i} className="border-b border-border/50">
+                    <tr key={p.position_uuid || i} className="border-b border-border/50">
                       <td className="py-2 pr-4 font-medium">
                         {pairName(p.trade_pair || p.pair)}
                       </td>
@@ -59,9 +58,6 @@ export function OpenPositions({ positions }) {
                       </td>
                       <td className="py-2 pr-4 font-mono">
                         {formatLeverage(p.net_leverage ?? p.leverage)}
-                      </td>
-                      <td className={`py-2 pr-4 font-mono ${pnlColor(p.unrealized_pnl)}`}>
-                        {formatUSD(p.unrealized_pnl)}
                       </td>
                       <td className={`py-2 font-mono ${pnlColor((p.current_return || 1) - 1)}`}>
                         {formatReturn(p.current_return)}

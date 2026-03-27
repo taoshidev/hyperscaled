@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { STUB_ENABLED, stubDashboard } from "@/lib/gateway-stubs";
 import { isValidEvmAddress } from "@/lib/validation";
 import { reportCritical } from "@/lib/errors";
+import { transformTraderResponse } from "@/lib/transform-trader";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -43,7 +44,8 @@ export async function GET(request) {
       );
     }
 
-    const trader = await traderRes.json();
+    const raw = await traderRes.json();
+    const trader = transformTraderResponse(raw);
     const limits = limitsRes.ok ? await limitsRes.json() : null;
 
     return NextResponse.json({ ...trader, limits }, { status: 200 });

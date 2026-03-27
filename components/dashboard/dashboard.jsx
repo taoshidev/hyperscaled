@@ -178,7 +178,8 @@ export function Dashboard() {
           <OrderEvents events={eventsData} />
           <StatsPanel
             drawdown={data.drawdown}
-            challengeProgress={data.challenge_progress}
+            challengePeriod={data.challenge_period}
+            accountSizeData={data.account_size_data}
             limits={data.limits}
           />
         </div>

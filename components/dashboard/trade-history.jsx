@@ -50,7 +50,7 @@ export function TradeHistory({ positions }) {
                     const closeTime = p.close_ms || p.closed_at;
                     const ret = p.return_at_close ?? p.return;
                     return (
-                      <tr key={i} className="border-b border-border/50">
+                      <tr key={p.position_uuid || i} className="border-b border-border/50">
                         <td className="py-2 pr-4 font-medium">
                           {pairName(p.trade_pair || p.pair)}
                         </td>
