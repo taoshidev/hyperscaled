@@ -148,11 +148,11 @@ function PricingCard({ tier, index }) {
 }
 
 /* ── Pricing Cards Grid ── */
-function PricingCards() {
+function PricingCards({ tiers }) {
   return (
     <section className="px-6 pb-20">
       <div className="max-w-[1100px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-5">
-        {PRICING_TIERS.map((tier, i) => (
+        {tiers.map((tier, i) => (
           <PricingCard key={tier.id} tier={tier} index={i} />
         ))}
       </div>
@@ -413,12 +413,12 @@ function PricingFAQSection() {
 }
 
 /* ── Page Compose ── */
-export default function PricingPage() {
+export default function PricingPage({ tiers = PRICING_TIERS }) {
   return (
     <>
       <LaunchBanner />
       <PricingHero />
-      <PricingCards />
+      <PricingCards tiers={tiers} />
       <WhatsIncludedGrid />
       <ModelSection />
       <ScalingSection />

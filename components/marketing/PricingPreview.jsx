@@ -9,7 +9,7 @@ const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
 const TIER_LABELS = { 'tier-1': 'Tier I', 'tier-2': 'Tier II', 'tier-3': 'Tier III' }
 
-export default function PricingPreview() {
+export default function PricingPreview({ tiers = PRICING_TIERS }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -31,7 +31,7 @@ export default function PricingPreview() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {PRICING_TIERS.map((tier, i) => (
+          {tiers.map((tier, i) => (
             <motion.div
               key={tier.id}
               initial={{ opacity: 0, y: 20 }}

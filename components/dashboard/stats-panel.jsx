@@ -30,13 +30,13 @@ export function StatsPanel({ drawdown, challengePeriod, accountSizeData, limits 
   const hasData = drawdown || challengePeriod || accountSizeData || limits;
 
   return (
-    <Card>
+    <Card className="bg-zinc-900/70 border-white/[0.08]">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium">Statistics</CardTitle>
       </CardHeader>
       <CardContent>
         {!hasData ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-zinc-500">
             No statistics available
           </p>
         ) : (
