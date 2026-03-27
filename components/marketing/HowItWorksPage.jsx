@@ -513,7 +513,7 @@ function PayoutMechanics() {
 /* ───────────────────────────────────────────────
    Page Compose
    ─────────────────────────────────────────────── */
-export default function HowItWorksPage() {
+export default function HowItWorksPage({ tiers }) {
   return (
     <>
       <PageHero />
@@ -521,7 +521,7 @@ export default function HowItWorksPage() {
       <ScalingSection />
       <NonCustodialExplainer />
       <PayoutMechanics />
-      <PricingPreview />
+      <PricingPreview tiers={tiers} />
     </>
   )
 }

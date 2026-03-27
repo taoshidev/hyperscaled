@@ -4,14 +4,15 @@ import { Info } from "@phosphor-icons/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { AlertCircle } from "lucide-react";
-import { formatUSD, formatReturn, pnlColor } from "@/lib/format";
+import { formatUSD, pnlColor } from "@/lib/format";
+import { useHLEquity } from "@/hooks/use-hl-equity";
 
 function StatCard({ label, value, className }) {
   return (
-    <Card>
+    <Card className="bg-zinc-900/70 border-white/[0.08]">
       <CardContent className="p-4">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className={`text-lg font-semibold mt-1 ${className || ""}`}>
+        <p className="text-xs text-zinc-500">{label}</p>
+        <p className={`text-lg font-semibold mt-1 font-mono ${className || ""}`}>
           {value}
         </p>
       </CardContent>
@@ -28,9 +29,9 @@ function ChallengeProgressBar({ challengePeriod, drawdown }) {
   const eodThreshold = drawdown?.eod_threshold_pct;
 
   return (
-    <Card>
+    <Card className="bg-zinc-900/70 border-white/[0.08]">
       <CardContent className="p-4 space-y-3">
-        <p className="text-xs text-muted-foreground font-medium">
+        <p className="text-xs text-zinc-500 font-medium">
           {challengePeriod.bucket === "SUBACCOUNT_FUNDED" || challengePeriod.bucket === "SUBACCOUNT_ALPHA"
             ? "Funded Account"
             : "Challenge Period"}
@@ -56,7 +57,7 @@ function ChallengeProgressBar({ challengePeriod, drawdown }) {
                 {intradayThreshold != null ? ` / ${intradayThreshold.toFixed(0)}%` : ""}
               </span>
             </div>
-            <div className="h-2 rounded-full bg-muted overflow-hidden">
+            <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
               <div
                 className={`h-full rounded-full transition-[width,background-color] ${
                   intradayUsage > 80 ? "bg-red-500" : intradayUsage > 50 ? "bg-yellow-500" : "bg-blue-500"
@@ -85,7 +86,7 @@ function ChallengeProgressBar({ challengePeriod, drawdown }) {
                 {eodThreshold != null ? ` / ${eodThreshold.toFixed(0)}%` : ""}
               </span>
             </div>
-            <div className="h-2 rounded-full bg-muted overflow-hidden">
+            <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
               <div
                 className={`h-full rounded-full transition-[width,background-color] ${
                   eodUsage > 80 ? "bg-red-500" : eodUsage > 50 ? "bg-yellow-500" : "bg-blue-500"
@@ -100,19 +101,21 @@ function ChallengeProgressBar({ challengePeriod, drawdown }) {
   );
 }
 
-export function AccountOverview({ dashboard }) {
+export function AccountOverview({ dashboard, hlAddress }) {
   const { account_size, drawdown, challenge_period, elimination, account_size_data } = dashboard;
 
-  const currentEquity = drawdown?.current_equity;
   const intradayDDPct = drawdown?.intraday_drawdown_pct;
   const eodDDPct = drawdown?.eod_drawdown_pct;
   const intradayLimit = drawdown?.intraday_threshold_pct;
   const balance = account_size_data?.balance;
 
+  const hlEquity = useHLEquity(hlAddress);
+  const liveEquity = hlEquity.data?.accountValue ?? null;
+
   return (
     <div className="space-y-4">
       {elimination && (
-        <div className="flex items-center gap-2 rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+        <div className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/5 px-4 py-3 text-sm text-red-400">
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>
             Elimination alert: {elimination.reason || "Account at risk"}
@@ -132,8 +135,18 @@ export function AccountOverview({ dashboard }) {
         />
         <StatCard
           label="Current Equity"
-          value={currentEquity != null ? formatReturn(currentEquity) : "--"}
-          className={currentEquity != null ? pnlColor(currentEquity - 1) : ""}
+          value={
+            hlEquity.isLoading
+              ? "…"
+              : liveEquity != null
+                ? formatUSD(liveEquity)
+                : "--"
+          }
+          className={
+            liveEquity != null && account_size
+              ? pnlColor(liveEquity - account_size)
+              : ""
+          }
         />
         <StatCard
           label="Intraday DD"
