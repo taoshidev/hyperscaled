@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, useInView } from 'framer-motion'
 import { MagnifyingGlass, XCircle } from '@phosphor-icons/react'
 
@@ -43,6 +44,7 @@ function fmtCompact(n) {
 }
 
 export default function Leaderboard({ onSelectTrader, initialSearch = '' }) {
+  const router = useRouter()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
   const [activeTab, setActiveTab] = useState('funded')
@@ -50,6 +52,10 @@ export default function Leaderboard({ onSelectTrader, initialSearch = '' }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState(initialSearch)
+
+  const handleSelectTrader = (addr) => {
+    if (addr) router.push('/dashboard?addr=' + encodeURIComponent(addr))
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -256,7 +262,7 @@ export default function Leaderboard({ onSelectTrader, initialSearch = '' }) {
                       {filteredFunded.map((t, i) => (
                         <tr
                           key={i}
-                          onClick={() => onSelectTrader?.(t.address || t.addr)}
+                          onClick={() => handleSelectTrader(t.address || t.addr)}
                           className="border-b border-white/[0.03] hover:bg-white/[0.03] cursor-pointer transition-colors group"
                         >
                           <td className="px-4 py-3 text-xs text-zinc-500">{t.rank || i + 1}</td>
@@ -296,7 +302,7 @@ export default function Leaderboard({ onSelectTrader, initialSearch = '' }) {
                         return (
                           <tr
                             key={i}
-                            onClick={() => onSelectTrader?.(t.address || t.addr)}
+                            onClick={() => handleSelectTrader(t.address || t.addr)}
                             className="border-b border-white/[0.03] hover:bg-white/[0.03] cursor-pointer transition-colors group"
                           >
                             <td className="px-4 py-3 text-xs font-mono text-amber-400 group-hover:text-amber-300 transition-colors">{t.address || t.addr}</td>
