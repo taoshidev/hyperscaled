@@ -19,6 +19,7 @@ const TOC_SECTIONS = [
   { id: 'funded', label: 'Funded Account' },
   { id: 'scaling', label: 'Scaling' },
   { id: 'disqualification', label: 'Disqualification' },
+  { id: 'pairs', label: 'Tradeable Pairs' },
   { id: 'kyc', label: 'KYC & Payouts' },
   { id: 'protocol', label: 'Protocol' },
 ]
@@ -366,7 +367,37 @@ function DisqualificationSection() {
 }
 
 /* ───────────────────────────────────────────────
-   Section 6 — KYC and Payout Eligibility
+   Section 6 — Tradeable Pairs
+   ─────────────────────────────────────────────── */
+const TRADEABLE_PAIRS = ['BTC', 'ETH', 'ADA', 'XRP', 'SOL', 'DOGE', 'TAO', 'HYPE', 'ZEC', 'BCH', 'LINK', 'XMR', 'LTC']
+
+function TradeablePairsSection() {
+  return (
+    <section id="pairs" className="px-6 pb-20 scroll-mt-24">
+      <div className="max-w-[900px] mx-auto">
+        <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
+          Tradeable Pairs
+        </span>
+        <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
+          Crypto perpetuals available at launch. All pairs are traded on Hyperliquid with no market&nbsp;restrictions.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {TRADEABLE_PAIRS.map((pair) => (
+            <span
+              key={pair}
+              className="px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.02] text-sm font-mono text-zinc-200"
+            >
+              {pair}
+            </span>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ───────────────────────────────────────────────
+   Section 7 — KYC and Payout Eligibility
    ─────────────────────────────────────────────── */
 function KYCSection() {
   return (
@@ -383,7 +414,7 @@ function KYCSection() {
             KYC is not required to register, trade, or complete the challenge. It is required only to receive a&nbsp;payout.
           </p>
           <p>
-            When your funded account reaches payout eligibility at the end of a 7-day cycle, you will be prompted to complete a simple cryptographic wallet verification. Payouts are then sent in USDC directly to your connected wallet. The entire payout flow is automated and verifiable&nbsp;onchain.
+            When your funded account reaches payout eligibility at the end of a monthly cycle, you will be prompted to complete a simple cryptographic wallet verification. Payouts are then sent in USDC directly to your connected wallet. The entire payout flow is automated and verifiable&nbsp;onchain.
           </p>
         </div>
       </div>
@@ -438,6 +469,7 @@ export default function RulesPage() {
       <FundedRulesSection />
       <ScalingRulesSection />
       <DisqualificationSection />
+      <TradeablePairsSection />
       <KYCSection />
       <ProtocolSection />
     </>

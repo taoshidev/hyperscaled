@@ -34,7 +34,7 @@ function TierSelectorMockup({ tiers = [] }) {
 
 function DashboardMockup() {
   const rows = [
-    { label: 'Challenge', value: 'Phase 1', valueClass: 'text-white' },
+    { label: 'Challenge', value: 'One-Step', valueClass: 'text-white' },
     { label: 'Daily Loss', value: '\u2212$120 / $500', valueClass: 'text-zinc-300' },
     { label: 'Profit Target', value: '92.4%', valueClass: 'text-teal-400' },
   ]
@@ -126,7 +126,7 @@ export default function HowItWorks({ tiers = [] }) {
       number: '03',
       icon: Trophy,
       title: 'Hit the Target. Get Paid.',
-      body: 'Hit the 10% profit target to pass the Hyperscaled Challenge and activate your funded account immediately. Payouts are delivered to your wallet every 7 days, and you keep 100% of everything you\u00a0earn.',
+      body: 'Hit the 10% profit target to pass the Hyperscaled Challenge and activate your funded account immediately. Payouts are delivered to your wallet monthly, and you keep 100% of everything you\u00a0earn.',
       mockup: <PayoutMockup />,
     },
   ]

@@ -132,17 +132,8 @@ export function StepSelectTier({ tiers, selectedTier, onSelect, onContinue }) {
 
               {/* Pricing */}
               <div className="flex items-baseline gap-2 mt-3 mb-5">
-                <ins className="no-underline">
-                  <span className="sr-only">Sale price: </span>
-                  <span className="text-3xl font-bold font-mono text-white">
-                    {formatPrice(tier.promoPrice)}
-                  </span>
-                </ins>
-                <del className="text-sm text-zinc-600 font-mono" style={{ textDecorationThickness: '1px', textUnderlineOffset: '-3px' }}>
-                  <span className="sr-only">Original price: </span>
-                  {formatPrice(tier.fullPrice)}
-                </del>
-                <span className="text-xs text-zinc-500 font-medium">USDC</span>
+                <span className="text-3xl font-bold font-mono text-teal-400">Free</span>
+                <span className="text-sm text-zinc-500 font-medium">(testnet)</span>
               </div>
 
               {/* Separator */}

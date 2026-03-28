@@ -9,7 +9,7 @@ import { buildMetadata } from "@/lib/metadata";
 export const metadata = buildMetadata({
   title: "Hyperscaled — Permissionless Funded Trading on Hyperliquid",
   description:
-    "Trade on Hyperliquid. Get a funded account. Keep 100% of your profits. 1-step challenge. USDC payouts every 7 days. Scale to $2.5M.",
+    "Trade on Hyperliquid. Get a funded account. Keep 100% of your profits. 1-step challenge. Monthly USDC payouts. Scale to $2.5M.",
   ogTitle: "Hyperscaled — Permissionless Funded Trading on Hyperliquid",
   ogDescription:
     "The most advanced decentralized prop trading infrastructure. 1-step challenge, 100% profit split, onchain USDC payouts, no KYC to start. Trade your way to $2.5M.",

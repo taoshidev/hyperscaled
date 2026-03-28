@@ -23,7 +23,7 @@ const WHAT_YOU_CONTROL = [
   },
   {
     title: 'Set your profit split',
-    body: 'Define what traders keep and what you retain as the\u00a0operator',
+    body: 'Define what traders keep and what you retain as the\u00a0operator.',
     icon: ChartPie,
   },
   {
@@ -38,7 +38,7 @@ const WHAT_YOU_CONTROL = [
   },
   {
     title: 'Permissionless scaling',
-    body: 'No ceiling on how many traders you can\u00a0fund',
+    body: 'No ceiling on how many traders you can\u00a0fund.',
     icon: ArrowsOutSimple,
   },
   {

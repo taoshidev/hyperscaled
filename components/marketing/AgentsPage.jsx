@@ -359,50 +359,6 @@ function IntegrationPaths() {
 
 const whyFeatures = [
   {
-    icon: CheckCircle,
-    title: 'Pydantic Everywhere',
-    body: 'Every SDK response is a typed Pydantic model. No raw dict parsing, no .get() chains. Autocomplete works, mypy works, agents work.',
-    span: 'md:col-span-6',
-    extra: (
-      <CodeBlock lines={[
-        { text: 'AccountInfo(', dim: true },
-        { text: '  balance=201271.23,', teal: true },
-        { text: '  phase="funded",', teal: true },
-        { text: '  profit_pct=4.2', teal: true },
-        { text: ')', dim: true },
-      ]} />
-    ),
-  },
-  {
-    icon: Lightning,
-    title: 'Semantic Error Types',
-    body: 'Errors have meaning. RuleViolationError, InsufficientFundsError, DrawdownBreachError — catch exactly what went wrong and respond programmatically.',
-    span: 'md:col-span-6',
-    extra: (
-      <CodeBlock lines={[
-        { text: 'except RuleViolationError as e:' },
-        { text: '    # e.violations → list of rule details', dim: true },
-        { text: '    handle_violation(e.violations)', teal: true },
-      ]} />
-    ),
-  },
-  {
-    icon: CheckCircle,
-    title: 'Pre-Submission Validation',
-    body: "Catch rule violations before they hit the network. Agents don't blow challenges on avoidable mistakes.",
-    span: 'md:col-span-7',
-    extra: (
-      <div className="mt-5 grid grid-cols-2 gap-3">
-        {['Drawdown Guard', 'Position Limits', 'Leverage Check', 'Margin Reserve'].map((r) => (
-          <div key={r} className="p-3 rounded-xl bg-zinc-800/60 border border-white/[0.06] flex items-center gap-2">
-            <CheckCircle size={13} className="text-teal-400 shrink-0" />
-            <span className="text-xs text-zinc-300">{r}</span>
-          </div>
-        ))}
-      </div>
-    ),
-  },
-  {
     icon: ArrowRight,
     title: 'Dual Sync/Async',
     body: 'One API, both paradigms. Use the same client in blocking scripts or async agent loops.',
@@ -505,54 +461,6 @@ function WhyAgentsSection() {
   )
 }
 
-// ─── Section E: CTA Banner ────────────────────────────────────────────────
-
-function CTABanner() {
-  return (
-    <section className="px-6 pb-24">
-      <div className="max-w-[1400px] mx-auto">
-        <div className="relative rounded-2xl border border-teal-400/20 bg-zinc-900/50 p-12 md:p-16 text-center overflow-hidden">
-          <div
-            className="absolute inset-0 rounded-2xl pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(0,198,167,0.08), transparent 60%)' }}
-          />
-          <div className="relative">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4 text-balance">
-              Ready to connect your agent?
-            </h2>
-            <p className="text-zinc-400 mb-8 max-w-[40ch] mx-auto [text-wrap:pretty]">
-              Install the OpenClaw skill or drop the Python SDK directly into your agent workflow.
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
-              <a href="https://clawhub.ai/taoshidev1/funded-account" target="_blank" rel="noreferrer" className="shiny-cta px-6 py-2.5">
-                <span className="flex items-center gap-1.5">
-                  Install OpenClaw Skill
-                  <ArrowRight size={15} weight="bold" />
-                </span>
-              </a>
-              <a
-                href="https://docs.hyperscaled.trade"
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl text-sm text-zinc-300 border border-white/[0.08] hover:border-white/[0.18] hover:text-white transition-all"
-              >
-                Read the Docs <ArrowSquareOut size={14} />
-              </a>
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              {['Pydantic outputs', 'Semantic errors', 'Pre-submission rules'].map((chip) => (
-                <span key={chip} className="px-3 py-1 rounded-full border border-white/[0.06] text-xs text-zinc-500">
-                  {chip}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
 // ─── Page Root ────────────────────────────────────────────────────────────
 
 export default function AgentsPage() {
@@ -564,7 +472,6 @@ export default function AgentsPage() {
         <ValueStrip />
         <IntegrationPaths />
         <WhyAgentsSection />
-        <CTABanner />
       </main>
       <Footer />
     </div>
