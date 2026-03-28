@@ -10,15 +10,15 @@ const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
 function TierSelectorMockup() {
   const tiers = [
-    { size: '$25,000', price: '$149', highlight: false },
-    { size: '$50,000', price: '$249', highlight: true },
-    { size: '$100,000', price: '$449', highlight: false },
+    { label: 'Tier I', size: '$25K', highlight: false },
+    { label: 'Tier II', size: '$50K', highlight: true },
+    { label: 'Tier III', size: '$100K', highlight: false },
   ]
   return (
     <div className="w-full max-w-sm space-y-2.5">
       {tiers.map((t) => (
         <div
-          key={t.size}
+          key={t.label}
           className={`flex items-center justify-between px-4 py-3.5 rounded-xl border transition-colors ${
             t.highlight
               ? 'bg-teal-400/5 border-teal-400/25'
@@ -26,10 +26,10 @@ function TierSelectorMockup() {
           }`}
         >
           <div className={`text-sm font-semibold ${t.highlight ? 'text-white' : 'text-zinc-300'}`}>
-            {t.size}
+            {t.label}
           </div>
           <span className={`text-xs font-mono ${t.highlight ? 'text-teal-400' : 'text-zinc-500'}`}>
-            {t.price}
+            {t.size}
           </span>
         </div>
       ))}
@@ -39,7 +39,7 @@ function TierSelectorMockup() {
 
 function DashboardMockup() {
   const rows = [
-    { label: 'Challenge', value: 'Phase 1', valueClass: 'text-white' },
+    { label: 'Challenge', value: 'One-Step', valueClass: 'text-white' },
     { label: 'Daily Loss', value: '\u2212$120 / $500', valueClass: 'text-zinc-300' },
     { label: 'Profit Target', value: '92.4%', valueClass: 'text-teal-400' },
   ]
@@ -130,7 +130,7 @@ const steps = [
     number: '03',
     icon: Trophy,
     title: 'Hit the Target. Get Paid.',
-    body: 'Hit the 10% profit target to pass the Hyperscaled Challenge and activate your funded account immediately. Payouts are delivered to your wallet every 7 days, and you keep 100% of everything you\u00a0earn.',
+    body: 'Hit the 10% profit target to pass the Hyperscaled Challenge and activate your funded account immediately. Payouts are delivered to your wallet monthly, and you keep 100% of everything you\u00a0earn.',
     mockup: <PayoutMockup />,
   },
 ]

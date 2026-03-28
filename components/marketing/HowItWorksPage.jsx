@@ -141,12 +141,12 @@ const STEPS = [
     number: '04',
     icon: CurrencyDollar,
     title: 'Pass. Get Funded. Get Paid.',
-    body: 'Hit the 10% profit target with drawdown under 5% to immediately activate your funded account. Keep 100% of profits with payouts delivered in USDC weekly. Scale to $2.5M with continued\u00a0performance.',
+    body: 'Hit the 10% profit target with drawdown under 5% to immediately activate your funded account. Keep 100% of profits with payouts delivered in USDC monthly. Scale to $2.5M with continued\u00a0performance.',
     details: [
       { label: 'Profit Target', value: '10%' },
       { label: 'Max Drawdown (Challenge)', value: '5% daily / 5% EOD trailing' },
       { label: 'Max Drawdown (Funded)', value: '8% daily / 8% EOD trailing' },
-      { label: 'Payout Cycle', value: 'Every 7 days' },
+      { label: 'Payout Cycle', value: 'Monthly' },
       { label: 'Profit Split', value: '100% — Hyperscaled takes 0%' },
     ],
   },
@@ -390,7 +390,7 @@ function NonCustodialExplainer() {
 const PAYOUT_STEPS = [
   { label: 'You trade on HL', icon: ChartLineUp, detail: null },
   { label: 'Hyperscaled reads performance', icon: Eye, detail: null },
-  { label: '7-day cycle closes', icon: ClockCountdown, detail: null },
+  { label: 'Monthly cycle closes', icon: ClockCountdown, detail: null },
   { label: 'USDC sent to wallet', icon: Wallet, detail: '+$2,847.32 USDC' },
   { label: 'Verifiable onchain', icon: ShieldCheck, detail: '0x7a3...f4e2' },
 ]
@@ -413,7 +413,7 @@ function PayoutMechanics() {
             Payout Mechanics
           </span>
           <h2 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight">
-            Automated. Weekly.&nbsp;Onchain.
+            Automated. Monthly.&nbsp;Onchain.
           </h2>
         </motion.div>
 
@@ -425,7 +425,7 @@ function PayoutMechanics() {
           className="max-w-[700px] mx-auto mb-14 space-y-4 text-sm sm:text-base text-zinc-400 leading-relaxed"
         >
           <p>
-            Funded account payouts are calculated automatically on a weekly basis for your realized profits. USDC is sent directly to your connected wallet, with no delays or&nbsp;discretion.
+            Funded account payouts are calculated automatically on a monthly basis for your realized profits. USDC is sent directly to your connected wallet, with no delays or&nbsp;discretion.
           </p>
           <p>
             A brief KYC is required only for your first payout — just a simple cryptographic wallet&nbsp;verification.

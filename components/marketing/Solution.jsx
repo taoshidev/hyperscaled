@@ -25,7 +25,7 @@ const pillars = [
   {
     icon: LinkSimple,
     title: 'Onchain Payouts',
-    desc: 'USDC paid directly to your wallet every week. Fully transparent.',
+    desc: 'USDC paid directly to your wallet monthly. Fully transparent.',
   },
   {
     icon: Globe,
@@ -62,23 +62,6 @@ export default function Solution() {
   return (
     <section id="solution" ref={ref} className="py-24 px-6">
       <div className="max-w-[1400px] mx-auto">
-
-        {/* Full-width banner tagline */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={spring}
-          className="border-t border-b border-white/[0.06] py-10 mb-16 text-center"
-        >
-          <p className="text-2xl md:text-4xl font-bold tracking-tighter text-white mb-2">
-            Permissionless.{' '}
-            <span className="text-teal-400">Open-Source.</span>{' '}
-            Onchain.
-          </p>
-          <p className="text-base text-zinc-400 max-w-[55ch] mx-auto">
-            Built to remove hidden rules, opaque payouts, and centralized&nbsp;discretion.
-          </p>
-        </motion.div>
 
         {/* Two-column layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">

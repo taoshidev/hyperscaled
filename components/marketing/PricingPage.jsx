@@ -27,7 +27,7 @@ function LaunchBanner() {
     <div className="bg-teal-400/10 border-b border-teal-400/20">
       <div className="max-w-[1400px] mx-auto px-6 py-3 text-center">
         <p className="text-sm text-teal-400 font-medium" style={{ textWrap: 'balance' }}>
-          🟢 Launch Pricing Active — Save up to 50% for a limited&nbsp;time.
+          Launch Pricing Active — Save up to 50% for a limited&nbsp;time.
         </p>
       </div>
     </div>
@@ -174,8 +174,8 @@ const INCLUDED_FEATURES = [
   },
   {
     icon: CalendarCheck,
-    title: 'Weekly Payouts',
-    desc: 'Funded traders receive USDC payouts every 7 days.',
+    title: 'Monthly Payouts',
+    desc: 'Funded traders receive USDC payouts monthly.',
   },
   {
     icon: Wallet,

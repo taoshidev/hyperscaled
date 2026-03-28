@@ -10,21 +10,21 @@ const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
 /*
   Progressive responsive collapse:
-  - xl+ (>1280px): all 7 links visible, no hamburger
-  - lg–xl (1024–1280px): How It Works, Pricing, For Agents, Rules visible
-  - md–lg (768–1024px): How It Works, Pricing, For Agents visible
+  - xl+ (>1280px): all 8 links visible, no hamburger
+  - md–xl (768–1280px): How It Works, Pricing, For Agents, Rules visible
   - <md (<768px): all links in hamburger only
 
-  Priority (stays visible longest): How It Works → Pricing → For Agents
+  Always visible at desktop: How It Works → Pricing → For Agents → Rules
+  Collapse to hamburger: Partners → Dashboard → Leaderboard → FAQ
 */
 const NAV_LINKS = [
   { label: 'How It Works', href: '/how-it-works', visibility: 'hidden md:block' },
   { label: 'Pricing', href: '/pricing', visibility: 'hidden md:block' },
   { label: 'For Agents', href: '/agents', visibility: 'hidden md:block' },
-  { label: 'Rules', href: '/rules', visibility: 'hidden lg:block' },
-  { label: 'Dashboard', href: '/dashboard', visibility: 'hidden lg:block' },
-  { label: 'Leaderboard', href: '/leaderboard', visibility: 'hidden xl:block' },
+  { label: 'Rules', href: '/rules', visibility: 'hidden md:block' },
   { label: 'Partners', href: '/partners', visibility: 'hidden xl:block' },
+  { label: 'Dashboard', href: '/dashboard', visibility: 'hidden xl:block' },
+  { label: 'Leaderboard', href: '/leaderboard', visibility: 'hidden xl:block' },
   { label: 'FAQ', href: '/faq', visibility: 'hidden xl:block' },
 ]
 
