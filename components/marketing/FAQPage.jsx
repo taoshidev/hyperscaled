@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, DiscordLogo, Envelope } from '@phosphor-icons/react'
 import FAQAccordion from '@/components/shared/FAQAccordion'
 import { FAQ_ITEMS } from '@/lib/constants'
@@ -17,12 +17,38 @@ const TOC_SECTIONS = FAQ_ITEMS.map((group) => ({
    Sticky TOC (desktop sidebar + mobile jump bar)
    Matches Rules page pattern for consistency
    ─────────────────────────────────────────────── */
+function handleTocClick(e, id) {
+  e.preventDefault()
+  const el = document.getElementById(id)
+  if (!el) return
+  el.scrollIntoView({ behavior: 'smooth' })
+  history.replaceState(null, '', `#${id}`)
+}
+
 function TableOfContents({ activeId }) {
+  const navRef = useRef(null)
+
+  useEffect(() => {
+    function check() {
+      if (!navRef.current) return
+      const footer = document.querySelector('footer')
+      if (!footer) return
+      const navBottom = navRef.current.getBoundingClientRect().bottom
+      const footerTop = footer.getBoundingClientRect().top
+      const hide = footerTop <= navBottom + 24
+      navRef.current.style.opacity = hide ? '0' : '1'
+      navRef.current.style.pointerEvents = hide ? 'none' : 'auto'
+    }
+    window.addEventListener('scroll', check, { passive: true })
+    return () => window.removeEventListener('scroll', check)
+  }, [])
+
   return (
     <>
       {/* Desktop sidebar */}
       <nav
-        className="hidden lg:block fixed left-[max(1rem,calc((100vw-900px)/2-180px))] top-32 w-[140px]"
+        ref={navRef}
+        className="hidden lg:block fixed left-[max(1rem,calc((100vw-900px)/2-180px))] top-[126px] w-[140px] z-40 transition-opacity duration-300"
         aria-label="FAQ sections"
       >
         <ul className="space-y-1">
@@ -30,6 +56,7 @@ function TableOfContents({ activeId }) {
             <li key={s.id}>
               <a
                 href={`#${s.id}`}
+                onClick={(e) => handleTocClick(e, s.id)}
                 className={`block text-xs py-1.5 transition-colors ${
                   activeId === s.id
                     ? 'text-teal-400 font-medium'
@@ -44,13 +71,14 @@ function TableOfContents({ activeId }) {
       </nav>
 
       {/* Mobile jump bar */}
-      <div className="lg:hidden sticky top-16 z-30 bg-[#09090b]/95 backdrop-blur-sm border-b border-white/[0.06]">
+      <div className="lg:hidden sticky top-[94px] z-30 bg-[#09090b]/95 backdrop-blur-sm border-b border-white/[0.06]">
         <div className="overflow-x-auto scrollbar-hide">
           <div className="flex items-center gap-1 px-4 py-2 min-w-max">
             {TOC_SECTIONS.map((s) => (
               <a
                 key={s.id}
                 href={`#${s.id}`}
+                onClick={(e) => handleTocClick(e, s.id)}
                 className={`text-xs px-3 py-1.5 rounded-full whitespace-nowrap transition-colors ${
                   activeId === s.id
                     ? 'bg-teal-400/10 text-teal-400 font-medium'
@@ -89,7 +117,7 @@ function useActiveSection() {
           setActiveId(visible[0].target.id)
         }
       },
-      { rootMargin: '-80px 0px -60% 0px', threshold: 0 }
+      { rootMargin: '-110px 0px -60% 0px', threshold: 0 }
     )
 
     elements.forEach((el) => observer.observe(el))
@@ -178,8 +206,10 @@ export default function FAQPage() {
     <>
       <PageHero />
       <TableOfContents activeId={activeId} />
-      <FAQSection />
-      <ContactSection />
+      <div data-toc-content>
+        <FAQSection />
+        <ContactSection />
+      </div>
     </>
   )
 }
