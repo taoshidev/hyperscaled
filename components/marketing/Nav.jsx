@@ -45,9 +45,9 @@ export default function Nav() {
           <span className="text-[10px] font-semibold uppercase tracking-widest text-teal-400 border border-teal-400/30 bg-teal-400/10 rounded px-1.5 py-0.5 leading-none">Beta</span>
         </Link>
 
-        {/* Desktop nav — absolutely centered in header */}
-        <nav className="hidden md:flex items-center justify-center gap-6 absolute inset-0 pointer-events-none">
-          <div className="flex items-center gap-6 pointer-events-auto">
+        {/* Desktop nav — centered between logo and CTA */}
+        <nav className="hidden md:flex items-center justify-center flex-1 min-w-0 mx-4">
+          <div className="flex items-center gap-6 overflow-hidden">
           {NAV_LINKS.map((l) => (
             <Link
               key={l.label}
