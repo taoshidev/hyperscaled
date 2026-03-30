@@ -92,7 +92,7 @@ function PricingCard({ tier, index }) {
   )
 }
 
-export default function HomePricing() {
+export default function HomePricing({ tiers = PRICING_TIERS }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -114,7 +114,7 @@ export default function HomePricing() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-5">
-          {PRICING_TIERS.map((tier, i) => (
+          {tiers.map((tier, i) => (
             <PricingCard key={tier.id} tier={tier} index={i} />
           ))}
         </div>
