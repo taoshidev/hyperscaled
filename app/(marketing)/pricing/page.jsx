@@ -21,7 +21,7 @@ export default async function Pricing() {
     "@context": "https://schema.org",
     "@type": "Product",
     name: `Hyperscaled ${tier.name} Funded Account`,
-    description: `${tier.accountSize} funded trading account on Hyperliquid. 10% profit target, 5% max drawdown, ${tier.profitSplit} profit split, monthly USDC payouts. Scale ${tier.scalingPath}.`,
+    description: `${tier.accountSize} funded trading account on Hyperliquid. 10% profit target, 5% max drawdown, ${tier.profitSplit} profit split, weekly USDC payouts. Scale ${tier.scalingPath}.`,
     offers: {
       "@type": "Offer",
       price: String(tier.launchPrice),

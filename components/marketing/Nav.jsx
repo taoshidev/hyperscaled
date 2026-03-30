@@ -21,10 +21,10 @@ const NAV_LINKS = [
   { label: 'How It Works', href: '/how-it-works', visibility: 'hidden md:block' },
   { label: 'Pricing', href: '/pricing', visibility: 'hidden md:block' },
   { label: 'For Agents', href: '/agents', visibility: 'hidden md:block' },
-  { label: 'Rules', href: '/rules', visibility: 'hidden md:block' },
-  { label: 'Partners', href: '/partners', visibility: 'hidden xl:block' },
-  { label: 'Dashboard', href: '/dashboard', visibility: 'hidden xl:block' },
+  { label: 'Rules', href: '/rules', visibility: 'hidden lg:block' },
+  { label: 'Dashboard', href: '/dashboard', visibility: 'hidden lg:block' },
   { label: 'Leaderboard', href: '/leaderboard', visibility: 'hidden xl:block' },
+  { label: 'Partners', href: '/partners', visibility: 'hidden xl:block' },
   { label: 'FAQ', href: '/faq', visibility: 'hidden xl:block' },
 ]
 
