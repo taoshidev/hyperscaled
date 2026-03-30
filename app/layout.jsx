@@ -55,7 +55,7 @@ export default function RootLayout({ children }) {
       </head>
       <body className="font-sans antialiased">
         <div className="w-full bg-teal-500 text-center py-1.5 text-xs font-medium text-black tracking-wide z-[100] fixed top-0 left-0 right-0">
-          Hyperscaled is in testnet. Sign up for free to test the platform. Funds traded are not real. Launching on mainnet by April&nbsp;3rd.
+          Hyperscaled is in testnet. Sign up for free to test the platform. Funds traded are not real. Launching on mainnet by April&nbsp;6th.
         </div>
         <div className="h-[30px]" />
         {children}
