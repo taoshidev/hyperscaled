@@ -16,6 +16,7 @@ import {
   Wallet,
   CurrencyDollar,
   GoogleChromeLogo,
+  Info,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import ExtensionModal from "@/components/marketing/ExtensionModal";
@@ -65,8 +66,10 @@ export function StepConnectAndPay({
   const [hlWalletTouched, setHlWalletTouched] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
   const [payoutWallet, setPayoutWallet] = useState("");
+  const [payoutPrefilled, setPayoutPrefilled] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState(null); // null | "base" | "hyperliquid"
   const [extensionModalOpen, setExtensionModalOpen] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
 
   const {
     extensionDetected,
@@ -434,6 +437,7 @@ export function StepConnectAndPay({
     hasEnough &&
     hlAddressReady &&
     emailValid &&
+    confirmed &&
     !!paymentWallet &&
     paymentState !== "processing";
 
@@ -441,22 +445,27 @@ export function StepConnectAndPay({
     extensionDetected &&
     hlAddressReady &&
     emailValid &&
+    confirmed &&
     !!paymentWallet &&
     paymentState !== "processing";
 
   const missingFieldBase = !emailValid
     ? "Enter your email to continue"
     : !hlAddressReady
-      ? "Enter your Hyperliquid wallet to continue"
-      : !hasEnough
-        ? "Insufficient USDC balance"
-        : null;
+      ? "Enter your Hyperliquid wallet address to continue"
+      : !confirmed
+        ? "Confirm your details above to continue"
+        : !hasEnough
+          ? "Insufficient USDC balance"
+          : null;
 
   const missingFieldHL = !emailValid
     ? "Enter your email to continue"
     : !hlAddressReady
-      ? "Enter your Hyperliquid wallet to continue"
-      : null;
+      ? "Enter your Hyperliquid wallet address to continue"
+      : !confirmed
+        ? "Confirm your details above to continue"
+        : null;
 
   // Determine HL payment flow status text
   const hlFlowStatus =
@@ -544,13 +553,16 @@ export function StepConnectAndPay({
       {/* ─── 2. Hyperliquid Wallet ─── */}
       <div className="w-full max-w-lg space-y-1.5">
         <label htmlFor="hl-wallet" className="text-xs font-medium text-muted-foreground">
-          Hyperliquid wallet
+          Hyperliquid wallet address (this is the wallet you will use to trade)
         </label>
         <input
           id="hl-wallet"
           type="text"
           value={hlWallet}
-          onChange={(e) => setHlWallet(e.target.value)}
+          onChange={(e) => {
+            setHlWallet(e.target.value);
+            setConfirmed(false);
+          }}
           onBlur={() => setHlWalletTouched(true)}
           placeholder="0x..."
           aria-label="Hyperliquid trading wallet address"
@@ -574,35 +586,7 @@ export function StepConnectAndPay({
         </div>
       </div>
 
-      {/* ─── 3. Payout Wallet (optional) ─── */}
-      {hlAddressReady && (
-        <div className="w-full max-w-lg space-y-1.5">
-          <label htmlFor="payout-wallet" className="text-xs font-medium text-muted-foreground">
-            Payout wallet <span className="text-muted-foreground/60">(optional)</span>
-          </label>
-          <input
-            id="payout-wallet"
-            type="text"
-            value={payoutWallet}
-            onChange={(e) => setPayoutWallet(e.target.value)}
-            placeholder={hlWallet || "Defaults to your Hyperliquid address"}
-            aria-label="Payout wallet address — defaults to your Hyperliquid address"
-            className={`
-              w-full rounded-xl border bg-card p-4 text-sm font-mono
-              placeholder:text-muted-foreground/50
-              outline-none
-              focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
-              transition-[border-color,box-shadow] duration-200
-              border-border hover:border-white/[0.15]
-            `}
-          />
-          <p className="text-xs text-muted-foreground/60 min-h-[1.25rem]">
-            Defaults to your Hyperliquid address if left blank
-          </p>
-        </div>
-      )}
-
-      {/* ─── 4. Payment Method Selector ─── */}
+      {/* ─── 3. Payment Method Selector ─── */}
       <div className="w-full max-w-lg mt-2 space-y-3">
         <p className="text-xs font-medium text-muted-foreground">
           Payment method
@@ -618,7 +602,12 @@ export function StepConnectAndPay({
             aria-checked={paymentMethod === "base"}
             onClick={() => {
               setPaymentMethod("base");
+              setConfirmed(false);
               resetPaymentStatus();
+              if (!payoutPrefilled && hlAddressReady) {
+                setPayoutWallet(hlWallet);
+                setPayoutPrefilled(true);
+              }
               if (paymentState === "error") {
                 setPaymentState("idle");
                 setErrorMessage("");
@@ -651,6 +640,11 @@ export function StepConnectAndPay({
             aria-checked={paymentMethod === "hyperliquid"}
             onClick={() => {
               setPaymentMethod("hyperliquid");
+              setConfirmed(false);
+              if (!payoutPrefilled && hlAddressReady) {
+                setPayoutWallet(hlWallet);
+                setPayoutPrefilled(true);
+              }
               if (paymentState === "error") {
                 setPaymentState("idle");
                 setErrorMessage("");
@@ -679,7 +673,109 @@ export function StepConnectAndPay({
         </div>
       </div>
 
-      {/* ─── 5. Payment UI ─── */}
+      {/* ─── 4. Payout Wallet (shown after payment method selected) ─── */}
+      {paymentMethod && hlAddressReady && (
+        <div className="w-full max-w-lg mt-4 space-y-1.5">
+          <label htmlFor="payout-wallet" className="text-xs font-medium text-muted-foreground">
+            Payout wallet <span className="text-muted-foreground/60">(where you receive payouts)</span>
+          </label>
+          <input
+            id="payout-wallet"
+            type="text"
+            value={payoutWallet}
+            onChange={(e) => {
+              setPayoutWallet(e.target.value);
+              setConfirmed(false);
+            }}
+            placeholder={hlWallet || "0x..."}
+            aria-label="Payout wallet address — where you will receive payouts"
+            className={`
+              w-full rounded-xl border bg-card p-4 text-sm font-mono
+              placeholder:text-muted-foreground/50
+              outline-none
+              focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
+              transition-[border-color,box-shadow] duration-200
+              border-border hover:border-white/[0.15]
+            `}
+          />
+          <p className="text-xs text-muted-foreground/60 min-h-[1.25rem]">
+            Prefilled with your Hyperliquid address — change if you want payouts sent elsewhere
+          </p>
+        </div>
+      )}
+
+      {/* ─── 5. Confirmation Review ─── */}
+      {paymentMethod && hlAddressReady && emailValid && paymentState !== "success" && (
+        <div className="w-full max-w-lg mt-4 space-y-3">
+          <div className="rounded-xl border border-border bg-zinc-900/50 p-5 space-y-3">
+            <div className="flex items-center gap-2 mb-1">
+              <Info size={16} weight="fill" className="text-teal-400 shrink-0" />
+              <p className="text-sm font-semibold text-foreground">Confirm your details</p>
+            </div>
+
+            <div className="space-y-2.5 text-sm">
+              <div className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0 mt-1.5" />
+                <div>
+                  <p className="text-muted-foreground">Trading wallet</p>
+                  <p className="font-mono text-foreground break-all">{hlWallet}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    This address will be tracked for all challenge trades
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t border-border" />
+
+              <div className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0 mt-1.5" />
+                <div>
+                  <p className="text-muted-foreground">Payout wallet</p>
+                  <p className="font-mono text-foreground break-all">{resolvedPayoutAddress}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    All earned payouts will be sent to this address
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t border-border" />
+
+              <div className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0 mt-1.5" />
+                <div>
+                  <p className="text-muted-foreground">You will receive</p>
+                  <p className="text-foreground font-semibold">
+                    {selectedTier.name} — {formatAccountSize(selectedTier.accountSize)} Funded Account
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {formatRulesSummary(selectedTier.details)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-border pt-3">
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={confirmed}
+                  onChange={(e) => setConfirmed(e.target.checked)}
+                  className="
+                    mt-0.5 h-4 w-4 shrink-0 rounded border-border bg-card
+                    accent-teal-400 cursor-pointer
+                    focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background outline-none
+                  "
+                />
+                <span className="text-sm text-muted-foreground group-hover:text-foreground transition-[color] duration-200">
+                  I confirm these details are correct and understand that my trading wallet will be tracked and payouts will be sent to the wallet shown above.
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── 6. Payment UI ─── */}
       <div className="w-full max-w-lg mt-4 space-y-4">
         {/* Status region for screen readers */}
         <div aria-live="polite" className="sr-only">
