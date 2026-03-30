@@ -2,7 +2,27 @@
 
 ## Current status
 
-Wallet search + metadata + link audit complete. Leaderboard has address search with `?addr=` query param support. Dashboard has address lookup for disconnected users. All pages have OG metadata, favicon, and Twitter card configured. Link audit done — all dead links fixed, Discord URLs corrected, Docs link removed from footer, Chrome Extension URL uses constant.
+Fixes batch complete. Payout frequency updated from weekly/7-day to monthly across all pages. Tradeable pairs added to EVAL_RULES. Telegram bot link in footer. Nav collapse tightened. Homepage Step 01/02 mockups fixed. Permissionless banner removed. Pricing emoji removed. Agents tags removed. Partners copy + spacing fixed.
+
+## Fixes Batch Session (2026-03-28)
+
+### Payout frequency: weekly → monthly
+- Updated 20+ instances across lib/constants.js, lib/pricing.js, HowItWorks.jsx, HowItWorksPage.jsx, PricingPage.jsx, RulesPage.jsx, Solution.jsx, layout.jsx, and all page metadata
+- FUNDED_RULES payout cycle → "Monthly", PRICING_TIERS payoutCycle → "Monthly"
+- FAQ answers updated (7-day cycle → monthly cycle)
+- Verified: only remaining "weekly" is sitemap.js changeFrequency (not payout-related)
+
+### Other fixes
+- Added Tradeable Pairs row to EVAL_RULES in lib/constants.js
+- Footer: added Telegram Bot link with TelegramLogo icon to Community column
+- Nav: Rules moved to always-visible group (md+), Partners/Dashboard/Leaderboard/FAQ collapse at xl
+- Homepage Step 01: replaced price mockup with tier labels (Tier I · $25K, etc.)
+- Homepage Step 02: "Challenge: Phase 1" → "Challenge: One-Step"
+- Homepage: removed "Permissionless. Open-Source. Onchain." banner from Solution.jsx
+- Pricing: removed 🟢 emoji from launch banner
+- Agents: removed "Pydantic outputs", "Semantic errors", "Pre-submission rules" tags from bottom CTA
+- Partners: added periods to "Set your profit split" and "Permissionless scaling" card bodies
+- Partners: increased Division of Responsibility section spacing (pt-20 pb-24, mt-12 gap)
 
 ## Search + Meta + Links Session (2026-03-26)
 

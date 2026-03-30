@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { AlertCircle, RefreshCw } from "lucide-react";
@@ -21,10 +20,8 @@ import { KycVerification } from "./kyc-verification";
 
 export function Dashboard() {
   const { address, isConnected } = useAccount();
-  const searchParams = useSearchParams();
-  const preloadAddr = searchParams.get("addr") || "";
-  const [lookupAddr, setLookupAddr] = useState(preloadAddr);
-  const [lookupSubmitted, setLookupSubmitted] = useState(!!preloadAddr);
+  const [lookupAddr, setLookupAddr] = useState("");
+  const [lookupSubmitted, setLookupSubmitted] = useState(false);
   const [useConnectedWallet, setUseConnectedWallet] = useState(false);
 
   // User must explicitly choose — connected wallet or lookup

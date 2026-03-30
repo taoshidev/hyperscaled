@@ -24,10 +24,11 @@ const TIER_LABELS = { 'tier-1': 'Tier I', 'tier-2': 'Tier II', 'tier-3': 'Tier I
 /* ── Launch Pricing Banner ── */
 function LaunchBanner() {
   return (
-    <div className="mt-16 bg-teal-400/10 border-b border-teal-400/20">
-      <div className="max-w-[1400px] mx-auto px-6 py-3 text-center">
+    <div className="sticky top-[94px] z-40 bg-teal-400/10 border-b border-teal-400/20 backdrop-blur-sm">
+      <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-center gap-2">
+        <span className="w-2 h-2 rounded-full bg-teal-400 shrink-0" aria-hidden="true" />
         <p className="text-sm text-teal-400 font-medium" style={{ textWrap: 'balance' }}>
-          🟢 Launch Pricing Active — Save up to 50% for a limited&nbsp;time.
+          Launch Pricing Active — Save up to 50% for a limited&nbsp;time.
         </p>
       </div>
     </div>
@@ -37,7 +38,7 @@ function LaunchBanner() {
 /* ── Page Hero ── */
 function PricingHero() {
   return (
-    <section className="pt-16 pb-16 px-6">
+    <section className="pt-32 pb-16 px-6">
       <div className="max-w-[800px] mx-auto text-center">
         <motion.h1
           initial={{ opacity: 0, y: 16 }}
@@ -174,8 +175,8 @@ const INCLUDED_FEATURES = [
   },
   {
     icon: CalendarCheck,
-    title: 'Weekly Payouts',
-    desc: 'Funded traders receive USDC payouts every 7 days.',
+    title: 'Monthly Payouts',
+    desc: 'Funded traders receive USDC payouts monthly.',
   },
   {
     icon: Wallet,

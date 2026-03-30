@@ -539,13 +539,6 @@ function CTABanner() {
                 Read the Docs <ArrowSquareOut size={14} />
               </a>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              {['Pydantic outputs', 'Semantic errors', 'Pre-submission rules'].map((chip) => (
-                <span key={chip} className="px-3 py-1 rounded-full border border-white/[0.06] text-xs text-zinc-500">
-                  {chip}
-                </span>
-              ))}
-            </div>
           </div>
         </div>
       </div>

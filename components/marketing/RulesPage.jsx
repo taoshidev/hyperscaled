@@ -26,11 +26,18 @@ const TOC_SECTIONS = [
 
 const AVAILABLE_PAIRS = [
   { base: 'ADA', quote: 'USDC' },
+  { base: 'BCH', quote: 'USDC' },
   { base: 'BTC', quote: 'USDC' },
   { base: 'DOGE', quote: 'USDC' },
   { base: 'ETH', quote: 'USDC' },
+  { base: 'HYPE', quote: 'USDC' },
+  { base: 'LINK', quote: 'USDC' },
+  { base: 'LTC', quote: 'USDC' },
   { base: 'SOL', quote: 'USDC' },
+  { base: 'TAO', quote: 'USDC' },
+  { base: 'XMR', quote: 'USDC' },
   { base: 'XRP', quote: 'USDC' },
+  { base: 'ZEC', quote: 'USDC' },
 ]
 
 /* ───────────────────────────────────────────────
@@ -456,7 +463,7 @@ function KYCSection() {
             KYC is not required to register, trade, or complete the challenge. It is required only to receive a&nbsp;payout.
           </p>
           <p>
-            When your funded account reaches payout eligibility at the end of a 7-day cycle, you will be prompted to complete a simple cryptographic wallet verification. Payouts are then sent in USDC directly to your connected wallet. The entire payout flow is automated and verifiable&nbsp;onchain.
+            When your funded account reaches payout eligibility at the end of a monthly cycle, you will be prompted to complete a simple cryptographic wallet verification. Payouts are then sent in USDC directly to your connected wallet. The entire payout flow is automated and verifiable&nbsp;onchain.
           </p>
         </div>
       </div>

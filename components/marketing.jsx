@@ -9,12 +9,12 @@ import Problem from './marketing/Problem'
 import PartnersCTA from './marketing/PartnersCTA'
 import FAQ from './marketing/FAQ'
 
-export default function App({ tiers }) {
+export default function App() {
   return (
     <>
       <Hero />
-      <HowItWorks tiers={tiers} />
-      <HomePricing tiers={tiers} />
+      <HowItWorks />
+      <HomePricing />
       <Features />
       <Solution />
       <Problem />

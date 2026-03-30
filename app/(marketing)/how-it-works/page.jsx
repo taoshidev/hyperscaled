@@ -6,10 +6,10 @@ import { getPricingTiers } from '@/lib/pricing'
 export const metadata = buildMetadata({
   title: 'How It Works — Hyperscaled Funded Trading',
   description:
-    'See exactly how Hyperscaled works. Connect your wallet, trade on Hyperliquid, pass the challenge, and keep 100% of your USDC payouts every 7 days.',
+    'See exactly how Hyperscaled works. Connect your wallet, trade on Hyperliquid, pass the challenge, and keep 100% of your monthly USDC payouts.',
   ogTitle: 'How Hyperscaled Works — Trade on Hyperliquid, Get Funded, Keep 100%',
   ogDescription:
-    'No API keys. No custody. Register, trade on Hyperliquid, pass the 1-step challenge, and collect 100% of your profits every 7 days — onchain.',
+    'No API keys. No custody. Register, trade on Hyperliquid, pass the 1-step challenge, and collect 100% of your profits monthly — onchain.',
   path: '/how-it-works',
 })
 
@@ -42,7 +42,7 @@ const HOW_TO_SCHEMA = {
       "@type": "HowToStep",
       position: 4,
       name: "Pass and get paid",
-      text: "Hit the 10% profit target. Receive 100% of your performance rewards in USDC every 7 days, automatically onchain.",
+      text: "Hit the 10% profit target. Receive 100% of your performance rewards in USDC monthly, automatically onchain.",
     },
   ],
 }
