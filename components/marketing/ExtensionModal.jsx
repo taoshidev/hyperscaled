@@ -29,7 +29,7 @@ const STEPS = [
   },
 ]
 
-export default function ExtensionModal({ open, onClose }) {
+export default function ExtensionModal({ open, onClose, hideTelegram = false }) {
   return (
     <AnimatePresence>
       {open && (
@@ -107,15 +107,17 @@ export default function ExtensionModal({ open, onClose }) {
 
               {/* Footer */}
               <div className="px-6 pb-6 pt-2 flex flex-col sm:flex-row items-center gap-3 border-t border-white/[0.06]">
-                <a
-                  href="https://t.me/hyperscaled_bot"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#229ED9]/10 border border-[#229ED9]/25 text-[#229ED9] hover:bg-[#229ED9]/20 transition-colors text-sm font-medium"
-                >
-                  <TelegramLogo size={16} weight="fill" />
-                  Use Telegram Bot Instead
-                </a>
+                {!hideTelegram && (
+                  <a
+                    href="https://t.me/hyperscaled_bot"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#229ED9]/10 border border-[#229ED9]/25 text-[#229ED9] hover:bg-[#229ED9]/20 transition-colors text-sm font-medium"
+                  >
+                    <TelegramLogo size={16} weight="fill" />
+                    Use Telegram Bot Instead
+                  </a>
+                )}
                 <button
                   onClick={onClose}
                   className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-teal-400/10 border border-teal-400/20 text-teal-400 hover:bg-teal-400/20 transition-colors text-sm font-medium"
