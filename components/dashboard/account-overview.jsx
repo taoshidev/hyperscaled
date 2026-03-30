@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { AlertCircle } from "lucide-react";
 import { formatUSD, pnlColor } from "@/lib/format";
-import { useHLEquity } from "@/hooks/use-hl-equity";
 
 function StatCard({ label, value, className }) {
   return (
@@ -31,7 +30,7 @@ function ChallengeProgressBar({ challengePeriod, drawdown }) {
   return (
     <Card className="bg-zinc-900/70 border-white/[0.08]">
       <CardContent className="p-4 space-y-3">
-        <p className="text-xs text-zinc-500 font-medium">
+        <p className="text-xs text-muted-foreground font-medium">
           {challengePeriod.bucket === "SUBACCOUNT_FUNDED" || challengePeriod.bucket === "SUBACCOUNT_ALPHA"
             ? "Funded Account"
             : "Challenge Period"}
@@ -86,7 +85,7 @@ function ChallengeProgressBar({ challengePeriod, drawdown }) {
                 {eodThreshold != null ? ` / ${eodThreshold.toFixed(0)}%` : ""}
               </span>
             </div>
-            <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+            <div className="h-2 rounded-full bg-muted overflow-hidden">
               <div
                 className={`h-full rounded-full transition-[width,background-color] ${
                   eodUsage > 80 ? "bg-red-500" : eodUsage > 50 ? "bg-yellow-500" : "bg-blue-500"
@@ -101,16 +100,14 @@ function ChallengeProgressBar({ challengePeriod, drawdown }) {
   );
 }
 
-export function AccountOverview({ dashboard, hlAddress }) {
+export function AccountOverview({ dashboard }) {
   const { account_size, drawdown, challenge_period, elimination, account_size_data } = dashboard;
 
+  const currentEquity = drawdown?.current_equity;
   const intradayDDPct = drawdown?.intraday_drawdown_pct;
   const eodDDPct = drawdown?.eod_drawdown_pct;
   const intradayLimit = drawdown?.intraday_threshold_pct;
   const balance = account_size_data?.balance;
-
-  const hlEquity = useHLEquity(hlAddress);
-  const liveEquity = hlEquity.data?.accountValue ?? null;
 
   return (
     <div className="space-y-4">
@@ -135,18 +132,8 @@ export function AccountOverview({ dashboard, hlAddress }) {
         />
         <StatCard
           label="Current Equity"
-          value={
-            hlEquity.isLoading
-              ? "…"
-              : liveEquity != null
-                ? formatUSD(liveEquity)
-                : "--"
-          }
-          className={
-            liveEquity != null && account_size
-              ? pnlColor(liveEquity - account_size)
-              : ""
-          }
+          value={currentEquity != null ? formatReturn(currentEquity) : "--"}
+          className={currentEquity != null ? pnlColor(currentEquity - 1) : ""}
         />
         <StatCard
           label="Intraday DD"
