@@ -83,7 +83,7 @@ export default function Nav() {
             Extension
           </button>
           <Link
-            href="/register"
+            href="/testnet-register"
             className="shiny-cta px-5 py-2"
           >
             <span className="flex items-center gap-1.5">
