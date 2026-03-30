@@ -13,6 +13,7 @@ import { db } from "@/lib/db";
 import { users, registrations } from "@/lib/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { facilitator as cdpFacilitator } from "@coinbase/x402";
+import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
 
 const USE_TESTNET = process.env.USE_TESTNET === "true";
 
@@ -170,11 +171,43 @@ export async function POST(request) {
       .limit(1);
 
     if (existing) {
-      const msg =
-        existing.status === "registered"
-          ? "This HL address is already registered with this miner."
-          : "A registration for this HL address is already being processed. Please wait for it to complete.";
-      return NextResponse.json({ error: msg }, { status: 409 });
+      if (existing.status === "registered") {
+        // Before blocking, check the validator — the user may have been de-registered
+        // externally, leaving the DB out of sync.
+        const validatorStatus = await checkValidatorStatus(hlAddress);
+        if (isConfirmedDeregistered(validatorStatus.status)) {
+          // Validator confirms they're no longer active — sync the DB and allow re-registration
+          await db
+            .update(registrations)
+            .set({
+              status: "deregistered",
+              statusDetail: {
+                deregisteredAt: new Date().toISOString(),
+                validatorStatus: validatorStatus.status,
+              },
+              updatedAt: new Date(),
+            })
+            .where(eq(registrations.id, existing.id));
+          console.info("[register] De-registration detected — DB synced, allowing re-registration", {
+            hlAddress,
+            minerSlug,
+            validatorStatus: validatorStatus.status,
+          });
+          // Fall through — allow the registration to proceed
+        } else {
+          // Active on validator (or validator unreachable — safe default: block)
+          return NextResponse.json(
+            { error: "This HL address is already registered with this miner." },
+            { status: 409 },
+          );
+        }
+      } else {
+        // pending — payment already recorded, don't risk a double-charge
+        return NextResponse.json(
+          { error: "A registration for this HL address is already being processed. Please wait for it to complete." },
+          { status: 409 },
+        );
+      }
     }
   } catch (err) {
     console.error("[register] Duplicate check failed:", err.message);

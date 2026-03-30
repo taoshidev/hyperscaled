@@ -5,6 +5,7 @@ import { isValidHLAddress, isValidEmail } from "@/lib/validation";
 import { db } from "@/lib/db";
 import { users, registrations } from "@/lib/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
+import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
 
 const MINER_SLUG = "vanta";
 
@@ -88,11 +89,33 @@ export async function POST(request) {
       .limit(1);
 
     if (existing) {
-      const msg =
-        existing.status === "registered"
-          ? "This HL address is already registered."
-          : "A registration for this address is already being processed.";
-      return NextResponse.json({ error: msg }, { status: 409 });
+      // For both "registered" and "pending" on testnet (no payment risk), check the
+      // validator before blocking — the user may have been de-registered externally.
+      const validatorStatus = await checkValidatorStatus(hlAddress);
+      if (isConfirmedDeregistered(validatorStatus.status)) {
+        await db
+          .update(registrations)
+          .set({
+            status: "deregistered",
+            statusDetail: {
+              deregisteredAt: new Date().toISOString(),
+              validatorStatus: validatorStatus.status,
+            },
+            updatedAt: new Date(),
+          })
+          .where(eq(registrations.id, existing.id));
+        console.info("[testnet-register] De-registration detected — DB synced, allowing re-registration", {
+          hlAddress,
+          validatorStatus: validatorStatus.status,
+        });
+        // Fall through — allow the registration to proceed
+      } else {
+        const msg =
+          existing.status === "registered"
+            ? "This HL address is already registered."
+            : "A registration for this address is already being processed.";
+        return NextResponse.json({ error: msg }, { status: 409 });
+      }
     }
   } catch (err) {
     console.error("[testnet-register] Duplicate check failed:", err.message);
