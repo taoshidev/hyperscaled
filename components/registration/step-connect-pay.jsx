@@ -67,7 +67,7 @@ export function StepConnectAndPay({
   const [emailTouched, setEmailTouched] = useState(false);
   const [payoutWallet, setPayoutWallet] = useState("");
   const [payoutPrefilled, setPayoutPrefilled] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState(null); // null | "base" | "hyperliquid"
+  const [paymentMethod, setPaymentMethod] = useState("hyperliquid"); // null | "base" | "hyperliquid"
   const [extensionModalOpen, setExtensionModalOpen] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
 
@@ -596,6 +596,42 @@ export function StepConnectAndPay({
           aria-label="Select payment method"
           className="grid grid-cols-2 gap-3"
         >
+          {/* Hyperliquid — default/left, shiny animated border when selected */}
+          <div className={`relative rounded-xl overflow-hidden p-[1.5px] transition-colors duration-200 ${
+            paymentMethod === "hyperliquid" ? "hl-shiny-border" : "bg-white/[0.1] hover:bg-white/[0.15]"
+          }`}>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={paymentMethod === "hyperliquid"}
+              onClick={() => {
+                setPaymentMethod("hyperliquid");
+                setConfirmed(false);
+                if (!payoutPrefilled && hlAddressReady) {
+                  setPayoutWallet(hlWallet);
+                  setPayoutPrefilled(true);
+                }
+                if (paymentState === "error") {
+                  setPaymentState("idle");
+                  setErrorMessage("");
+                }
+              }}
+              className={`w-full rounded-[calc(0.75rem-1.5px)] p-4 text-left cursor-pointer transition-[background-color] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                paymentMethod === "hyperliquid" ? "bg-card" : "bg-card"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${paymentMethod === "hyperliquid" ? "bg-teal-400/15" : "bg-white/[0.05]"}`}>
+                  <CurrencyDollar size={20} weight="duotone" className={paymentMethod === "hyperliquid" ? "text-teal-400" : "text-muted-foreground"} />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Pay with Hyperliquid</p>
+                  <p className="text-xs text-muted-foreground">USDC transfer</p>
+                </div>
+              </div>
+            </button>
+          </div>
+
           <button
             type="button"
             role="radio"
@@ -633,43 +669,6 @@ export function StepConnectAndPay({
               </div>
             </div>
           </button>
-
-          <button
-            type="button"
-            role="radio"
-            aria-checked={paymentMethod === "hyperliquid"}
-            onClick={() => {
-              setPaymentMethod("hyperliquid");
-              setConfirmed(false);
-              if (!payoutPrefilled && hlAddressReady) {
-                setPayoutWallet(hlWallet);
-                setPayoutPrefilled(true);
-              }
-              if (paymentState === "error") {
-                setPaymentState("idle");
-                setErrorMessage("");
-              }
-            }}
-            className={`
-              rounded-xl border p-4 text-left cursor-pointer transition-[border-color,box-shadow] duration-200
-              outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
-              ${
-                paymentMethod === "hyperliquid"
-                  ? "border-teal-400 bg-teal-400/5"
-                  : "border-border bg-card hover:border-white/[0.15]"
-              }
-            `}
-          >
-            <div className="flex items-center gap-3">
-              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${paymentMethod === "hyperliquid" ? "bg-teal-400/15" : "bg-white/[0.05]"}`}>
-                <CurrencyDollar size={20} weight="duotone" className={paymentMethod === "hyperliquid" ? "text-teal-400" : "text-muted-foreground"} />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-foreground">Pay with Hyperliquid</p>
-                <p className="text-xs text-muted-foreground">USDC transfer</p>
-              </div>
-            </div>
-          </button>
         </div>
       </div>
 
@@ -698,7 +697,7 @@ export function StepConnectAndPay({
               border-border hover:border-white/[0.15]
             `}
           />
-          <p className="text-xs text-muted-foreground/60 min-h-[1.25rem]">
+          <p className="text-xs text-muted-foreground/40 min-h-[1.25rem]">
             Prefilled with your Hyperliquid address — change if you want payouts sent elsewhere
           </p>
         </div>
@@ -720,7 +719,7 @@ export function StepConnectAndPay({
                   <p className="text-muted-foreground">Trading wallet</p>
                   <p className="font-mono text-foreground break-all">{hlWallet}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    This address will be tracked for all challenge trades
+                    This address will be tracked for all trades
                   </p>
                 </div>
               </div>

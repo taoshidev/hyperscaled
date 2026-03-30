@@ -2,8 +2,36 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { entityMiners, entityTiers } from "@/lib/db/schema";
 import { eq, asc } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
 import { getAllActiveMinersWithTiers } from "@/lib/miners";
 import { verifyHotkeySignature } from "@/lib/auth";
+import { isValidEvmAddress } from "@/lib/validation";
+
+function isValidPublicUrl(url) {
+  try {
+    const parsed = new URL(url);
+    if (!["https:", "http:"].includes(parsed.protocol)) return false;
+    const hostname = parsed.hostname;
+    // Block private/internal IPs and hostnames
+    if (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "0.0.0.0" ||
+      hostname.startsWith("10.") ||
+      hostname.startsWith("192.168.") ||
+      hostname.startsWith("172.") ||
+      hostname === "169.254.169.254" ||
+      hostname.endsWith(".internal") ||
+      hostname.endsWith(".local") ||
+      hostname === "[::1]"
+    ) {
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export async function GET() {
   const miners = await getAllActiveMinersWithTiers();
@@ -38,6 +66,28 @@ export async function PATCH(request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
+  // Validate fields that need uniqueness or format checks before any DB writes
+  if (body.apiUrl !== undefined) {
+    if (body.apiUrl && !isValidPublicUrl(body.apiUrl)) {
+      return NextResponse.json({ error: "Invalid API URL" }, { status: 400 });
+    }
+  }
+
+  if (body.slug !== undefined) {
+    const [conflict] = await db
+      .select({ hotkey: entityMiners.hotkey })
+      .from(entityMiners)
+      .where(eq(entityMiners.slug, body.slug))
+      .limit(1);
+    if (conflict && conflict.hotkey !== hotkey) {
+      return NextResponse.json({ error: "Slug already in use" }, { status: 409 });
+    }
+  }
+
+  if (body.usdcWallet !== undefined && body.usdcWallet && !isValidEvmAddress(body.usdcWallet)) {
+    return NextResponse.json({ error: "Invalid USDC wallet address" }, { status: 400 });
+  }
+
   // Update miner fields
   const minerUpdate = {};
   if (body.name !== undefined) minerUpdate.name = body.name;
@@ -70,6 +120,12 @@ export async function PATCH(request) {
         isActive: tier.isActive !== false,
       });
     }
+  }
+
+  // Pricing pages cache tier data; clear it after miner/tiers update.
+  revalidateTag("pricing-tiers");
+  if (miner.slug) {
+    revalidateTag(`pricing-tiers:${miner.slug}`);
   }
 
   // Return updated miner with tiers
