@@ -18,6 +18,7 @@ import {
   GoogleChromeLogo,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import ExtensionModal from "@/components/marketing/ExtensionModal";
 import { isValidHLAddress } from "@/lib/validation";
 import {
   USDC_ADDRESS,
@@ -65,6 +66,7 @@ export function StepConnectAndPay({
   const [emailTouched, setEmailTouched] = useState(false);
   const [payoutWallet, setPayoutWallet] = useState("");
   const [paymentMethod, setPaymentMethod] = useState(null); // null | "base" | "hyperliquid"
+  const [extensionModalOpen, setExtensionModalOpen] = useState(false);
 
   const {
     extensionDetected,
@@ -833,20 +835,25 @@ export function StepConnectAndPay({
                     The Hyperscaled extension connects to Hyperliquid and fills the payment form for you. Install it to continue with this payment method.
                   </p>
                 </div>
-                <a
-                  href={CHROME_EXTENSION_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => {
+                    const a = document.createElement('a')
+                    a.href = '/hyperscaled_extension.zip'
+                    a.download = 'hyperscaled_extension.zip'
+                    a.click()
+                    setExtensionModalOpen(true)
+                  }}
                   className="shiny-cta h-11 w-full flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   <span className="inline-flex items-center gap-2 text-sm font-semibold">
                     <GoogleChromeLogo size={18} weight="bold" />
                     Install Chrome Extension
                   </span>
-                </a>
+                </button>
                 <p className="text-xs text-muted-foreground text-center">
                   After installing, refresh this page to continue
                 </p>
+                <ExtensionModal open={extensionModalOpen} onClose={() => setExtensionModalOpen(false)} hideTelegram />
               </div>
             ) : paymentState === "idle" ? (
               /* Extension detected, ready to pay */

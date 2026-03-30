@@ -15,7 +15,8 @@ import {
   ShieldCheck,
   Crosshair,
 } from "@phosphor-icons/react";
-import { BASESCAN_URL, CHROME_EXTENSION_URL } from "@/lib/constants";
+import { BASESCAN_URL } from "@/lib/constants";
+import ExtensionModal from "@/components/marketing/ExtensionModal";
 import { copyToClipboard } from "@/lib/utils";
 import { formatAccountSize, truncateAddress } from "@/lib/format";
 
@@ -243,6 +244,7 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
   const explorerUrl = isHLPayment ? null : `${BASESCAN_URL}/tx/${txHash}`;
 
   const [status, setStatus] = useState(registrationStatus || "pending");
+  const [extensionModalOpen, setExtensionModalOpen] = useState(false);
   const intervalRef = useRef(null);
 
   useEffect(() => {
@@ -388,20 +390,25 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
             The extension tracks your positions, enforces risk limits, and
             displays your progress inside&nbsp;Hyperliquid.
           </p>
-          <a
-            href={CHROME_EXTENSION_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={() => {
+              const a = document.createElement('a')
+              a.href = '/hyperscaled_extension.zip'
+              a.download = 'hyperscaled_extension.zip'
+              a.click()
+              setExtensionModalOpen(true)
+            }}
             className="shiny-cta h-11 w-full max-w-sm flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             <span className="inline-flex items-center gap-2 text-sm font-semibold">
               <GoogleChromeLogo size={18} weight="bold" />
               Install Chrome Extension
             </span>
-          </a>
+          </button>
           <p className="text-xs text-muted-foreground">
             Available for Chrome and&nbsp;Brave
           </p>
+          <ExtensionModal open={extensionModalOpen} onClose={() => setExtensionModalOpen(false)} />
         </div>
 
         {/* Dashboard link */}
