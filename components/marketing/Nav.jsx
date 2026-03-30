@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight, DownloadSimple, List, X } from '@phosphor-icons/react'
-import { CHROME_EXTENSION_URL } from '@/lib/constants'
+import ExtensionModal from '@/components/marketing/ExtensionModal'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -30,8 +30,20 @@ const NAV_LINKS = [
 
 export default function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [extensionOpen, setExtensionOpen] = useState(false)
+
+  function handleExtensionClick() {
+    // Trigger download
+    const a = document.createElement('a')
+    a.href = '/hyperscaled_extension.zip'
+    a.download = 'hyperscaled_extension.zip'
+    a.click()
+    // Open install instructions
+    setExtensionOpen(true)
+  }
 
   return (
+    <>
     <motion.header
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
@@ -62,15 +74,14 @@ export default function Nav() {
 
         {/* CTA + hamburger */}
         <div className="flex items-center gap-3 shrink-0 relative z-10">
-          <a
-            href={CHROME_EXTENSION_URL}
-            target="_blank"
-            rel="noreferrer"
+          <button
+            type="button"
+            onClick={handleExtensionClick}
             className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors px-3 py-2 rounded-lg border border-white/[0.08] bg-zinc-900/80"
           >
             <DownloadSimple size={15} weight="bold" />
             Extension
-          </a>
+          </button>
           <Link
             href="/register"
             className="shiny-cta px-5 py-2"
@@ -120,5 +131,8 @@ export default function Nav() {
         )}
       </AnimatePresence>
     </motion.header>
+
+    <ExtensionModal open={extensionOpen} onClose={() => setExtensionOpen(false)} />
+    </>
   )
 }
