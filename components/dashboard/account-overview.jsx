@@ -4,7 +4,7 @@ import { Info } from "@phosphor-icons/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { AlertCircle } from "lucide-react";
-import { formatUSD, pnlColor } from "@/lib/format";
+import { formatUSD, formatReturn, pnlColor } from "@/lib/format";
 
 function StatCard({ label, value, className }) {
   return (
