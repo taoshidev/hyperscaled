@@ -110,7 +110,7 @@ export function Dashboard() {
                 type="text"
                 value={lookupAddr}
                 onChange={(e) => setLookupAddr(e.target.value)}
-                placeholder="Enter HL wallet address\u2026"
+                placeholder="Enter HL wallet address..."
                 className="w-full h-11 pl-9 pr-3 rounded-xl bg-zinc-900/70 border border-white/[0.08] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background font-mono transition-[border-color,box-shadow]"
               />
             </div>
