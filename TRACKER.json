@@ -1,6 +1,6 @@
 {
   "project": "Hyperscaled Marketing Website",
-  "lastUpdated": "2026-03-26T18:00:00Z",
+  "lastUpdated": "2026-03-28T12:00:00Z",
   "phases": [
     {
       "id": 0, "name": "Global Compliance Sweep", "status": "done",
@@ -239,6 +239,24 @@
         { "name": "Fix Discord URLs across FAQ, FAQPage, Footer (discord.gg/hyperscaledhq)", "status": "done" },
         { "name": "Fix Leaderboard text-[10px] → text-xs", "status": "done" },
         { "name": "Remove Figma MCP capture script from layout", "status": "done" }
+      ]
+    },
+    {
+      "id": 14, "name": "Fixes Batch — Payouts, Nav, Homepage, Pricing, Partners, Agents", "status": "done",
+      "scope": "Global payout language, nav, homepage, pricing, partners, agents, footer, rules", "estSessions": "1 session", "estHours": 1,
+      "dependsOn": [13],
+      "sessions": [{ "session": 16, "date": "2026-03-28", "notes": "Payout frequency weekly→monthly across all pages, tradeable pairs in EVAL_RULES, Telegram bot in footer, nav collapse tightened, homepage Step 01/02 fixes, removed Permissionless banner, pricing emoji removed, agents tags removed, partners copy+spacing fixes" }],
+      "items": [
+        { "name": "Global payout frequency: weekly/7-day → monthly", "status": "done" },
+        { "name": "Add Tradeable Pairs to EVAL_RULES", "status": "done" },
+        { "name": "Footer: add Telegram Bot link", "status": "done" },
+        { "name": "Nav: tighten progressive collapse", "status": "done" },
+        { "name": "Homepage Step 01: replace prices with tier labels", "status": "done" },
+        { "name": "Homepage Step 02: Phase 1 → One-Step", "status": "done" },
+        { "name": "Homepage: remove Permissionless/Open-Source/Onchain banner", "status": "done" },
+        { "name": "Pricing: remove green circle emoji from launch banner", "status": "done" },
+        { "name": "Agents: remove bottom CTA tags", "status": "done" },
+        { "name": "Partners: add periods to card bodies, fix Division of Responsibility spacing", "status": "done" }
       ]
     }
   ],

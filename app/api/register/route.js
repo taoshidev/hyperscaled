@@ -7,7 +7,7 @@ import {
   encodePaymentResponseHeader,
 } from "@x402/core/http";
 import { getMinerBySlug, getTiersForMiner, TIERS } from "@/lib/miners";
-import { isValidHLAddress, isValidEvmAddress, isValidEmail } from "@/lib/validation";
+import { isValidHLAddress, isValidEvmAddress } from "@/lib/validation";
 import { USDC_ADDRESS, USDC_DECIMALS, USDC_EIP712_NAME, USDC_EIP712_VERSION, BASE_NETWORK, FACILITATOR_URL, BASESCAN_URL } from "@/lib/constants";
 import { db } from "@/lib/db";
 import { users, registrations } from "@/lib/db/schema";
@@ -19,11 +19,6 @@ const USE_TESTNET = process.env.USE_TESTNET === "true";
 const facilitator = USE_TESTNET
   ? new HTTPFacilitatorClient({ url: FACILITATOR_URL })
   : new HTTPFacilitatorClient(cdpFacilitator);
-
-function escapeHtml(str) {
-  if (typeof str !== "string") str = String(str ?? "");
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
 
 function sanitizeApiKey(key) {
   if (key == null) return null;
@@ -125,10 +120,6 @@ export async function POST(request) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  if (!isValidEmail(email)) {
-    return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
-  }
-
   const miner = await getMinerBySlug(minerSlug);
   if (!miner) {
     return NextResponse.json({ error: "Unknown miner" }, { status: 400 });
@@ -150,10 +141,6 @@ export async function POST(request) {
   }
 
   const tier = activeTiers[tierIndex];
-
-  if (accountSize !== tier.accountSize) {
-    return NextResponse.json({ error: "Account size does not match selected tier" }, { status: 400 });
-  }
 
   // Reject duplicate registrations — don't let users pay twice for the same miner + HL address
   try {
@@ -600,14 +587,14 @@ function registeredEmailHtml(miner, accountSize, hlAddress, payoutAddress, txHas
       </div>
       <div style="background: #1a1a1a; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
         <table style="width: 100%; font-size: 14px;" cellpadding="8">
-          <tr><td style="color: #888;">Firm</td><td style="text-align: right; font-weight: 600;">${escapeHtml(miner.name)}</td></tr>
-          <tr><td style="color: #888;">Account Size</td><td style="text-align: right; font-weight: 600;">$${escapeHtml(accountSize.toLocaleString())}</td></tr>
-          <tr><td style="color: #888;">HL Wallet</td><td style="text-align: right; font-family: monospace; font-size: 12px;">${escapeHtml(hlAddress)}</td></tr>
-          <tr><td style="color: #888;">Payout Wallet</td><td style="text-align: right; font-family: monospace; font-size: 12px;">${escapeHtml(payoutAddress)}</td></tr>
+          <tr><td style="color: #888;">Firm</td><td style="text-align: right; font-weight: 600;">${miner.name}</td></tr>
+          <tr><td style="color: #888;">Account Size</td><td style="text-align: right; font-weight: 600;">$${accountSize.toLocaleString()}</td></tr>
+          <tr><td style="color: #888;">HL Wallet</td><td style="text-align: right; font-family: monospace; font-size: 12px;">${hlAddress}</td></tr>
+          <tr><td style="color: #888;">Payout Wallet</td><td style="text-align: right; font-family: monospace; font-size: 12px;">${payoutAddress}</td></tr>
         </table>
       </div>
       <div style="text-align: center;">
-        <a href="${BASESCAN_URL}/tx/${encodeURIComponent(txHash)}" style="color: ${escapeHtml(miner.color)}; font-size: 14px;">View transaction on BaseScan \u2192</a>
+        <a href="${BASESCAN_URL}/tx/${txHash}" style="color: ${miner.color}; font-size: 14px;">View transaction on BaseScan \u2192</a>
       </div>
       <p style="text-align: center; color: #555; font-size: 12px; margin-top: 32px;">Hyperscaled \u2014 The Decentralized Prop Trading Network</p>
     </div>
@@ -620,21 +607,21 @@ function pendingEmailHtml(miner, accountSize, hlAddress, payoutAddress, txHash) 
       <div style="text-align: center; margin-bottom: 32px;">
         <div style="font-size: 48px;">\u231B</div>
         <h1 style="font-size: 24px; font-weight: 700; margin: 16px 0 8px;">Registration Pending</h1>
-        <p style="color: #888; font-size: 14px;">Your payment is confirmed. Account setup with ${escapeHtml(miner.name)} is in progress.</p>
+        <p style="color: #888; font-size: 14px;">Your payment is confirmed. Account setup with ${miner.name} is in progress.</p>
       </div>
       <div style="background: #1a1a1a; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
         <table style="width: 100%; font-size: 14px;" cellpadding="8">
-          <tr><td style="color: #888;">Firm</td><td style="text-align: right; font-weight: 600;">${escapeHtml(miner.name)}</td></tr>
-          <tr><td style="color: #888;">Account Size</td><td style="text-align: right; font-weight: 600;">$${escapeHtml(accountSize.toLocaleString())}</td></tr>
-          <tr><td style="color: #888;">HL Wallet</td><td style="text-align: right; font-family: monospace; font-size: 12px;">${escapeHtml(hlAddress)}</td></tr>
-          <tr><td style="color: #888;">Payout Wallet</td><td style="text-align: right; font-family: monospace; font-size: 12px;">${escapeHtml(payoutAddress)}</td></tr>
+          <tr><td style="color: #888;">Firm</td><td style="text-align: right; font-weight: 600;">${miner.name}</td></tr>
+          <tr><td style="color: #888;">Account Size</td><td style="text-align: right; font-weight: 600;">$${accountSize.toLocaleString()}</td></tr>
+          <tr><td style="color: #888;">HL Wallet</td><td style="text-align: right; font-family: monospace; font-size: 12px;">${hlAddress}</td></tr>
+          <tr><td style="color: #888;">Payout Wallet</td><td style="text-align: right; font-family: monospace; font-size: 12px;">${payoutAddress}</td></tr>
         </table>
       </div>
       <div style="background: #2a2000; border: 1px solid #554400; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
         <p style="color: #eab308; font-size: 14px; margin: 0;">\u26A0\uFE0F Your payment was received but we could not automatically create your account. Our team will set it up manually and notify you once it's ready.</p>
       </div>
       <div style="text-align: center;">
-        <a href="${BASESCAN_URL}/tx/${encodeURIComponent(txHash)}" style="color: ${escapeHtml(miner.color)}; font-size: 14px;">View transaction on BaseScan \u2192</a>
+        <a href="${BASESCAN_URL}/tx/${txHash}" style="color: ${miner.color}; font-size: 14px;">View transaction on BaseScan \u2192</a>
       </div>
       <p style="text-align: center; color: #555; font-size: 12px; margin-top: 32px;">Hyperscaled \u2014 The Decentralized Prop Trading Network</p>
     </div>

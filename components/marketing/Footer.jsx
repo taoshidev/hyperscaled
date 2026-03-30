@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { TwitterLogo, DiscordLogo, GithubLogo, ArrowUpRight } from '@phosphor-icons/react'
+import { TwitterLogo, DiscordLogo, GithubLogo, TelegramLogo, ArrowUpRight } from '@phosphor-icons/react'
 
 const footerLinks = {
   Protocol: [
@@ -15,6 +15,7 @@ const footerLinks = {
     { label: 'Twitter / X', href: 'https://x.com/hyperscaledhq', external: true, icon: TwitterLogo },
     { label: 'Discord', href: 'https://discord.gg/hyperscaledhq', external: true, icon: DiscordLogo },
     { label: 'GitHub', href: 'https://github.com/taoshidev', external: true, icon: GithubLogo },
+    { label: 'Telegram Bot', href: 'https://t.me/hyperscaled_bot', external: true, icon: TelegramLogo },
     { label: 'Contact Support', href: 'mailto:support@hyperscaled.trade', external: true },
   ],
   Legal: [

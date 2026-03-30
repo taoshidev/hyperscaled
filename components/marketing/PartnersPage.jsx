@@ -23,7 +23,7 @@ const WHAT_YOU_CONTROL = [
   },
   {
     title: 'Set your profit split',
-    body: 'Define what traders keep and what you retain as the\u00a0operator',
+    body: 'Define what traders keep and what you retain as the\u00a0operator.',
     icon: ChartPie,
   },
   {
@@ -38,7 +38,7 @@ const WHAT_YOU_CONTROL = [
   },
   {
     title: 'Permissionless scaling',
-    body: 'No ceiling on how many traders you can\u00a0fund',
+    body: 'No ceiling on how many traders you can\u00a0fund.',
     icon: ArrowsOutSimple,
   },
   {
@@ -270,16 +270,16 @@ function HowItWorksSection() {
    ─────────────────────────────────────────────── */
 function ResponsibilitySection() {
   return (
-    <section className="px-6 pb-20">
+    <section className="px-6 pt-20 pb-24">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Division of Responsibility
         </span>
-        <h2 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight">
+        <h2 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight">
           Designed for your&nbsp;success.
         </h2>
 
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Operator card */}
           <div className="rounded-2xl border border-white/[0.08] bg-[#09090b] p-6 sm:p-8">
             <h3 className="text-sm font-semibold text-white tracking-wide uppercase mb-5">

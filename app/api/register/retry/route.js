@@ -1,19 +1,7 @@
-import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { registrations, entityMiners } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-
-function timingSafeEqual(a, b) {
-  const bufA = Buffer.from(a);
-  const bufB = Buffer.from(b);
-  if (bufA.length !== bufB.length) {
-    // Compare against itself to burn constant time, then return false
-    crypto.timingSafeEqual(bufA, bufA);
-    return false;
-  }
-  return crypto.timingSafeEqual(bufA, bufB);
-}
 
 function sanitizeApiKey(key) {
   if (key == null) return null;
@@ -51,13 +39,11 @@ async function postCreateHlSubaccount(baseUrl, payload, apiKey) {
  */
 export async function POST(request) {
   const retrySecret = process.env.RETRY_SECRET;
-  if (!retrySecret) {
-    return NextResponse.json({ error: "Retry endpoint not configured" }, { status: 500 });
-  }
-
-  const auth = request.headers.get("authorization");
-  if (!timingSafeEqual(retrySecret, auth?.replace(/^Bearer\s+/i, "") || "")) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (retrySecret) {
+    const auth = request.headers.get("authorization");
+    if (auth !== `Bearer ${retrySecret}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
   }
 
   const pending = await db

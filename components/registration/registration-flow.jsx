@@ -10,7 +10,7 @@ import { StepConfirmation } from "./step-confirmation";
 import { TIERS } from "@/lib/constants";
 
 const STEP_LABELS = ["Select Plan", "Connect & Pay", "Confirmation"];
-const DEFAULT_MINER_SLUG = "vanta";
+const MINER_SLUG = "vanta";
 
 const MOCK_WALLET = "0x0000000000000000000000000000000000000000";
 const MOCK_TIERS = TIERS.map((t) => ({ ...t, promoPrice: 1 }));
@@ -37,11 +37,7 @@ function getRecoveredRegistration() {
   }
 }
 
-export function RegistrationFlow({
-  initialMinerSlug = DEFAULT_MINER_SLUG,
-  initialMinerTiers = null,
-  initialPaymentWallet = null,
-}) {
+export function RegistrationFlow() {
   const [recovered] = useState(getRecoveredRegistration);
   const [currentStep, setCurrentStep] = useState(recovered ? 2 : 0);
   const [selectedTier, setSelectedTier] = useState(recovered ? {
@@ -56,13 +52,11 @@ export function RegistrationFlow({
   const [registrationStatus, setRegistrationStatus] = useState(recovered?.registrationStatus ?? null);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState(recovered ? "hyperliquid" : null);
-  const [minerTiers, setMinerTiers] = useState(initialMinerTiers);
-  const [paymentWallet, setPaymentWallet] = useState(initialPaymentWallet);
+  const [minerTiers, setMinerTiers] = useState(null);
+  const [paymentWallet, setPaymentWallet] = useState(null);
 
   useEffect(() => {
-    if (minerTiers && paymentWallet) return;
-
-    fetch(`/api/miners/${initialMinerSlug}`)
+    fetch(`/api/miners/${MINER_SLUG}`)
       .then((r) => r.ok ? r.json() : Promise.reject(r.status))
       .then((data) => {
         setMinerTiers(data.tiers);
@@ -73,7 +67,7 @@ export function RegistrationFlow({
         setMinerTiers(MOCK_TIERS);
         setPaymentWallet(MOCK_WALLET);
       });
-  }, [initialMinerSlug, minerTiers, paymentWallet]);
+  }, []);
 
 
   // B1: Browser refresh guard — only during active payment processing
@@ -148,7 +142,7 @@ export function RegistrationFlow({
             <StepConnectAndPay
               selectedTier={selectedTier}
               tierIndex={selectedTierIndex}
-              minerSlug={initialMinerSlug}
+              minerSlug={MINER_SLUG}
               paymentWallet={paymentWallet}
               email={email}
               onEmailChange={setEmail}

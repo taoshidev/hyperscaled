@@ -21,7 +21,7 @@
   --secondary: oklch(0.2 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.2 0 0);
-  --muted-foreground: oklch(0.72 0 0);
+  --muted-foreground: oklch(0.6 0 0);
   --accent: oklch(0.2 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
@@ -106,29 +106,6 @@
 @keyframes shimmer {
   0%   { background-position: -600px 0; }
   100% { background-position: 600px 0; }
-}
-
-/* ── Hyperliquid shiny rotating border ── */
-@property --hl-angle {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
-}
-
-@keyframes hl-border-spin {
-  to { --hl-angle: 360deg; }
-}
-
-.hl-shiny-border {
-  background: conic-gradient(
-    from var(--hl-angle),
-    transparent 40%,
-    oklch(0.879 0.169 175.7 / 0.6) 48%,
-    oklch(0.95 0.08 175 / 0.85) 50%,
-    oklch(0.879 0.169 175.7 / 0.6) 52%,
-    transparent 60%
-  );
-  animation: hl-border-spin 2.5s linear infinite;
 }
 
 .skeleton {
