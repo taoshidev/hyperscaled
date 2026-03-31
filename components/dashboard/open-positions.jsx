@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { formatPrice, formatLeverage, formatReturn, pnlColor } from "@/lib/format";
+import { formatPrice, formatLeverage, formatReturn, formatUSD, pnlColor } from "@/lib/format";
 
 function pairName(tradePair) {
   if (Array.isArray(tradePair)) return tradePair[1] || tradePair[0];
@@ -36,7 +36,8 @@ export function OpenPositions({ positions }) {
                   <th className="pb-2 pr-4">Direction</th>
                   <th className="pb-2 pr-4">Entry Price</th>
                   <th className="pb-2 pr-4">Leverage</th>
-                  <th className="pb-2">Return</th>
+                  <th className="pb-2 pr-4">Return</th>
+                  <th className="pb-2">Fees</th>
                 </tr>
               </thead>
               <tbody>
@@ -66,8 +67,11 @@ export function OpenPositions({ positions }) {
                       <td className="py-2.5 pr-4 font-mono text-zinc-300">
                         {formatLeverage(p.net_leverage ?? p.leverage)}
                       </td>
-                      <td className={`py-2 font-mono ${pnlColor((p.current_return || 1) - 1)}`}>
+                      <td className={`py-2 pr-4 font-mono ${pnlColor((p.current_return || 1) - 1)}`}>
                         {formatReturn(p.current_return)}
+                      </td>
+                      <td className="py-2 font-mono text-zinc-500">
+                        {p.fees != null ? `-${formatUSD(p.fees)}` : "--"}
                       </td>
                     </tr>
                   );

@@ -45,6 +45,7 @@ export function TradeHistory({ positions }) {
                     <th className="pb-2 pr-4 font-medium">Direction</th>
                     <th className="pb-2 pr-4 font-medium">Entry Price</th>
                     <th className="pb-2 pr-4 font-medium">Realized PnL</th>
+                    <th className="pb-2 pr-4 font-medium">Fees</th>
                     <th className="pb-2 pr-4 font-medium">Return</th>
                     <th className="pb-2 pr-4 font-medium">Opened</th>
                     <th className="pb-2 font-medium">Closed</th>
@@ -79,6 +80,9 @@ export function TradeHistory({ positions }) {
                         </td>
                         <td className={`py-2.5 pr-4 font-mono font-semibold ${pnlColor(p.realized_pnl)}`}>
                           {formatUSD(p.realized_pnl)}
+                        </td>
+                        <td className="py-2.5 pr-4 font-mono text-zinc-500">
+                          {p.fees != null ? `-${formatUSD(p.fees)}` : "--"}
                         </td>
                         <td className={`py-2.5 pr-4 font-mono font-semibold ${pnlColor((ret || 1) - 1)}`}>
                           {formatReturn(ret)}

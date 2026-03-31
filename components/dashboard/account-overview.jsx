@@ -77,7 +77,7 @@ function ChallengeProgressBar({ challengePeriod, drawdown }) {
                 className={`h-full rounded-full transition-[width,background-color] ${
                   intradayUsage > 80 ? "bg-red-500" : intradayUsage > 50 ? "bg-yellow-500" : "bg-blue-500"
                 }`}
-                style={{ width: `${Math.min(intradayUsage, 100)}%` }}
+                style={{ width: `${Math.max(0, Math.min(intradayUsage, 100))}%` }}
               />
             </div>
             <p className="text-[11px] text-zinc-500 mt-1">
@@ -110,7 +110,7 @@ function ChallengeProgressBar({ challengePeriod, drawdown }) {
                 className={`h-full rounded-full transition-[width,background-color] ${
                   eodUsage > 80 ? "bg-red-500" : eodUsage > 50 ? "bg-yellow-500" : "bg-blue-500"
                 }`}
-                style={{ width: `${Math.min(eodUsage, 100)}%` }}
+                style={{ width: `${Math.max(0, Math.min(eodUsage, 100))}%` }}
               />
             </div>
             <p className="text-[11px] text-zinc-500 mt-1">
