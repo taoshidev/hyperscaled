@@ -7,6 +7,9 @@ import { Stepper } from "./stepper";
 import { StepSelectTier } from "./step-select-tier";
 import { StepConnectAndPay } from "./step-connect-pay";
 import { StepConfirmation } from "./step-confirmation";
+import { RegistrationHelpProvider } from "./registration-help-context";
+import { RegistrationSidebar } from "./registration-sidebar";
+import { MobileHelpSheet } from "./mobile-help-sheet";
 import { TIERS } from "@/lib/constants";
 
 const STEP_LABELS = ["Select Plan", "Connect & Pay", "Confirmation"];
@@ -114,69 +117,86 @@ export function RegistrationFlow({
       </nav>
 
       {/* Flow content */}
-      <div className="flex-1 flex flex-col items-center justify-start pt-6 pb-20 px-4">
-        <div className={`w-full ${currentStep === 2 ? "max-w-5xl" : "max-w-3xl"}`}>
-          {/* Stepper — collapsed to label on confirmation */}
-          {currentStep === 2 ? (
-            <div className="mb-10 flex justify-center">
-              <p className="text-sm font-medium text-teal-400">
-                Registration complete
-              </p>
+      {currentStep === 1 ? (
+        /* Step 1: Two-column layout with sidebar */
+        <RegistrationHelpProvider>
+          <div className="flex-1 flex flex-col lg:flex-row lg:justify-center lg:items-start gap-0 lg:gap-8 pt-6 pb-20 px-4 lg:px-8">
+            {/* Form column */}
+            <div className="w-full lg:max-w-[640px] lg:shrink-0">
+              <Stepper
+                currentStep={currentStep}
+                steps={STEP_LABELS}
+              />
+              <StepConnectAndPay
+                selectedTier={selectedTier}
+                tierIndex={selectedTierIndex}
+                minerSlug={initialMinerSlug}
+                paymentWallet={paymentWallet}
+                email={email}
+                onEmailChange={setEmail}
+                onPaymentProcessing={setPaymentProcessing}
+                onPaymentComplete={({ txHash: hash, hlAddress: addr, registrationStatus: status, paymentMethod: method }) => {
+                  setPaymentProcessing(false);
+                  setTxHash(hash);
+                  setHlAddress(addr);
+                  setRegistrationStatus(status);
+                  setPaymentMethod(method || null);
+                  setCurrentStep(2);
+                }}
+                onBack={() => setCurrentStep(0)}
+              />
             </div>
-          ) : (
-            <Stepper
-              currentStep={currentStep}
-              steps={STEP_LABELS}
-            />
-          )}
 
-          {/* Step 0: Tier selection */}
-          {currentStep === 0 && (
-            <StepSelectTier
-              tiers={minerTiers}
-              selectedTier={selectedTier}
-              onSelect={(tier) => {
-                setSelectedTier(tier);
-                setSelectedTierIndex(minerTiers ? minerTiers.findIndex((t) => t.id === tier.id) : 0);
-              }}
-              onContinue={() => setCurrentStep(1)}
-            />
-          )}
+            {/* Desktop sidebar */}
+            <RegistrationSidebar />
+          </div>
 
-          {/* Step 1: Connect & Pay */}
-          {currentStep === 1 && (
-            <StepConnectAndPay
-              selectedTier={selectedTier}
-              tierIndex={selectedTierIndex}
-              minerSlug={initialMinerSlug}
-              paymentWallet={paymentWallet}
-              email={email}
-              onEmailChange={setEmail}
-              onPaymentProcessing={setPaymentProcessing}
-              onPaymentComplete={({ txHash: hash, hlAddress: addr, registrationStatus: status, paymentMethod: method }) => {
-                setPaymentProcessing(false);
-                setTxHash(hash);
-                setHlAddress(addr);
-                setRegistrationStatus(status);
-                setPaymentMethod(method || null);
-                setCurrentStep(2);
-              }}
-              onBack={() => setCurrentStep(0)}
-            />
-          )}
+          {/* Mobile bottom sheet */}
+          <MobileHelpSheet />
+        </RegistrationHelpProvider>
+      ) : (
+        /* Steps 0 and 2: Single-column centered layout */
+        <div className="flex-1 flex flex-col items-center justify-start pt-6 pb-20 px-4">
+          <div className={`w-full ${currentStep === 2 ? "max-w-5xl" : "max-w-3xl"}`}>
+            {currentStep === 2 ? (
+              <div className="mb-10 flex justify-center">
+                <p className="text-sm font-medium text-teal-400">
+                  Registration complete
+                </p>
+              </div>
+            ) : (
+              <Stepper
+                currentStep={currentStep}
+                steps={STEP_LABELS}
+              />
+            )}
 
-          {/* Step 2: Confirmation */}
-          {currentStep === 2 && (
-            <StepConfirmation
-              selectedTier={selectedTier}
-              hlAddress={hlAddress}
-              txHash={txHash}
-              registrationStatus={registrationStatus}
-              paymentMethod={paymentMethod}
-            />
-          )}
+            {/* Step 0: Tier selection */}
+            {currentStep === 0 && (
+              <StepSelectTier
+                tiers={minerTiers}
+                selectedTier={selectedTier}
+                onSelect={(tier) => {
+                  setSelectedTier(tier);
+                  setSelectedTierIndex(minerTiers ? minerTiers.findIndex((t) => t.id === tier.id) : 0);
+                }}
+                onContinue={() => setCurrentStep(1)}
+              />
+            )}
+
+            {/* Step 2: Confirmation */}
+            {currentStep === 2 && (
+              <StepConfirmation
+                selectedTier={selectedTier}
+                hlAddress={hlAddress}
+                txHash={txHash}
+                registrationStatus={registrationStatus}
+                paymentMethod={paymentMethod}
+              />
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </main>
   );
 }

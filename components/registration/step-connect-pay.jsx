@@ -31,6 +31,7 @@ import {
 import { usdcAbi } from "@/lib/usdc-abi";
 import { formatAccountSize, truncateAddress } from "@/lib/format";
 import { useExtensionBridge } from "@/hooks/use-extension-bridge";
+import { useRegistrationHelp } from "./registration-help-context";
 import { ExactEvmScheme } from "@x402/evm/exact/client";
 import {
   decodePaymentRequiredHeader,
@@ -70,6 +71,8 @@ export function StepConnectAndPay({
   const [paymentMethod, setPaymentMethod] = useState("hyperliquid"); // null | "base" | "hyperliquid"
   const [extensionModalOpen, setExtensionModalOpen] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+
+  const { handleHelpFocus, handleHelpBlur } = useRegistrationHelp();
 
   const {
     extensionDetected,
@@ -529,7 +532,8 @@ export function StepConnectAndPay({
           type="email"
           value={email}
           onChange={(e) => onEmailChange(e.target.value)}
-          onBlur={() => setEmailTouched(true)}
+          onFocus={() => handleHelpFocus("email")}
+          onBlur={() => { setEmailTouched(true); handleHelpBlur(); }}
           placeholder="you@example.com"
           aria-label="Email address for registration confirmation"
           aria-describedby="email-error"
@@ -563,7 +567,8 @@ export function StepConnectAndPay({
             setHlWallet(e.target.value);
             setConfirmed(false);
           }}
-          onBlur={() => setHlWalletTouched(true)}
+          onFocus={() => handleHelpFocus("hl-wallet")}
+          onBlur={() => { setHlWalletTouched(true); handleHelpBlur(); }}
           placeholder="0x..."
           aria-label="Hyperliquid trading wallet address"
           aria-describedby="hl-wallet-error"
@@ -606,6 +611,7 @@ export function StepConnectAndPay({
               aria-checked={paymentMethod === "hyperliquid"}
               onClick={() => {
                 setPaymentMethod("hyperliquid");
+                handleHelpFocus("payment-hl");
                 setConfirmed(false);
                 if (!payoutPrefilled && hlAddressReady) {
                   setPayoutWallet(hlWallet);
@@ -638,6 +644,7 @@ export function StepConnectAndPay({
             aria-checked={paymentMethod === "base"}
             onClick={() => {
               setPaymentMethod("base");
+              handleHelpFocus("payment-base");
               setConfirmed(false);
               resetPaymentStatus();
               if (!payoutPrefilled && hlAddressReady) {
@@ -686,6 +693,8 @@ export function StepConnectAndPay({
               setPayoutWallet(e.target.value);
               setConfirmed(false);
             }}
+            onFocus={() => handleHelpFocus("payout-wallet")}
+            onBlur={handleHelpBlur}
             placeholder={hlWallet || "0x..."}
             aria-label="Payout wallet address — where you will receive payouts"
             className={`
