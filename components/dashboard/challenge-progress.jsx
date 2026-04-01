@@ -3,6 +3,23 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { formatUSD } from "@/lib/format";
 
+const DAY_MS = 86_400_000;
+const CHALLENGE_MAX_DAYS = 90;
+
+function computeChallengeDays(challengePeriod, isFunded) {
+  if (isFunded || !challengePeriod?.start_time_ms) return null;
+  const now = Date.now();
+  const elapsedMs = now - challengePeriod.start_time_ms;
+  const maxMs = CHALLENGE_MAX_DAYS * DAY_MS;
+  const timeLeftMs = Math.max(0, challengePeriod.start_time_ms + maxMs - now);
+  return {
+    daysElapsed: Math.floor(elapsedMs / DAY_MS),
+    daysRemaining: Math.ceil(timeLeftMs / DAY_MS),
+    usagePct: Math.min(100, (elapsedMs / maxMs) * 100),
+    expired: timeLeftMs === 0,
+  };
+}
+
 export function ChallengeProgress({ accountSize, accountSizeData, drawdown, challengePeriod }) {
   if (!challengePeriod || !drawdown) return null;
 
@@ -126,16 +143,59 @@ export function ChallengeProgress({ accountSize, accountSizeData, drawdown, chal
             </div>
 
             {/* Days Remaining */}
-            <div>
-              <div className="text-xs text-zinc-500 mb-1">Days Remaining</div>
-              <div className="text-xl font-light tracking-tight mb-2">&infin;</div>
-              <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
-                <div className="w-full h-full rounded-full bg-blue-500" />
-              </div>
-              <p className="text-xs text-zinc-500 mt-1">
-                Unlimited trading period
-              </p>
-            </div>
+            {(() => {
+              if (isFunded) {
+                return (
+                  <div>
+                    <div className="text-xs text-zinc-500 mb-1">Time Limit</div>
+                    <div className="text-xl font-light tracking-tight mb-2">&infin;</div>
+                    <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                      <div className="w-full h-full rounded-full bg-teal-500" />
+                    </div>
+                    <p className="text-xs text-zinc-500 mt-1">No deadline — funded</p>
+                  </div>
+                );
+              }
+              const cd = computeChallengeDays(challengePeriod, isFunded);
+              if (!cd) {
+                return (
+                  <div>
+                    <div className="text-xs text-zinc-500 mb-1">Days Remaining</div>
+                    <div className="text-xl font-light tracking-tight mb-2">&mdash;</div>
+                    <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden" />
+                    <p className="text-xs text-zinc-500 mt-1">No start time recorded</p>
+                  </div>
+                );
+              }
+              const barColor = cd.expired
+                ? "bg-red-500"
+                : cd.daysRemaining <= 10
+                  ? "bg-red-500"
+                  : cd.daysRemaining <= 30
+                    ? "bg-yellow-500"
+                    : "bg-blue-500";
+              return (
+                <div>
+                  <div className="flex justify-between text-xs text-zinc-500 mb-1">
+                    <span>Days Remaining</span>
+                    <span>{CHALLENGE_MAX_DAYS}-day max</span>
+                  </div>
+                  <div className={`text-xl font-light tracking-tight mb-2 ${cd.expired ? "text-red-400" : cd.daysRemaining <= 10 ? "text-yellow-400" : ""}`}>
+                    {cd.expired ? "Expired" : cd.daysRemaining}
+                    {!cd.expired && <span className="text-sm text-zinc-500"> days</span>}
+                  </div>
+                  <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-[width] ${barColor}`}
+                      style={{ width: `${cd.usagePct}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-zinc-500 mt-1">
+                    Day {cd.daysElapsed} of {CHALLENGE_MAX_DAYS} · forced exit at max
+                  </p>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Overall challenge completion bar */}

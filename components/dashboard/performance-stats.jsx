@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatUSD, pnlColor } from "@/lib/format";
 
@@ -80,11 +80,23 @@ function EquityCurve({ positions }) {
   );
 }
 
+const FILTERS = ["1D", "1W", "1M", "All"];
+const FILTER_MS = { "1D": 86_400_000, "1W": 7 * 86_400_000, "1M": 30 * 86_400_000, All: null };
+
 export function PerformanceStats({ positions }) {
+  const [activeFilter, setActiveFilter] = useState("All");
+
   const all = Array.isArray(positions) ? positions : positions?.positions || [];
+
+  const cutoff = FILTER_MS[activeFilter] != null ? Date.now() - FILTER_MS[activeFilter] : null;
+
+  // For stats: filter closed positions by close_ms within window
+  const closed = all.filter(
+    (p) => p.is_closed_position && (cutoff == null || (p.close_ms ?? 0) >= cutoff),
+  );
+  // Open positions are always current — include them only in "All"
   const open = all.filter((p) => !p.is_closed_position);
-  const closed = all.filter((p) => p.is_closed_position);
-  const totalTrades = all.length;
+  const totalTrades = closed.length + (cutoff == null ? open.length : 0);
   const closedCount = closed.length;
 
   const wins = closed.filter((p) => (p.realized_pnl ?? 0) > 0).length;
@@ -110,7 +122,7 @@ export function PerformanceStats({ positions }) {
     {
       label: "Total Trades",
       value: String(totalTrades),
-      sub: `${closedCount} closed \u00b7 ${open.length} open`,
+      sub: cutoff == null ? `${closedCount} closed \u00b7 ${open.length} open` : `${closedCount} closed`,
       color: null,
     },
     {
@@ -139,11 +151,12 @@ export function PerformanceStats({ positions }) {
         <div className="flex justify-between items-center mb-4">
           <p className="text-xs text-zinc-500 uppercase tracking-widest font-medium">Performance</p>
           <div className="flex gap-1">
-            {["1D", "1W", "1M", "All"].map((t, i) => (
+            {FILTERS.map((t) => (
               <button
                 key={t}
-                className={`px-3 py-1.5 text-xs rounded transition-[background-color,border-color] ${
-                  i === 0
+                onClick={() => setActiveFilter(t)}
+                className={`px-3 py-1.5 text-xs rounded transition-[background-color,color,border-color] ${
+                  activeFilter === t
                     ? "text-white bg-white/[0.06] border border-white/[0.08]"
                     : "text-zinc-500 border border-transparent hover:text-zinc-300"
                 }`}
@@ -166,7 +179,7 @@ export function PerformanceStats({ positions }) {
         </div>
 
         {/* Equity Curve */}
-        <EquityCurve positions={all} />
+        <EquityCurve positions={cutoff == null ? all : closed} />
       </CardContent>
     </Card>
   );
