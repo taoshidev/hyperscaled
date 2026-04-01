@@ -23,6 +23,8 @@ import { OrderEvents } from "./order-events";
 import { StatsPanel } from "./stats-panel";
 import { KycVerification } from "./kyc-verification";
 
+const FUNDED_DEMO_LOOKUP = "0x7939aF2C9889F59A96C3921B515300A9a70898BD".toLowerCase();
+
 export function Dashboard() {
   const { address, isConnected } = useAccount();
   const searchParams = useSearchParams();
@@ -39,12 +41,16 @@ export function Dashboard() {
       : lookupSubmitted
         ? lookupAddr.trim()
         : null;
+  const useFundedDemo =
+    !useConnectedWallet &&
+    lookupSubmitted &&
+    (activeAddress || "").toLowerCase() === FUNDED_DEMO_LOOKUP;
 
-  const { dashboard, events } = useDashboardData(activeAddress);
+  const { dashboard, events } = useDashboardData(activeAddress, { useFundedDemo });
   useDashboardStream(
-    activeAddress && dashboard.data ? activeAddress : null,
+    activeAddress && dashboard.data && !useFundedDemo ? activeAddress : null,
   );
-  const payout = usePayoutData(dashboard.data?.subaccount_uuid ?? null);
+  const payout = usePayoutData(dashboard.data?.subaccount_uuid ?? null, { useFundedDemo });
 
   const handleReset = () => {
     setUseConnectedWallet(false);
@@ -420,6 +426,8 @@ export function Dashboard() {
               accountSizeData={data.account_size_data}
               drawdown={data.drawdown}
               challengePeriod={data.challenge_period}
+              statistics={data.statistics}
+              quarterlyPnl={data.quarterly_pnl}
             />
 
             {/* Performance Stats */}

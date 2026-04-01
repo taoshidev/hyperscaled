@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { formatUSD } from "@/lib/format";
 
-export function ChallengeProgress({ accountSize, accountSizeData, drawdown, challengePeriod }) {
+export function ChallengeProgress({ accountSize, accountSizeData, drawdown, challengePeriod, statistics, quarterlyPnl: rawQuarterlyPnl }) {
   if (!challengePeriod || !drawdown) return null;
 
   const isFunded =
@@ -44,6 +44,8 @@ export function ChallengeProgress({ accountSize, accountSizeData, drawdown, chal
       eodMaxLoss={eodMaxLoss}
       eodRemaining={eodRemaining}
       leverageLabel={leverageLabel}
+      statistics={statistics}
+      quarterlyPnlPct={rawQuarterlyPnl != null && accountSize > 0 ? (rawQuarterlyPnl / accountSize) * 100 : null}
     />;
   }
 
@@ -187,15 +189,15 @@ function FundedProgress({
   eodMaxLoss,
   eodRemaining,
   leverageLabel,
+  statistics,
+  quarterlyPnlPct,
 }) {
-  // Mock promotion metrics
-  const sharpeRatio = 1.87;
+  const sharpeRatio = statistics?.sharpe ?? null;
   const sharpeTarget = 1.0;
-  const sharpePct = Math.min(100, (sharpeRatio / sharpeTarget) * 100);
+  const sharpePct = sharpeRatio != null ? Math.min(100, (sharpeRatio / sharpeTarget) * 100) : 0;
 
-  const quarterlyPnlPct = 3.42;
   const quarterlyTarget = 5;
-  const quarterlyPct = Math.min(100, Math.max(0, (quarterlyPnlPct / quarterlyTarget) * 100));
+  const quarterlyPct = quarterlyPnlPct != null ? Math.min(100, Math.max(0, (quarterlyPnlPct / quarterlyTarget) * 100)) : 0;
 
   return (
     <Card className="bg-zinc-900/70 border-white/[0.08]">
@@ -298,8 +300,8 @@ function FundedProgress({
                   <span>Sharpe Ratio</span>
                   <span>Min: {sharpeTarget.toFixed(1)}</span>
                 </div>
-                <div className={`text-xl font-light tracking-tight mb-2 font-mono ${sharpeRatio >= sharpeTarget ? "text-green-400" : ""}`}>
-                  {sharpeRatio.toFixed(2)}
+                <div className={`text-xl font-light tracking-tight mb-2 font-mono ${sharpeRatio != null && sharpeRatio >= sharpeTarget ? "text-green-400" : ""}`}>
+                  {sharpeRatio != null ? sharpeRatio.toFixed(2) : "--"}
                 </div>
                 <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
                   <div
@@ -310,7 +312,7 @@ function FundedProgress({
                   />
                 </div>
                 <p className="text-xs text-zinc-500 mt-1">
-                  {sharpeRatio >= sharpeTarget ? "Target met" : `${sharpePct.toFixed(1)}% of target`}
+                  {sharpeRatio == null ? "Loading..." : sharpeRatio >= sharpeTarget ? "Target met" : `${sharpePct.toFixed(1)}% of target`}
                 </p>
               </div>
 
@@ -320,8 +322,8 @@ function FundedProgress({
                   <span>Quarterly PnL</span>
                   <span>Min: {quarterlyTarget}%</span>
                 </div>
-                <div className={`text-xl font-light tracking-tight mb-2 font-mono ${quarterlyPnlPct >= quarterlyTarget ? "text-green-400" : quarterlyPnlPct >= 0 ? "" : "text-red-400"}`}>
-                  {quarterlyPnlPct >= 0 ? "+" : ""}{quarterlyPnlPct.toFixed(2)}%
+                <div className={`text-xl font-light tracking-tight mb-2 font-mono ${quarterlyPnlPct != null && quarterlyPnlPct >= quarterlyTarget ? "text-green-400" : quarterlyPnlPct != null && quarterlyPnlPct < 0 ? "text-red-400" : ""}`}>
+                  {quarterlyPnlPct != null ? `${quarterlyPnlPct >= 0 ? "+" : ""}${quarterlyPnlPct.toFixed(2)}%` : "--"}
                 </div>
                 <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
                   <div
@@ -332,7 +334,7 @@ function FundedProgress({
                   />
                 </div>
                 <p className="text-xs text-zinc-500 mt-1">
-                  {quarterlyPnlPct >= quarterlyTarget ? "Target met" : `${quarterlyPct.toFixed(1)}% of target`}
+                  {quarterlyPnlPct == null ? "Loading..." : quarterlyPnlPct >= quarterlyTarget ? "Target met" : `${quarterlyPct.toFixed(1)}% of target`}
                 </p>
               </div>
             </div>
