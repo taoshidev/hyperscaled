@@ -2,6 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { formatPrice, formatLeverage, formatReturn, formatUSD, pnlColor } from "@/lib/format";
+import { openPositionUnrealizedUsd } from "@/lib/position-utils";
 
 function pairName(tradePair) {
   if (Array.isArray(tradePair)) return tradePair[1] || tradePair[0];
@@ -36,6 +37,7 @@ export function OpenPositions({ positions, accountSizeData }) {
                   <th className="pb-2 pr-4">Direction</th>
                   <th className="pb-2 pr-4">Entry Price</th>
                   <th className="pb-2 pr-4">Leverage</th>
+                  <th className="pb-2 pr-4">Unrealized PnL</th>
                   <th className="pb-2 pr-4">Return</th>
                   <th className="pb-2">Fees</th>
                 </tr>
@@ -43,6 +45,7 @@ export function OpenPositions({ positions, accountSizeData }) {
               <tbody>
                 {open.map((p, i) => {
                   const direction = p.direction || (p.position_type !== "FLAT" ? p.position_type : null) || p.position_type;
+                  const unrealized = openPositionUnrealizedUsd(p, open, accountSizeData);
                   return (
                     <tr key={p.position_uuid || i} className="border-b border-border/50">
                       <td className="py-2 pr-4 font-medium">
@@ -66,6 +69,15 @@ export function OpenPositions({ positions, accountSizeData }) {
                       </td>
                       <td className="py-2.5 pr-4 font-mono text-zinc-300">
                         {formatLeverage(p.net_leverage ?? p.leverage)}
+                      </td>
+                      <td
+                        className={`py-2 pr-4 font-mono ${
+                          unrealized != null ? pnlColor(unrealized) : "text-zinc-500"
+                        }`}
+                      >
+                        {unrealized != null
+                          ? `${unrealized >= 0 ? "+" : ""}${formatUSD(unrealized)}`
+                          : "--"}
                       </td>
                       <td className={`py-2 pr-4 font-mono ${pnlColor((p.current_return || 1) - 1)}`}>
                         {formatReturn(p.current_return)}

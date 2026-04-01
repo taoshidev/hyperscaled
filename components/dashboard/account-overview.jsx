@@ -3,6 +3,7 @@
 import { AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatUSD, pnlColor } from "@/lib/format";
+import { openPositionsUnrealizedTotalUsd } from "@/lib/position-utils";
 
 function StatCard({ label, value, sub, className }) {
   return (
@@ -25,12 +26,12 @@ function StatCard({ label, value, sub, className }) {
 }
 
 export function AccountOverview({ dashboard }) {
-  const { account_size, elimination, account_size_data } = dashboard;
+  const { account_size, elimination, account_size_data, positions } = dashboard;
 
   const balance = account_size_data?.balance;
   const profitTarget = account_size * 0.1;
   const totalPnl = account_size_data?.total_realized_pnl ?? 0;
-  const openPnl = balance != null ? balance - account_size - totalPnl : null;
+  const openPnl = openPositionsUnrealizedTotalUsd(positions, account_size_data);
 
   const balanceChange = balance != null ? ((balance - account_size) / account_size * 100) : null;
 
