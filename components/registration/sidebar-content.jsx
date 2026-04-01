@@ -45,7 +45,7 @@ export function SidebarContent({ collapsed, onToggle }) {
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-[18px] pb-3.5 border-b border-border shrink-0">
         <span className="text-sm font-bold text-foreground tracking-tight">
-          Hyper<span className="text-teal-400">scaled</span> Help
+          Help
         </span>
         <button
           type="button"
