@@ -85,7 +85,8 @@ const FILTER_MS = { "1D": 86_400_000, "1W": 7 * 86_400_000, "1M": 30 * 86_400_00
 
 export function PerformanceStats({ positions }) {
   const [activeFilter, setActiveFilter] = useState("All");
-  const now = useRef(Date.now());
+  const now = useRef(null);
+  if (now.current === null) now.current = Date.now();
 
   const all = Array.isArray(positions) ? positions : positions?.positions || [];
 
