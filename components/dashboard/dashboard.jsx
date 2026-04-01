@@ -9,11 +9,15 @@ import { MagnifyingGlass, Wallet, ArrowRight, Warning, WifiSlash } from "@phosph
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-import { useDashboardData } from "@/hooks/use-dashboard";
+import { useDashboardData, usePayoutData } from "@/hooks/use-dashboard";
 import { useDashboardStream } from "@/hooks/use-dashboard-stream";
+import { truncateAddress } from "@/lib/format";
 import { AccountOverview } from "./account-overview";
+import { ChallengeProgress } from "./challenge-progress";
+import { PerformanceStats } from "./performance-stats";
 import { OpenPositions } from "./open-positions";
 import { TradeHistory } from "./trade-history";
+import { Payouts } from "./payouts";
 
 import { OrderEvents } from "./order-events";
 import { StatsPanel } from "./stats-panel";
@@ -26,6 +30,7 @@ export function Dashboard() {
   const [lookupAddr, setLookupAddr] = useState(preloadAddr);
   const [lookupSubmitted, setLookupSubmitted] = useState(!!preloadAddr);
   const [useConnectedWallet, setUseConnectedWallet] = useState(false);
+  const [dashTab, setDashTab] = useState("performance");
 
   // User must explicitly choose — connected wallet or lookup
   const activeAddress =
@@ -39,6 +44,7 @@ export function Dashboard() {
   useDashboardStream(
     activeAddress && dashboard.data ? activeAddress : null,
   );
+  const payout = usePayoutData(dashboard.data?.subaccount_uuid ?? null);
 
   const handleReset = () => {
     setUseConnectedWallet(false);
@@ -236,21 +242,57 @@ export function Dashboard() {
   const data = dashboard.data;
   const eventsData = events.data;
 
+  const isFunded =
+    data.challenge_period?.bucket === "SUBACCOUNT_FUNDED" ||
+    data.challenge_period?.bucket === "SUBACCOUNT_ALPHA";
+
+  // Derive account label from size
+  const sizeLabel =
+    data.account_size >= 100000
+      ? `${Math.round(data.account_size / 1000)}K`
+      : data.account_size >= 1000
+        ? `${Math.round(data.account_size / 1000)}K`
+        : String(data.account_size);
+  const accountName = `CRYPTO ${sizeLabel}`;
+
+  // Derive tier from account size
+  const tierLabel =
+    data.account_size >= 100000 ? "Tier III" : data.account_size >= 50000 ? "Tier II" : "Tier I";
+
   return (
     <div className="min-h-[calc(100dvh-4rem)] px-6 py-8">
       <div className="max-w-[1400px] mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-teal-400 pulse-teal" />
-                <span className="text-xs text-teal-400 font-medium uppercase tracking-widest">Live</span>
-              </div>
-              <h1 className="text-2xl font-bold tracking-tight">Trading Dashboard</h1>
+        {/* KYC Verification */}
+        <KycVerification wallet={address} />
+
+        {/* Account Header */}
+        <div className="flex justify-between items-start flex-wrap gap-4">
+          <div>
+            <h2 className="text-2xl font-light tracking-tight mb-2">{accountName}</h2>
+            <div className="flex gap-2 flex-wrap">
+              <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-blue-500/[0.15] text-blue-400 border border-blue-500/20">
+                {tierLabel}
+              </span>
+              <span
+                className={`text-xs px-2.5 py-1 rounded-full font-medium border ${
+                  isFunded
+                    ? "bg-green-500/10 text-green-400 border-green-500/20"
+                    : "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
+                }`}
+              >
+                {isFunded ? "Funded" : "Evaluation"}
+              </span>
+              <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-white/[0.04] text-zinc-400 border border-white/[0.08]">
+                {isFunded ? "5x" : "1.25x"} Leverage
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-3">
+            {activeAddress && (
+              <span className="text-xs font-mono text-zinc-500 bg-white/[0.04] border border-white/[0.06] px-3 py-1.5 rounded-md">
+                {truncateAddress(activeAddress)}
+              </span>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -264,31 +306,66 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* KYC Verification */}
-        <KycVerification wallet={address} />
-
-        {/* Account Overview */}
-        <AccountOverview
-          dashboard={data}
-          hlAddress={data.hl_address}
-        />
-
-        {/* Open Positions */}
-        <OpenPositions positions={data.positions} />
-
-        {/* Trade History */}
-        <TradeHistory positions={data.positions} />
-
-        {/* Order Events + Statistics */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <OrderEvents events={eventsData} />
-          <StatsPanel
-            drawdown={data.drawdown}
-            challengePeriod={data.challenge_period}
-            accountSizeData={data.account_size_data}
-            limits={data.limits}
-          />
+        {/* Tab Navigation */}
+        <div className="flex gap-0 border-b border-white/[0.06]">
+          {["performance", "payouts"].map((t) => (
+            <button
+              key={t}
+              onClick={() => setDashTab(t)}
+              className={`px-5 py-3 text-sm capitalize transition-[color,border-color] border-b-2 ${
+                dashTab === t
+                  ? "text-white border-blue-500"
+                  : "text-zinc-500 border-transparent hover:text-zinc-300"
+              }`}
+            >
+              {t}
+            </button>
+          ))}
         </div>
+
+        {/* Performance Tab */}
+        {dashTab === "performance" && (
+          <div className="space-y-6">
+            {/* Top Stat Cards */}
+            <AccountOverview dashboard={data} />
+
+            {/* Challenge Progress */}
+            <ChallengeProgress
+              accountSize={data.account_size}
+              accountSizeData={data.account_size_data}
+              drawdown={data.drawdown}
+              challengePeriod={data.challenge_period}
+            />
+
+            {/* Performance Stats */}
+            <PerformanceStats positions={data.positions} />
+
+            {/* Open Positions */}
+            <OpenPositions
+              positions={data.positions}
+              accountSizeData={data.account_size_data}
+            />
+
+            {/* Trade History */}
+            <TradeHistory positions={data.positions} />
+
+            {/* Order Events + Statistics */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <OrderEvents events={eventsData} />
+              <StatsPanel
+                drawdown={data.drawdown}
+                challengePeriod={data.challenge_period}
+                accountSizeData={data.account_size_data}
+                limits={data.limits}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Payouts Tab */}
+        {dashTab === "payouts" && (
+          <Payouts payoutAddress={data.payout_address} payoutData={payout.data} />
+        )}
       </div>
     </div>
   );

@@ -290,6 +290,49 @@ export const HELP_CONTENT = {
     content: <PaymentWalletContent />,
   },
 
+  "payment-eip712": {
+    icon: null,
+    title: "Pay with Hyperscaled",
+    content: (
+      <>
+        <p className="text-[13px] text-muted-foreground leading-relaxed mb-2">
+          Signs and submits a USDC transfer directly to{" "}
+          <strong className="text-foreground font-semibold">Hyperliquid&rsquo;s exchange API</strong>{" "}
+          using EIP-712 typed data. Your connected wallet signs the transfer
+          and it executes on Hyperliquid — no extension, no browser tabs, no
+          bridging.
+        </p>
+
+        <Tip label="How it works">
+          <NumberedSteps
+            items={[
+              <>Connect the wallet that owns your <strong className="text-foreground font-semibold">Hyperliquid account</strong></>,
+              "Your wallet prompts you to sign a Hyperliquid USDC transfer (EIP-712)",
+              "The signed payload is submitted to Hyperliquid automatically",
+              "Registration completes once the transfer is confirmed",
+            ]}
+          />
+        </Tip>
+
+        <Tip label="One signature, one transfer">
+          <p>
+            Unlike the extension method, everything happens in a single wallet
+            prompt — no switching tabs or confirming on Hyperliquid manually.
+            The EIP-712 signature authorizes the USDC transfer directly.
+          </p>
+        </Tip>
+
+        <Warn label="Requirements">
+          <p>
+            Your connected wallet must match the Hyperliquid account that holds
+            the USDC. The balance shown is your withdrawable USDC on Hyperliquid —
+            funds locked in open positions are not available for transfer.
+          </p>
+        </Warn>
+      </>
+    ),
+  },
+
   "payment-hl": {
     icon: null,
     title: "Pay with Hyperliquid",

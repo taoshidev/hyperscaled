@@ -108,20 +108,25 @@
   100% { background-position: 600px 0; }
 }
 
-/* ── Hyperliquid shiny rotating border ── */
-@property --hl-angle {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
-}
-
+/* ── Shiny rotating border (payment card) ── */
 @keyframes hl-border-spin {
-  to { --hl-angle: 360deg; }
+  to { rotate: 360deg; }
 }
 
 .hl-shiny-border {
+  position: relative;
+  overflow: hidden;
+}
+
+.hl-shiny-border::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
   background: conic-gradient(
-    from var(--hl-angle),
     transparent 40%,
     oklch(0.879 0.169 175.7 / 0.6) 48%,
     oklch(0.95 0.08 175 / 0.85) 50%,

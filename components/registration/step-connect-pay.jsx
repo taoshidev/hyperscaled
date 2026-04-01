@@ -17,6 +17,7 @@ import {
   CurrencyDollar,
   GoogleChromeLogo,
   Info,
+  ShieldCheck,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import ExtensionModal from "@/components/marketing/ExtensionModal";
@@ -27,6 +28,9 @@ import {
   BASE_CHAIN_ID,
   CHAIN_LABEL,
   CHROME_EXTENSION_URL,
+  HL_API_URL,
+  HL_SIGNING_CHAIN_ID,
+  HL_CHAIN_NAME,
 } from "@/lib/constants";
 import { usdcAbi } from "@/lib/usdc-abi";
 import { formatAccountSize, truncateAddress } from "@/lib/format";
@@ -58,7 +62,7 @@ export function StepConnectAndPay({
   onBack,
 }) {
   const { address, isConnected, chainId } = useAccount();
-  const { switchChain } = useSwitchChain();
+  const { switchChain, switchChainAsync } = useSwitchChain();
   const { data: walletClient } = useWalletClient();
 
   const [paymentState, setPaymentState] = useState("idle");
@@ -68,9 +72,11 @@ export function StepConnectAndPay({
   const [emailTouched, setEmailTouched] = useState(false);
   const [payoutWallet, setPayoutWallet] = useState("");
   const [payoutPrefilled, setPayoutPrefilled] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("hyperliquid"); // null | "base" | "hyperliquid"
+  const [paymentMethod, setPaymentMethod] = useState("eip712"); // null | "base" | "hyperliquid" | "eip712"
   const [extensionModalOpen, setExtensionModalOpen] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [hlBalance, setHlBalance] = useState(null);
+  const [hlBalanceLoading, setHlBalanceLoading] = useState(false);
 
   const { handleHelpFocus, handleHelpBlur } = useRegistrationHelp();
 
@@ -108,6 +114,55 @@ export function StepConnectAndPay({
     balance != null &&
     balance >= parseUnits(String(price), USDC_DECIMALS);
   const isOnBase = chainId === BASE_CHAIN_ID;
+
+  // ── Fetch Hyperliquid balance for EIP-712 method ──────────────────────────
+  const hlHasEnough = hlBalance != null && hlBalance >= price;
+  const walletMatchesHL =
+    address && hlWallet && address.toLowerCase() === hlWallet.toLowerCase();
+
+  useEffect(() => {
+    if (paymentMethod !== "eip712" || !isConnected || !address) {
+      setHlBalance(null);
+      return;
+    }
+    let cancelled = false;
+    setHlBalanceLoading(true);
+
+    Promise.all([
+      fetch(`${HL_API_URL}/info`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "spotClearinghouseState", user: address }),
+      }).then((r) => r.json()),
+      fetch(`${HL_API_URL}/info`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "clearinghouseState", user: address }),
+      }).then((r) => r.json()),
+    ])
+      .then(([spot, perps]) => {
+        if (cancelled) return;
+        const usdcEntry = spot?.balances?.find((b) => b.coin === "USDC");
+        const spotAvailable =
+          usdcEntry
+            ? parseFloat(usdcEntry.total) - parseFloat(usdcEntry.hold)
+            : 0;
+        const perpsWithdrawable =
+          perps?.withdrawable != null ? parseFloat(perps.withdrawable) : 0;
+        setHlBalance(spotAvailable + perpsWithdrawable);
+        setHlBalanceLoading(false);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setHlBalance(null);
+          setHlBalanceLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [paymentMethod, isConnected, address]);
 
   // ── Base chain (x402) payment handler ─────────────────────────────────────
   const handlePayBase = useCallback(async () => {
@@ -262,6 +317,225 @@ export function StepConnectAndPay({
     minerSlug,
     tierIndex,
     paymentSenderAddress,
+    onPaymentProcessing,
+  ]);
+
+  // ── Hyperliquid EIP-712 payment handler ──────────────────────────────────
+  const handlePayEIP712 = useCallback(async () => {
+    if (!walletClient) return;
+
+    setPaymentState("processing");
+    setErrorMessage("");
+    onPaymentProcessing?.(true);
+
+    try {
+      const amount = String(price);
+      const nonce = Date.now();
+
+      // Step 1 — Switch to Arbitrum so the wallet's active chain matches
+      // the EIP-712 domain chainId that Hyperliquid requires
+      const previousChainId = chainId;
+      if (chainId !== HL_SIGNING_CHAIN_ID) {
+        await switchChainAsync({ chainId: HL_SIGNING_CHAIN_ID });
+      }
+
+      // Step 2 — Sign Hyperliquid sendAsset (USDC) via EIP-712
+      // usdSend/spotSend are disabled for unified accounts; sendAsset works.
+      let signature;
+      try {
+        // Re-fetch wallet client after chain switch (wagmi may return a new
+        // client instance bound to the now-active chain)
+        const { getWalletClient } = await import("wagmi/actions");
+        const { wagmiConfig } = await import("@/lib/wagmi");
+        const freshClient = await getWalletClient(wagmiConfig, {
+          chainId: HL_SIGNING_CHAIN_ID,
+        });
+
+        signature = await freshClient.signTypedData({
+          domain: {
+            name: "HyperliquidSignTransaction",
+            version: "1",
+            chainId: HL_SIGNING_CHAIN_ID,
+            verifyingContract: "0x0000000000000000000000000000000000000000",
+          },
+          types: {
+            "HyperliquidTransaction:SendAsset": [
+              { name: "hyperliquidChain", type: "string" },
+              { name: "destination", type: "string" },
+              { name: "sourceDex", type: "string" },
+              { name: "destinationDex", type: "string" },
+              { name: "token", type: "string" },
+              { name: "amount", type: "string" },
+              { name: "fromSubAccount", type: "string" },
+              { name: "nonce", type: "uint64" },
+            ],
+          },
+          primaryType: "HyperliquidTransaction:SendAsset",
+          message: {
+            hyperliquidChain: HL_CHAIN_NAME,
+            destination: paymentWallet,
+            sourceDex: "spot",
+            destinationDex: "spot",
+            token: "USDC",
+            amount,
+            fromSubAccount: "",
+            nonce,
+          },
+        });
+      } finally {
+        // Step 3 — Switch back to Base regardless of signing outcome
+        if (previousChainId && previousChainId !== HL_SIGNING_CHAIN_ID) {
+          switchChainAsync({ chainId: previousChainId }).catch(() => {
+            // Best-effort switch back; don't block the flow if the user rejects
+          });
+        }
+      }
+
+      // Split signature into r, s, v for Hyperliquid API
+      const r = "0x" + signature.slice(2, 66);
+      const s = "0x" + signature.slice(66, 130);
+      const v = parseInt(signature.slice(130, 132), 16);
+
+      // Step 4 — Submit signed transfer to Hyperliquid exchange API
+      const exchangeRes = await fetch(`${HL_API_URL}/exchange`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: {
+            type: "sendAsset",
+            signatureChainId: "0x" + HL_SIGNING_CHAIN_ID.toString(16),
+            hyperliquidChain: HL_CHAIN_NAME,
+            destination: paymentWallet,
+            sourceDex: "spot",
+            destinationDex: "spot",
+            token: "USDC",
+            amount,
+            fromSubAccount: "",
+            nonce,
+          },
+          nonce,
+          signature: { r, s, v },
+        }),
+      });
+
+      if (!exchangeRes.ok) {
+        const data = await exchangeRes.json().catch(() => ({}));
+        throw new Error(data.error || data.message || "Hyperliquid transfer failed.");
+      }
+
+      const exchangeResult = await exchangeRes.json();
+
+      // HL exchange returns 200 even on failure — check the status field
+      if (exchangeResult.status !== "ok") {
+        throw new Error(
+          typeof exchangeResult.response === "string"
+            ? exchangeResult.response
+            : "Hyperliquid transfer failed.",
+        );
+      }
+
+      // usdSend returns {"status":"ok","response":{"type":"default"}} with no
+      // hash. Look up the transfer hash from the HL info endpoint.
+      let hlHash = "";
+      try {
+        const infoRes = await fetch(`${HL_API_URL}/info`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "userNonFundingLedgerUpdates",
+            user: address,
+          }),
+        });
+        if (infoRes.ok) {
+          const updates = await infoRes.json();
+          if (Array.isArray(updates)) {
+            // Find the most recent USDC send to the payment wallet
+            const match = updates.find((u) => {
+              const d = u.delta;
+              return (
+                d &&
+                d.type === "send" &&
+                d.token === "USDC" &&
+                (d.destination || "").toLowerCase() === paymentWallet.toLowerCase() &&
+                Math.abs(Number(d.amount || 0) - price) < 0.01 &&
+                Date.now() - (u.time || 0) < 2 * 60 * 1000
+              );
+            });
+            if (match) hlHash = match.hash || "";
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to look up HL transfer hash:", e.message);
+      }
+
+      if (!hlHash) {
+        throw new Error("Transfer succeeded but could not retrieve transaction hash. Please contact support.");
+      }
+
+      // Step 5 — Register with our backend
+      const registerRes = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          minerSlug,
+          hlAddress: resolvedHlAddress,
+          accountSize: selectedTier.accountSize,
+          payoutAddress: resolvedPayoutAddress || address,
+          email,
+          tierIndex,
+          paymentMethod: "eip712",
+          hlTransferHash: hlHash,
+          hlTransferSender: address,
+        }),
+      });
+
+      if (!registerRes.ok) {
+        const data = await registerRes.json().catch(() => ({}));
+        throw new Error(
+          data.error || data.message || "Registration failed. Please contact support.",
+        );
+      }
+
+      const result = await registerRes.json();
+
+      setPaymentState("success");
+      onPaymentProcessing?.(false);
+
+      setTimeout(() => {
+        onPaymentComplete({
+          txHash: hlHash || result.txHash || "",
+          hlAddress: resolvedHlAddress,
+          registrationStatus: result.status,
+          paymentMethod: "eip712",
+        });
+      }, 1500);
+    } catch (err) {
+      setPaymentState("error");
+      onPaymentProcessing?.(false);
+
+      if (
+        err.message?.includes("User rejected") ||
+        err.message?.includes("denied")
+      ) {
+        setErrorMessage("Signature rejected — you can try again when ready.");
+      } else {
+        setErrorMessage(err.message || "Payment failed — please try again.");
+      }
+    }
+  }, [
+    walletClient,
+    minerSlug,
+    selectedTier,
+    email,
+    tierIndex,
+    address,
+    chainId,
+    switchChainAsync,
+    price,
+    paymentWallet,
+    resolvedHlAddress,
+    resolvedPayoutAddress,
+    onPaymentComplete,
     onPaymentProcessing,
   ]);
 
@@ -452,6 +726,15 @@ export function StepConnectAndPay({
     !!paymentWallet &&
     paymentState !== "processing";
 
+  const canPayEIP712 =
+    isConnected &&
+    hlHasEnough &&
+    hlAddressReady &&
+    emailValid &&
+    confirmed &&
+    !!paymentWallet &&
+    paymentState !== "processing";
+
   const missingFieldBase = !emailValid
     ? "Enter your email to continue"
     : !hlAddressReady
@@ -469,6 +752,20 @@ export function StepConnectAndPay({
       : !confirmed
         ? "Confirm your details above to continue"
         : null;
+
+  const missingFieldEIP712 = !emailValid
+    ? "Enter your email to continue"
+    : !hlAddressReady
+      ? "Enter your Hyperliquid wallet address to continue"
+      : !confirmed
+        ? "Confirm your details above to continue"
+        : hlBalanceLoading
+          ? "Checking Hyperliquid balance..."
+          : !hlHasEnough
+            ? hlBalance != null
+              ? "Insufficient USDC on Hyperliquid"
+              : "Could not fetch Hyperliquid balance"
+            : null;
 
   // Determine HL payment flow status text
   const hlFlowStatus =
@@ -599,20 +896,21 @@ export function StepConnectAndPay({
         <div
           role="radiogroup"
           aria-label="Select payment method"
-          className="grid grid-cols-2 gap-3"
+          className="grid grid-cols-1 sm:grid-cols-3 gap-3"
         >
-          {/* Hyperliquid — default/left, shiny animated border when selected */}
-          <div className={`relative rounded-xl overflow-hidden p-[1.5px] transition-colors duration-200 ${
-            paymentMethod === "hyperliquid" ? "hl-shiny-border" : "bg-white/[0.1] hover:bg-white/[0.15]"
+          {/* Hyperliquid EIP-712 — default, shiny animated border when selected */}
+          <div className={`rounded-xl p-[1.5px] transition-colors duration-200 ${
+            paymentMethod === "eip712" ? "hl-shiny-border" : "bg-white/[0.1] hover:bg-white/[0.15]"
           }`}>
             <button
               type="button"
               role="radio"
-              aria-checked={paymentMethod === "hyperliquid"}
+              aria-checked={paymentMethod === "eip712"}
               onClick={() => {
-                setPaymentMethod("hyperliquid");
-                handleHelpFocus("payment-hl");
+                setPaymentMethod("eip712");
+                handleHelpFocus("payment-eip712");
                 setConfirmed(false);
+                resetPaymentStatus();
                 if (!payoutPrefilled && hlAddressReady) {
                   setPayoutWallet(hlWallet);
                   setPayoutPrefilled(true);
@@ -622,22 +920,60 @@ export function StepConnectAndPay({
                   setErrorMessage("");
                 }
               }}
-              className={`w-full rounded-[calc(0.75rem-1.5px)] p-4 text-left cursor-pointer transition-[background-color] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
-                paymentMethod === "hyperliquid" ? "bg-card" : "bg-card"
-              }`}
+              className="relative w-full rounded-[calc(0.75rem-1.5px)] p-4 text-left cursor-pointer transition-[background-color] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background bg-card"
             >
               <div className="flex items-center gap-3">
-                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${paymentMethod === "hyperliquid" ? "bg-teal-400/15" : "bg-white/[0.05]"}`}>
-                  <CurrencyDollar size={20} weight="duotone" className={paymentMethod === "hyperliquid" ? "text-teal-400" : "text-muted-foreground"} />
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${paymentMethod === "eip712" ? "bg-teal-400/15" : "bg-white/[0.05]"}`}>
+                  <ShieldCheck size={20} weight="duotone" className={paymentMethod === "eip712" ? "text-teal-400" : "text-muted-foreground"} />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-foreground">Pay with Hyperliquid</p>
-                  <p className="text-xs text-muted-foreground">USDC transfer</p>
+                  <p className="text-sm font-semibold text-foreground">Sign & Send</p>
+                  <p className="text-xs text-muted-foreground">USDC via Hyperliquid Spot</p>
                 </div>
               </div>
             </button>
           </div>
 
+          {/* Send via Extension — Hyperliquid extension fills the form */}
+          <button
+            type="button"
+            role="radio"
+            aria-checked={paymentMethod === "hyperliquid"}
+            onClick={() => {
+              setPaymentMethod("hyperliquid");
+              handleHelpFocus("payment-hl");
+              setConfirmed(false);
+              if (!payoutPrefilled && hlAddressReady) {
+                setPayoutWallet(hlWallet);
+                setPayoutPrefilled(true);
+              }
+              if (paymentState === "error") {
+                setPaymentState("idle");
+                setErrorMessage("");
+              }
+            }}
+            className={`
+              rounded-xl border p-4 text-left cursor-pointer transition-[border-color,box-shadow] duration-200
+              outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
+              ${
+                paymentMethod === "hyperliquid"
+                  ? "border-teal-400 bg-teal-400/5"
+                  : "border-border bg-card hover:border-white/[0.15]"
+              }
+            `}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${paymentMethod === "hyperliquid" ? "bg-teal-400/15" : "bg-white/[0.05]"}`}>
+                <CurrencyDollar size={20} weight="duotone" className={paymentMethod === "hyperliquid" ? "text-teal-400" : "text-muted-foreground"} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Send via Extension</p>
+                <p className="text-xs text-muted-foreground">USDC via Hyperliquid Spot</p>
+              </div>
+            </div>
+          </button>
+
+          {/* Pay with Wallet — USDC on Base */}
           <button
             type="button"
             role="radio"
@@ -918,6 +1254,123 @@ export function StepConnectAndPay({
                     missingFieldBase
                   ) : (
                     `Pay $${price} USDC`
+                  )}
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── Hyperliquid EIP-712 payment flow ── */}
+        {paymentMethod === "eip712" && paymentState !== "success" && paymentState !== "error" && (
+          <>
+            {!isConnected ? (
+              <div className="space-y-4 text-center">
+                <p className="text-sm text-muted-foreground text-balance max-w-md mx-auto">
+                  Connect the wallet that owns your Hyperliquid account to sign and transfer USDC.
+                </p>
+                <ConnectButton.Custom>
+                  {({ openConnectModal }) => (
+                    <div className="flex justify-center">
+                      <button
+                        type="button"
+                        onClick={openConnectModal}
+                        className="shiny-cta h-11 px-8 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                      >
+                        <span className="inline-flex items-center gap-2 text-sm font-semibold">
+                          <ShieldCheck size={18} weight="bold" />
+                          Connect Wallet
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </ConnectButton.Custom>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="rounded-xl border border-border bg-zinc-900/50 px-5 py-3.5 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2 h-2 rounded-full bg-teal-400 shrink-0" />
+                    <span className="text-sm font-mono text-foreground">
+                      {truncateAddress(address)}
+                    </span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    Connected
+                  </span>
+                </div>
+
+                {/* Wallet mismatch warning */}
+                {hlAddressReady && !walletMatchesHL && (
+                  <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 flex items-start gap-2.5">
+                    <Warning size={16} weight="fill" className="text-amber-400 shrink-0 mt-0.5" />
+                    <p className="text-sm text-muted-foreground">
+                      Connected wallet does not match your Hyperliquid trading address. The transfer will be signed by{" "}
+                      <span className="font-mono text-foreground">{truncateAddress(address)}</span>.
+                    </p>
+                  </div>
+                )}
+
+                {/* HL balance */}
+                <p className="text-xs text-center text-muted-foreground">
+                  {hlBalanceLoading ? (
+                    "Checking Hyperliquid balance..."
+                  ) : hlBalance != null ? (
+                    <>
+                      HL Balance:{" "}
+                      <span
+                        className={
+                          hlHasEnough
+                            ? "text-foreground font-mono"
+                            : "text-destructive font-mono"
+                        }
+                      >
+                        {hlBalance.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}{" "}
+                        USDC
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-destructive">Could not fetch Hyperliquid balance</span>
+                  )}
+                </p>
+
+                <div className="rounded-xl border border-border bg-zinc-900/30 p-4 space-y-2">
+                  <p className="text-xs text-muted-foreground">How it works</p>
+                  <ol className="text-sm text-muted-foreground space-y-1.5 list-decimal list-inside">
+                    <li>Sign a Hyperliquid USDC transfer (EIP-712)</li>
+                    <li>The signed transfer is submitted to Hyperliquid</li>
+                    <li>Registration completes automatically</li>
+                  </ol>
+                </div>
+
+                <Button
+                  onClick={handlePayEIP712}
+                  disabled={!canPayEIP712}
+                  aria-label={`Sign and transfer ${price} USDC via Hyperliquid for ${selectedTier.name} challenge`}
+                  className={`
+                    w-full h-11 text-sm font-semibold cursor-pointer relative overflow-hidden
+                    ${
+                      paymentState === "processing"
+                        ? "bg-teal-400/60 text-zinc-950"
+                        : "bg-teal-400 text-zinc-950 hover:bg-teal-400/90"
+                    }
+                    disabled:opacity-40 disabled:cursor-not-allowed
+                  `}
+                >
+                  {paymentState === "processing" ? (
+                    <>
+                      <span className="skeleton absolute inset-0 rounded-[inherit]" />
+                      <span className="relative">
+                        Signing transfer...
+                      </span>
+                    </>
+                  ) : missingFieldEIP712 ? (
+                    missingFieldEIP712
+                  ) : (
+                    `Sign & Transfer $${price} USDC`
                   )}
                 </Button>
               </div>

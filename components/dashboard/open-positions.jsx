@@ -8,7 +8,7 @@ function pairName(tradePair) {
   return tradePair || "--";
 }
 
-export function OpenPositions({ positions }) {
+export function OpenPositions({ positions, accountSizeData }) {
   const all = Array.isArray(positions) ? positions : positions?.positions || [];
   const open = all.filter((p) => !p.is_closed_position);
 
@@ -78,6 +78,32 @@ export function OpenPositions({ positions }) {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Margin Used */}
+        {accountSizeData && accountSizeData.capital_used != null && (
+          <div className="mt-3 px-4 py-3 bg-white/[0.015] border border-white/[0.06] rounded-md flex items-center gap-3">
+            <span className="text-xs text-zinc-500 whitespace-nowrap">Margin Used</span>
+            <div className="flex-1 h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full bg-blue-500 transition-[width]"
+                style={{
+                  width: `${Math.min(100, accountSizeData.buying_power > 0
+                    ? (accountSizeData.capital_used / (accountSizeData.capital_used + accountSizeData.buying_power)) * 100
+                    : 0
+                  )}%`,
+                }}
+              />
+            </div>
+            <span className="text-xs font-medium font-mono whitespace-nowrap">
+              {accountSizeData.buying_power > 0
+                ? `${((accountSizeData.capital_used / (accountSizeData.capital_used + accountSizeData.buying_power)) * 100).toFixed(1)}%`
+                : "0%"}{" "}
+              <span className="text-zinc-500 font-normal">
+                of {formatUSD(accountSizeData.capital_used + accountSizeData.buying_power)}
+              </span>
+            </span>
           </div>
         )}
       </CardContent>

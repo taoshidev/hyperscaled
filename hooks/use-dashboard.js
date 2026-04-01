@@ -16,6 +16,24 @@ async function fetchJSON(url) {
   return res.json();
 }
 
+async function postJSON(url, body) {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = new Error("Fetch failed");
+    err.status = res.status;
+    try {
+      const b = await res.json();
+      err.message = b.error || err.message;
+    } catch {}
+    throw err;
+  }
+  return res.json();
+}
+
 export function useDashboardData(hlAddress) {
   const enabled = !!hlAddress;
 
@@ -36,4 +54,25 @@ export function useDashboardData(hlAddress) {
   });
 
   return { dashboard, events };
+}
+
+export function usePayoutData(subaccountUuid) {
+  const enabled = !!subaccountUuid;
+
+  // Query the current payout period (last 30 days as default window)
+  const now = Date.now();
+  const thirtyDaysAgo = now - 30 * 86400000;
+
+  return useQuery({
+    queryKey: ["payout", subaccountUuid],
+    queryFn: () =>
+      postJSON("/api/dashboard/payout", {
+        subaccount_uuid: subaccountUuid,
+        start_time_ms: thirtyDaysAgo,
+        end_time_ms: now,
+      }),
+    enabled,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
 }

@@ -226,8 +226,8 @@ export async function POST(request) {
   let effectivePayoutAddress;
   let settleResult = null;
 
-  // ── Hyperliquid payment path ──────────────────────────────────────────────
-  if (paymentMethod === "hyperliquid") {
+  // ── Hyperliquid payment path (extension "hyperliquid" + direct "eip712") ──
+  if (paymentMethod === "hyperliquid" || paymentMethod === "eip712") {
     console.info("[register] hyperliquid branch entered", {
       minerSlug,
       minerWallet,
