@@ -8,7 +8,7 @@ export const metadata = buildMetadata({
   ogTitle: "Testnet Registration — Hyperscaled",
   ogDescription:
     "Join the Hyperscaled testnet. Enter your info, get a funded testnet account, and start trading on Hyperliquid.",
-  path: "/testnet-register",
+  path: "/register",
 });
 
 export const dynamic = "force-dynamic";
