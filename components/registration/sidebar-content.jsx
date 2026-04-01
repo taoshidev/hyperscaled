@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { useRegistrationHelp } from "./registration-help-context";
 import { HelpPanel } from "./help-panel";

@@ -906,7 +906,7 @@ function AfterRegistrationSection() {
                   title: 'Get Paid When Profitable',
                   body: 'Pass the 10% profit target and your funded account activates. From there, monthly USDC payouts are calculated automatically and sent to your payout wallet.',
                 },
-              ].map((step, i) => {
+              ].map((step) => {
                 const Icon = step.icon
                 return (
                   <div key={step.title} className="flex items-start gap-5">
