@@ -31,15 +31,15 @@ export function ChallengeProgress({ accountSize, accountSizeData, drawdown, chal
   const totalPnl = accountSizeData?.total_realized_pnl ?? 0;
   const profitPct = profitTarget > 0 ? Math.max(0, (totalPnl / profitTarget) * 100) : 0;
 
-  const intradayDD = drawdown.intraday_drawdown_pct ?? 0;
+  const intradayDD = Math.max(0, drawdown.intraday_drawdown_pct ?? 0);
   const intradayThreshold = drawdown.intraday_threshold_pct ?? 5;
-  const intradayUsage = drawdown.intraday_usage_pct ?? 0;
+  const intradayUsage = Math.max(0, drawdown.intraday_usage_pct ?? 0);
   const intradayMaxLoss = accountSize * (intradayThreshold / 100);
   const intradayRemaining = intradayMaxLoss - accountSize * (intradayDD / 100);
 
-  const eodDD = drawdown.eod_drawdown_pct ?? 0;
+  const eodDD = Math.max(0, drawdown.eod_drawdown_pct ?? 0);
   const eodThreshold = drawdown.eod_threshold_pct ?? 8;
-  const eodUsage = drawdown.eod_usage_pct ?? 0;
+  const eodUsage = Math.max(0, drawdown.eod_usage_pct ?? 0);
   const eodHwm = drawdown.eod_hwm ?? drawdown.current_equity ?? 1;
   const eodMaxLoss = accountSize * (eodThreshold / 100);
   const eodRemaining = eodMaxLoss - accountSize * (eodDD / 100);

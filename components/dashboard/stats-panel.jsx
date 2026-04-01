@@ -102,7 +102,7 @@ export function StatsPanel({ drawdown, challengePeriod, accountSizeData, limits 
                   tooltip="Drawdown from today's opening equity. Breaching the limit results in account termination."
                   value={
                     drawdown.intraday_drawdown_pct != null
-                      ? `${drawdown.intraday_drawdown_pct.toFixed(2)}%`
+                      ? `${Math.max(0, drawdown.intraday_drawdown_pct).toFixed(2)}%`
                       : undefined
                   }
                 />
@@ -111,7 +111,7 @@ export function StatsPanel({ drawdown, challengePeriod, accountSizeData, limits 
                   tooltip="End-of-day drawdown from peak equity high-water mark."
                   value={
                     drawdown.eod_drawdown_pct != null
-                      ? `${drawdown.eod_drawdown_pct.toFixed(2)}%`
+                      ? `${Math.max(0, drawdown.eod_drawdown_pct).toFixed(2)}%`
                       : undefined
                   }
                 />
@@ -134,7 +134,7 @@ export function StatsPanel({ drawdown, challengePeriod, accountSizeData, limits 
                   }
                   value={
                     drawdown.intraday_usage_pct != null
-                      ? `${drawdown.intraday_usage_pct.toFixed(1)}% of limit`
+                      ? `${Math.max(0, drawdown.intraday_usage_pct).toFixed(1)}% of limit`
                       : undefined
                   }
                 />
@@ -156,7 +156,7 @@ export function StatsPanel({ drawdown, challengePeriod, accountSizeData, limits 
                   }
                   value={
                     drawdown.eod_usage_pct != null
-                      ? `${drawdown.eod_usage_pct.toFixed(1)}% of limit`
+                      ? `${Math.max(0, drawdown.eod_usage_pct).toFixed(1)}% of limit`
                       : undefined
                   }
                 />
