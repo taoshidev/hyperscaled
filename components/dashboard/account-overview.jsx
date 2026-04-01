@@ -26,7 +26,11 @@ function StatCard({ label, value, sub, className }) {
 }
 
 export function AccountOverview({ dashboard }) {
-  const { account_size, elimination, account_size_data, positions } = dashboard;
+  const { account_size, elimination, account_size_data, positions, challenge_period } = dashboard;
+
+  const isFunded =
+    challenge_period?.bucket === "SUBACCOUNT_FUNDED" ||
+    challenge_period?.bucket === "SUBACCOUNT_ALPHA";
 
   const balance = account_size_data?.balance;
   const profitTarget = account_size * 0.1;
@@ -56,12 +60,20 @@ export function AccountOverview({ dashboard }) {
           } : undefined}
           className={balance != null ? pnlColor(balance - account_size) : ""}
         />
-        <StatCard
-          label="Profit Target"
-          value={formatUSD(totalPnl)}
-          sub={{ text: formatUSD(profitTarget), className: "bg-blue-500/[0.12] text-blue-400" }}
-          className={pnlColor(totalPnl)}
-        />
+        {isFunded ? (
+          <StatCard
+            label="Closed PnL"
+            value={formatUSD(totalPnl)}
+            className={pnlColor(totalPnl)}
+          />
+        ) : (
+          <StatCard
+            label="Profit Target"
+            value={formatUSD(totalPnl)}
+            sub={{ text: formatUSD(profitTarget), className: "bg-blue-500/[0.12] text-blue-400" }}
+            className={pnlColor(totalPnl)}
+          />
+        )}
         <StatCard
           label="Open PnL"
           value={openPnl != null ? `${openPnl >= 0 ? "+" : ""}${formatUSD(openPnl)}` : "--"}
