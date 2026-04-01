@@ -19,8 +19,8 @@ import { Button } from "@/components/ui/button";
 import { Stepper } from "./stepper";
 import { isValidEmail, isValidHLAddress } from "@/lib/validation";
 import { copyToClipboard, cn } from "@/lib/utils";
-import { CHROME_EXTENSION_URL } from "@/lib/constants";
 import { truncateAddress, formatAccountSize } from "@/lib/format";
+import ExtensionModal from "@/components/marketing/ExtensionModal";
 
 const STEP_LABELS = ["Account Size", "Your Info", "Confirmation"];
 
@@ -426,6 +426,7 @@ const itemVariants = {
 
 function StepConfirmation({ selectedTier, email, hlAddress, registrationStatus }) {
   const isRegistered = registrationStatus === "registered";
+  const [extensionModalOpen, setExtensionModalOpen] = useState(false);
 
   return (
     <motion.div
@@ -510,18 +511,23 @@ function StepConfirmation({ selectedTier, email, hlAddress, registrationStatus }
           <p className="text-sm text-muted-foreground text-balance text-center max-w-md">
             The extension tracks your positions, enforces risk limits, and displays your progress inside Hyperliquid.
           </p>
-          <a
-            href={CHROME_EXTENSION_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={() => {
+              const a = document.createElement('a');
+              a.href = '/hyperscaled_extension.zip';
+              a.download = 'hyperscaled_extension.zip';
+              a.click();
+              setExtensionModalOpen(true);
+            }}
             className="shiny-cta h-11 w-full max-w-sm flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             <span className="inline-flex items-center gap-2 text-sm font-semibold">
               <GoogleChromeLogo size={18} weight="bold" />
               Install Chrome Extension
             </span>
-          </a>
+          </button>
           <p className="text-xs text-muted-foreground">Available for Chrome and Brave</p>
+          <ExtensionModal open={extensionModalOpen} onClose={() => setExtensionModalOpen(false)} />
         </div>
 
         <Link
