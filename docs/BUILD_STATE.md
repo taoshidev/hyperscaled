@@ -229,6 +229,11 @@ Last updated: 2026-03-26
 | Success screen restructured (Phase 3) | Done — order: success header → extension CTA/confirmation → receipt card → dashboard link; useExtensionBridge in StepConfirmation for detection |
 | Polish: HL wallet truncation + copy (Phase 4) | Done — truncated display with copy button when valid, click-to-edit, auto-collapse on blur/auto-detect |
 | Polish: Help panel cleanup (Phase 4) | Done — removed "How it works" and "One signature" sections from payment-eip712 help, removed payment-hl (dead extension method), moved requirements inline under payment selector, updated "Getting Started" fastest-path steps |
+| Polish: Payment card selected border (Phase 6) | Done — solid teal ring-[1.5px] on selected payment card alongside shiny-border effect |
+| Polish: Auto-fill HL wallet on connect (Phase 6) | Done — wallet address auto-populates from connected wallet, "Change" button to clear and re-enter, "Connect wallet" button when disconnected, updated helper text |
+| Polish: Remove copy button from Connect & Pay (Phase 6) | Done — copy button removed from HL wallet field, kept only on Confirm and success screens |
+| Polish: Full EVM address on Confirm (Phase 6) | Done — full address in text-xs font-mono on confirm screen, break-all for mobile wrap |
+| Polish: Remove Help sidebar (Phase 6) | Done — removed RegistrationHelpProvider, RegistrationSidebar, MobileHelpSheet from registration flow; single-column centered layout for steps 1-2 |
 
 **Next action**: UI polish pass across other pages
 

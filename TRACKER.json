@@ -1,6 +1,6 @@
 {
   "project": "Hyperscaled Marketing Website",
-  "lastUpdated": "2026-04-02T18:00:00Z",
+  "lastUpdated": "2026-04-02T20:00:00Z",
   "phases": [
     {
       "id": 0, "name": "Global Compliance Sweep", "status": "done",
@@ -316,6 +316,21 @@
         { "name": "Move requirements inline under payment selector", "status": "done" },
         { "name": "Remove payment-hl help entry (dead extension method)", "status": "done" },
         { "name": "Update Getting Started fastest-path steps", "status": "done" }
+      ]
+    },
+    {
+      "id": 19, "name": "Registration Phase 6 — Checkout UX Polish", "status": "done",
+      "scope": "Registration flow", "estSessions": "1 session", "estHours": 1,
+      "dependsOn": [18],
+      "sessions": [{ "session": 21, "date": "2026-04-02", "notes": "Auto-fill wallet, selected payment border, full addresses on confirm, sidebar removed" }],
+      "items": [
+        { "name": "Solid teal border stroke on selected payment card", "status": "done" },
+        { "name": "Auto-fill HL wallet on wallet connect", "status": "done" },
+        { "name": "Change/Connect wallet button logic", "status": "done" },
+        { "name": "Remove copy button from Connect & Pay wallet field", "status": "done" },
+        { "name": "Full EVM address on Confirm screen", "status": "done" },
+        { "name": "Remove Help sidebar from registration flow", "status": "done" },
+        { "name": "Verify skip payment dev-only gate", "status": "done" }
       ]
     }
   ],

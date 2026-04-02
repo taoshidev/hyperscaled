@@ -20,8 +20,6 @@ import {
   Info,
   ShieldCheck,
   PencilSimple,
-  Copy,
-  Check,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { isValidHLAddress } from "@/lib/validation";
@@ -43,9 +41,7 @@ import {
 } from "@/lib/hl-payment";
 import { usdcAbi } from "@/lib/usdc-abi";
 import { formatAccountSize, truncateAddress } from "@/lib/format";
-import { copyToClipboard } from "@/lib/utils";
 import { useExtensionBridge } from "@/hooks/use-extension-bridge";
-import { useRegistrationHelp } from "./registration-help-context";
 import { ExactEvmScheme } from "@x402/evm/exact/client";
 import {
   decodePaymentRequiredHeader,
@@ -82,12 +78,9 @@ export function StepConnectAndPay({
   const [editingPayout, setEditingPayout] = useState(false);
   const [editPayoutValue, setEditPayoutValue] = useState("");
   const [editingHlWallet, setEditingHlWallet] = useState(true);
-  const [hlWalletCopied, setHlWalletCopied] = useState(false);
   const [hlBalance, setHlBalance] = useState(null);
   const [hlBalanceLoading, setHlBalanceLoading] = useState(false);
   const [eip712Step, setEip712Step] = useState(null); // "signing" | "submitting" | "verifying" | "provisioning"
-
-  const { handleHelpFocus, handleHelpBlur } = useRegistrationHelp();
 
   const {
     resetPaymentStatus,
@@ -118,6 +111,15 @@ export function StepConnectAndPay({
     balance != null &&
     balance >= parseUnits(String(price), USDC_DECIMALS);
   const isOnBase = chainId === BASE_CHAIN_ID;
+
+  // ── Auto-fill HL wallet address when wallet connects ──────────────────────
+  useEffect(() => {
+    if (isConnected && address && !hlWallet) {
+      setHlWallet(address);
+      setHlWalletTouched(true);
+      setEditingHlWallet(false);
+    }
+  }, [isConnected, address]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Fetch Hyperliquid balance for EIP-712 method ──────────────────────────
   const hlHasEnough = hlBalance != null && hlBalance >= price;
@@ -491,7 +493,7 @@ export function StepConnectAndPay({
           {/* Trading wallet — read-only */}
           <div className="space-y-1">
             <p className="text-xs font-medium text-muted-foreground">Trading wallet</p>
-            <p className="text-sm font-mono text-foreground break-all">{truncateAddress(hlWallet)}</p>
+            <p className="text-xs font-mono text-foreground break-all">{hlWallet}</p>
           </div>
 
           <div className="border-t border-border" />
@@ -563,7 +565,7 @@ export function StepConnectAndPay({
                 </div>
               </div>
             ) : (
-              <p className="text-sm font-mono text-foreground break-all">{truncateAddress(resolvedPayoutAddress)}</p>
+              <p className="text-xs font-mono text-foreground break-all">{resolvedPayoutAddress}</p>
             )}
 
             <p className="text-xs text-muted-foreground/60">
@@ -882,33 +884,23 @@ export function StepConnectAndPay({
           Hyperliquid wallet address (the wallet you trade with)
         </label>
 
-        {/* Truncated display when populated + valid + not editing */}
+        {/* Display mode: valid address, not editing */}
         {hlWalletValid && !editingHlWallet ? (
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setEditingHlWallet(true)}
-              className="flex-1 rounded-xl border border-border bg-card p-4 text-sm font-mono text-foreground text-left hover:border-white/[0.15] transition-[border-color] duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            >
+            <div className="flex-1 rounded-xl border border-border bg-card p-4 text-sm font-mono text-foreground">
               {truncateAddress(hlWallet)}
-            </button>
+            </div>
             <button
               type="button"
-              onClick={async () => {
-                const ok = await copyToClipboard(hlWallet);
-                if (ok) {
-                  setHlWalletCopied(true);
-                  setTimeout(() => setHlWalletCopied(false), 2000);
-                }
+              onClick={() => {
+                setEditingHlWallet(true);
+                setHlWallet("");
+                setHlWalletTouched(false);
+                setConfirmed(false);
               }}
-              aria-label={hlWalletCopied ? "Copied" : "Copy wallet address"}
-              className="shrink-0 h-[52px] px-4 rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:border-white/[0.15] transition-[border-color,color] duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background inline-flex items-center"
+              className="shrink-0 h-[52px] px-4 rounded-xl border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:border-white/[0.15] transition-[border-color,color] duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background inline-flex items-center"
             >
-              {hlWalletCopied ? (
-                <Check size={16} weight="bold" className="text-teal-400" />
-              ) : (
-                <Copy size={16} weight="bold" />
-              )}
+              Change
             </button>
           </div>
         ) : (
@@ -921,10 +913,8 @@ export function StepConnectAndPay({
                 setHlWallet(e.target.value);
                 setConfirmed(false);
               }}
-              onFocus={() => handleHelpFocus("hl-wallet")}
               onBlur={() => {
                 setHlWalletTouched(true);
-                handleHelpBlur();
                 if (hlWalletValid) setEditingHlWallet(false);
               }}
               placeholder="0x..."
@@ -940,7 +930,20 @@ export function StepConnectAndPay({
                 ${showHlWalletError ? "border-destructive" : "border-border hover:border-white/[0.15]"}
               `}
             />
-            {isConnected && (
+            {!isConnected ? (
+              <ConnectButton.Custom>
+                {({ openConnectModal }) => (
+                  <button
+                    type="button"
+                    onClick={openConnectModal}
+                    className="shrink-0 h-[52px] px-4 rounded-xl border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:border-white/[0.15] transition-[border-color,color] duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background inline-flex items-center gap-2"
+                  >
+                    <Wallet size={16} weight="bold" />
+                    Connect wallet
+                  </button>
+                )}
+              </ConnectButton.Custom>
+            ) : (
               <button
                 type="button"
                 onClick={() => {
@@ -952,14 +955,16 @@ export function StepConnectAndPay({
                 className="shrink-0 h-[52px] px-4 rounded-xl border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:border-white/[0.15] transition-[border-color,color] duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background inline-flex items-center gap-2"
               >
                 <Wallet size={16} weight="bold" />
-                Auto-detect
+                Use connected
               </button>
             )}
           </div>
         )}
 
         <p id="hl-wallet-hint" className="text-xs text-muted-foreground/60">
-          Find it in Hyperliquid &rarr; Portfolio &rarr; your address top right
+          {hlWalletValid
+            ? "This should match the wallet you use on Hyperliquid. Not\u00a0right? Change it\u00a0above."
+            : "Enter the wallet address you trade with on\u00a0Hyperliquid"}
         </p>
         <div id="hl-wallet-error" role="alert" className="min-h-[1.25rem]">
           {showHlWalletError && (
@@ -980,9 +985,9 @@ export function StepConnectAndPay({
           aria-label="Select payment method"
           className="grid grid-cols-1 sm:grid-cols-2 gap-3"
         >
-          {/* Hyperliquid EIP-712 — default, shiny animated border when selected */}
+          {/* Hyperliquid EIP-712 — default, shiny animated border + solid stroke when selected */}
           <div className={`rounded-xl p-[1.5px] transition-colors duration-200 ${
-            paymentMethod === "eip712" ? "hl-shiny-border" : "bg-white/[0.1] hover:bg-white/[0.15]"
+            paymentMethod === "eip712" ? "hl-shiny-border ring-[1.5px] ring-teal-400/80" : "bg-white/[0.1] hover:bg-white/[0.15]"
           }`}>
             <button
               type="button"
@@ -990,7 +995,6 @@ export function StepConnectAndPay({
               aria-checked={paymentMethod === "eip712"}
               onClick={() => {
                 setPaymentMethod("eip712");
-                handleHelpFocus("payment-eip712");
                 setConfirmed(false);
                 resetPaymentStatus();
                 if (!payoutPrefilled && hlAddressReady) {
@@ -1026,7 +1030,6 @@ export function StepConnectAndPay({
             aria-checked={paymentMethod === "base"}
             onClick={() => {
               setPaymentMethod("base");
-              handleHelpFocus("payment-base");
               setConfirmed(false);
               resetPaymentStatus();
               if (!payoutPrefilled && hlAddressReady) {

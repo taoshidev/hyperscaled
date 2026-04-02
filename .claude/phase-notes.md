@@ -2,7 +2,27 @@
 
 ## Current status
 
-Registration Phase 4 complete — polish fixes: wallet truncation, help panel cleanup, inline requirements.
+Registration Phase 6 complete — checkout UX polish: auto-fill wallet, selected payment border, full addresses on confirm, sidebar removed.
+
+## Registration Phase 6 — Checkout UX Polish (2026-04-02)
+
+### What changed
+- Selected payment card now shows solid teal ring-[1.5px] border in addition to shiny-border effect
+- HL wallet address auto-fills from connected wallet on connect (no button press)
+- "Auto-detect" replaced with "Change" (when populated) / "Connect wallet" (when disconnected)
+- Copy button removed from HL wallet field on Connect & Pay step
+- Full EVM addresses shown on Confirm screen (text-xs, break-all) instead of truncated
+- Help sidebar (RegistrationSidebar, MobileHelpSheet, RegistrationHelpProvider) removed entirely from registration flow
+- Steps 1-2 now use single-column centered layout (max-w-lg) instead of two-column with sidebar
+- Helper text updated to match auto-fill behavior
+- handleHelpFocus/handleHelpBlur calls removed from payment method selectors
+
+### Files modified
+- `components/registration/step-connect-pay.jsx` — wallet auto-fill, copy removal, full addresses, border, removed help hooks
+- `components/registration/registration-flow.jsx` — removed sidebar/help imports, single-column layout
+
+### Verified
+- "Skip payment (dev only)" already gated behind `process.env.NODE_ENV === "development"`
 
 ## Registration Phase 4 — Polish Fixes (2026-04-02)
 
