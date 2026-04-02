@@ -60,7 +60,7 @@ export function ChallengeProgress({ accountSize, accountSizeData, drawdown, chal
           {/* Header row */}
           <div className="flex justify-between items-center mb-5 flex-wrap gap-2">
             <h3 className="text-sm text-zinc-400">Account Progress</h3>
-            <div className="flex gap-4 text-xs text-zinc-500">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
               <span>
                 Max Leverage:{" "}
                 <strong className="text-zinc-300 font-medium">{leverageLabel}</strong>
@@ -192,7 +192,10 @@ function FundedProgress({
   statistics,
   quarterlyPnlPct,
 }) {
-  const sharpeRatio = statistics?.sharpe ?? null;
+  const rawSharpe = statistics?.sharpe ?? null;
+  // -100 is a sentinel value meaning insufficient data (< 60 days)
+  const sharpeInsufficient = rawSharpe === -100;
+  const sharpeRatio = rawSharpe != null && !sharpeInsufficient ? rawSharpe : null;
   const sharpeTarget = 1.0;
   const sharpePct = sharpeRatio != null ? Math.min(100, (sharpeRatio / sharpeTarget) * 100) : 0;
 
@@ -210,7 +213,7 @@ function FundedProgress({
           {/* Header row */}
           <div className="flex justify-between items-center mb-5 flex-wrap gap-2">
             <h3 className="text-sm text-zinc-400">Account Status</h3>
-            <div className="flex gap-4 text-xs text-zinc-500">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
               <span>
                 Max Leverage:{" "}
                 <strong className="text-zinc-300 font-medium">{leverageLabel}</strong>
@@ -301,7 +304,7 @@ function FundedProgress({
                   <span>Min: {sharpeTarget.toFixed(1)}</span>
                 </div>
                 <div className={`text-xl font-light tracking-tight mb-2 font-mono ${sharpeRatio != null && sharpeRatio >= sharpeTarget ? "text-green-400" : ""}`}>
-                  {sharpeRatio != null ? sharpeRatio.toFixed(2) : "--"}
+                  {sharpeInsufficient ? "N/A" : sharpeRatio != null ? sharpeRatio.toFixed(2) : "--"}
                 </div>
                 <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
                   <div
@@ -312,7 +315,7 @@ function FundedProgress({
                   />
                 </div>
                 <p className="text-xs text-zinc-500 mt-1">
-                  {sharpeRatio == null ? "Loading..." : sharpeRatio >= sharpeTarget ? "Target met" : `${sharpePct.toFixed(1)}% of target`}
+                  {sharpeInsufficient ? "Requires 60+ days of data" : sharpeRatio == null ? "Loading..." : sharpeRatio >= sharpeTarget ? "Target met" : `${sharpePct.toFixed(1)}% of target`}
                 </p>
               </div>
 
