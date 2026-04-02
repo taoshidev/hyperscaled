@@ -2,6 +2,66 @@
 
 ## Current status
 
+Registration Phase 4 complete — polish fixes: wallet truncation, help panel cleanup, inline requirements.
+
+## Registration Phase 4 — Polish Fixes (2026-04-02)
+
+### What changed
+- HL wallet address shows truncated with copy button when valid (click to edit)
+- Removed "How it works" (4 steps) and "One signature, one transfer" sections from payment-eip712 help content
+- Moved requirements text inline under payment method selector (visible when EIP-712 selected)
+- Removed `payment-hl` help entry (dead extension payment method)
+- Updated "Getting Started" fastest-path steps to reflect current flow (no extension install step)
+
+### Files modified
+- `components/registration/step-connect-pay.jsx` — wallet truncation UI, inline requirements hint
+- `components/registration/help-content.jsx` — removed sections, removed payment-hl, updated default steps
+
+## Registration Phase 3 — Decouple Extension from Payment (2026-04-02)
+
+### What changed
+- Removed "Send via Extension" payment method option entirely from Connect & Pay step
+- Removed `extensionDetected` gating from `canPayHL` and `canContinueToConfirm`
+- Removed extension detection status blocks (install prompt + "Extension detected" indicator) from Connect & Pay
+- Removed `handlePayHL` handler, extension verification watcher, and related refs (`hlPaymentParamsRef`, `verificationRunRef`, `callbacksRef`)
+- Removed unused imports: `CurrencyDollar`, `GoogleChromeLogo`, `ExtensionModal`, `useRef`, `initiatePayment`, `paymentStatus`, `paymentSenderAddress`, `registrationResult`
+- Payment grid changed from 3-col to 2-col (only "Pay with Hyperliquid" + "Pay with Wallet")
+- Success screen (`step-confirmation.jsx`) restructured:
+  - Extension CTA is now the first content block after success header
+  - If extension detected: shows "Extension installed — you're ready to trade" + prominent dashboard link
+  - If not detected: shows install heading, description ("Required to participate"), full-width install button, "Available for Chrome and Brave"
+  - Receipt card moved below extension CTA
+  - Secondary "Go to Dashboard" text link shown only when extension not installed (when installed, the dashboard link is in the prominent CTA block)
+- `useExtensionBridge` added to `StepConfirmation` for extension detection
+- `isHLPayment` now includes `paymentMethod === "eip712"` (no explorer URL for HL payments regardless of method)
+
+### Key decisions
+- Extension detection kept via `useExtensionBridge` hook — only moved where it's evaluated (success screen, not payment flow)
+- Extension bridge hook still runs its detection logic (DOM markers, postMessage pings) — no changes to `hooks/use-extension-bridge.js`
+- `resetPaymentStatus` kept in step-connect-pay.jsx (used by Base payment method selection)
+
+## Registration Phase 2 — usdSend EIP-712 (2026-04-02)
+
+### What changed
+- Created `lib/hl-payment.js` — utility functions for usdSend EIP-712 signing and submission
+  - `buildUsdSendTypes()`, `buildUsdSendDomain()`, `buildUsdSendMessage()`, `submitUsdSend()`
+- Replaced `sendAsset` action with `usdSend` in `handlePayEIP712` handler
+  - `sendAsset` used spot-to-spot transfer with 8 typed fields
+  - `usdSend` uses perps account transfer with 4 typed fields (simpler)
+- Added inline progress steps during EIP-712 payment: Signing → Submitting → Verifying → Provisioning
+  - Reuses existing `PaymentStep` component from extension flow
+- Added `eip712Step` state to track progress granularity
+- Added backend TODO comment in `lib/hl-payment.js` for WebSocket listener
+- Added env vars `NEXT_PUBLIC_HL_RECEIVING_WALLET` and `NEXT_PUBLIC_HL_CHAIN` to `.env.example`
+- Base and Extension payment paths untouched
+
+### Key decisions
+- Used existing `HL_SIGNING_CHAIN_ID`, `HL_CHAIN_NAME`, `HL_API_URL` from `lib/constants.js` rather than the `NEXT_PUBLIC_HL_CHAIN` env var pattern from the spec (avoids duplication)
+- The `hl-payment.js` utility imports from constants rather than reading env vars directly
+- Transfer hash lookup still checks `userNonFundingLedgerUpdates` but matches `type: "usdSend"` instead of `type: "send"`
+
+## Previous status
+
 Fixes batch complete. Payout frequency updated from weekly/7-day to monthly across all pages. Tradeable pairs added to EVAL_RULES. Telegram bot link in footer. Nav collapse tightened. Homepage Step 01/02 mockups fixed. Permissionless banner removed. Pricing emoji removed. Agents tags removed. Partners copy + spacing fixed.
 
 ## Fixes Batch Session (2026-03-28)

@@ -12,7 +12,7 @@ import { RegistrationSidebar } from "./registration-sidebar";
 import { MobileHelpSheet } from "./mobile-help-sheet";
 import { TIERS } from "@/lib/constants";
 
-const STEP_LABELS = ["Select Plan", "Connect & Pay", "Confirmation"];
+const STEP_LABELS = ["Select Plan", "Connect & Pay", "Confirm", "Done"];
 const DEFAULT_MINER_SLUG = "vanta";
 
 const MOCK_WALLET = "0x0000000000000000000000000000000000000000";
@@ -46,14 +46,13 @@ export function RegistrationFlow({
   initialPaymentWallet = null,
 }) {
   const [recovered] = useState(getRecoveredRegistration);
-  const [currentStep, setCurrentStep] = useState(recovered ? 2 : 0);
+  const [currentStep, setCurrentStep] = useState(recovered ? 3 : 0);
   const [selectedTier, setSelectedTier] = useState(recovered ? {
     name: recovered.tierName || "Challenge",
     accountSize: recovered.accountSize || 0,
     details: [],
   } : null);
   const [selectedTierIndex, setSelectedTierIndex] = useState(null);
-  const [email, setEmail] = useState("");
   const [txHash, setTxHash] = useState(recovered?.txHash ?? null);
   const [hlAddress, setHlAddress] = useState(recovered?.hlAddress ?? null);
   const [registrationStatus, setRegistrationStatus] = useState(recovered?.registrationStatus ?? null);
@@ -80,9 +79,6 @@ export function RegistrationFlow({
 
 
   // B1: Browser refresh guard — only during active payment processing
-  // Note: beforeunload only fires during active payment processing.
-  // Wallet connection mid-signature is not guarded — acceptable tradeoff
-  // since no funds have moved yet at that point.
   useEffect(() => {
     if (!paymentProcessing) return;
 
@@ -94,6 +90,11 @@ export function RegistrationFlow({
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [paymentProcessing]);
+
+  // Steps 1 (Connect & Pay) and 2 (Confirm) share StepConnectAndPay to keep
+  // wagmi/extension hooks mounted. We render it in both phases but only show
+  // the active phase's UI via the `phase` prop.
+  const isConnectOrConfirm = currentStep === 1 || currentStep === 2;
 
   return (
     <main className="min-h-[100dvh] flex flex-col">
@@ -117,8 +118,8 @@ export function RegistrationFlow({
       </nav>
 
       {/* Flow content */}
-      {currentStep === 1 ? (
-        /* Step 1: Two-column layout with sidebar */
+      {isConnectOrConfirm ? (
+        /* Steps 1–2: Two-column layout with sidebar */
         <RegistrationHelpProvider>
           <div className="flex-1 flex flex-col lg:flex-row lg:justify-center lg:items-start gap-0 lg:gap-8 pt-6 pb-20 px-4 lg:px-8">
             {/* Form column */}
@@ -132,8 +133,8 @@ export function RegistrationFlow({
                 tierIndex={selectedTierIndex}
                 minerSlug={initialMinerSlug}
                 paymentWallet={paymentWallet}
-                email={email}
-                onEmailChange={setEmail}
+                phase={currentStep === 2 ? "confirm" : "connect"}
+                onContinueToConfirm={() => setCurrentStep(2)}
                 onPaymentProcessing={setPaymentProcessing}
                 onPaymentComplete={({ txHash: hash, hlAddress: addr, registrationStatus: status, paymentMethod: method }) => {
                   setPaymentProcessing(false);
@@ -141,9 +142,9 @@ export function RegistrationFlow({
                   setHlAddress(addr);
                   setRegistrationStatus(status);
                   setPaymentMethod(method || null);
-                  setCurrentStep(2);
+                  setCurrentStep(3);
                 }}
-                onBack={() => setCurrentStep(0)}
+                onBack={currentStep === 2 ? () => setCurrentStep(1) : () => setCurrentStep(0)}
               />
             </div>
 
@@ -155,10 +156,10 @@ export function RegistrationFlow({
           <MobileHelpSheet />
         </RegistrationHelpProvider>
       ) : (
-        /* Steps 0 and 2: Single-column centered layout */
+        /* Steps 0 and 3: Single-column centered layout */
         <div className="flex-1 flex flex-col items-center justify-start pt-6 pb-20 px-4">
-          <div className={`w-full ${currentStep === 2 ? "max-w-5xl" : "max-w-3xl"}`}>
-            {currentStep === 2 ? (
+          <div className={`w-full ${currentStep === 3 ? "max-w-5xl" : "max-w-3xl"}`}>
+            {currentStep === 3 ? (
               <div className="mb-10 flex justify-center">
                 <p className="text-sm font-medium text-teal-400">
                   Registration complete
@@ -184,8 +185,8 @@ export function RegistrationFlow({
               />
             )}
 
-            {/* Step 2: Confirmation */}
-            {currentStep === 2 && (
+            {/* Step 3: Done */}
+            {currentStep === 3 && (
               <StepConfirmation
                 selectedTier={selectedTier}
                 hlAddress={hlAddress}
