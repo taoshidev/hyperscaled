@@ -34,10 +34,15 @@ import {
   HL_CHAIN_NAME,
 } from "@/lib/constants";
 import {
+  checkUserAbstraction,
+  isUnifiedAccount,
+  buildDomain,
   buildUsdSendTypes,
-  buildUsdSendDomain,
   buildUsdSendMessage,
   submitUsdSend,
+  buildSpotSendTypes,
+  buildSpotSendMessage,
+  submitSpotSend,
 } from "@/lib/hl-payment";
 import { usdcAbi } from "@/lib/usdc-abi";
 import { formatAccountSize, truncateAddress } from "@/lib/format";
@@ -299,42 +304,54 @@ export function StepConnectAndPay({
         await switchChainAsync({ chainId: HL_SIGNING_CHAIN_ID });
       }
 
-      // Step 2 — Sign Hyperliquid usdSend via EIP-712
+      // Step 2 — Detect account mode (unified vs standard)
+      const abstraction = await checkUserAbstraction(address);
+      const useSpotSend = isUnifiedAccount(abstraction);
+
+      // Step 3 — Sign the appropriate transfer type via EIP-712
       let signature;
       try {
-        // Re-fetch wallet client after chain switch (wagmi may return a new
-        // client instance bound to the now-active chain)
         const freshClient = await getWalletClientAction(wagmiConfig, {
           chainId: HL_SIGNING_CHAIN_ID,
         });
 
-        signature = await freshClient.signTypedData({
-          domain: buildUsdSendDomain(),
-          types: buildUsdSendTypes(),
-          primaryType: "HyperliquidTransaction:UsdSend",
-          message: buildUsdSendMessage({
-            amount,
-            destination: paymentWallet,
-            timestamp,
-          }),
-        });
-      } finally {
-        // Step 3 — Switch back to previous chain regardless of signing outcome
-        if (previousChainId && previousChainId !== HL_SIGNING_CHAIN_ID) {
-          switchChainAsync({ chainId: previousChainId }).catch(() => {
-            // Best-effort switch back; don't block the flow if the user rejects
+        if (useSpotSend) {
+          signature = await freshClient.signTypedData({
+            domain: buildDomain(),
+            types: buildSpotSendTypes(),
+            primaryType: "HyperliquidTransaction:SpotSend",
+            message: buildSpotSendMessage({
+              amount,
+              destination: paymentWallet,
+              timestamp,
+            }),
           });
+        } else {
+          signature = await freshClient.signTypedData({
+            domain: buildDomain(),
+            types: buildUsdSendTypes(),
+            primaryType: "HyperliquidTransaction:UsdSend",
+            message: buildUsdSendMessage({
+              amount,
+              destination: paymentWallet,
+              timestamp,
+            }),
+          });
+        }
+      } finally {
+        // Switch back to previous chain regardless of signing outcome
+        if (previousChainId && previousChainId !== HL_SIGNING_CHAIN_ID) {
+          switchChainAsync({ chainId: previousChainId }).catch(() => {});
         }
       }
 
-      // Step 4 — Submit signed usdSend to Hyperliquid exchange API
+      // Step 4 — Submit signed transfer to Hyperliquid exchange API
       setEip712Step("submitting");
-      await submitUsdSend({
-        signature,
-        amount,
-        destination: paymentWallet,
-        timestamp,
-      });
+      if (useSpotSend) {
+        await submitSpotSend({ signature, amount, destination: paymentWallet, timestamp });
+      } else {
+        await submitUsdSend({ signature, amount, destination: paymentWallet, timestamp });
+      }
 
       // Step 5 — Look up the transfer hash from HL info endpoint
       setEip712Step("verifying");
