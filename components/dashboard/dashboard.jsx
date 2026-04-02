@@ -354,7 +354,7 @@ export function Dashboard() {
     <div className="min-h-[calc(100dvh-4rem)] px-6 py-8">
       <div className="max-w-[1400px] mx-auto space-y-6">
         {/* KYC Verification */}
-        <KycVerification wallet={address} />
+        <KycVerification hlAddress={activeAddress} connectedWallet={address} />
 
         {/* Account Header */}
         <div className="flex justify-between items-start flex-wrap gap-4">

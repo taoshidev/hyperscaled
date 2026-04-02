@@ -8,6 +8,7 @@ import {
   createApplicant,
   generateAccessToken,
   updateKycStatus,
+  getAuthorizedWalletsForHlAddress,
 } from "@/lib/sumsub";
 
 export async function POST(request) {
@@ -18,7 +19,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { wallet } = body;
+  const { wallet, connectedWallet } = body;
 
   if (!wallet || !isValidEvmAddress(wallet)) {
     return NextResponse.json(
@@ -27,7 +28,28 @@ export async function POST(request) {
     );
   }
 
+  if (!connectedWallet || !isValidEvmAddress(connectedWallet)) {
+    return NextResponse.json(
+      { error: "Invalid or missing connectedWallet" },
+      { status: 400 },
+    );
+  }
+
   try {
+    // Verify the connected wallet is authorized to KYC for this HL address
+    const hlLower = wallet.toLowerCase();
+    const connLower = connectedWallet.toLowerCase();
+
+    if (connLower !== hlLower) {
+      const authorizedWallets = await getAuthorizedWalletsForHlAddress(wallet);
+      if (!authorizedWallets.includes(connLower)) {
+        return NextResponse.json(
+          { error: "Connected wallet is not authorized to KYC for this address" },
+          { status: 403 },
+        );
+      }
+    }
+
     let user = await getUserByWallet(wallet);
     if (!user) {
       user = await createUserByWallet(wallet);
