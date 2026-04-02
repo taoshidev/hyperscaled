@@ -73,7 +73,7 @@ export async function GET(request) {
       ]);
 
       if (statsRes?.ok) {
-        try { statistics = await statsRes.json(); } catch {}
+        try { statistics = await statsRes.json(); } catch { /* ignore malformed JSON */ }
       }
 
       if (ledgerRes?.ok) {
@@ -83,7 +83,7 @@ export async function GET(request) {
           const realized = checkpoints.reduce((sum, cp) => sum + (cp.r || 0), 0);
           const lastUnrealized = checkpoints.length > 0 ? (checkpoints[checkpoints.length - 1].u || 0) : 0;
           quarterly_pnl = realized + Math.min(0, lastUnrealized);
-        } catch {}
+        } catch { /* ignore malformed JSON */ }
       }
     }
 
