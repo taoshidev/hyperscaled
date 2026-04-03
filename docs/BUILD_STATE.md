@@ -176,14 +176,14 @@ Last updated: 2026-03-26
 
 ## Registration Flow (`/register`)
 
-**Status**: Complete — 3-step flow, all screens built
+**Status**: Complete — 4-step flow (Select Plan → Connect & Pay → Confirm → Done)
 
 | Item | State |
 |------|-------|
 | /register route + layout | Done |
 | Tier data in lib/constants.js (TIERS) | Done (5% drawdown, Unlimited period, label/value format) |
-| Stepper component (3-step, Phosphor Icons, Framer Motion) | Done (Phase 2: collapsed from 4 to 3 steps; Phase 3: mobile compact "Step X of 3" label) |
-| Registration flow orchestrator (3-step) | Done (Phase 2: Select Plan → Connect & Pay → Confirmation; Phase 3: nav bar, beforeunload guard) |
+| Stepper component (4-step, Phosphor Icons, Framer Motion) | Done (Phase 1 confirm: expanded to 4 steps; mobile "Step X of 4" label) |
+| Registration flow orchestrator (4-step) | Done (Select Plan → Connect & Pay → Confirm → Done; nav bar, beforeunload guard) |
 | Tier selection step (interactive cards, selected state) | Done (label/value rows, Pro card elevated, promo banner) |
 | A11y: ARIA radiogroup + keyboard nav on tier cards | Done |
 | A11y: Semantic stepper (ol/li, aria-current) | Done |
@@ -193,8 +193,9 @@ Last updated: 2026-03-26
 | Performance: targeted transitions (no transition-all) | Done |
 | Contrast: brightened small muted text (oklch 0.65) | Done |
 | Min font size: text-xs (12px) floor on all labels | Done |
-| Email step | Removed (not in flow) |
-| Connect & Pay step (merged wallet + payment) | Done (Phase 2: order summary, RainbowKit connect, alt wallet toggle, USDC payment, wagmi/viem fallback, x402 TODO) |
+| Email field | Removed — Phase 1 confirm: removed from flow, state, validation, and all payment handlers |
+| Connect & Pay step | Done (Phase 1 confirm: HL wallet with Auto-detect, payment method selector, wallet connection, Continue to review) |
+| Confirm step (new) | Done — Phase 1 confirm: review card with trading wallet, inline-editable payout wallet, plan summary, confirmation checkbox, pay button |
 | Old step-hl-address.jsx | Deleted (absorbed into step-connect-pay.jsx) |
 | Old step-payment.jsx | Deleted (absorbed into step-connect-pay.jsx) |
 | Confirmation step | Done (Phase 3: success header, summary card with copy buttons, next steps, dashboard/leaderboard links) |
@@ -221,6 +222,18 @@ Last updated: 2026-03-26
 | Polish: extension UI mockup (account size, progress bars, position row) | Done |
 | Polish: "Go to Dashboard" as secondary text link below receipt | Done |
 | Polish: confirmation container widens to max-w-5xl on step 2 | Done |
+| EIP-712 usdSend payment (Phase 2) | Done — replaced sendAsset with native usdSend EIP-712 typed signature; lib/hl-payment.js utility (buildUsdSendTypes, buildUsdSendDomain, buildUsdSendMessage, submitUsdSend); inline progress steps (Signing → Submitting → Verifying → Provisioning); backend TODO comment for WebSocket listener; env vars NEXT_PUBLIC_HL_RECEIVING_WALLET + NEXT_PUBLIC_HL_CHAIN |
+| Pay with Wallet (Base path) | Still working — untouched in Phase 2 |
+| Pay with Hyperliquid (extension path) | Still working — untouched in Phase 2 |
+| Extension decoupled from payment (Phase 3) | Done — removed "Send via Extension" payment option, removed extension detection gating from payment flow, extension CTA moved to success screen as first content block, conditional display (install CTA vs "ready to trade" confirmation), 2-col payment grid |
+| Success screen restructured (Phase 3) | Done — order: success header → extension CTA/confirmation → receipt card → dashboard link; useExtensionBridge in StepConfirmation for detection |
+| Polish: HL wallet truncation + copy (Phase 4) | Done — truncated display with copy button when valid, click-to-edit, auto-collapse on blur/auto-detect |
+| Polish: Help panel cleanup (Phase 4) | Done — removed "How it works" and "One signature" sections from payment-eip712 help, removed payment-hl (dead extension method), moved requirements inline under payment selector, updated "Getting Started" fastest-path steps |
+| Polish: Payment card selected border (Phase 6) | Done — solid teal ring-[1.5px] on selected payment card alongside shiny-border effect |
+| Polish: Auto-fill HL wallet on connect (Phase 6) | Done — wallet address auto-populates from connected wallet, "Change" button to clear and re-enter, "Connect wallet" button when disconnected, updated helper text |
+| Polish: Remove copy button from Connect & Pay (Phase 6) | Done — copy button removed from HL wallet field, kept only on Confirm and success screens |
+| Polish: Full EVM address on Confirm (Phase 6) | Done — full address in text-xs font-mono on confirm screen, break-all for mobile wrap |
+| Polish: Remove Help sidebar (Phase 6) | Done — removed RegistrationHelpProvider, RegistrationSidebar, MobileHelpSheet from registration flow; single-column centered layout for steps 1-2 |
 
 **Next action**: UI polish pass across other pages
 
