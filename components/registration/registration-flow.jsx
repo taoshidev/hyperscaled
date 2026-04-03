@@ -7,6 +7,9 @@ import { Stepper } from "./stepper";
 import { StepSelectTier } from "./step-select-tier";
 import { StepConnectAndPay } from "./step-connect-pay";
 import { StepConfirmation } from "./step-confirmation";
+import { RegistrationHelpProvider } from "./registration-help-context";
+import { RegistrationSidebar } from "./registration-sidebar";
+import { MobileHelpSheet } from "./mobile-help-sheet";
 import { TIERS } from "@/lib/constants";
 
 const STEP_LABELS = ["Select Plan", "Connect & Pay", "Confirm", "Done"];
@@ -116,33 +119,40 @@ export function RegistrationFlow({
 
       {/* Flow content */}
       {isConnectOrConfirm ? (
-        /* Steps 1–2: Single-column centered layout */
-        <div className="flex-1 flex flex-col items-center justify-start pt-6 pb-20 px-4">
-          <div className="w-full max-w-lg">
-            <Stepper
-              currentStep={currentStep}
-              steps={STEP_LABELS}
-            />
-            <StepConnectAndPay
-              selectedTier={selectedTier}
-              tierIndex={selectedTierIndex}
-              minerSlug={initialMinerSlug}
-              paymentWallet={paymentWallet}
-              phase={currentStep === 2 ? "confirm" : "connect"}
-              onContinueToConfirm={() => setCurrentStep(2)}
-              onPaymentProcessing={setPaymentProcessing}
-              onPaymentComplete={({ txHash: hash, hlAddress: addr, registrationStatus: status, paymentMethod: method }) => {
-                setPaymentProcessing(false);
-                setTxHash(hash);
-                setHlAddress(addr);
-                setRegistrationStatus(status);
-                setPaymentMethod(method || null);
-                setCurrentStep(3);
-              }}
-              onBack={currentStep === 2 ? () => setCurrentStep(1) : () => setCurrentStep(0)}
-            />
+        /* Steps 1–2: Two-column layout with help sidebar */
+        <RegistrationHelpProvider>
+          <div className="flex-1 flex flex-col lg:flex-row lg:justify-center lg:items-start gap-0 lg:gap-8 pt-6 pb-20 px-4 lg:px-8">
+            {/* Form column */}
+            <div className="w-full lg:max-w-[640px] lg:shrink-0">
+              <Stepper
+                currentStep={currentStep}
+                steps={STEP_LABELS}
+              />
+              <StepConnectAndPay
+                selectedTier={selectedTier}
+                tierIndex={selectedTierIndex}
+                minerSlug={initialMinerSlug}
+                paymentWallet={paymentWallet}
+                phase={currentStep === 2 ? "confirm" : "connect"}
+                onContinueToConfirm={() => setCurrentStep(2)}
+                onPaymentProcessing={setPaymentProcessing}
+                onPaymentComplete={({ txHash: hash, hlAddress: addr, registrationStatus: status, paymentMethod: method }) => {
+                  setPaymentProcessing(false);
+                  setTxHash(hash);
+                  setHlAddress(addr);
+                  setRegistrationStatus(status);
+                  setPaymentMethod(method || null);
+                  setCurrentStep(3);
+                }}
+                onBack={currentStep === 2 ? () => setCurrentStep(1) : () => setCurrentStep(0)}
+              />
+            </div>
+
+            {/* Desktop sidebar */}
+            <RegistrationSidebar />
           </div>
-        </div>
+          <MobileHelpSheet />
+        </RegistrationHelpProvider>
       ) : (
         /* Steps 0 and 3: Single-column centered layout */
         <div className="flex-1 flex flex-col items-center justify-start pt-6 pb-20 px-4">

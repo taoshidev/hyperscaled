@@ -34,6 +34,7 @@ import {
 import { usdcAbi } from "@/lib/usdc-abi";
 import { formatAccountSize, truncateAddress } from "@/lib/format";
 import { useExtensionBridge } from "@/hooks/use-extension-bridge";
+import { useRegistrationHelp } from "./registration-help-context";
 import { ExactEvmScheme } from "@x402/evm/exact/client";
 import {
   decodePaymentRequiredHeader,
@@ -77,6 +78,8 @@ export function StepConnectAndPay({
   const {
     resetPaymentStatus,
   } = useExtensionBridge();
+
+  const { handleHelpFocus, handleHelpBlur } = useRegistrationHelp();
 
   const price = selectedTier.promoPrice;
   const hlWalletValid = isValidHLAddress(hlWallet);
@@ -966,9 +969,11 @@ export function StepConnectAndPay({
                 setHlWallet(e.target.value);
                 setConfirmed(false);
               }}
+              onFocus={() => handleHelpFocus("hl-wallet")}
               onBlur={() => {
                 setHlWalletTouched(true);
                 if (hlWalletValid) setEditingHlWallet(false);
+                handleHelpBlur();
               }}
               placeholder="0x..."
               aria-label="Hyperliquid trading wallet address"
@@ -1048,6 +1053,7 @@ export function StepConnectAndPay({
               aria-checked={paymentMethod === "eip712"}
               onClick={() => {
                 setPaymentMethod("eip712");
+                handleHelpFocus("payment-eip712");
                 setConfirmed(false);
                 resetPaymentStatus();
                 if (!payoutPrefilled && hlAddressReady) {
@@ -1066,11 +1072,9 @@ export function StepConnectAndPay({
                   <ShieldCheck size={20} weight="duotone" className={paymentMethod === "eip712" ? "text-teal-400" : "text-muted-foreground"} />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold text-foreground">Pay with Hyperliquid</p>
-                    <span className="text-[11px] leading-none font-semibold uppercase tracking-wide text-teal-400 bg-teal-400/10 px-1.5 py-0.5 rounded">Recommended</span>
-                  </div>
+                  <p className="text-sm font-semibold text-foreground">Pay with Hyperliquid</p>
                   <p className="text-xs text-muted-foreground">USDC from trading account</p>
+                  <span className="mt-1.5 inline-block text-[11px] leading-none font-semibold uppercase tracking-wide text-teal-400 bg-teal-400/10 px-1.5 py-0.5 rounded">Recommended</span>
                 </div>
               </div>
             </button>
@@ -1083,6 +1087,7 @@ export function StepConnectAndPay({
             aria-checked={paymentMethod === "base"}
             onClick={() => {
               setPaymentMethod("base");
+              handleHelpFocus("payment-base");
               setConfirmed(false);
               resetPaymentStatus();
               if (!payoutPrefilled && hlAddressReady) {
@@ -1177,6 +1182,39 @@ export function StepConnectAndPay({
           >
             Switch to {CHAIN_LABEL}
           </Button>
+        </div>
+      )}
+
+      {/* ─── 4. Payout Wallet (shown after payment method selected) ─── */}
+      {paymentMethod && hlAddressReady && (
+        <div className="w-full max-w-lg mt-4 space-y-1.5">
+          <label htmlFor="payout-wallet" className="text-xs font-medium text-muted-foreground">
+            Payout wallet <span className="text-muted-foreground/60">(where you receive payouts)</span>
+          </label>
+          <input
+            id="payout-wallet"
+            type="text"
+            value={payoutWallet}
+            onChange={(e) => {
+              setPayoutWallet(e.target.value);
+              setConfirmed(false);
+            }}
+            onFocus={() => handleHelpFocus("payout-wallet")}
+            onBlur={handleHelpBlur}
+            placeholder={hlWallet || "0x..."}
+            aria-label="Payout wallet address — where you will receive payouts"
+            className={`
+              w-full rounded-xl border bg-card p-4 text-sm font-mono
+              placeholder:text-muted-foreground/50
+              outline-none
+              focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
+              transition-[border-color,box-shadow] duration-200
+              border-border hover:border-white/[0.15]
+            `}
+          />
+          <p className="text-xs text-muted-foreground/40 min-h-[1.25rem]">
+            Prefilled with your Hyperliquid address — change if you want payouts sent elsewhere
+          </p>
         </div>
       )}
 
