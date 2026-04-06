@@ -43,7 +43,7 @@ export default function Footer() {
               <img src="/hyperscaled-logo.svg" alt="Hyperscaled" className="h-7 w-auto" />
             </Link>
             <p className="text-xs text-zinc-500 leading-relaxed max-w-[24ch] [text-wrap:pretty]">
-              Permissionless funded trading on&nbsp;Hyperliquid.
+              Funded trading on&nbsp;Hyperliquid.
             </p>
             <div className="flex items-center gap-3 mt-5">
               {socialIcons.map(({ Icon, href, label }, i) => (

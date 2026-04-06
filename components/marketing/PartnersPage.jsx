@@ -37,7 +37,7 @@ const WHAT_YOU_CONTROL = [
     icon: PaintBrush,
   },
   {
-    title: 'Permissionless scaling',
+    title: 'Unlimited scaling',
     body: 'No ceiling on how many traders you can\u00a0fund.',
     icon: ArrowsOutSimple,
   },
