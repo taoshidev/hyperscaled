@@ -34,7 +34,7 @@ export function AccountOverview({ dashboard }) {
 
   const balance = account_size_data?.balance;
   const profitTarget = account_size * 0.1;
-  const totalPnl = account_size_data?.total_realized_pnl ?? 0;
+  const totalPnl = (account_size_data?.balance - account_size_data?.account_size) ?? 0;
   const openPnl = openPositionsUnrealizedTotalUsd(positions, account_size_data);
 
   const balanceChange = balance != null ? ((balance - account_size) / account_size * 100) : null;
