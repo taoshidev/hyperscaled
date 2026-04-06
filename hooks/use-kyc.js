@@ -26,7 +26,7 @@ export function useKycStatus(wallet) {
   });
 }
 
-export function useKycToken(wallet) {
+export function useKycToken(wallet, connectedWallet) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -34,7 +34,7 @@ export function useKycToken(wallet) {
       const res = await fetch("/api/kyc/token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wallet }),
+        body: JSON.stringify({ wallet, connectedWallet }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));

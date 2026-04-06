@@ -4,6 +4,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
+[id] {
+  scroll-margin-top: 110px;
+}
+
 :root {
   --radius: 0.625rem;
   --background: oklch(0.05 0 0);
@@ -17,7 +21,7 @@
   --secondary: oklch(0.2 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.2 0 0);
-  --muted-foreground: oklch(0.6 0 0);
+  --muted-foreground: oklch(0.72 0 0);
   --accent: oklch(0.2 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
@@ -102,6 +106,34 @@
 @keyframes shimmer {
   0%   { background-position: -600px 0; }
   100% { background-position: 600px 0; }
+}
+
+/* ── Shiny rotating border (payment card) ── */
+@keyframes hl-border-spin {
+  to { rotate: 360deg; }
+}
+
+.hl-shiny-border {
+  position: relative;
+  overflow: hidden;
+}
+
+.hl-shiny-border::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  background: conic-gradient(
+    transparent 40%,
+    oklch(0.879 0.169 175.7 / 0.6) 48%,
+    oklch(0.95 0.08 175 / 0.85) 50%,
+    oklch(0.879 0.169 175.7 / 0.6) 52%,
+    transparent 60%
+  );
+  animation: hl-border-spin 2.5s linear infinite;
 }
 
 .skeleton {
@@ -347,6 +379,25 @@
   box-shadow:
     inset 0 0 0 1px rgba(0, 198, 167, 0.4),
     inset 0 -24px 48px -20px rgba(0, 198, 167, 0.25);
+}
+
+/* ── Input autofill + focus overrides ── */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 50px oklch(0.12 0 0) inset !important;
+  -webkit-text-fill-color: oklch(0.985 0 0) !important;
+  caret-color: oklch(0.985 0 0);
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+input:focus,
+input:active,
+textarea:focus,
+textarea:active {
+  background-color: oklch(0.15 0 0) !important;
 }
 
 /* ── Custom scrollbar ── */

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { TwitterLogo, DiscordLogo, GithubLogo, ArrowUpRight } from '@phosphor-icons/react'
+import { TwitterLogo, DiscordLogo, GithubLogo, TelegramLogo, ArrowUpRight } from '@phosphor-icons/react'
 
 const footerLinks = {
   Protocol: [
@@ -15,12 +15,12 @@ const footerLinks = {
     { label: 'Twitter / X', href: 'https://x.com/hyperscaledhq', external: true, icon: TwitterLogo },
     { label: 'Discord', href: 'https://discord.gg/hyperscaledhq', external: true, icon: DiscordLogo },
     { label: 'GitHub', href: 'https://github.com/taoshidev', external: true, icon: GithubLogo },
+    { label: 'Telegram Bot', href: 'https://t.me/hyperscaled_bot', external: true, icon: TelegramLogo },
     { label: 'Contact Support', href: 'mailto:support@hyperscaled.trade', external: true },
   ],
   Legal: [
     { label: 'Terms of Service', href: '/terms' },
     { label: 'Privacy Policy', href: '/privacy' },
-    { label: 'Risk Disclosure', href: '/risk' },
   ],
 }
 
@@ -43,7 +43,7 @@ export default function Footer() {
               <img src="/hyperscaled-logo.svg" alt="Hyperscaled" className="h-7 w-auto" />
             </Link>
             <p className="text-xs text-zinc-500 leading-relaxed max-w-[24ch] [text-wrap:pretty]">
-              Permissionless funded trading on&nbsp;Hyperliquid.
+              Funded trading on&nbsp;Hyperliquid.
             </p>
             <div className="flex items-center gap-3 mt-5">
               {socialIcons.map(({ Icon, href, label }, i) => (

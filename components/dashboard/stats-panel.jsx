@@ -26,105 +26,137 @@ function StatRow({ label, value, tooltip }) {
   );
 }
 
-export function StatsPanel({ drawdown, challengeProgress, limits }) {
-  const hasData = drawdown || challengeProgress || limits;
+export function StatsPanel({ drawdown, challengePeriod, accountSizeData, limits }) {
+  const hasData = drawdown || challengePeriod || accountSizeData || limits;
 
   return (
-    <Card>
+    <Card className="bg-zinc-900/70 border-white/[0.08]">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium">Statistics</CardTitle>
       </CardHeader>
       <CardContent>
         {!hasData ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-zinc-500">
             No statistics available
           </p>
         ) : (
           <div className="space-y-4">
-            {challengeProgress && (
+            {(challengePeriod || accountSizeData) && (
               <div className="space-y-2">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Challenge
+                  Account
                 </p>
+                {challengePeriod && (
+                  <StatRow
+                    label="Status"
+                    value={challengePeriod.bucket?.replace(/_/g, " ") || "--"}
+                  />
+                )}
                 <StatRow
-                  label="Current Return"
+                  label="Current Equity"
                   value={
-                    challengeProgress.current_return != null
-                      ? formatReturn(challengeProgress.current_return)
+                    drawdown?.current_equity != null
+                      ? formatReturn(drawdown.current_equity)
                       : undefined
                   }
                 />
-                <StatRow
-                  label="Target Return"
-                  value={
-                    challengeProgress.target_return_percent != null
-                      ? `${challengeProgress.target_return_percent}%`
-                      : undefined
-                  }
-                />
-                <StatRow
-                  label="Returns Progress"
-                  value={
-                    challengeProgress.returns_progress_percent != null
-                      ? `${challengeProgress.returns_progress_percent.toFixed(1)}%`
-                      : undefined
-                  }
-                />
-                <StatRow
-                  label="Time Progress"
-                  value={
-                    challengeProgress.time_progress_percent != null
-                      ? `${challengeProgress.time_progress_percent.toFixed(1)}%`
-                      : undefined
-                  }
-                />
+                {accountSizeData && (
+                  <>
+                    <StatRow
+                      label="Balance"
+                      value={
+                        accountSizeData.balance != null
+                          ? formatUSD(accountSizeData.balance)
+                          : undefined
+                      }
+                    />
+                    <StatRow
+                      label="Buying Power"
+                      value={
+                        accountSizeData.buying_power != null
+                          ? formatUSD(accountSizeData.buying_power)
+                          : undefined
+                      }
+                    />
+                    <StatRow
+                      label="Max Return"
+                      tooltip="High-water mark of portfolio return."
+                      value={
+                        accountSizeData.max_return != null
+                          ? formatReturn(accountSizeData.max_return)
+                          : undefined
+                      }
+                    />
+                  </>
+                )}
               </div>
             )}
 
-            {(drawdown || challengeProgress) && (
+            {drawdown && (
               <div className="space-y-2">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Drawdown
                 </p>
                 <StatRow
-                  label="Current Drawdown"
-                  tooltip="Your current drawdown from peak equity. Exceeding the limit results in account breach."
+                  label="Intraday Drawdown"
+                  tooltip="Drawdown from today's opening equity. Breaching the limit results in account termination."
                   value={
-                    challengeProgress?.drawdown_percent != null
-                      ? `${challengeProgress.drawdown_percent.toFixed(2)}%`
+                    drawdown.intraday_drawdown_pct != null
+                      ? `${Math.max(0, drawdown.intraday_drawdown_pct).toFixed(2)}%`
                       : undefined
                   }
                 />
                 <StatRow
-                  label="Max Drawdown"
-                  tooltip="The highest drawdown recorded on this account since inception."
+                  label="EOD Trailing Drawdown"
+                  tooltip="End-of-day drawdown from peak equity high-water mark."
                   value={
-                    drawdown?.ledger_max_drawdown != null
-                      ? `${((1 - drawdown.ledger_max_drawdown) * 100).toFixed(2)}%`
-                      : challengeProgress?.max_drawdown_percent != null
-                        ? `${challengeProgress.max_drawdown_percent.toFixed(2)}%`
-                        : challengeProgress?.drawdown_percent != null
-                          ? `${challengeProgress.drawdown_percent.toFixed(2)}%`
-                          : undefined
+                    drawdown.eod_drawdown_pct != null
+                      ? `${Math.max(0, drawdown.eod_drawdown_pct).toFixed(2)}%`
+                      : undefined
                   }
                 />
                 <StatRow
-                  label="Drawdown Usage"
+                  label="Intraday limit usage"
                   tooltip={
                     <div className="space-y-1.5">
-                      <p className="font-medium">2-Step Drawdown Rules</p>
-                      <p>1. Daily drawdown must not exceed 4% of starting daily equity.</p>
-                      <p>2. Total drawdown must not exceed the account drawdown limit from peak equity.</p>
-                      <p className="text-muted-foreground">Breaching either rule results in account termination.</p>
+                      <p className="font-medium">Share of your intraday allowance</p>
+                      <p>
+                        0–100%: how much of the allowed drawdown from today&apos;s open you have used. 100% means
+                        breach.
+                      </p>
+                      {drawdown.intraday_threshold_pct != null && (
+                        <p className="text-muted-foreground">
+                          Max drawdown from open: {drawdown.intraday_threshold_pct.toFixed(1)}% of equity.
+                        </p>
+                      )}
+                      <p className="text-muted-foreground">Breaching this rule results in account termination.</p>
                     </div>
                   }
                   value={
-                    challengeProgress?.drawdown_usage_percent != null
-                      ? `${challengeProgress.drawdown_usage_percent.toFixed(1)}%${
-                          challengeProgress.drawdown_limit_percent != null
-                            ? ` / ${challengeProgress.drawdown_limit_percent.toFixed(0)}%`
-                            : ""
-                        }`
+                    drawdown.intraday_usage_pct != null
+                      ? `${Math.max(0, drawdown.intraday_usage_pct).toFixed(1)}% of limit`
+                      : undefined
+                  }
+                />
+                <StatRow
+                  label="EOD limit usage"
+                  tooltip={
+                    <div className="space-y-1.5">
+                      <p className="font-medium">Share of your EOD trailing allowance</p>
+                      <p>
+                        0–100%: how much of the allowed trailing drawdown from peak you have used. 100% means breach.
+                      </p>
+                      {drawdown.eod_threshold_pct != null && (
+                        <p className="text-muted-foreground">
+                          Max trailing drawdown: {drawdown.eod_threshold_pct.toFixed(1)}% of equity.
+                        </p>
+                      )}
+                      <p className="text-muted-foreground">Breaching this rule results in account termination.</p>
+                    </div>
+                  }
+                  value={
+                    drawdown.eod_usage_pct != null
+                      ? `${Math.max(0, drawdown.eod_usage_pct).toFixed(1)}% of limit`
                       : undefined
                   }
                 />

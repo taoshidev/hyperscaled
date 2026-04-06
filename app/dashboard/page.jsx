@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Dashboard } from "@/components/dashboard/dashboard";
 import { buildMetadata } from "@/lib/metadata";
 
@@ -14,5 +15,9 @@ export const metadata = buildMetadata({
 });
 
 export default function DashboardPage() {
-  return <Dashboard />;
+  return (
+    <Suspense fallback={<div className="bg-[#09090b] min-h-[100dvh]" />}>
+      <Dashboard />
+    </Suspense>
+  );
 }

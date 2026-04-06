@@ -58,7 +58,7 @@ export default function TraderDashboard({ addr, onClose }) {
               </div>
               <div>
                 <div className="text-sm font-medium text-white">Complete KYC to unlock payouts</div>
-                <div className="text-xs text-zinc-500 mt-0.5">Permissionless identity verification — no personal data stored on-chain. Takes ~2 minutes.</div>
+                <div className="text-xs text-zinc-500 mt-0.5">Fast identity verification to unlock payouts — takes approximately 2 minutes.</div>
               </div>
             </div>
             <a

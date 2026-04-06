@@ -5,8 +5,9 @@ import { reportError } from "@/lib/errors";
 export async function POST(request) {
   const rawBody = await request.text();
   const digest = request.headers.get("x-payload-digest");
+  const digestAlg = request.headers.get("x-payload-digest-alg");
 
-  if (!digest || !verifyWebhookSignature(rawBody, digest)) {
+  if (!digest || !verifyWebhookSignature(rawBody, digest, digestAlg)) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 403 });
   }
 

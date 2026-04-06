@@ -227,14 +227,14 @@ function IntegrationPaths() {
                 { text: '> register  trade  positions  orders  rules  payouts', teal: true },
               ]} />
               <div className="flex items-center gap-3 mt-5">
-                <a href="https://clawhub.com" target="_blank" rel="noreferrer" className="shiny-cta px-4 py-2 text-sm">
+                <a href="https://clawhub.ai/taoshidev1/funded-account" target="_blank" rel="noreferrer" className="shiny-cta px-4 py-2 text-sm">
                   <span className="flex items-center gap-1.5">
                     Install Skill
                     <ArrowRight size={14} weight="bold" />
                   </span>
                 </a>
                 <a
-                  href="https://github.com/taoshidev/hyperscaled-sdk"
+                  href="https://github.com/taoshidev/hyperscaled-sdk/blob/main/.claude/skills/hyperscaled/SKILL.md"
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-white transition-colors"
@@ -524,7 +524,7 @@ function CTABanner() {
               Install the OpenClaw skill or drop the Python SDK directly into your agent workflow.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
-              <a href="https://clawhub.com" target="_blank" rel="noreferrer" className="shiny-cta px-6 py-2.5">
+              <a href="https://clawhub.ai/taoshidev1/funded-account" target="_blank" rel="noreferrer" className="shiny-cta px-6 py-2.5">
                 <span className="flex items-center gap-1.5">
                   Install OpenClaw Skill
                   <ArrowRight size={15} weight="bold" />
@@ -538,13 +538,6 @@ function CTABanner() {
               >
                 Read the Docs <ArrowSquareOut size={14} />
               </a>
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              {['Pydantic outputs', 'Semantic errors', 'Pre-submission rules'].map((chip) => (
-                <span key={chip} className="px-3 py-1 rounded-full border border-white/[0.06] text-xs text-zinc-500">
-                  {chip}
-                </span>
-              ))}
             </div>
           </div>
         </div>

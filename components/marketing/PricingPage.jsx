@@ -24,10 +24,10 @@ const TIER_LABELS = { 'tier-1': 'Tier I', 'tier-2': 'Tier II', 'tier-3': 'Tier I
 /* ── Launch Pricing Banner ── */
 function LaunchBanner() {
   return (
-    <div className="bg-teal-400/10 border-b border-teal-400/20">
+    <div className="mt-16 bg-teal-400/10 border-b border-teal-400/20">
       <div className="max-w-[1400px] mx-auto px-6 py-3 text-center">
         <p className="text-sm text-teal-400 font-medium" style={{ textWrap: 'balance' }}>
-          🟢 Launch Pricing Active — Save up to 50% for a limited&nbsp;time.
+          Launch Pricing Active — Save up to 50% for a limited&nbsp;time.
         </p>
       </div>
     </div>
@@ -37,7 +37,7 @@ function LaunchBanner() {
 /* ── Page Hero ── */
 function PricingHero() {
   return (
-    <section className="pt-32 pb-16 px-6">
+    <section className="pt-16 pb-16 px-6">
       <div className="max-w-[800px] mx-auto text-center">
         <motion.h1
           initial={{ opacity: 0, y: 16 }}
@@ -148,11 +148,11 @@ function PricingCard({ tier, index }) {
 }
 
 /* ── Pricing Cards Grid ── */
-function PricingCards() {
+function PricingCards({ tiers }) {
   return (
     <section className="px-6 pb-20">
       <div className="max-w-[1100px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-5">
-        {PRICING_TIERS.map((tier, i) => (
+        {tiers.map((tier, i) => (
           <PricingCard key={tier.id} tier={tier} index={i} />
         ))}
       </div>
@@ -174,8 +174,8 @@ const INCLUDED_FEATURES = [
   },
   {
     icon: CalendarCheck,
-    title: 'Weekly Payouts',
-    desc: 'Funded traders receive USDC payouts every 7 days.',
+    title: 'Monthly Payouts',
+    desc: 'Funded traders receive USDC payouts monthly.',
   },
   {
     icon: Wallet,
@@ -413,12 +413,12 @@ function PricingFAQSection() {
 }
 
 /* ── Page Compose ── */
-export default function PricingPage() {
+export default function PricingPage({ tiers = PRICING_TIERS }) {
   return (
     <>
       <LaunchBanner />
       <PricingHero />
-      <PricingCards />
+      <PricingCards tiers={tiers} />
       <WhatsIncludedGrid />
       <ModelSection />
       <ScalingSection />

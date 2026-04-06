@@ -15,9 +15,11 @@ import {
   ShieldCheck,
   Crosshair,
 } from "@phosphor-icons/react";
-import { BASESCAN_URL, CHROME_EXTENSION_URL } from "@/lib/constants";
+import { BASESCAN_URL } from "@/lib/constants";
+import ExtensionModal from "@/components/marketing/ExtensionModal";
 import { copyToClipboard } from "@/lib/utils";
 import { formatAccountSize, truncateAddress } from "@/lib/format";
+import { useExtensionBridge } from "@/hooks/use-extension-bridge";
 
 function CopyButton({ text, label }) {
   const [copied, setCopied] = useState(false);
@@ -238,11 +240,15 @@ const itemVariants = {
 
 const POLL_INTERVAL_MS = 5000;
 
-export function StepConfirmation({ selectedTier, hlAddress, txHash, registrationStatus }) {
-  const explorerUrl = `${BASESCAN_URL}/tx/${txHash}`;
+export function StepConfirmation({ selectedTier, hlAddress, txHash, registrationStatus, paymentMethod }) {
+  const isHLPayment = paymentMethod === "hyperliquid" || paymentMethod === "eip712";
+  const explorerUrl = isHLPayment ? null : `${BASESCAN_URL}/tx/${txHash}`;
 
   const [status, setStatus] = useState(registrationStatus || "pending");
+  const [extensionModalOpen, setExtensionModalOpen] = useState(false);
   const intervalRef = useRef(null);
+
+  const { extensionDetected } = useExtensionBridge();
 
   useEffect(() => {
     if (status !== "pending") return;
@@ -296,7 +302,7 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
           />
           <div>
             <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight leading-tight text-balance">
-              You&#8217;re in. Challenge starts&nbsp;now.
+              You&#8217;re registered
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
               Your funded account is being provisioned on Hyperscaled.
@@ -304,8 +310,63 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
           </div>
         </div>
 
+        {/* Extension CTA — first content block */}
+        <div className="w-full mt-8">
+          {extensionDetected ? (
+            /* Extension already installed */
+            <div className="rounded-xl border border-teal-400/20 bg-teal-400/5 px-5 py-4 flex flex-col items-center gap-3">
+              <div className="flex items-center gap-2.5">
+                <CheckCircle size={20} weight="fill" className="text-teal-400 shrink-0" />
+                <p className="text-sm font-semibold text-teal-400">
+                  Extension installed — you&#8217;re ready to&nbsp;trade
+                </p>
+              </div>
+              <Link
+                href="/dashboard"
+                className="shiny-cta h-11 w-full max-w-sm flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                <span className="inline-flex items-center gap-2 text-sm font-semibold">
+                  Go to Dashboard
+                  <ArrowRight size={14} weight="bold" />
+                </span>
+              </Link>
+            </div>
+          ) : (
+            /* Extension not installed */
+            <div className="rounded-xl border border-border bg-zinc-900/50 px-5 py-6 flex flex-col items-center gap-4">
+              <h3 className="text-lg font-bold tracking-tight text-foreground text-balance text-center">
+                Install the Chrome extension to start&nbsp;trading
+              </h3>
+              <p className="text-sm text-muted-foreground text-balance text-center max-w-md">
+                The extension tracks your positions, enforces risk limits, and
+                displays your challenge progress inside Hyperliquid.
+                Required to&nbsp;participate.
+              </p>
+              <button
+                onClick={() => {
+                  const a = document.createElement('a')
+                  a.href = '/hyperscaled_extension.zip'
+                  a.download = 'hyperscaled_extension.zip'
+                  a.click()
+                  setExtensionModalOpen(true)
+                }}
+                className="shiny-cta h-11 w-full flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                <span className="inline-flex items-center gap-2 text-sm font-semibold">
+                  <GoogleChromeLogo size={18} weight="bold" />
+                  Install Chrome Extension
+                </span>
+              </button>
+              <p className="text-xs text-muted-foreground">
+                Available for Chrome and&nbsp;Brave
+              </p>
+              <ExtensionModal open={extensionModalOpen} onClose={() => setExtensionModalOpen(false)} />
+            </div>
+          )}
+        </div>
+
         {/* Receipt card */}
-        <div className="w-full rounded-xl border border-border bg-zinc-900/50 px-5 pt-4 pb-px mt-8">
+        <div className="w-full rounded-xl border border-border bg-zinc-900/50 px-5 pt-4 pb-px mt-6">
           {/* Plan */}
           <div className="flex items-center justify-between py-2.5">
             <span className="text-sm text-muted-foreground">Plan</span>
@@ -336,16 +397,18 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
                 {truncateAddress(txHash)}
               </span>
               <CopyButton text={txHash} label="Copy transaction hash" />
-              <a
-                href={explorerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="View transaction on block explorer"
-                className="ml-1 p-1 min-h-11 min-w-11 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-[color] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-              >
-                <ArrowSquareOut size={14} weight="bold" />
-                <span className="sr-only">(opens in new tab)</span>
-              </a>
+              {explorerUrl && (
+                <a
+                  href={explorerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="View transaction on block explorer"
+                  className="ml-1 p-1 min-h-11 min-w-11 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-[color] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  <ArrowSquareOut size={14} weight="bold" />
+                  <span className="sr-only">(opens in new tab)</span>
+                </a>
+              )}
             </div>
           </div>
           <div className="border-t border-border" />
@@ -376,39 +439,16 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
           </div>
         </div>
 
-        {/* Extension CTA */}
-        <div className="w-full flex flex-col items-center mt-10 gap-4">
-          <h3 className="text-lg font-bold tracking-tight text-foreground text-balance text-center">
-            Install the Chrome extension to start&nbsp;trading
-          </h3>
-          <p className="text-sm text-muted-foreground text-balance text-center max-w-md">
-            The extension tracks your positions, enforces risk limits, and
-            displays your progress inside&nbsp;Hyperliquid.
-          </p>
-          <a
-            href={CHROME_EXTENSION_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="shiny-cta h-11 w-full max-w-sm flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        {/* Dashboard link — secondary, below receipt */}
+        {!extensionDetected && (
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-[color] duration-200 min-h-11 mt-4"
           >
-            <span className="inline-flex items-center gap-2 text-sm font-semibold">
-              <GoogleChromeLogo size={18} weight="bold" />
-              Install Chrome Extension
-            </span>
-          </a>
-          <p className="text-xs text-muted-foreground">
-            Available for Chrome and&nbsp;Brave
-          </p>
-        </div>
-
-        {/* Dashboard link */}
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-[color] duration-200 min-h-11 mt-2"
-        >
-          Go to Dashboard
-          <ArrowRight size={14} weight="bold" />
-        </Link>
+            Go to Dashboard
+            <ArrowRight size={14} weight="bold" />
+          </Link>
+        )}
       </motion.div>
 
       {/* ─── Bottom: "Your Trading Companion" two-column section ─── */}

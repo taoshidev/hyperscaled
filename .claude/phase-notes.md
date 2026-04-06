@@ -2,7 +2,107 @@
 
 ## Current status
 
-Wallet search + metadata + link audit complete. Leaderboard has address search with `?addr=` query param support. Dashboard has address lookup for disconnected users. All pages have OG metadata, favicon, and Twitter card configured. Link audit done — all dead links fixed, Discord URLs corrected, Docs link removed from footer, Chrome Extension URL uses constant.
+Registration Phase 6 complete — checkout UX polish: auto-fill wallet, selected payment border, full addresses on confirm, sidebar removed.
+
+## Registration Phase 6 — Checkout UX Polish (2026-04-02)
+
+### What changed
+- Selected payment card now shows solid teal ring-[1.5px] border in addition to shiny-border effect
+- HL wallet address auto-fills from connected wallet on connect (no button press)
+- "Auto-detect" replaced with "Change" (when populated) / "Connect wallet" (when disconnected)
+- Copy button removed from HL wallet field on Connect & Pay step
+- Full EVM addresses shown on Confirm screen (text-xs, break-all) instead of truncated
+- Help sidebar (RegistrationSidebar, MobileHelpSheet, RegistrationHelpProvider) removed entirely from registration flow
+- Steps 1-2 now use single-column centered layout (max-w-lg) instead of two-column with sidebar
+- Helper text updated to match auto-fill behavior
+- handleHelpFocus/handleHelpBlur calls removed from payment method selectors
+
+### Files modified
+- `components/registration/step-connect-pay.jsx` — wallet auto-fill, copy removal, full addresses, border, removed help hooks
+- `components/registration/registration-flow.jsx` — removed sidebar/help imports, single-column layout
+
+### Verified
+- "Skip payment (dev only)" already gated behind `process.env.NODE_ENV === "development"`
+
+## Registration Phase 4 — Polish Fixes (2026-04-02)
+
+### What changed
+- HL wallet address shows truncated with copy button when valid (click to edit)
+- Removed "How it works" (4 steps) and "One signature, one transfer" sections from payment-eip712 help content
+- Moved requirements text inline under payment method selector (visible when EIP-712 selected)
+- Removed `payment-hl` help entry (dead extension payment method)
+- Updated "Getting Started" fastest-path steps to reflect current flow (no extension install step)
+
+### Files modified
+- `components/registration/step-connect-pay.jsx` — wallet truncation UI, inline requirements hint
+- `components/registration/help-content.jsx` — removed sections, removed payment-hl, updated default steps
+
+## Registration Phase 3 — Decouple Extension from Payment (2026-04-02)
+
+### What changed
+- Removed "Send via Extension" payment method option entirely from Connect & Pay step
+- Removed `extensionDetected` gating from `canPayHL` and `canContinueToConfirm`
+- Removed extension detection status blocks (install prompt + "Extension detected" indicator) from Connect & Pay
+- Removed `handlePayHL` handler, extension verification watcher, and related refs (`hlPaymentParamsRef`, `verificationRunRef`, `callbacksRef`)
+- Removed unused imports: `CurrencyDollar`, `GoogleChromeLogo`, `ExtensionModal`, `useRef`, `initiatePayment`, `paymentStatus`, `paymentSenderAddress`, `registrationResult`
+- Payment grid changed from 3-col to 2-col (only "Pay with Hyperliquid" + "Pay with Wallet")
+- Success screen (`step-confirmation.jsx`) restructured:
+  - Extension CTA is now the first content block after success header
+  - If extension detected: shows "Extension installed — you're ready to trade" + prominent dashboard link
+  - If not detected: shows install heading, description ("Required to participate"), full-width install button, "Available for Chrome and Brave"
+  - Receipt card moved below extension CTA
+  - Secondary "Go to Dashboard" text link shown only when extension not installed (when installed, the dashboard link is in the prominent CTA block)
+- `useExtensionBridge` added to `StepConfirmation` for extension detection
+- `isHLPayment` now includes `paymentMethod === "eip712"` (no explorer URL for HL payments regardless of method)
+
+### Key decisions
+- Extension detection kept via `useExtensionBridge` hook — only moved where it's evaluated (success screen, not payment flow)
+- Extension bridge hook still runs its detection logic (DOM markers, postMessage pings) — no changes to `hooks/use-extension-bridge.js`
+- `resetPaymentStatus` kept in step-connect-pay.jsx (used by Base payment method selection)
+
+## Registration Phase 2 — usdSend EIP-712 (2026-04-02)
+
+### What changed
+- Created `lib/hl-payment.js` — utility functions for usdSend EIP-712 signing and submission
+  - `buildUsdSendTypes()`, `buildUsdSendDomain()`, `buildUsdSendMessage()`, `submitUsdSend()`
+- Replaced `sendAsset` action with `usdSend` in `handlePayEIP712` handler
+  - `sendAsset` used spot-to-spot transfer with 8 typed fields
+  - `usdSend` uses perps account transfer with 4 typed fields (simpler)
+- Added inline progress steps during EIP-712 payment: Signing → Submitting → Verifying → Provisioning
+  - Reuses existing `PaymentStep` component from extension flow
+- Added `eip712Step` state to track progress granularity
+- Added backend TODO comment in `lib/hl-payment.js` for WebSocket listener
+- Added env vars `NEXT_PUBLIC_HL_RECEIVING_WALLET` and `NEXT_PUBLIC_HL_CHAIN` to `.env.example`
+- Base and Extension payment paths untouched
+
+### Key decisions
+- Used existing `HL_SIGNING_CHAIN_ID`, `HL_CHAIN_NAME`, `HL_API_URL` from `lib/constants.js` rather than the `NEXT_PUBLIC_HL_CHAIN` env var pattern from the spec (avoids duplication)
+- The `hl-payment.js` utility imports from constants rather than reading env vars directly
+- Transfer hash lookup still checks `userNonFundingLedgerUpdates` but matches `type: "usdSend"` instead of `type: "send"`
+
+## Previous status
+
+Fixes batch complete. Payout frequency updated from weekly/7-day to monthly across all pages. Tradeable pairs added to EVAL_RULES. Telegram bot link in footer. Nav collapse tightened. Homepage Step 01/02 mockups fixed. Permissionless banner removed. Pricing emoji removed. Agents tags removed. Partners copy + spacing fixed.
+
+## Fixes Batch Session (2026-03-28)
+
+### Payout frequency: weekly → monthly
+- Updated 20+ instances across lib/constants.js, lib/pricing.js, HowItWorks.jsx, HowItWorksPage.jsx, PricingPage.jsx, RulesPage.jsx, Solution.jsx, layout.jsx, and all page metadata
+- FUNDED_RULES payout cycle → "Monthly", PRICING_TIERS payoutCycle → "Monthly"
+- FAQ answers updated (7-day cycle → monthly cycle)
+- Verified: only remaining "weekly" is sitemap.js changeFrequency (not payout-related)
+
+### Other fixes
+- Added Tradeable Pairs row to EVAL_RULES in lib/constants.js
+- Footer: added Telegram Bot link with TelegramLogo icon to Community column
+- Nav: Rules moved to always-visible group (md+), Partners/Dashboard/Leaderboard/FAQ collapse at xl
+- Homepage Step 01: replaced price mockup with tier labels (Tier I · $25K, etc.)
+- Homepage Step 02: "Challenge: Phase 1" → "Challenge: One-Step"
+- Homepage: removed "Permissionless. Open-Source. Onchain." banner from Solution.jsx
+- Pricing: removed 🟢 emoji from launch banner
+- Agents: removed "Pydantic outputs", "Semantic errors", "Pre-submission rules" tags from bottom CTA
+- Partners: added periods to "Set your profit split" and "Permissionless scaling" card bodies
+- Partners: increased Division of Responsibility section spacing (pt-20 pb-24, mt-12 gap)
 
 ## Search + Meta + Links Session (2026-03-26)
 

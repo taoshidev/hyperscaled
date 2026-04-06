@@ -7,18 +7,24 @@ import {
   encodePaymentResponseHeader,
 } from "@x402/core/http";
 import { getMinerBySlug, getTiersForMiner, TIERS } from "@/lib/miners";
-import { isValidHLAddress, isValidEvmAddress } from "@/lib/validation";
+import { isValidHLAddress, isValidEvmAddress, isValidEmail } from "@/lib/validation";
 import { USDC_ADDRESS, USDC_DECIMALS, USDC_EIP712_NAME, USDC_EIP712_VERSION, BASE_NETWORK, FACILITATOR_URL, BASESCAN_URL } from "@/lib/constants";
 import { db } from "@/lib/db";
 import { users, registrations } from "@/lib/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { facilitator as cdpFacilitator } from "@coinbase/x402";
+import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
 
 const USE_TESTNET = process.env.USE_TESTNET === "true";
 
 const facilitator = USE_TESTNET
   ? new HTTPFacilitatorClient({ url: FACILITATOR_URL })
   : new HTTPFacilitatorClient(cdpFacilitator);
+
+function escapeHtml(str) {
+  if (typeof str !== "string") str = String(str ?? "");
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
 
 function sanitizeApiKey(key) {
   if (key == null) return null;
@@ -103,10 +109,25 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { minerSlug, hlAddress, accountSize, payoutAddress, email, tierIndex, affiliateUtm } = body;
+  const {
+    minerSlug,
+    hlAddress,
+    accountSize,
+    payoutAddress,
+    email,
+    tierIndex,
+    affiliateUtm,
+    paymentMethod,
+    hlTransferHash,
+    hlTransferSender,
+  } = body;
 
   if (!minerSlug || !hlAddress || !accountSize || !email || tierIndex == null) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  }
+
+  if (!isValidEmail(email)) {
+    return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
   }
 
   const miner = await getMinerBySlug(minerSlug);
@@ -131,6 +152,10 @@ export async function POST(request) {
 
   const tier = activeTiers[tierIndex];
 
+  if (accountSize !== tier.accountSize) {
+    return NextResponse.json({ error: "Account size does not match selected tier" }, { status: 400 });
+  }
+
   // Reject duplicate registrations — don't let users pay twice for the same miner + HL address
   try {
     const [existing] = await db
@@ -146,113 +171,294 @@ export async function POST(request) {
       .limit(1);
 
     if (existing) {
-      const msg =
-        existing.status === "registered"
-          ? "This HL address is already registered with this miner."
-          : "A registration for this HL address is already being processed. Please wait for it to complete.";
-      return NextResponse.json({ error: msg }, { status: 409 });
+      if (existing.status === "registered") {
+        // Before blocking, check the validator — the user may have been de-registered
+        // externally, leaving the DB out of sync.
+        const validatorStatus = await checkValidatorStatus(hlAddress);
+        if (isConfirmedDeregistered(validatorStatus.status)) {
+          // Validator confirms they're no longer active — sync the DB and allow re-registration
+          await db
+            .update(registrations)
+            .set({
+              status: "deregistered",
+              statusDetail: {
+                deregisteredAt: new Date().toISOString(),
+                validatorStatus: validatorStatus.status,
+              },
+              updatedAt: new Date(),
+            })
+            .where(eq(registrations.id, existing.id));
+          console.info("[register] De-registration detected — DB synced, allowing re-registration", {
+            hlAddress,
+            minerSlug,
+            validatorStatus: validatorStatus.status,
+          });
+          // Fall through — allow the registration to proceed
+        } else {
+          // Active on validator (or validator unreachable — safe default: block)
+          return NextResponse.json(
+            { error: "This HL address is already registered with this miner." },
+            { status: 409 },
+          );
+        }
+      } else {
+        // pending — payment already recorded, don't risk a double-charge
+        return NextResponse.json(
+          { error: "A registration for this HL address is already being processed. Please wait for it to complete." },
+          { status: 409 },
+        );
+      }
     }
   } catch (err) {
     console.error("[register] Duplicate check failed:", err.message);
     // Continue — better to risk a duplicate than block a legitimate registration
   }
 
-  const { requirements, paymentRequired, minerWallet, price } = buildPaymentRequirements(
-    miner,
-    tier,
-    request.url,
-  );
+  // Compute wallet and price early — both payment paths need them
+  const minerWallet = miner.usdcWallet;
+  const price = Number(tier.priceUsdc);
 
   if (!minerWallet) {
     return NextResponse.json({ error: "Miner wallet not configured" }, { status: 500 });
   }
 
-  const paymentSignatureHeader = request.headers.get("payment-signature");
+  let txHash;
+  let effectivePayoutAddress;
+  let settleResult = null;
 
-  if (!paymentSignatureHeader) {
-    const encoded = encodePaymentRequiredHeader(paymentRequired);
-    return new Response(JSON.stringify(paymentRequired), {
-      status: 402,
-      headers: {
-        "Content-Type": "application/json",
-        "PAYMENT-REQUIRED": encoded,
-      },
+  // ── Hyperliquid payment path (extension "hyperliquid" + direct "eip712") ──
+  if (paymentMethod === "hyperliquid" || paymentMethod === "eip712") {
+    console.info("[register] hyperliquid branch entered", {
+      minerSlug,
+      minerWallet,
+      hlAddress,
+      payoutAddress,
+      tierIndex,
+      price,
+      hasTransferHash: Boolean(hlTransferHash),
     });
-  }
 
-  let paymentPayload;
-  try {
-    paymentPayload = decodePaymentSignatureHeader(paymentSignatureHeader);
-  } catch {
-    return NextResponse.json({ error: "Invalid payment signature" }, { status: 400 });
-  }
+    if (!hlTransferHash) {
+      return NextResponse.json({ error: "Missing HL transfer hash" }, { status: 400 });
+    }
 
-  let verifyResult;
-  try {
-    verifyResult = await facilitator.verify(paymentPayload, requirements);
-  } catch (err) {
-    reportCritical(err, {
-      source: "api/register",
-      metadata: { step: "facilitator_verify" },
-    });
-    return NextResponse.json(
-      { error: `Payment verification failed: ${err?.message || "unknown error"}` },
-      { status: 502 },
+    const normalizedTxHash = String(hlTransferHash).toLowerCase().startsWith("0x")
+      ? String(hlTransferHash).toLowerCase()
+      : null;
+
+    if (!normalizedTxHash) {
+      return NextResponse.json({ error: "Invalid HL transfer hash format" }, { status: 400 });
+    }
+
+    // Reject reuse — same tx hash must not register twice
+    try {
+      const [existingTx] = await db
+        .select({ id: registrations.id })
+        .from(registrations)
+        .where(eq(registrations.txHash, hlTransferHash))
+        .limit(1);
+
+      if (existingTx) {
+        return NextResponse.json(
+          { error: "This transaction has already been used for a registration." },
+          { status: 409 },
+        );
+      }
+    } catch (err) {
+      console.error("[register] txHash uniqueness check failed:", err.message);
+    }
+
+    // Verify the transfer on Hyperliquid — exact hash match only, no sender-based fallback
+    const hlApiUrl = USE_TESTNET
+      ? "https://api.hyperliquid-testnet.xyz"
+      : "https://api.hyperliquid.xyz";
+
+    let transferVerified = false;
+    try {
+      const verifyRes = await fetch(hlApiUrl + "/info", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "userNonFundingLedgerUpdates",
+          user: minerWallet,
+        }),
+      });
+
+      if (verifyRes.ok) {
+        const updates = await verifyRes.json();
+        const now = Date.now();
+        const TEN_MINUTES = 10 * 60 * 1000;
+
+        if (Array.isArray(updates)) {
+          for (const update of updates) {
+            const delta = update.delta;
+            if (!delta || delta.type !== "send") continue;
+            if (delta.token !== "USDC") continue;
+
+            const updateHash = (update.hash || "").toLowerCase();
+            if (updateHash !== normalizedTxHash) continue;
+
+            // Exact hash matched — validate sender, amount, and recency
+            const transferSender = (delta.user || "").toLowerCase();
+            const transferAmount = Number(delta.amount || delta.usdcValue || 0);
+            const isRecent = (now - (update.time || 0)) < TEN_MINUTES;
+
+            // Log if sender differs from hlAddress (cross-wallet payment is allowed)
+            if (transferSender !== hlAddress.toLowerCase()) {
+              console.info("[register] HL sender differs from hlAddress (cross-wallet payment)", {
+                minerSlug,
+                txHash: update.hash,
+                hlAddress,
+                actualSender: transferSender,
+                claimedSender: hlTransferSender || "not provided",
+              });
+            }
+
+            if (Math.abs(transferAmount - price) >= 0.01) {
+              console.warn("[register] HL amount mismatch on hash match", {
+                minerSlug,
+                txHash: update.hash,
+                expected: price,
+                actual: transferAmount,
+              });
+              return NextResponse.json(
+                { error: "Transfer amount does not match the expected price." },
+                { status: 400 },
+              );
+            }
+
+            if (!isRecent) {
+              console.warn("[register] HL transfer too old", {
+                minerSlug,
+                txHash: update.hash,
+                transferTime: update.time,
+              });
+              return NextResponse.json(
+                { error: "Transfer is too old. Please make a new transfer." },
+                { status: 400 },
+              );
+            }
+
+            transferVerified = true;
+            console.info("[register] hyperliquid transfer verified (exact hash)", {
+              minerSlug,
+              txHash: update.hash,
+              transferSender,
+              transferAmount,
+              transferTime: update.time,
+            });
+            break;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("[register] HL transfer verification error:", err.message);
+    }
+
+    if (!transferVerified) {
+      return NextResponse.json(
+        { error: "Could not verify Hyperliquid transfer. Ensure you sent the correct amount from your registered wallet." },
+        { status: 400 },
+      );
+    }
+
+    txHash = hlTransferHash;
+    effectivePayoutAddress = payoutAddress || hlAddress;
+
+  // ── x402 payment path (Base chain USDC) ───────────────────────────────────
+  } else {
+    const { requirements, paymentRequired } = buildPaymentRequirements(
+      miner,
+      tier,
+      request.url,
     );
-  }
 
-  if (!verifyResult?.isValid) {
-    reportError(new Error("Payment verification invalid"), {
-      source: "api/register",
-      severity: SEVERITY.ERROR,
-      metadata: { step: "facilitator_verify", reason: verifyResult?.invalidReason },
-    });
-    const encoded = encodePaymentRequiredHeader(paymentRequired);
-    return new Response(
-      JSON.stringify({ ...paymentRequired, error: verifyResult?.invalidReason || "Payment verification failed" }),
-      {
+    const paymentSignatureHeader = request.headers.get("payment-signature");
+
+    if (!paymentSignatureHeader) {
+      const encoded = encodePaymentRequiredHeader(paymentRequired);
+      return new Response(JSON.stringify(paymentRequired), {
         status: 402,
         headers: {
           "Content-Type": "application/json",
           "PAYMENT-REQUIRED": encoded,
         },
-      },
-    );
-  }
+      });
+    }
 
-  let settleResult;
-  try {
-    settleResult = await facilitator.settle(paymentPayload, requirements);
-  } catch (err) {
-    reportCritical(err, {
-      source: "api/register",
-      metadata: { step: "facilitator_settle" },
-    });
-    return NextResponse.json(
-      {
-        error: "Payment settlement failed",
-        message: "Your payment was verified but settlement failed. Please contact support.",
-      },
-      { status: 500 },
-    );
-  }
+    let paymentPayload;
+    try {
+      paymentPayload = decodePaymentSignatureHeader(paymentSignatureHeader);
+    } catch {
+      return NextResponse.json({ error: "Invalid payment signature" }, { status: 400 });
+    }
 
-  if (!settleResult?.success) {
-    reportCritical(new Error("Payment settlement unsuccessful"), {
-      source: "api/register",
-      metadata: { step: "facilitator_settle", reason: settleResult?.errorReason },
-    });
-    return NextResponse.json(
-      {
-        error: "Payment settlement was not successful",
-        message: settleResult?.errorReason || settleResult?.errorMessage || "The facilitator could not complete the on-chain transfer. Please try again.",
-      },
-      { status: 500 },
-    );
-  }
+    let verifyResult;
+    try {
+      verifyResult = await facilitator.verify(paymentPayload, requirements);
+    } catch (err) {
+      reportCritical(err, {
+        source: "api/register",
+        metadata: { step: "facilitator_verify" },
+      });
+      return NextResponse.json(
+        { error: `Payment verification failed: ${err?.message || "unknown error"}` },
+        { status: 502 },
+      );
+    }
 
-  const txHash = settleResult?.transaction || "";
-  const effectivePayoutAddress = payoutAddress || paymentPayload?.payload?.authorization?.from;
+    if (!verifyResult?.isValid) {
+      reportError(new Error("Payment verification invalid"), {
+        source: "api/register",
+        severity: SEVERITY.ERROR,
+        metadata: { step: "facilitator_verify", reason: verifyResult?.invalidReason },
+      });
+      const encoded = encodePaymentRequiredHeader(paymentRequired);
+      return new Response(
+        JSON.stringify({ ...paymentRequired, error: verifyResult?.invalidReason || "Payment verification failed" }),
+        {
+          status: 402,
+          headers: {
+            "Content-Type": "application/json",
+            "PAYMENT-REQUIRED": encoded,
+          },
+        },
+      );
+    }
+
+    try {
+      settleResult = await facilitator.settle(paymentPayload, requirements);
+    } catch (err) {
+      reportCritical(err, {
+        source: "api/register",
+        metadata: { step: "facilitator_settle" },
+      });
+      return NextResponse.json(
+        {
+          error: "Payment settlement failed",
+          message: "Your payment was verified but settlement failed. Please contact support.",
+        },
+        { status: 500 },
+      );
+    }
+
+    if (!settleResult?.success) {
+      reportCritical(new Error("Payment settlement unsuccessful"), {
+        source: "api/register",
+        metadata: { step: "facilitator_settle", reason: settleResult?.errorReason },
+      });
+      return NextResponse.json(
+        {
+          error: "Payment settlement was not successful",
+          message: settleResult?.errorReason || settleResult?.errorMessage || "The facilitator could not complete the on-chain transfer. Please try again.",
+        },
+        { status: 500 },
+      );
+    }
+
+    txHash = settleResult?.transaction || "";
+    effectivePayoutAddress = payoutAddress || paymentPayload?.payload?.authorization?.from;
+  }
 
   // Upsert user record
   let userId = null;
@@ -348,7 +554,10 @@ export async function POST(request) {
       priceUsdc: String(price),
       txHash,
       status: registered ? "registered" : "pending",
-      statusDetail,
+      statusDetail: {
+        paymentMethod: paymentMethod || "x402",
+        ...(statusDetail || {}),
+      },
     });
   } catch (err) {
     reportCritical(err, {
@@ -424,14 +633,14 @@ function registeredEmailHtml(miner, accountSize, hlAddress, payoutAddress, txHas
       </div>
       <div style="background: #1a1a1a; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
         <table style="width: 100%; font-size: 14px;" cellpadding="8">
-          <tr><td style="color: #888;">Firm</td><td style="text-align: right; font-weight: 600;">${miner.name}</td></tr>
-          <tr><td style="color: #888;">Account Size</td><td style="text-align: right; font-weight: 600;">$${accountSize.toLocaleString()}</td></tr>
-          <tr><td style="color: #888;">HL Wallet</td><td style="text-align: right; font-family: monospace; font-size: 12px;">${hlAddress}</td></tr>
-          <tr><td style="color: #888;">Payout Wallet</td><td style="text-align: right; font-family: monospace; font-size: 12px;">${payoutAddress}</td></tr>
+          <tr><td style="color: #888;">Firm</td><td style="text-align: right; font-weight: 600;">${escapeHtml(miner.name)}</td></tr>
+          <tr><td style="color: #888;">Account Size</td><td style="text-align: right; font-weight: 600;">$${escapeHtml(accountSize.toLocaleString())}</td></tr>
+          <tr><td style="color: #888;">HL Wallet</td><td style="text-align: right; font-family: monospace; font-size: 12px;">${escapeHtml(hlAddress)}</td></tr>
+          <tr><td style="color: #888;">Payout Wallet</td><td style="text-align: right; font-family: monospace; font-size: 12px;">${escapeHtml(payoutAddress)}</td></tr>
         </table>
       </div>
       <div style="text-align: center;">
-        <a href="${BASESCAN_URL}/tx/${txHash}" style="color: ${miner.color}; font-size: 14px;">View transaction on BaseScan \u2192</a>
+        <a href="${BASESCAN_URL}/tx/${encodeURIComponent(txHash)}" style="color: ${escapeHtml(miner.color)}; font-size: 14px;">View transaction on BaseScan \u2192</a>
       </div>
       <p style="text-align: center; color: #555; font-size: 12px; margin-top: 32px;">Hyperscaled \u2014 The Decentralized Prop Trading Network</p>
     </div>
@@ -444,21 +653,21 @@ function pendingEmailHtml(miner, accountSize, hlAddress, payoutAddress, txHash) 
       <div style="text-align: center; margin-bottom: 32px;">
         <div style="font-size: 48px;">\u231B</div>
         <h1 style="font-size: 24px; font-weight: 700; margin: 16px 0 8px;">Registration Pending</h1>
-        <p style="color: #888; font-size: 14px;">Your payment is confirmed. Account setup with ${miner.name} is in progress.</p>
+        <p style="color: #888; font-size: 14px;">Your payment is confirmed. Account setup with ${escapeHtml(miner.name)} is in progress.</p>
       </div>
       <div style="background: #1a1a1a; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
         <table style="width: 100%; font-size: 14px;" cellpadding="8">
-          <tr><td style="color: #888;">Firm</td><td style="text-align: right; font-weight: 600;">${miner.name}</td></tr>
-          <tr><td style="color: #888;">Account Size</td><td style="text-align: right; font-weight: 600;">$${accountSize.toLocaleString()}</td></tr>
-          <tr><td style="color: #888;">HL Wallet</td><td style="text-align: right; font-family: monospace; font-size: 12px;">${hlAddress}</td></tr>
-          <tr><td style="color: #888;">Payout Wallet</td><td style="text-align: right; font-family: monospace; font-size: 12px;">${payoutAddress}</td></tr>
+          <tr><td style="color: #888;">Firm</td><td style="text-align: right; font-weight: 600;">${escapeHtml(miner.name)}</td></tr>
+          <tr><td style="color: #888;">Account Size</td><td style="text-align: right; font-weight: 600;">$${escapeHtml(accountSize.toLocaleString())}</td></tr>
+          <tr><td style="color: #888;">HL Wallet</td><td style="text-align: right; font-family: monospace; font-size: 12px;">${escapeHtml(hlAddress)}</td></tr>
+          <tr><td style="color: #888;">Payout Wallet</td><td style="text-align: right; font-family: monospace; font-size: 12px;">${escapeHtml(payoutAddress)}</td></tr>
         </table>
       </div>
       <div style="background: #2a2000; border: 1px solid #554400; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
         <p style="color: #eab308; font-size: 14px; margin: 0;">\u26A0\uFE0F Your payment was received but we could not automatically create your account. Our team will set it up manually and notify you once it's ready.</p>
       </div>
       <div style="text-align: center;">
-        <a href="${BASESCAN_URL}/tx/${txHash}" style="color: ${miner.color}; font-size: 14px;">View transaction on BaseScan \u2192</a>
+        <a href="${BASESCAN_URL}/tx/${encodeURIComponent(txHash)}" style="color: ${escapeHtml(miner.color)}; font-size: 14px;">View transaction on BaseScan \u2192</a>
       </div>
       <p style="text-align: center; color: #555; font-size: 12px; margin-top: 32px;">Hyperscaled \u2014 The Decentralized Prop Trading Network</p>
     </div>

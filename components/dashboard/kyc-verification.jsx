@@ -2,15 +2,17 @@
 
 import { useState, useCallback } from "react";
 import { ShieldCheck, ShieldAlert, Clock, Shield } from "lucide-react";
+import { Warning } from "@phosphor-icons/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useKycStatus, useKycToken } from "@/hooks/use-kyc";
 import { useQueryClient } from "@tanstack/react-query";
 import SumsubWebSdk from "@sumsub/websdk-react";
+import { truncateAddress } from "@/lib/format";
 
-export function KycVerification({ wallet }) {
-  const { data: kyc, isLoading } = useKycStatus(wallet);
-  const tokenMutation = useKycToken(wallet);
+export function KycVerification({ hlAddress, connectedWallet }) {
+  const { data: kyc, isLoading } = useKycStatus(hlAddress);
+  const tokenMutation = useKycToken(hlAddress, connectedWallet);
   const queryClient = useQueryClient();
   const [sdkToken, setSdkToken] = useState(null);
   const [showSdk, setShowSdk] = useState(false);
@@ -39,10 +41,10 @@ export function KycVerification({ wallet }) {
   const handleMessage = useCallback(
     (event) => {
       if (event === "idCheck.onApplicantSubmitted") {
-        queryClient.invalidateQueries({ queryKey: ["kyc-status", wallet] });
+        queryClient.invalidateQueries({ queryKey: ["kyc-status", hlAddress] });
       }
     },
-    [queryClient, wallet],
+    [queryClient, hlAddress],
   );
 
   const handleError = useCallback((err) => {
@@ -51,6 +53,14 @@ export function KycVerification({ wallet }) {
   }, []);
 
   if (isLoading || !kyc) return null;
+
+  // Check if the connected wallet is authorized to KYC for this HL address
+  // Allowed: the HL address itself, the payment wallet, or the payout address
+  const connLower = connectedWallet?.toLowerCase();
+  const isAuthorized =
+    connLower &&
+    (connLower === hlAddress?.toLowerCase() ||
+      (kyc.authorizedWallets || []).includes(connLower));
 
   // Already showing SDK widget
   if (showSdk && sdkToken) {
@@ -70,6 +80,9 @@ export function KycVerification({ wallet }) {
 
   const status = kyc.kycStatus;
 
+  // Show approved/pending status regardless of authorization (informational)
+  // But gate actionable states (none, rejected) behind authorization
+
   if (status === "approved") {
     return (
       <Card className="border-green-500/30 bg-green-500/5">
@@ -85,6 +98,26 @@ export function KycVerification({ wallet }) {
                 {new Date(kyc.verifiedAt).toLocaleDateString()}
               </p>
             )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // For any actionable KYC state, require wallet authorization
+  if (!isAuthorized && status !== "pending") {
+    return (
+      <Card className="border-amber-500/30 bg-amber-500/5">
+        <CardContent className="p-4 flex items-center gap-3">
+          <Warning size={20} weight="duotone" className="text-amber-500 shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-amber-500">
+              Wallet Mismatch
+            </p>
+            <p className="text-xs text-muted-foreground">
+              To verify identity for this address, connect the wallet that registered this account
+              {hlAddress ? ` or ${truncateAddress(hlAddress)} directly` : ""}.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -134,14 +167,16 @@ export function KycVerification({ wallet }) {
               Your identity verification is being reviewed.
             </p>
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleStart}
-            disabled={tokenMutation.isPending}
-          >
-            Continue Verification
-          </Button>
+          {isAuthorized && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleStart}
+              disabled={tokenMutation.isPending}
+            >
+              Continue Verification
+            </Button>
+          )}
           {error && (
             <p className="text-xs text-red-500 mt-1">{error}</p>
           )}

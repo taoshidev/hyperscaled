@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isValidEvmAddress } from "@/lib/validation";
-import { getUserByWallet } from "@/lib/sumsub";
+import { getUserByWallet, getAuthorizedWalletsForHlAddress } from "@/lib/sumsub";
 import { reportError } from "@/lib/errors";
 
 export async function GET(request) {
@@ -15,7 +15,10 @@ export async function GET(request) {
   }
 
   try {
-    const user = await getUserByWallet(wallet);
+    const [user, authorizedWallets] = await Promise.all([
+      getUserByWallet(wallet),
+      getAuthorizedWalletsForHlAddress(wallet),
+    ]);
 
     if (!user) {
       return NextResponse.json({
@@ -23,6 +26,7 @@ export async function GET(request) {
         kycStatus: "none",
         verified: false,
         verifiedAt: null,
+        authorizedWallets,
       });
     }
 
@@ -31,6 +35,7 @@ export async function GET(request) {
       kycStatus: user.kycStatus,
       verified: user.kycStatus === "approved",
       verifiedAt: user.kycVerifiedAt,
+      authorizedWallets,
     });
   } catch (err) {
     reportError(err, { source: "api/kyc/status" });

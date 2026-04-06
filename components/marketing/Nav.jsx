@@ -4,24 +4,25 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight, DownloadSimple, List, X } from '@phosphor-icons/react'
-import { CHROME_EXTENSION_URL } from '@/lib/constants'
+import ExtensionModal from '@/components/marketing/ExtensionModal'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
 /*
   Progressive responsive collapse:
-  - xl+ (>1280px): all 7 links visible, no hamburger
-  - lg–xl (1024–1280px): How It Works, Pricing, For Agents, Rules visible
-  - md–lg (768–1024px): How It Works, Pricing, For Agents visible
+  - xl+ (>1280px): all 8 links visible, no hamburger
+  - md–xl (768–1280px): How It Works, Pricing, For Agents, Rules visible
   - <md (<768px): all links in hamburger only
 
-  Priority (stays visible longest): How It Works → Pricing → For Agents
+  Always visible at desktop: How It Works → Pricing → For Agents → Rules
+  Collapse to hamburger: Partners → Dashboard → Leaderboard → FAQ
 */
 const NAV_LINKS = [
   { label: 'How It Works', href: '/how-it-works', visibility: 'hidden md:block' },
   { label: 'Pricing', href: '/pricing', visibility: 'hidden md:block' },
   { label: 'For Agents', href: '/agents', visibility: 'hidden md:block' },
   { label: 'Rules', href: '/rules', visibility: 'hidden lg:block' },
+  { label: 'Dashboard', href: '/dashboard', visibility: 'hidden lg:block' },
   { label: 'Leaderboard', href: '/leaderboard', visibility: 'hidden xl:block' },
   { label: 'Partners', href: '/partners', visibility: 'hidden xl:block' },
   { label: 'FAQ', href: '/faq', visibility: 'hidden xl:block' },
@@ -29,8 +30,20 @@ const NAV_LINKS = [
 
 export default function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [extensionOpen, setExtensionOpen] = useState(false)
+
+  function handleExtensionClick() {
+    // Trigger download
+    const a = document.createElement('a')
+    a.href = '/hyperscaled_extension.zip'
+    a.download = 'hyperscaled_extension.zip'
+    a.click()
+    // Open install instructions
+    setExtensionOpen(true)
+  }
 
   return (
+    <>
     <motion.header
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
@@ -44,9 +57,9 @@ export default function Nav() {
           <span className="text-[10px] font-semibold uppercase tracking-widest text-teal-400 border border-teal-400/30 bg-teal-400/10 rounded px-1.5 py-0.5 leading-none">Beta</span>
         </Link>
 
-        {/* Desktop nav — absolutely centered in header */}
-        <nav className="hidden md:flex items-center justify-center gap-6 absolute inset-0 pointer-events-none">
-          <div className="flex items-center gap-6 pointer-events-auto">
+        {/* Desktop nav — centered between logo and CTA */}
+        <nav className="hidden md:flex items-center justify-center flex-1 min-w-0 mx-4">
+          <div className="flex items-center gap-6 overflow-hidden">
           {NAV_LINKS.map((l) => (
             <Link
               key={l.label}
@@ -61,15 +74,14 @@ export default function Nav() {
 
         {/* CTA + hamburger */}
         <div className="flex items-center gap-3 shrink-0 relative z-10">
-          <a
-            href={CHROME_EXTENSION_URL}
-            target="_blank"
-            rel="noreferrer"
+          <button
+            type="button"
+            onClick={handleExtensionClick}
             className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors px-3 py-2 rounded-lg border border-white/[0.08] bg-zinc-900/80"
           >
             <DownloadSimple size={15} weight="bold" />
             Extension
-          </a>
+          </button>
           <Link
             href="/register"
             className="shiny-cta px-5 py-2"
@@ -119,5 +131,8 @@ export default function Nav() {
         )}
       </AnimatePresence>
     </motion.header>
+
+    <ExtensionModal open={extensionOpen} onClose={() => setExtensionOpen(false)} />
+    </>
   )
 }

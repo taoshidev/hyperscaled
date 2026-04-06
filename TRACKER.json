@@ -1,6 +1,6 @@
 {
   "project": "Hyperscaled Marketing Website",
-  "lastUpdated": "2026-03-26T18:00:00Z",
+  "lastUpdated": "2026-04-02T20:00:00Z",
   "phases": [
     {
       "id": 0, "name": "Global Compliance Sweep", "status": "done",
@@ -240,6 +240,98 @@
         { "name": "Fix Leaderboard text-[10px] → text-xs", "status": "done" },
         { "name": "Remove Figma MCP capture script from layout", "status": "done" }
       ]
+    },
+    {
+      "id": 14, "name": "Fixes Batch — Payouts, Nav, Homepage, Pricing, Partners, Agents", "status": "done",
+      "scope": "Global payout language, nav, homepage, pricing, partners, agents, footer, rules", "estSessions": "1 session", "estHours": 1,
+      "dependsOn": [13],
+      "sessions": [{ "session": 16, "date": "2026-03-28", "notes": "Payout frequency weekly→monthly across all pages, tradeable pairs in EVAL_RULES, Telegram bot in footer, nav collapse tightened, homepage Step 01/02 fixes, removed Permissionless banner, pricing emoji removed, agents tags removed, partners copy+spacing fixes" }],
+      "items": [
+        { "name": "Global payout frequency: weekly/7-day → monthly", "status": "done" },
+        { "name": "Add Tradeable Pairs to EVAL_RULES", "status": "done" },
+        { "name": "Footer: add Telegram Bot link", "status": "done" },
+        { "name": "Nav: tighten progressive collapse", "status": "done" },
+        { "name": "Homepage Step 01: replace prices with tier labels", "status": "done" },
+        { "name": "Homepage Step 02: Phase 1 → One-Step", "status": "done" },
+        { "name": "Homepage: remove Permissionless/Open-Source/Onchain banner", "status": "done" },
+        { "name": "Pricing: remove green circle emoji from launch banner", "status": "done" },
+        { "name": "Agents: remove bottom CTA tags", "status": "done" },
+        { "name": "Partners: add periods to card bodies, fix Division of Responsibility spacing", "status": "done" }
+      ]
+    },
+    {
+      "id": 15, "name": "Registration Phase 1 — Confirm Step", "status": "done",
+      "scope": "Registration flow", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [],
+      "sessions": [{ "session": 17, "date": "2026-04-02", "notes": "4-step flow (Select Plan → Connect & Pay → Confirm → Done), removed email field, explicit HL wallet with Auto-detect, new Confirm step with inline payout edit" }],
+      "items": [
+        { "name": "Remove email field from all steps and state", "status": "done" },
+        { "name": "Explicit HL wallet field with Auto-detect button", "status": "done" },
+        { "name": "New Confirm step with review card", "status": "done" },
+        { "name": "Inline payout wallet edit with validation", "status": "done" },
+        { "name": "Confirmation checkbox resets on payout change", "status": "done" },
+        { "name": "4-step stepper (Select Plan, Connect & Pay, Confirm, Done)", "status": "done" },
+        { "name": "Payment flow unchanged", "status": "done" }
+      ]
+    },
+    {
+      "id": 16, "name": "Registration Phase 2 — Native usdSend EIP-712 Payment", "status": "done",
+      "scope": "Registration flow, lib/hl-payment.js", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [15],
+      "sessions": [{ "session": 18, "date": "2026-04-02", "notes": "Replaced sendAsset with usdSend EIP-712, added lib/hl-payment.js utility, inline progress steps, backend TODO comment, env vars" }],
+      "items": [
+        { "name": "Create lib/hl-payment.js utility", "status": "done" },
+        { "name": "Replace sendAsset with usdSend in EIP-712 handler", "status": "done" },
+        { "name": "Inline progress states (Signing, Submitting, Verifying, Provisioning)", "status": "done" },
+        { "name": "Backend WebSocket TODO comment", "status": "done" },
+        { "name": "Env vars NEXT_PUBLIC_HL_RECEIVING_WALLET + NEXT_PUBLIC_HL_CHAIN", "status": "done" },
+        { "name": "Base payment path unchanged", "status": "done" },
+        { "name": "Extension payment path unchanged", "status": "done" }
+      ]
+    },
+    {
+      "id": 17, "name": "Registration Phase 3 — Decouple Extension from Payment", "status": "done",
+      "scope": "Registration flow", "estSessions": "1 session", "estHours": 2,
+      "dependsOn": [16],
+      "sessions": [{ "session": 19, "date": "2026-04-02", "notes": "Removed extension payment option, moved extension CTA to success screen, conditional display based on detection" }],
+      "items": [
+        { "name": "Remove Send via Extension payment option", "status": "done" },
+        { "name": "Remove extension detection gating from payment", "status": "done" },
+        { "name": "Remove extension verification watcher and refs", "status": "done" },
+        { "name": "Extension CTA first on success screen", "status": "done" },
+        { "name": "Conditional: installed confirmation vs install CTA", "status": "done" },
+        { "name": "Receipt card below extension CTA", "status": "done" },
+        { "name": "Dashboard link as secondary text link", "status": "done" },
+        { "name": "Payment grid 3-col to 2-col", "status": "done" }
+      ]
+    },
+    {
+      "id": 18, "name": "Registration Phase 4 — Polish Fixes", "status": "done",
+      "scope": "Registration flow", "estSessions": "1 session", "estHours": 1,
+      "dependsOn": [17],
+      "sessions": [{ "session": 20, "date": "2026-04-02", "notes": "HL wallet truncation with copy button, help panel cleanup, inline requirements, removed dead payment-hl help entry" }],
+      "items": [
+        { "name": "HL wallet address truncation + copy button", "status": "done" },
+        { "name": "Remove How it works and One signature from help panel", "status": "done" },
+        { "name": "Move requirements inline under payment selector", "status": "done" },
+        { "name": "Remove payment-hl help entry (dead extension method)", "status": "done" },
+        { "name": "Update Getting Started fastest-path steps", "status": "done" }
+      ]
+    },
+    {
+      "id": 19, "name": "Registration Phase 6 — Checkout UX Polish", "status": "done",
+      "scope": "Registration flow", "estSessions": "1 session", "estHours": 1,
+      "dependsOn": [18],
+      "sessions": [{ "session": 21, "date": "2026-04-02", "notes": "Auto-fill wallet, selected payment border, full addresses on confirm, sidebar removed" }],
+      "items": [
+        { "name": "Solid teal border stroke on selected payment card", "status": "done" },
+        { "name": "Auto-fill HL wallet on wallet connect", "status": "done" },
+        { "name": "Change/Connect wallet button logic", "status": "done" },
+        { "name": "Remove copy button from Connect & Pay wallet field", "status": "done" },
+        { "name": "Full EVM address on Confirm screen", "status": "done" },
+        { "name": "Remove Help sidebar from registration flow", "status": "done" },
+        { "name": "Verify skip payment dev-only gate", "status": "done" }
+      ]
     }
   ],
   "routes": [
@@ -250,7 +342,7 @@
     { "path": "/leaderboard", "label": "Leaderboard", "status": "complete", "phase": 13, "note": "Wallet search added, metadata added" },
     { "path": "/partners", "label": "Partners", "status": "complete", "phase": 8, "note": "Hero, features, revenue model, how it works, responsibilities, funding capacity, application CTA" },
     { "path": "/faq", "label": "FAQ", "status": "complete", "phase": 7, "note": "Grouped accordion, 5 categories, 22 items, sticky TOC" },
-    { "path": "/register", "label": "Register", "status": "complete", "phase": null, "note": "3-step flow, working" },
+    { "path": "/register", "label": "Register", "status": "complete", "phase": 15, "note": "4-step flow: Select Plan → Connect & Pay → Confirm → Done" },
     { "path": "/dashboard", "label": "Dashboard", "status": "complete", "phase": 13, "note": "Wallet lookup added, metadata updated" },
     { "path": "/miner/[slug]", "label": "Miner Detail", "status": "complete", "phase": null, "note": "Dynamic route, working" },
     { "path": "/status", "label": "Status", "status": "complete", "phase": null, "note": "Working" }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
   ArrowRight,
@@ -16,6 +16,7 @@ import { EVAL_RULES, FUNDED_RULES, SCALING_PATH } from '@/lib/constants'
    ─────────────────────────────────────────────── */
 const TOC_SECTIONS = [
   { id: 'challenge', label: 'Challenge' },
+  { id: 'pairs', label: 'Available Pairs' },
   { id: 'funded', label: 'Funded Account' },
   { id: 'scaling', label: 'Scaling' },
   { id: 'disqualification', label: 'Disqualification' },
@@ -23,15 +24,57 @@ const TOC_SECTIONS = [
   { id: 'protocol', label: 'Protocol' },
 ]
 
+const AVAILABLE_PAIRS = [
+  { base: 'ADA', quote: 'USDC' },
+  { base: 'BCH', quote: 'USDC' },
+  { base: 'BTC', quote: 'USDC' },
+  { base: 'DOGE', quote: 'USDC' },
+  { base: 'ETH', quote: 'USDC' },
+  { base: 'HYPE', quote: 'USDC' },
+  { base: 'LINK', quote: 'USDC' },
+  { base: 'LTC', quote: 'USDC' },
+  { base: 'SOL', quote: 'USDC' },
+  { base: 'TAO', quote: 'USDC' },
+  { base: 'XMR', quote: 'USDC' },
+  { base: 'XRP', quote: 'USDC' },
+  { base: 'ZEC', quote: 'USDC' },
+]
+
 /* ───────────────────────────────────────────────
    Sticky TOC (desktop sidebar + mobile jump bar)
    ─────────────────────────────────────────────── */
+function handleTocClick(e, id) {
+  e.preventDefault()
+  const el = document.getElementById(id)
+  if (!el) return
+  el.scrollIntoView({ behavior: 'smooth' })
+  history.replaceState(null, '', `#${id}`)
+}
+
 function TableOfContents({ activeId }) {
+  const navRef = useRef(null)
+
+  useEffect(() => {
+    function check() {
+      if (!navRef.current) return
+      const footer = document.querySelector('footer')
+      if (!footer) return
+      const navBottom = navRef.current.getBoundingClientRect().bottom
+      const footerTop = footer.getBoundingClientRect().top
+      const hide = footerTop <= navBottom + 24
+      navRef.current.style.opacity = hide ? '0' : '1'
+      navRef.current.style.pointerEvents = hide ? 'none' : 'auto'
+    }
+    window.addEventListener('scroll', check, { passive: true })
+    return () => window.removeEventListener('scroll', check)
+  }, [])
+
   return (
     <>
       {/* Desktop sidebar */}
       <nav
-        className="hidden lg:block fixed left-[max(1rem,calc((100vw-900px)/2-180px))] top-32 w-[140px]"
+        ref={navRef}
+        className="hidden lg:block fixed left-[max(1rem,calc((100vw-900px)/2-180px))] top-[126px] w-[140px] z-40 transition-opacity duration-300"
         aria-label="Page sections"
       >
         <ul className="space-y-1">
@@ -39,6 +82,7 @@ function TableOfContents({ activeId }) {
             <li key={s.id}>
               <a
                 href={`#${s.id}`}
+                onClick={(e) => handleTocClick(e, s.id)}
                 className={`block text-xs py-1.5 transition-colors ${
                   activeId === s.id
                     ? 'text-teal-400 font-medium'
@@ -53,13 +97,14 @@ function TableOfContents({ activeId }) {
       </nav>
 
       {/* Mobile jump bar */}
-      <div className="lg:hidden sticky top-16 z-30 bg-[#09090b]/95 backdrop-blur-sm border-b border-white/[0.06]">
+      <div className="lg:hidden sticky top-[94px] z-30 bg-[#09090b]/95 backdrop-blur-sm border-b border-white/[0.06]">
         <div className="overflow-x-auto scrollbar-hide">
           <div className="flex items-center gap-1 px-4 py-2 min-w-max">
             {TOC_SECTIONS.map((s) => (
               <a
                 key={s.id}
                 href={`#${s.id}`}
+                onClick={(e) => handleTocClick(e, s.id)}
                 className={`text-xs px-3 py-1.5 rounded-full whitespace-nowrap transition-colors ${
                   activeId === s.id
                     ? 'bg-teal-400/10 text-teal-400 font-medium'
@@ -98,7 +143,7 @@ function useActiveSection() {
           setActiveId(visible[0].target.id)
         }
       },
-      { rootMargin: '-80px 0px -60% 0px', threshold: 0 }
+      { rootMargin: '-110px 0px -60% 0px', threshold: 0 }
     )
 
     elements.forEach((el) => observer.observe(el))
@@ -137,7 +182,7 @@ function PageHero() {
    ─────────────────────────────────────────────── */
 function EvalRulesSection() {
   return (
-    <section id="challenge" className="px-6 pb-20 scroll-mt-24">
+    <section id="challenge" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Challenge Phase
@@ -161,11 +206,46 @@ function EvalRulesSection() {
 }
 
 /* ───────────────────────────────────────────────
+   Section 2b — Available Trading Pairs
+   ─────────────────────────────────────────────── */
+function AvailablePairsSection() {
+  return (
+    <section id="pairs" className="px-6 pb-20 scroll-mt-[110px]">
+      <div className="max-w-[900px] mx-auto">
+        <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
+          Available Pairs
+        </span>
+        <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
+          The following trading pairs are available during both the Challenge and Funded&nbsp;phases.
+        </p>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {AVAILABLE_PAIRS.map((pair) => (
+            <div
+              key={pair.base}
+              className="flex items-center gap-3 px-4 py-3 rounded-lg bg-white/[0.03] border border-white/[0.06]"
+            >
+              <span className="text-sm font-semibold text-zinc-200">{pair.base}</span>
+              <span className="text-xs text-zinc-600">/</span>
+              <span className="text-sm text-zinc-400">{pair.quote}</span>
+            </div>
+          ))}
+        </div>
+
+        <p className="mt-6 text-xs text-zinc-600">
+          Additional pairs may be added as the network expands. All pairs settle in&nbsp;USDC.
+        </p>
+      </div>
+    </section>
+  )
+}
+
+/* ───────────────────────────────────────────────
    Section 3 — Funded Account Rules
    ─────────────────────────────────────────────── */
 function FundedRulesSection() {
   return (
-    <section id="funded" className="px-6 pb-20 scroll-mt-24">
+    <section id="funded" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Funded Account Phase
@@ -201,7 +281,7 @@ const DOES_NOT_DISQUALIFY = [
 
 function ScalingRulesSection() {
   return (
-    <section id="scaling" className="px-6 pb-20 scroll-mt-24">
+    <section id="scaling" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Account Scaling
@@ -320,7 +400,7 @@ function ScalingRulesSection() {
    ─────────────────────────────────────────────── */
 function DisqualificationSection() {
   return (
-    <section id="disqualification" className="px-6 pb-20 scroll-mt-24">
+    <section id="disqualification" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Disqualification
@@ -370,7 +450,7 @@ function DisqualificationSection() {
    ─────────────────────────────────────────────── */
 function KYCSection() {
   return (
-    <section id="kyc" className="px-6 pb-20 scroll-mt-24">
+    <section id="kyc" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           KYC & Payouts
@@ -383,7 +463,7 @@ function KYCSection() {
             KYC is not required to register, trade, or complete the challenge. It is required only to receive a&nbsp;payout.
           </p>
           <p>
-            When your funded account reaches payout eligibility at the end of a 7-day cycle, you will be prompted to complete a simple cryptographic wallet verification. Payouts are then sent in USDC directly to your connected wallet. The entire payout flow is automated and verifiable&nbsp;onchain.
+            When your funded account reaches payout eligibility at the end of a 7-day cycle, you will be prompted to complete a brief identity verification to unlock payouts. Payouts are then sent in USDC directly to your connected wallet. The entire payout flow is automated and verifiable&nbsp;onchain.
           </p>
         </div>
       </div>
@@ -396,7 +476,7 @@ function KYCSection() {
    ─────────────────────────────────────────────── */
 function ProtocolSection() {
   return (
-    <section id="protocol" className="px-6 pb-24 scroll-mt-24">
+    <section id="protocol" className="px-6 pb-24 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Protocol
@@ -434,12 +514,15 @@ export default function RulesPage() {
     <>
       <PageHero />
       <TableOfContents activeId={activeId} />
-      <EvalRulesSection />
-      <FundedRulesSection />
-      <ScalingRulesSection />
-      <DisqualificationSection />
-      <KYCSection />
-      <ProtocolSection />
+      <div data-toc-content>
+        <EvalRulesSection />
+        <AvailablePairsSection />
+        <FundedRulesSection />
+        <ScalingRulesSection />
+        <DisqualificationSection />
+        <KYCSection />
+        <ProtocolSection />
+      </div>
     </>
   )
 }

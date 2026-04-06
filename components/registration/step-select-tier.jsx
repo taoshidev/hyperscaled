@@ -202,8 +202,8 @@ export function StepSelectTier({ tiers, selectedTier, onSelect, onContinue }) {
 
       {/* Footer note */}
       <p className="text-xs text-center text-muted-foreground mt-6">
-        You&#8217;ll connect your wallet to pay with USDC on Base in the next
-        step.
+        You&#8217;ll choose your payment method and complete checkout in the
+        next step.
       </p>
     </div>
   );

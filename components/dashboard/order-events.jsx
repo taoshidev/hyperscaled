@@ -8,13 +8,20 @@ export function OrderEvents({ events }) {
   const items = Array.isArray(events) ? events.slice(0, 50) : [];
 
   return (
-    <Card>
+    <Card className="bg-zinc-900/70 border-white/[0.08]">
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium">Order Events</CardTitle>
+        <CardTitle className="text-sm font-medium">
+          <span className="flex items-center gap-2">
+            Order Events
+            {items.length > 0 && (
+              <span className="text-xs font-normal text-zinc-500">{items.length}</span>
+            )}
+          </span>
+        </CardTitle>
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No events yet</p>
+          <p className="text-sm text-zinc-500">No events yet</p>
         ) : (
           <div className="space-y-3 max-h-96 overflow-y-auto">
             {items.map((e, i) => {
@@ -27,7 +34,7 @@ export function OrderEvents({ events }) {
               return (
                 <div
                   key={i}
-                  className="flex items-start gap-3 text-sm border-b border-border/50 pb-3 last:border-0"
+                  className="flex items-start gap-3 text-sm border-b border-white/[0.04] pb-3 last:border-0"
                 >
                   {accepted ? (
                     <CheckCircle weight="fill" className="h-4 w-4 mt-0.5 shrink-0 text-green-400" />

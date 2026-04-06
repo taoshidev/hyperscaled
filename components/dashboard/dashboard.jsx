@@ -1,57 +1,107 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
-import { MagnifyingGlass } from "@phosphor-icons/react";
+import { AlertCircle, RefreshCw } from "lucide-react";
+import { MagnifyingGlass, Wallet, ArrowRight, Warning, WifiSlash } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-import { useDashboardData } from "@/hooks/use-dashboard";
+import { useDashboardData, usePayoutData } from "@/hooks/use-dashboard";
 import { useDashboardStream } from "@/hooks/use-dashboard-stream";
-import { ConnectionStatus } from "./connection-status";
+import { truncateAddress } from "@/lib/format";
 import { AccountOverview } from "./account-overview";
+import { ChallengeProgress } from "./challenge-progress";
+import { PerformanceStats } from "./performance-stats";
 import { OpenPositions } from "./open-positions";
 import { TradeHistory } from "./trade-history";
+import { Payouts } from "./payouts";
 
 import { OrderEvents } from "./order-events";
 import { StatsPanel } from "./stats-panel";
 import { KycVerification } from "./kyc-verification";
 
+const FUNDED_DEMO_LOOKUP = "0x7939aF2C9889F59A96C3921B515300A9a70898BD".toLowerCase();
+
 export function Dashboard() {
   const { address, isConnected } = useAccount();
-  const [lookupAddr, setLookupAddr] = useState("");
-  const [lookupSubmitted, setLookupSubmitted] = useState(false);
+  const searchParams = useSearchParams();
+  const preloadAddr = searchParams.get("addr") || "";
+  const [lookupAddr, setLookupAddr] = useState(preloadAddr);
+  const [lookupSubmitted, setLookupSubmitted] = useState(!!preloadAddr);
+  const [useConnectedWallet, setUseConnectedWallet] = useState(false);
+  const [dashTab, setDashTab] = useState("performance");
 
-  const activeAddress = isConnected ? address : lookupSubmitted ? lookupAddr.trim() : null;
+  // User must explicitly choose — connected wallet or lookup
+  const activeAddress =
+    useConnectedWallet && isConnected
+      ? address
+      : lookupSubmitted
+        ? lookupAddr.trim()
+        : null;
+  const useFundedDemo =
+    !useConnectedWallet &&
+    lookupSubmitted &&
+    (activeAddress || "").toLowerCase() === FUNDED_DEMO_LOOKUP;
 
-  const { dashboard, events } = useDashboardData(activeAddress);
-  const { status: streamStatus } = useDashboardStream(
-    activeAddress && dashboard.data ? activeAddress : null,
+  const { dashboard, events } = useDashboardData(activeAddress, { useFundedDemo });
+  useDashboardStream(
+    activeAddress && dashboard.data && !useFundedDemo ? activeAddress : null,
   );
+  const payout = usePayoutData(dashboard.data?.subaccount_uuid ?? null, { useFundedDemo });
 
-  // Disconnected — show connect + address lookup
-  if (!isConnected && !lookupSubmitted) {
+  const handleReset = () => {
+    setUseConnectedWallet(false);
+    setLookupSubmitted(false);
+    setLookupAddr("");
+  };
+
+  // No choice made yet — show options
+  if (!useConnectedWallet && !lookupSubmitted) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center p-4">
+      <div className="min-h-[calc(100dvh-4rem)] flex items-center justify-center p-6">
         <div className="space-y-8 max-w-md w-full mx-auto text-center">
-          <div className="space-y-2">
-            <h1 className="text-2xl font-bold">Trading Dashboard</h1>
-            <p className="text-muted-foreground text-sm">
-              Connect your wallet to view your trading dashboard.
+          <div className="space-y-3">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-teal-400 pulse-teal" />
+              <span className="text-xs text-teal-400 font-medium uppercase tracking-widest">Dashboard</span>
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">Trading Dashboard</h1>
+            <p className="text-zinc-400 text-sm leading-relaxed">
+              {isConnected
+                ? "Use your connected wallet or look up any address."
+                : "Connect your wallet to view your trading dashboard."}
             </p>
           </div>
-          <div className="flex justify-center">
-            <ConnectButton />
-          </div>
+
+          {isConnected ? (
+            <button
+              onClick={() => setUseConnectedWallet(true)}
+              className="w-full flex items-center gap-4 p-4 rounded-xl bg-zinc-900/70 border border-white/[0.08] hover:border-teal-400/40 hover:bg-zinc-900/90 text-left transition-[border-color,box-shadow,background-color] focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background outline-none"
+            >
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-teal-400/10">
+                <Wallet size={20} weight="duotone" className="text-teal-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white">Use connected wallet</p>
+                <p className="text-xs text-zinc-500 font-mono truncate">{address}</p>
+              </div>
+              <ArrowRight size={16} className="text-zinc-500" />
+            </button>
+          ) : (
+            <div className="flex justify-center">
+              <ConnectButton />
+            </div>
+          )}
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-white/[0.06]" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-3 text-zinc-500">or look up an address</span>
+            <div className="relative flex justify-center text-xs uppercase tracking-widest">
+              <span className="bg-[#09090b] px-3 text-zinc-500">or look up an address</span>
             </div>
           </div>
 
@@ -72,11 +122,11 @@ export function Dashboard() {
                 type="text"
                 value={lookupAddr}
                 onChange={(e) => setLookupAddr(e.target.value)}
-                placeholder="Enter HL wallet address\u2026"
-                className="w-full h-11 pl-9 pr-3 rounded-lg bg-zinc-900/60 border border-white/[0.08] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background font-mono transition-[border-color,box-shadow]"
+                placeholder="Enter HL wallet address..."
+                className="w-full h-11 pl-9 pr-3 rounded-xl bg-zinc-900/70 border border-white/[0.08] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background font-mono transition-[border-color,box-shadow]"
               />
             </div>
-            <Button type="submit" className="h-11 px-5" disabled={!lookupAddr.trim()}>
+            <Button type="submit" className="h-11 px-5 rounded-xl" disabled={!lookupAddr.trim()}>
               Look up
             </Button>
           </form>
@@ -85,15 +135,126 @@ export function Dashboard() {
     );
   }
 
-  // Loading
+  // Loading — skeleton instead of spinner
   if (dashboard.isLoading) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center p-4">
-        <div className="text-center space-y-3">
-          <Loader2 className="w-12 h-12 mx-auto text-muted-foreground animate-spin" />
-          <p className="text-sm text-muted-foreground">
-            Loading dashboard...
-          </p>
+      <div className="min-h-[calc(100dvh-4rem)] px-6 py-8">
+        <div className="max-w-[1400px] mx-auto space-y-6">
+
+          {/* Account header */}
+          <div className="flex justify-between items-start flex-wrap gap-4">
+            <div className="space-y-2.5">
+              <div className="skeleton h-7 w-40 rounded" />
+              <div className="flex gap-2">
+                <div className="skeleton h-5 w-14 rounded-full" />
+                <div className="skeleton h-5 w-20 rounded-full" />
+                <div className="skeleton h-5 w-16 rounded-full" />
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="skeleton h-7 w-32 rounded-md" />
+              <div className="skeleton h-8 w-28 rounded-lg" />
+            </div>
+          </div>
+
+          {/* Tab nav */}
+          <div className="flex gap-0 border-b border-white/[0.06]">
+            <div className="px-5 py-3"><div className="skeleton h-3 w-20 rounded" /></div>
+            <div className="px-5 py-3"><div className="skeleton h-3 w-16 rounded" /></div>
+          </div>
+
+          {/* AccountOverview — 3 stat cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-white/[0.08] bg-zinc-900/70 p-4 space-y-2">
+                <div className="skeleton h-3 w-20" />
+                <div className="skeleton h-7 w-32 rounded" />
+              </div>
+            ))}
+          </div>
+
+          {/* ChallengeProgress card */}
+          <div className="rounded-xl border border-white/[0.08] bg-zinc-900/70 p-6 space-y-4">
+            <div className="skeleton h-3 w-28 rounded" />
+            <div className="bg-white/[0.015] border border-white/[0.06] rounded-lg p-6 space-y-5">
+              <div className="flex justify-between flex-wrap gap-2">
+                <div className="skeleton h-3 w-28 rounded" />
+                <div className="flex gap-4">
+                  <div className="skeleton h-3 w-20 rounded" />
+                  <div className="skeleton h-3 w-20 rounded" />
+                  <div className="skeleton h-3 w-24 rounded" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="space-y-2">
+                    <div className="skeleton h-2.5 w-24 rounded" />
+                    <div className="skeleton h-6 w-28 rounded" />
+                    <div className="skeleton h-1.5 w-full rounded-full" />
+                    <div className="skeleton h-2.5 w-20 rounded" />
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-1.5 pt-1">
+                <div className="flex justify-between">
+                  <div className="skeleton h-2.5 w-32 rounded" />
+                  <div className="skeleton h-2.5 w-8 rounded" />
+                </div>
+                <div className="skeleton h-1 w-full rounded-full" />
+              </div>
+            </div>
+          </div>
+
+          {/* PerformanceStats card */}
+          <div className="rounded-xl border border-white/[0.08] bg-zinc-900/70 p-6 space-y-4">
+            <div className="flex justify-between items-center">
+              <div className="skeleton h-3 w-20 rounded" />
+              <div className="flex gap-1">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="skeleton h-6 w-9 rounded" />
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-4 border-b border-white/[0.06]">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="space-y-1.5">
+                  <div className="skeleton h-2.5 w-16 rounded" />
+                  <div className="skeleton h-5 w-20 rounded" />
+                  <div className="skeleton h-2.5 w-14 rounded" />
+                </div>
+              ))}
+            </div>
+            <div className="skeleton h-[220px] w-full rounded-md" />
+          </div>
+
+          {/* OpenPositions card */}
+          <div className="rounded-xl border border-white/[0.08] bg-zinc-900/70 p-4 space-y-3">
+            <div className="skeleton h-4 w-28 rounded" />
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="skeleton h-9 w-full rounded" />
+            ))}
+          </div>
+
+          {/* TradeHistory card */}
+          <div className="rounded-xl border border-white/[0.08] bg-zinc-900/70 p-4 space-y-3">
+            <div className="skeleton h-4 w-24 rounded" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="skeleton h-8 w-full rounded" />
+            ))}
+          </div>
+
+          {/* OrderEvents + StatsPanel — 2-col grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-white/[0.08] bg-zinc-900/70 p-4 space-y-3">
+                <div className="skeleton h-4 w-24 rounded" />
+                {Array.from({ length: 4 }).map((_, j) => (
+                  <div key={j} className="skeleton h-8 w-full rounded" />
+                ))}
+              </div>
+            ))}
+          </div>
+
         </div>
       </div>
     );
@@ -102,16 +263,32 @@ export function Dashboard() {
   // Error: 404
   if (dashboard.error?.status === 404) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center p-4">
-        <div className="space-y-4 max-w-md w-full mx-auto text-center">
-          <AlertCircle className="w-16 h-16 mx-auto text-yellow-500" />
-          <h2 className="text-xl font-bold">No Account Found</h2>
-          <p className="text-sm text-muted-foreground">
+      <div className="min-h-[calc(100dvh-4rem)] flex items-center justify-center p-6">
+        <div className="space-y-5 max-w-md w-full mx-auto text-center">
+          <div className="flex items-center justify-center w-16 h-16 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/20">
+            <Warning size={32} weight="duotone" className="text-amber-500" />
+          </div>
+          <h2 className="text-xl font-bold tracking-tight">No Account Found</h2>
+          <p className="text-sm text-zinc-400 leading-relaxed">
             This wallet is not registered with any entity miner.
           </p>
-          <Link href="/register">
-            <Button className="mt-2">Register Now</Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <Link href="/register">
+              <span className="shiny-cta px-6 py-3 inline-flex items-center gap-1.5">
+                <span className="flex items-center gap-1.5">
+                  Register Now
+                  <ArrowRight size={15} weight="bold" />
+                </span>
+              </span>
+            </Link>
+            <Button
+              variant="outline"
+              onClick={handleReset}
+              className="border-white/[0.12] hover:border-white/[0.24] hover:bg-white/[0.04]"
+            >
+              Try another address
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -120,15 +297,21 @@ export function Dashboard() {
   // Error: 502 or other
   if (dashboard.error) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center p-4">
-        <div className="space-y-4 max-w-md w-full mx-auto text-center">
-          <AlertCircle className="w-16 h-16 mx-auto text-red-500" />
-          <h2 className="text-xl font-bold">
+      <div className="min-h-[calc(100dvh-4rem)] flex items-center justify-center p-6">
+        <div className="space-y-5 max-w-md w-full mx-auto text-center">
+          <div className="flex items-center justify-center w-16 h-16 mx-auto rounded-2xl bg-red-500/10 border border-red-500/20">
+            {dashboard.error.status === 502 ? (
+              <WifiSlash size={32} weight="duotone" className="text-red-400" />
+            ) : (
+              <AlertCircle className="w-8 h-8 text-red-400" />
+            )}
+          </div>
+          <h2 className="text-xl font-bold tracking-tight">
             {dashboard.error.status === 502
               ? "Gateway Offline"
               : "Something Went Wrong"}
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-zinc-400 leading-relaxed">
             {dashboard.error.status === 502
               ? "The trading gateway is currently unreachable. Please try again later."
               : "Could not load dashboard data. Please try again."}
@@ -136,8 +319,9 @@ export function Dashboard() {
           <Button
             variant="outline"
             onClick={() => dashboard.refetch()}
+            className="border-white/[0.12] hover:border-white/[0.24] hover:bg-white/[0.04] gap-2"
           >
-            <RefreshCw className="w-4 h-4 mr-2" />
+            <RefreshCw className="w-4 h-4" />
             Retry
           </Button>
         </div>
@@ -149,39 +333,132 @@ export function Dashboard() {
   const data = dashboard.data;
   const eventsData = events.data;
 
+  const isFunded =
+    data.challenge_period?.bucket === "SUBACCOUNT_FUNDED" ||
+    data.challenge_period?.bucket === "SUBACCOUNT_ALPHA";
+
+  // Derive account label from size
+  const sizeLabel =
+    data.account_size >= 100000
+      ? `${Math.round(data.account_size / 1000)}K`
+      : data.account_size >= 1000
+        ? `${Math.round(data.account_size / 1000)}K`
+        : String(data.account_size);
+  const accountName = `CRYPTO ${sizeLabel}`;
+
+  // Derive tier from account size
+  const tierLabel =
+    data.account_size >= 100000 ? "Tier III" : data.account_size >= 50000 ? "Tier II" : "Tier I";
+
   return (
-    <div className="min-h-[100dvh] p-4 md:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold">Trading Dashboard</h1>
-            <ConnectionStatus status={streamStatus} />
-          </div>
-          <ConnectButton />
-        </div>
-
+    <div className="min-h-[calc(100dvh-4rem)] px-6 py-8">
+      <div className="max-w-[1400px] mx-auto space-y-6">
         {/* KYC Verification */}
-        <KycVerification wallet={address} />
+        <KycVerification hlAddress={activeAddress} connectedWallet={address} />
 
-        {/* Account Overview */}
-        <AccountOverview dashboard={data} />
-
-        {/* Open Positions */}
-        <OpenPositions positions={data.positions} />
-
-        {/* Trade History */}
-        <TradeHistory positions={data.positions} />
-
-        {/* Order Events + Statistics */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <OrderEvents events={eventsData} />
-          <StatsPanel
-            drawdown={data.drawdown}
-            challengeProgress={data.challenge_progress}
-            limits={data.limits}
-          />
+        {/* Account Header */}
+        <div className="flex justify-between items-start flex-wrap gap-4">
+          <div>
+            <h2 className="text-2xl font-light tracking-tight mb-2">{accountName}</h2>
+            <div className="flex gap-2 flex-wrap">
+              <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-blue-500/[0.15] text-blue-400 border border-blue-500/20">
+                {tierLabel}
+              </span>
+              <span
+                className={`text-xs px-2.5 py-1 rounded-full font-medium border ${
+                  isFunded
+                    ? "bg-green-500/10 text-green-400 border-green-500/20"
+                    : "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
+                }`}
+              >
+                {isFunded ? "Funded" : "Evaluation"}
+              </span>
+              <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-white/[0.04] text-zinc-400 border border-white/[0.08]">
+                {isFunded ? "5x" : "1.25x"} Leverage
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {activeAddress && (
+              <span className="text-xs font-mono text-zinc-500 bg-white/[0.04] border border-white/[0.06] px-3 py-1.5 rounded-md">
+                {truncateAddress(activeAddress)}
+              </span>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReset}
+              className="gap-2 text-xs border-white/[0.12] hover:border-white/[0.24] hover:bg-white/[0.04]"
+            >
+              <MagnifyingGlass size={14} weight="bold" />
+              Switch wallet
+            </Button>
+            {isConnected && <ConnectButton />}
+          </div>
         </div>
+
+        {/* Tab Navigation */}
+        <div className="flex gap-0 border-b border-white/[0.06]">
+          {["performance", "payouts"].map((t) => (
+            <button
+              key={t}
+              onClick={() => setDashTab(t)}
+              className={`px-5 py-3 text-sm capitalize transition-[color,border-color] border-b-2 ${
+                dashTab === t
+                  ? "text-white border-blue-500"
+                  : "text-zinc-500 border-transparent hover:text-zinc-300"
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+
+        {/* Performance Tab */}
+        {dashTab === "performance" && (
+          <div className="space-y-6">
+            {/* Top Stat Cards */}
+            <AccountOverview dashboard={data} />
+
+            {/* Challenge Progress */}
+            <ChallengeProgress
+              accountSize={data.account_size}
+              accountSizeData={data.account_size_data}
+              drawdown={data.drawdown}
+              challengePeriod={data.challenge_period}
+              statistics={data.statistics}
+              quarterlyPnl={data.quarterly_pnl}
+            />
+
+            {/* Performance Stats */}
+            <PerformanceStats positions={data.positions} />
+
+            {/* Open Positions */}
+            <OpenPositions
+              positions={data.positions}
+              accountSizeData={data.account_size_data}
+            />
+
+            {/* Trade History */}
+            <TradeHistory positions={data.positions} />
+
+            {/* Order Events + Statistics */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <OrderEvents events={eventsData} />
+              <StatsPanel
+                drawdown={data.drawdown}
+                challengePeriod={data.challenge_period}
+                accountSizeData={data.account_size_data}
+                limits={data.limits}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Payouts Tab */}
+        {dashTab === "payouts" && (
+          <Payouts payoutAddress={data.payout_address} payoutData={payout.data} />
+        )}
       </div>
     </div>
   );
