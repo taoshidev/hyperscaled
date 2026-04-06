@@ -29,13 +29,13 @@ const pillars = [
   },
   {
     icon: Globe,
-    title: 'Permissionless Worldwide',
+    title: 'Open to Everyone',
     desc: 'Open to every trader in every country. No geographic exclusions.',
   },
   {
     icon: Fingerprint,
-    title: 'Cryptographic Identity',
-    desc: "Connect your Hyperliquid wallet. Sign cryptographically. It\u2019s that\u00a0simple.",
+    title: 'Simple Wallet Connect',
+    desc: "Connect your Hyperliquid wallet and start trading immediately.",
   },
 ]
 
@@ -78,7 +78,7 @@ export default function Solution() {
                 The Hyperscaled Protocol
               </span>
               <h2 className="text-4xl md:text-5xl tracking-tighter leading-none font-bold mb-5 text-balance">
-                Permissionless.<br />No middlemen.
+                Open. Onchain.<br />No middlemen.
               </h2>
               <p className="text-base text-zinc-400 leading-relaxed max-w-[52ch] [text-wrap:pretty]">
                 Hyperscaled mirrors your Hyperliquid trades into a protocol-funded simulated account

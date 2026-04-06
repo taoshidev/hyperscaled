@@ -428,7 +428,7 @@ function PayoutMechanics() {
             Funded account payouts are calculated automatically on a monthly basis for your realized profits. USDC is sent directly to your connected wallet, with no delays or&nbsp;discretion.
           </p>
           <p>
-            A brief KYC is required only for your first payout — just a simple cryptographic wallet&nbsp;verification.
+            A brief KYC is required only for your first payout — a fast identity verification that takes approximately 2&nbsp;minutes.
           </p>
         </motion.div>
 
