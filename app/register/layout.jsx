@@ -1,3 +1,5 @@
-export default function TestnetRegisterLayout({ children }) {
-  return children;
+import { Providers } from "../providers";
+
+export default function RegisterLayout({ children }) {
+  return <Providers>{children}</Providers>;
 }
