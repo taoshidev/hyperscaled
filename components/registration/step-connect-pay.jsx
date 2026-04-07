@@ -74,6 +74,7 @@ export function StepConnectAndPay({
   const [hlBalance, setHlBalance] = useState(null);
   const [hlBalanceLoading, setHlBalanceLoading] = useState(false);
   const [eip712Step, setEip712Step] = useState(null); // "signing" | "submitting" | "verifying" | "provisioning"
+  const [devPrice, setDevPrice] = useState(null);
 
   const {
     resetPaymentStatus,
@@ -81,9 +82,38 @@ export function StepConnectAndPay({
 
   const { handleHelpFocus, handleHelpBlur } = useRegistrationHelp();
 
-  const price = selectedTier.promoPrice;
   const hlWalletValid = isValidHLAddress(hlWallet);
   const showHlWalletError = hlWalletTouched && hlWallet.length > 0 && !hlWalletValid;
+
+  // Re-fetch tier pricing when HL wallet is entered (dev wallets get reduced price).
+  // Must use hlWallet (the HL trading address) because the backend checks hlAddress,
+  // which can differ from the connected Base/Arbitrum wallet.
+  useEffect(() => {
+    if (!hlWalletValid || !minerSlug) {
+      setDevPrice(null);
+      return;
+    }
+    const controller = new AbortController();
+    fetch(`/api/miners/${minerSlug}?wallet=${hlWallet}`, {
+      signal: controller.signal,
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data?.tiers) return;
+        const match = data.tiers.find(
+          (t) => t.accountSize === selectedTier.accountSize,
+        );
+        if (match && match.promoPrice !== selectedTier.promoPrice) {
+          setDevPrice(match.promoPrice);
+        } else {
+          setDevPrice(null);
+        }
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [hlWallet, hlWalletValid, minerSlug, selectedTier.accountSize, selectedTier.promoPrice]);
+
+  const price = devPrice ?? selectedTier.promoPrice;
 
   const resolvedHlAddress = hlWallet;
   const hlAddressReady = hlWallet.length > 0 && hlWalletValid;

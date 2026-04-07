@@ -14,6 +14,7 @@ import { users, registrations } from "@/lib/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { facilitator as cdpFacilitator } from "@coinbase/x402";
 import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
+import { isDevTestWallet, DEV_TEST_PRICE } from "@/lib/dev-test";
 
 const USE_TESTNET = process.env.USE_TESTNET === "true";
 
@@ -59,9 +60,9 @@ async function postCreateHlSubaccount(baseUrl, payload, apiKey) {
   });
 }
 
-function buildPaymentRequirements(miner, tier, requestUrl) {
+function buildPaymentRequirements(miner, tier, requestUrl, overridePrice) {
   const minerWallet = miner.usdcWallet;
-  const price = Number(tier.priceUsdc);
+  const price = overridePrice ?? Number(tier.priceUsdc);
   const tierLabel = TIERS.find((t) => t.accountSize === tier.accountSize)?.label || `$${tier.accountSize / 1000}K`;
 
   const extra = { name: USDC_EIP712_NAME, version: USDC_EIP712_VERSION };
@@ -217,6 +218,8 @@ export async function POST(request) {
   // Compute wallet and price early — both payment paths need them
   const minerWallet = miner.usdcWallet;
   const price = Number(tier.priceUsdc);
+  const devTest = isDevTestWallet(hlAddress);
+  const effectivePrice = devTest ? DEV_TEST_PRICE : price;
 
   if (!minerWallet) {
     return NextResponse.json({ error: "Miner wallet not configured" }, { status: 500 });
@@ -314,12 +317,13 @@ export async function POST(request) {
               });
             }
 
-            if (Math.abs(transferAmount - price) >= 0.01) {
+            if (Math.abs(transferAmount - effectivePrice) >= 0.01) {
               console.warn("[register] HL amount mismatch on hash match", {
                 minerSlug,
                 txHash: update.hash,
-                expected: price,
+                expected: effectivePrice,
                 actual: transferAmount,
+                devTest,
               });
               return NextResponse.json(
                 { error: "Transfer amount does not match the expected price." },
@@ -371,6 +375,7 @@ export async function POST(request) {
       miner,
       tier,
       request.url,
+      devTest ? DEV_TEST_PRICE : undefined,
     );
 
     const paymentSignatureHeader = request.headers.get("payment-signature");
@@ -551,11 +556,12 @@ export async function POST(request) {
       accountSize,
       payoutAddress: effectivePayoutAddress,
       tierIndex,
-      priceUsdc: String(price),
+      priceUsdc: String(effectivePrice),
       txHash,
       status: registered ? "registered" : "pending",
       statusDetail: {
         paymentMethod: paymentMethod || "x402",
+        ...(devTest ? { devTest: true, originalPrice: price } : {}),
         ...(statusDetail || {}),
       },
     });

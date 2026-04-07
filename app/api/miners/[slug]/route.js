@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { getMinerBySlug, getTiersForMiner } from "@/lib/miners";
 import { TIERS as TIER_META } from "@/lib/constants";
+import { isDevTestWallet, DEV_TEST_PRICE } from "@/lib/dev-test";
 
 function enrichTier(dbTier, index) {
   const meta = TIER_META.find((t) => t.accountSize === dbTier.accountSize);
@@ -19,6 +20,9 @@ function enrichTier(dbTier, index) {
 export async function GET(request, { params }) {
   try {
     const { slug } = await params;
+    const { searchParams } = new URL(request.url);
+    const wallet = searchParams.get("wallet");
+    const devMode = isDevTestWallet(wallet);
 
     const miner = await getMinerBySlug(slug);
     if (!miner) {
@@ -32,7 +36,11 @@ export async function GET(request, { params }) {
       name: miner.name,
       slug: miner.slug,
       usdcWallet: miner.usdcWallet,
-      tiers: activeTiers.map(enrichTier),
+      tiers: activeTiers.map((t, i) => {
+        const enriched = enrichTier(t, i);
+        if (devMode) enriched.promoPrice = DEV_TEST_PRICE;
+        return enriched;
+      }),
     });
   } catch (error) {
     Sentry.captureException(error, {
