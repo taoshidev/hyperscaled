@@ -7,6 +7,14 @@ const nextConfig = {
   },
   // Nodemailer is Node-only; keep it external so resolution matches runtime node_modules.
   serverExternalPackages: ["nodemailer"],
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      "pino-pretty": false,
+    };
+    config.externals.push("@react-native-async-storage/async-storage");
+    return config;
+  },
 };
 
 export default withSentryConfig(nextConfig, {
