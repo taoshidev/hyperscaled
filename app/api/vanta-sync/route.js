@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { db } from "@/lib/db";
 import { users, registrations } from "@/lib/db/schema";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { isValidEvmAddress, isValidEmail } from "@/lib/validation";
 
 function timingSafeEqual(a, b) {
