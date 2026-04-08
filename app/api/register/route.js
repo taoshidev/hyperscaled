@@ -123,11 +123,11 @@ export async function POST(request) {
     hlTransferSender,
   } = body;
 
-  if (!minerSlug || !hlAddress || !accountSize || !email || tierIndex == null) {
+  if (!minerSlug || !hlAddress || !accountSize || tierIndex == null) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  if (!isValidEmail(email)) {
+  if (email && !isValidEmail(email)) {
     return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
   }
 
@@ -485,7 +485,7 @@ export async function POST(request) {
     } else {
       const [newUser] = await db
         .insert(users)
-        .values({ wallet: effectivePayoutAddress, email, utmCode: affiliateUtm || null })
+        .values({ wallet: effectivePayoutAddress, email: email || null, utmCode: affiliateUtm || null })
         .returning({ id: users.id });
       userId = newUser.id;
     }
@@ -593,7 +593,7 @@ export async function POST(request) {
     );
   }
 
-  if (process.env.SMTP_USER) {
+  if (process.env.SMTP_USER && email) {
     try {
       const { sendEmail } = await import("@/lib/email");
       await sendEmail({
