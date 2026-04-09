@@ -322,7 +322,23 @@ export function StepConnectAndPay({
       setEip712Step("signing");
       const previousChainId = chainId;
       if (chainId !== HL_SIGNING_CHAIN_ID) {
-        await switchChainAsync({ chainId: HL_SIGNING_CHAIN_ID });
+        try {
+          await switchChainAsync({ chainId: HL_SIGNING_CHAIN_ID });
+        } catch (switchErr) {
+          const msg = switchErr?.message || "";
+          if (
+            msg.includes("not supported") ||
+            msg.includes("Unrecognized chain") ||
+            msg.includes("unknown chain") ||
+            msg.includes("addEthereumChain") ||
+            switchErr?.code === 4902
+          ) {
+            throw new Error(
+              "Your wallet doesn't support Arbitrum. Please switch to a wallet that supports Arbitrum and Base (e.g. MetaMask, Rabby, or Coinbase Wallet)."
+            );
+          }
+          throw switchErr;
+        }
       }
 
       // Step 2 — Sign Hyperliquid sendAsset (USDC) via EIP-712
@@ -1207,11 +1223,42 @@ export function StepConnectAndPay({
       {paymentMethod === "base" && isConnected && !isOnBase && (
         <div className="w-full max-w-lg mt-4">
           <Button
-            onClick={() => switchChain({ chainId: BASE_CHAIN_ID })}
+            onClick={() => {
+              try {
+                switchChain(
+                  { chainId: BASE_CHAIN_ID },
+                  {
+                    onError: (err) => {
+                      const msg = err?.message || "";
+                      if (
+                        msg.includes("not supported") ||
+                        msg.includes("Unrecognized chain") ||
+                        msg.includes("unknown chain") ||
+                        msg.includes("addEthereumChain") ||
+                        err?.code === 4902
+                      ) {
+                        setErrorMessage(
+                          `Your wallet doesn't support ${CHAIN_LABEL}. Please switch to a wallet that supports Base (e.g. MetaMask, Rabby, or Coinbase Wallet).`
+                        );
+                      } else {
+                        setErrorMessage(err.message || "Failed to switch network.");
+                      }
+                    },
+                  }
+                );
+              } catch (e) {
+                setErrorMessage(e.message || "Failed to switch network.");
+              }
+            }}
             className="w-full h-11 text-sm font-semibold bg-teal-400 text-zinc-950 hover:bg-teal-400/90 cursor-pointer"
           >
             Switch to {CHAIN_LABEL}
           </Button>
+          {errorMessage && (
+            <p role="alert" className="text-sm text-destructive mt-2">
+              {errorMessage}
+            </p>
+          )}
         </div>
       )}
 
