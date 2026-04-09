@@ -21,6 +21,18 @@ function shouldRewriteToVanta(hostname, pathname) {
   return !INTERNAL_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
+function getNormalizedVantaPath(pathname) {
+  if (pathname === "/vanta") {
+    return "/";
+  }
+
+  if (pathname.startsWith("/vanta/")) {
+    return pathname.replace(/^\/vanta/, "") || "/";
+  }
+
+  return null;
+}
+
 function applyTrackingCookies(response, { entryCookie, affiliateCookie, minerMatch, pathname, searchParams }) {
   if (!entryCookie) {
     const entryValue = minerMatch ? minerMatch[1] : pathname === "/" ? "home" : null;
@@ -51,6 +63,21 @@ export function middleware(request) {
   const entryCookie = request.cookies.get("hs_entry")?.value;
   const affiliateCookie = request.cookies.get("hs_affiliate")?.value;
   const minerMatch = pathname.match(/^\/miner\/([^/]+)/);
+  const normalizedVantaPath = getNormalizedVantaPath(pathname);
+
+  if (VANTA_HOSTNAMES.has(hostname) && normalizedVantaPath) {
+    const url = request.nextUrl.clone();
+    url.pathname = normalizedVantaPath;
+    const response = NextResponse.redirect(url);
+    applyTrackingCookies(response, {
+      entryCookie,
+      affiliateCookie,
+      minerMatch,
+      pathname: normalizedVantaPath,
+      searchParams,
+    });
+    return response;
+  }
 
   if (entryCookie && entryCookie !== "home" && minerMatch) {
     const slug = minerMatch[1];
