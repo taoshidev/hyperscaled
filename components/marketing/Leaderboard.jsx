@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, useInView } from 'framer-motion'
 import { MagnifyingGlass, XCircle } from '@phosphor-icons/react'
+import { useBrand } from '@/lib/brand'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -44,6 +45,7 @@ function fmtCompact(n) {
 }
 
 export default function Leaderboard({ initialSearch = '' }) {
+  const brand = useBrand()
   const router = useRouter()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
@@ -167,7 +169,7 @@ export default function Leaderboard({ initialSearch = '' }) {
           <div className="flex items-center gap-3 mb-4">
             <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Network</span>
             <span className="h-px flex-1 bg-white/[0.06]" />
-            <span className="text-xs text-zinc-600">Aggregated across the Hyperscaled network</span>
+            <span className="text-xs text-zinc-600">Aggregated across the {brand.name} network</span>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
@@ -221,9 +223,9 @@ export default function Leaderboard({ initialSearch = '' }) {
           >
             {/* Section label */}
             <div className="flex items-center gap-3 mb-5">
-              <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Hyperscaled</span>
+              <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">{brand.name}</span>
               <span className="h-px flex-1 bg-white/[0.06]" />
-              <span className="text-xs text-zinc-600">Traders registered directly on Hyperscaled</span>
+              <span className="text-xs text-zinc-600">Traders registered directly on {brand.name}</span>
             </div>
 
             {/* Tabs */}

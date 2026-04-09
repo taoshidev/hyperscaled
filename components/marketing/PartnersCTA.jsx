@@ -4,10 +4,13 @@ import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight } from '@phosphor-icons/react'
+import { useBrand, useBrandHref } from '@/lib/brand'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
 export default function PartnersCTA() {
+  const brand = useBrand()
+  const brandHref = useBrandHref()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -33,12 +36,12 @@ export default function PartnersCTA() {
           {/* Right — body + CTA */}
           <div>
             <p className="text-base text-zinc-400 leading-relaxed max-w-[50ch] mb-8">
-              Hyperscaled lets operators launch a fully branded prop trading business on decentralized
+              {brand.name} lets operators launch a fully branded prop trading business on decentralized
               infrastructure. Set your own pricing. Collect revenue directly. The network handles
               the challenge, enforcement, and&nbsp;payouts.
             </p>
             <Link
-              href="/partners"
+              href={brandHref('/partners')}
               className="inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-teal-400 transition-colors min-h-12 group"
             >
               Learn About the Partner Program

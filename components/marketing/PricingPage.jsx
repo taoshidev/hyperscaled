@@ -55,7 +55,7 @@ function PricingHero() {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[60ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          Pay a one-time USDC registration fee to take the Hyperscaled challenge. No hidden&nbsp;fees.
+          Pay a one-time USDC registration fee to take the challenge. No hidden&nbsp;fees.
         </motion.p>
       </div>
     </section>

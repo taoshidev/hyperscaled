@@ -2,6 +2,7 @@
 
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
+import { useBrand } from '@/lib/brand'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -43,6 +44,7 @@ const painPoints = [
 ]
 
 export default function Problem() {
+  const brand = useBrand()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -113,7 +115,7 @@ export default function Problem() {
           className="mt-10 border-l-2 border-teal-400 pl-5 py-1"
         >
           <p className="text-sm font-semibold text-teal-300 leading-relaxed max-w-[65ch]">
-            Hyperscaled pays out 100% of rewards to traders because our decentralized network is aligned with your success. No&nbsp;exceptions.
+            {brand.name} pays out 100% of rewards to traders because our decentralized network is aligned with your success. No&nbsp;exceptions.
           </p>
         </motion.div>
       </div>

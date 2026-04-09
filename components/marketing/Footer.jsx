@@ -2,36 +2,44 @@
 
 import Link from 'next/link'
 import { TwitterLogo, DiscordLogo, GithubLogo, TelegramLogo, ArrowUpRight } from '@phosphor-icons/react'
+import { useBrand, useBrandHref } from '@/lib/brand'
 
-const footerLinks = {
-  Protocol: [
-    { label: 'How It Works', href: '/how-it-works' },
-    { label: 'Pricing', href: '/pricing' },
-    { label: 'Rules', href: '/rules' },
-    { label: 'Leaderboard', href: '/leaderboard' },
-    { label: 'For Agents', href: '/agents' },
-  ],
-  Community: [
-    { label: 'Twitter / X', href: 'https://x.com/hyperscaledhq', external: true, icon: TwitterLogo },
-    { label: 'Discord', href: 'https://discord.gg/hyperscaledhq', external: true, icon: DiscordLogo },
-    { label: 'GitHub', href: 'https://github.com/taoshidev', external: true, icon: GithubLogo },
-    { label: 'Telegram Bot', href: 'https://t.me/hyperscaled_bot', external: true, icon: TelegramLogo },
-    { label: 'Contact Support', href: 'mailto:support@hyperscaled.trade', external: true },
-  ],
-  Legal: [
-    { label: 'Terms of Service', href: '/terms' },
-    { label: 'Privacy Policy', href: '/privacy' },
-  ],
+function useFooterLinks() {
+  const brand = useBrand()
+  const brandHref = useBrandHref()
+  return {
+    Protocol: [
+      { label: 'How It Works', href: brandHref('/how-it-works') },
+      { label: 'Pricing', href: brandHref('/pricing') },
+      { label: 'Rules', href: brandHref('/rules') },
+      { label: 'Leaderboard', href: brandHref('/leaderboard') },
+      { label: 'For Agents', href: brandHref('/agents') },
+    ],
+    Community: [
+      { label: 'Twitter / X', href: brand.socials.twitter, external: true, icon: TwitterLogo },
+      { label: 'Discord', href: brand.socials.discord, external: true, icon: DiscordLogo },
+      { label: 'GitHub', href: brand.socials.github, external: true, icon: GithubLogo },
+      { label: 'Telegram Bot', href: brand.socials.telegram, external: true, icon: TelegramLogo },
+      { label: 'Contact Support', href: brand.socials.support, external: true },
+    ],
+    Legal: [
+      { label: 'Terms of Service', href: brandHref('/terms') },
+      { label: 'Privacy Policy', href: brandHref('/privacy') },
+    ],
+  }
 }
 
-/* Social icons in brand column */
-const socialIcons = [
-  { Icon: TwitterLogo, href: 'https://x.com/hyperscaledhq', label: 'Twitter' },
-  { Icon: DiscordLogo, href: 'https://discord.gg/hyperscaledhq', label: 'Discord' },
-  { Icon: GithubLogo, href: 'https://github.com/taoshidev', label: 'GitHub' },
-]
-
 export default function Footer() {
+  const brand = useBrand()
+  const brandHref = useBrandHref()
+  const footerLinks = useFooterLinks()
+
+  const socialIcons = [
+    { Icon: TwitterLogo, href: brand.socials.twitter, label: 'Twitter' },
+    { Icon: DiscordLogo, href: brand.socials.discord, label: 'Discord' },
+    { Icon: GithubLogo, href: brand.socials.github, label: 'GitHub' },
+  ]
+
   return (
     <footer className="border-t border-white/[0.06] pt-16 pb-8 px-6">
       <div className="max-w-[1400px] mx-auto">
@@ -39,8 +47,8 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-16">
           {/* Brand column */}
           <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="block mb-4">
-              <img src="/hyperscaled-logo.svg" alt="Hyperscaled" className="h-7 w-auto" />
+            <Link href={brandHref('/')} className="block mb-4">
+              <img src={brand.logo} alt={brand.name} className="h-7 w-auto" />
             </Link>
             <p className="text-xs text-zinc-500 leading-relaxed max-w-[24ch] [text-wrap:pretty]">
               Funded trading on&nbsp;Hyperliquid.
@@ -104,7 +112,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-white/[0.06] pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-zinc-600">
-            © 2026 Hyperscaled. All rights reserved.
+            &copy; 2026 {brand.name}. All rights reserved.
           </p>
           <p className="text-xs text-zinc-600">
             Built on{' '}
@@ -116,7 +124,7 @@ export default function Footer() {
             >
               Hyperliquid
             </a>
-            {' '}·{' '}
+            {' '}&middot;{' '}
             Powered by{' '}
             <a
               href="https://bittensor.com"

@@ -3,6 +3,7 @@
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { CurrencyDollar, TrendUp, Trophy, ArrowRight } from '@phosphor-icons/react'
+import { useBrand } from '@/lib/brand'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -42,8 +43,8 @@ function DashboardMockup() {
     <div className="w-full max-w-sm rounded-xl overflow-hidden border border-white/[0.08] bg-zinc-900">
       {/* Status row */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-white/[0.06]">
-        <span className="w-2 h-2 rounded-full bg-teal-400 shrink-0" style={{ boxShadow: '0 0 6px rgba(0,198,167,0.7)' }} />
-        <span className="text-sm font-semibold text-white">Hyperscaled Active</span>
+        <span className="w-2 h-2 rounded-full bg-teal-400 shrink-0" style={{ boxShadow: `0 0 6px rgba(var(--brand-glow),0.7)` }} />
+        <span className="text-sm font-semibold text-white">Active</span>
       </div>
       {/* Data rows */}
       <div className="px-4 py-3 space-y-2.5">
@@ -107,6 +108,7 @@ function PayoutMockup() {
 /* ── Component ───────────────────────────────────────────────── */
 
 export default function HowItWorks({ tiers = [] }) {
+  const brand = useBrand()
   const steps = [
     {
       number: '01',
@@ -119,14 +121,14 @@ export default function HowItWorks({ tiers = [] }) {
       number: '02',
       icon: TrendUp,
       title: 'Trade on Hyperliquid',
-      body: 'Connect your Hyperliquid wallet. Trade exactly how you trade today — same interface, same order book, same fills. Hyperscaled reads your performance automatically in the\u00a0background.',
+      body: `Connect your Hyperliquid wallet. Trade exactly how you trade today \u2014 same interface, same order book, same fills. ${brand.name} reads your performance automatically in the\u00a0background.`,
       mockup: <DashboardMockup />,
     },
     {
       number: '03',
       icon: Trophy,
       title: 'Hit the Target. Get Paid.',
-      body: 'Hit the 10% profit target to pass the Hyperscaled Challenge and activate your funded account immediately. Payouts are delivered to your wallet every 7 days, and you keep 100% of everything you\u00a0earn.',
+      body: `Hit the 10% profit target to pass the ${brand.name} Challenge and activate your funded account immediately. Payouts are delivered to your wallet every 7 days, and you keep 100% of everything you\u00a0earn.`,
       mockup: <PayoutMockup />,
     },
   ]

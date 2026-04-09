@@ -10,6 +10,7 @@ import {
 } from '@phosphor-icons/react'
 import RulesTable from '@/components/shared/RulesTable'
 import { EVAL_RULES, FUNDED_RULES, SCALING_PATH } from '@/lib/constants'
+import { useBrand, useBrandHref } from '@/lib/brand'
 
 /* ───────────────────────────────────────────────
    TOC sections definition
@@ -157,6 +158,7 @@ function useActiveSection() {
    Section 1 — Page Hero
    ─────────────────────────────────────────────── */
 function PageHero() {
+  const brand = useBrand()
   return (
     <section className="pt-32 pb-16 px-6">
       <div className="max-w-[800px] mx-auto text-center">
@@ -170,7 +172,7 @@ function PageHero() {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[62ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          Every rule is published open-source and enforced automatically by the protocol. What you see here is exactly how Hyperscaled&nbsp;operates.
+          Every rule is published open-source and enforced automatically by the protocol. What you see here is exactly how {brand.name}&nbsp;operates.
         </p>
       </div>
     </section>
@@ -181,6 +183,7 @@ function PageHero() {
    Section 2 — Challenge Rules
    ─────────────────────────────────────────────── */
 function EvalRulesSection() {
+  const brand = useBrand()
   return (
     <section id="challenge" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
@@ -188,7 +191,7 @@ function EvalRulesSection() {
           Challenge Phase
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
-          The Hyperscaled challenge is one step. Rules are consistent across all account&nbsp;sizes.
+          The {brand.name} challenge is one step. Rules are consistent across all account&nbsp;sizes.
         </p>
 
         <RulesTable rules={EVAL_RULES} />
@@ -475,6 +478,8 @@ function KYCSection() {
    Section 7 — Protocol Transparency + CTA
    ─────────────────────────────────────────────── */
 function ProtocolSection() {
+  const brand = useBrand()
+  const brandHref = useBrandHref()
   return (
     <section id="protocol" className="px-6 pb-24 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
@@ -486,13 +491,13 @@ function ProtocolSection() {
         </h2>
         <div className="mt-4 rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-5 sm:p-6">
           <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-            All rules are enforced programmatically by the Hyperscaled protocol. There is no back office, no discretionary review committee, and no ability to override outcomes. Any rule changes are published publicly before taking&nbsp;effect.
+            All rules are enforced programmatically by the {brand.name} protocol. There is no back office, no discretionary review committee, and no ability to override outcomes. Any rule changes are published publicly before taking&nbsp;effect.
           </p>
         </div>
 
         <div className="mt-8">
           <Link
-            href="/register"
+            href={brandHref('/register')}
             className="text-sm text-teal-400 hover:text-teal-300 transition-colors inline-flex items-center gap-1.5"
           >
             Start Your Challenge

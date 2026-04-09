@@ -80,9 +80,6 @@ export default function ExtensionModal({ open, onClose, hideTelegram = false }) 
                 {/* Testnet notice */}
                 <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl bg-amber-400/[0.07] border border-amber-400/20">
                   <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-amber-400 ring-2 ring-amber-400/30 mt-1.5" />
-                  <p className="text-xs text-amber-200/70 leading-relaxed">
-                    Manual installation is only required during the <span className="text-amber-300 font-medium">testnet period</span>. Once Hyperscaled launches on mainnet, the extension will be available directly from the Chrome Web Store — no manual steps needed.
-                  </p>
                 </div>
                 {STEPS.map((step, i) => {
                   const Icon = step.icon

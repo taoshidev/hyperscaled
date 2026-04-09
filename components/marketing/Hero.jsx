@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowRight, TrendUp, ArrowsClockwise } from '@phosphor-icons/react'
 import { HERO_STATS } from '@/lib/constants'
 import LiquidCrystalBg from './LiquidCrystalBg'
+import { useBrand, useBrandHref } from '@/lib/brand'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -24,10 +25,13 @@ const cardVariants = {
 }
 
 export default function Hero() {
+  const brand = useBrand()
+  const brandHref = useBrandHref()
+
   return (
     <section className="relative min-h-[100dvh] flex items-center overflow-hidden pt-16">
       {/* Liquid crystal shader background */}
-      <LiquidCrystalBg className="pointer-events-none" />
+      {brand.showLiquidCrystal && <LiquidCrystalBg className="pointer-events-none" />}
       <div className="absolute inset-0 bg-zinc-950/60 pointer-events-none" />
 
       <div className="relative max-w-[1400px] mx-auto px-6 w-full py-20">
@@ -68,7 +72,7 @@ export default function Hero() {
             {/* CTA buttons */}
             <motion.div variants={itemVariants} className="flex flex-col items-center sm:items-start sm:flex-row gap-3 mb-10">
               <Link
-                href="/register"
+                href={brandHref('/register')}
                 className="shiny-cta px-6 py-3 min-h-12 whitespace-nowrap text-center"
               >
                 <span className="flex items-center justify-center gap-1.5">
@@ -77,7 +81,7 @@ export default function Hero() {
                 </span>
               </Link>
               <Link
-                href="/how-it-works"
+                href={brandHref('/how-it-works')}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 min-h-12 rounded-xl border border-white/[0.12] text-white text-sm font-medium hover:border-white/[0.24] hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-teal-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 active:scale-[0.98] transition-[border-color,background-color,transform] duration-200"
               >
                 Learn More
@@ -107,14 +111,14 @@ export default function Hero() {
             <div
               className="relative bg-zinc-900/70 rounded-2xl border border-white/[0.08] p-5 backdrop-blur-sm"
               style={{
-                boxShadow: '0 40px 80px rgba(0,0,0,0.5), 0 0 60px rgba(0,198,167,0.06)',
+                boxShadow: `0 40px 80px rgba(0,0,0,0.5), 0 0 60px rgba(var(--brand-glow),0.06)`,
               }}
             >
               {/* Card inner glow */}
               <div
                 className="absolute inset-0 rounded-2xl pointer-events-none"
                 style={{
-                  background: 'radial-gradient(circle at 80% 20%, rgba(0,198,167,0.07), transparent 55%)',
+                  background: `radial-gradient(circle at 80% 20%, rgba(var(--brand-glow),0.07), transparent 55%)`,
                 }}
               />
 
@@ -210,7 +214,7 @@ export default function Hero() {
                   <ArrowsClockwise size={11} />
                   Updated just now
                 </div>
-                <a href="/leaderboard" className="text-xs text-teal-400 hover:text-teal-300 transition-colors flex items-center gap-1">
+                <a href={brandHref('/leaderboard')} className="text-xs text-teal-400 hover:text-teal-300 transition-colors flex items-center gap-1">
                   View Full Analytics
                   <ArrowRight size={10} />
                 </a>

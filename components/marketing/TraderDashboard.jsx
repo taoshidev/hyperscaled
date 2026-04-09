@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { X, ArrowSquareOut } from '@phosphor-icons/react'
+import { useBrand } from '@/lib/brand'
 
 const OPEN_POSITIONS = [
   ['BTC-PERP', 'LONG', '0.025', '$2,429.61', '$96,412.50', '$97,184.20', '$91,280.00', '+$19.29', '$99,500 / $95,200', '2h ago'],
@@ -19,6 +20,7 @@ const PAYOUTS = [
 ]
 
 export default function TraderDashboard({ addr, onClose }) {
+  const brand = useBrand()
   const [dashTab, setDashTab] = useState('performance')
   const [tradeTab, setTradeTab] = useState('open')
 
@@ -31,7 +33,7 @@ export default function TraderDashboard({ addr, onClose }) {
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 h-16 border-b border-white/[0.06] shrink-0 bg-[#09090b]/80">
         <div className="flex items-center gap-3">
-          <img src="/hyperscaled-logo.svg" alt="Hyperscaled" className="h-6 w-auto" />
+          <img src={brand.logo} alt={brand.name} className="h-6 w-auto" />
           <span className="text-zinc-600">/</span>
           <span className="text-xs font-mono text-zinc-400">{shortAddr}</span>
         </div>

@@ -5,12 +5,13 @@ import { motion, useInView } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight, Star } from '@phosphor-icons/react'
 import { PRICING_TIERS } from '@/lib/constants'
+import { useBrandHref } from '@/lib/brand'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
 const TIER_LABELS = { 'tier-1': 'Tier I', 'tier-2': 'Tier II', 'tier-3': 'Tier III' }
 
-function PricingCard({ tier, index }) {
+function PricingCard({ tier, index, brandHref }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
 
@@ -78,7 +79,7 @@ function PricingCard({ tier, index }) {
 
       {/* CTA */}
       <Link
-        href="/register"
+        href={brandHref('/register')}
         className={`mt-8 flex items-center justify-center gap-1.5 min-h-12 rounded-xl text-sm font-semibold transition-colors ${
           tier.popular
             ? 'shiny-cta px-6 py-3'
@@ -93,6 +94,7 @@ function PricingCard({ tier, index }) {
 }
 
 export default function HomePricing({ tiers = PRICING_TIERS }) {
+  const brandHref = useBrandHref()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -115,7 +117,7 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-5">
           {tiers.map((tier, i) => (
-            <PricingCard key={tier.id} tier={tier} index={i} />
+            <PricingCard key={tier.id} tier={tier} index={i} brandHref={brandHref} />
           ))}
         </div>
 

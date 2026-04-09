@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight, DownloadSimple, List, X } from '@phosphor-icons/react'
 import ExtensionModal from '@/components/marketing/ExtensionModal'
+import { useBrand, useBrandHref } from '@/lib/brand'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -31,6 +32,8 @@ const NAV_LINKS = [
 export default function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [extensionOpen, setExtensionOpen] = useState(false)
+  const brand = useBrand()
+  const brandHref = useBrandHref()
 
   function handleExtensionClick() {
     // Trigger download
@@ -52,9 +55,11 @@ export default function Nav() {
     >
       <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between gap-4 relative">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0 relative z-10">
-          <img src="/hyperscaled-logo.svg" alt="Hyperscaled" className="h-7 w-auto" />
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-teal-400 border border-teal-400/30 bg-teal-400/10 rounded px-1.5 py-0.5 leading-none">Beta</span>
+        <Link href={brandHref('/')} className="flex items-center gap-2 shrink-0 relative z-10">
+          <img src={brand.logo} alt={brand.name} className="h-7 w-auto" />
+          {brand.showBetaBadge && (
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-teal-400 border border-teal-400/30 bg-teal-400/10 rounded px-1.5 py-0.5 leading-none">Beta</span>
+          )}
         </Link>
 
         {/* Desktop nav — centered between logo and CTA */}
@@ -63,7 +68,7 @@ export default function Nav() {
           {NAV_LINKS.map((l) => (
             <Link
               key={l.label}
-              href={l.href}
+              href={brandHref(l.href)}
               className={`text-sm text-zinc-400 hover:text-white transition-colors whitespace-nowrap ${l.visibility}`}
             >
               {l.label}
@@ -74,16 +79,18 @@ export default function Nav() {
 
         {/* CTA + hamburger */}
         <div className="flex items-center gap-3 shrink-0 relative z-10">
-          <button
-            type="button"
-            onClick={handleExtensionClick}
-            className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors px-3 py-2 rounded-lg border border-white/[0.08] bg-zinc-900/80"
-          >
-            <DownloadSimple size={15} weight="bold" />
-            Extension
-          </button>
+          {brand.showExtension && (
+            <button
+              type="button"
+              onClick={handleExtensionClick}
+              className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors px-3 py-2 rounded-lg border border-white/[0.08] bg-zinc-900/80"
+            >
+              <DownloadSimple size={15} weight="bold" />
+              Extension
+            </button>
+          )}
           <Link
-            href="/register"
+            href={brandHref('/register')}
             className="shiny-cta px-5 py-2"
           >
             <span className="flex items-center gap-1.5">
@@ -119,7 +126,7 @@ export default function Nav() {
               {NAV_LINKS.map((l) => (
                 <Link
                   key={l.label}
-                  href={l.href}
+                  href={brandHref(l.href)}
                   onClick={() => setMobileOpen(false)}
                   className="text-sm text-zinc-400 hover:text-white transition-colors py-2.5 border-b border-white/[0.04] last:border-0"
                 >

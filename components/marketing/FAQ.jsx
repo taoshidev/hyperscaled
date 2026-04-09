@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { Plus, Minus } from '@phosphor-icons/react'
 import Link from 'next/link'
 import { FAQ_ITEMS, HOME_FAQ_IDS } from '@/lib/constants'
+import { useBrand, useBrandHref } from '@/lib/brand'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -64,6 +65,8 @@ function FAQItem({ item, index }) {
 }
 
 export default function FAQ() {
+  const brand = useBrand()
+  const brandHref = useBrandHref()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -93,7 +96,7 @@ export default function FAQ() {
             <div className="mt-8 p-4 rounded-xl bg-zinc-900/50 border border-white/[0.06] space-y-2">
               <div className="text-xs text-zinc-500">Still have questions?</div>
               <a
-                href="https://discord.gg/hyperscaledhq"
+                href={brand.socials.discord}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-teal-400 hover:text-teal-300 transition-colors font-medium block"
@@ -101,7 +104,7 @@ export default function FAQ() {
                 Join our Discord →
               </a>
               <Link
-                href="/faq"
+                href={brandHref('/faq')}
                 className="text-sm text-zinc-400 hover:text-zinc-300 transition-colors font-medium block"
               >
                 View full FAQ →

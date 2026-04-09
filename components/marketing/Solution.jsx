@@ -3,6 +3,7 @@
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { ShieldCheck, LinkSimple, Globe, Fingerprint, CheckCircle } from '@phosphor-icons/react'
+import { useBrand } from '@/lib/brand'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -54,6 +55,7 @@ const compareRows = [
 const hsBest = new Set(['10%', '1-Step', 'Yes', 'No', '100%', 'Onchain', '$2.5M', 'Allowed'])
 
 export default function Solution() {
+  const brand = useBrand()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
   const tableRef = useRef(null)
@@ -75,13 +77,13 @@ export default function Solution() {
               className="mb-8"
             >
               <span className="text-xs text-zinc-500 tracking-widest uppercase block mb-4">
-                The Hyperscaled Protocol
+                The {brand.name} Protocol
               </span>
               <h2 className="text-4xl md:text-5xl tracking-tighter leading-none font-bold mb-5 text-balance">
                 Open. Onchain.<br />No middlemen.
               </h2>
               <p className="text-base text-zinc-400 leading-relaxed max-w-[52ch] [text-wrap:pretty]">
-                Hyperscaled mirrors your Hyperliquid trades into a protocol-funded simulated account
+                {brand.name} mirrors your Hyperliquid trades into a protocol-funded simulated account
                 and pays out performance rewards in USDC — onchain, automatically, monthly.
               </p>
             </motion.div>
@@ -125,7 +127,7 @@ export default function Solution() {
             <div className="grid grid-cols-3 border-b border-white/[0.06]">
               <div className="p-4 text-xs text-zinc-500 font-medium" />
               <div className="p-4 text-center">
-                <span className="text-xs font-semibold text-teal-400">Hyperscaled</span>
+                <span className="text-xs font-semibold text-teal-400">{brand.name}</span>
               </div>
               <div className="p-4 text-center">
                 <span className="text-xs text-zinc-400">FTMO</span>

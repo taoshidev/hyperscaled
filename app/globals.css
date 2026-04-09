@@ -10,6 +10,7 @@
 
 :root {
   --radius: 0.625rem;
+  --brand-glow: 0, 198, 167;
   --background: oklch(0.05 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.12 0 0);
@@ -413,4 +414,97 @@ textarea:active {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255,255,255,0.2);
+}
+
+/* ══════════════════════════════════════════════
+   Vanta Trading brand overrides
+   Applied via data-brand="vanta" on a wrapper div
+   ══════════════════════════════════════════════ */
+
+[data-brand="vanta"] {
+  --brand-glow: 255, 255, 255;
+  --background: oklch(0 0 0);
+  --card: oklch(0.06 0 0);
+  font-family: 'Geist', 'Helvetica Neue', Arial, ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Teal → white accent mapping for Vanta */
+[data-brand="vanta"] .text-teal-400 {
+  color: #ffffff;
+}
+[data-brand="vanta"] .text-teal-300 {
+  color: #e4e4e7;
+}
+[data-brand="vanta"] .border-teal-400\/20,
+[data-brand="vanta"] .border-teal-400\/30 {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+[data-brand="vanta"] .bg-teal-400\/10,
+[data-brand="vanta"] .bg-teal-400\/8,
+[data-brand="vanta"] .bg-teal-400\/5 {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Shiny CTA — white glow instead of teal */
+[data-brand="vanta"] .shiny-cta {
+  --shiny-cta-bg: #000000;
+  --shiny-cta-bg-subtle: #0d0d0d;
+  --shiny-cta-highlight: #ffffff;
+  --shiny-cta-highlight-subtle: #a1a1aa;
+}
+
+/* Shiny border — white instead of teal */
+[data-brand="vanta"] .shiny-border {
+  --shiny-cta-bg: #000000;
+  --shiny-cta-bg-subtle: #0d0d0d;
+  --shiny-cta-highlight: #ffffff;
+  --shiny-cta-highlight-subtle: #a1a1aa;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.15),
+    inset 0 -20px 40px -20px rgba(255, 255, 255, 0.08);
+}
+[data-brand="vanta"] .shiny-border:is(:hover, :focus-visible) {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.25),
+    inset 0 -24px 48px -20px rgba(255, 255, 255, 0.15);
+}
+
+/* Pulse — white glow instead of teal */
+[data-brand="vanta"] .pulse-teal {
+  animation-name: pulse-white;
+}
+@keyframes pulse-white {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
+  50%       { box-shadow: 0 0 0 5px rgba(255, 255, 255, 0); }
+}
+
+/* HL shiny border — white tones */
+[data-brand="vanta"] .hl-shiny-border::before {
+  background: conic-gradient(
+    transparent 40%,
+    rgba(255, 255, 255, 0.4) 48%,
+    rgba(255, 255, 255, 0.7) 50%,
+    rgba(255, 255, 255, 0.4) 52%,
+    transparent 60%
+  );
+}
+
+/* Background overrides */
+[data-brand="vanta"] .bg-\[\#09090b\],
+[data-brand="vanta"] .bg-\[\#09090b\]\/60,
+[data-brand="vanta"] .bg-\[\#09090b\]\/95 {
+  background-color: #000000;
+}
+[data-brand="vanta"] .bg-zinc-950\/60 {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+/* Focus ring — white instead of teal */
+[data-brand="vanta"] .focus-visible\:ring-teal-400\/50:focus-visible {
+  --tw-ring-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Scrollbar track for vanta */
+[data-brand="vanta"] ::-webkit-scrollbar-track {
+  background: #000000;
 }
