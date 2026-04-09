@@ -1,24 +1,27 @@
 import { NextResponse } from "next/server";
 
-export function middleware(request) {
-  const { pathname, searchParams } = request.nextUrl;
-  const entryCookie = request.cookies.get("hs_entry")?.value;
-  const affiliateCookie = request.cookies.get("hs_affiliate")?.value;
-  const minerMatch = pathname.match(/^\/miner\/([^/]+)/);
+const VANTA_HOSTNAMES = new Set(["hs.vantatrading.io"]);
+const INTERNAL_PATH_PREFIXES = ["/_next", "/api", "/monitoring"];
 
-  // Check for redirect first
-  if (entryCookie && entryCookie !== "home" && minerMatch) {
-    const slug = minerMatch[1];
-    if (slug !== entryCookie) {
-      const url = request.nextUrl.clone();
-      url.pathname = `/miner/${entryCookie}`;
-      return NextResponse.redirect(url);
-    }
+function getHostname(request) {
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const host = forwardedHost || request.headers.get("host") || "";
+  return host.split(",")[0].trim().toLowerCase().replace(/:\d+$/, "");
+}
+
+function shouldRewriteToVanta(hostname, pathname) {
+  if (!VANTA_HOSTNAMES.has(hostname)) {
+    return false;
   }
 
-  const response = NextResponse.next();
+  if (pathname === "/vanta" || pathname.startsWith("/vanta/")) {
+    return false;
+  }
 
-  // Set hs_entry cookie if not present
+  return !INTERNAL_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+function applyTrackingCookies(response, { entryCookie, affiliateCookie, minerMatch, pathname, searchParams }) {
   if (!entryCookie) {
     const entryValue = minerMatch ? minerMatch[1] : pathname === "/" ? "home" : null;
     if (entryValue) {
@@ -30,7 +33,6 @@ export function middleware(request) {
     }
   }
 
-  // Capture UTM param into hs_affiliate cookie
   if (!affiliateCookie) {
     const utm = searchParams.get("aff");
     if (utm) {
@@ -41,10 +43,45 @@ export function middleware(request) {
       });
     }
   }
+}
+
+export function middleware(request) {
+  const { pathname, searchParams } = request.nextUrl;
+  const hostname = getHostname(request);
+  const entryCookie = request.cookies.get("hs_entry")?.value;
+  const affiliateCookie = request.cookies.get("hs_affiliate")?.value;
+  const minerMatch = pathname.match(/^\/miner\/([^/]+)/);
+
+  if (entryCookie && entryCookie !== "home" && minerMatch) {
+    const slug = minerMatch[1];
+    if (slug !== entryCookie) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/miner/${entryCookie}`;
+      return NextResponse.redirect(url);
+    }
+  }
+
+  let response;
+
+  if (shouldRewriteToVanta(hostname, pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/vanta${pathname}`;
+    response = NextResponse.rewrite(url);
+  } else {
+    response = NextResponse.next();
+  }
+
+  applyTrackingCookies(response, {
+    entryCookie,
+    affiliateCookie,
+    minerMatch,
+    pathname,
+    searchParams,
+  });
 
   return response;
 }
 
 export const config = {
-  matcher: ["/", "/miner/:path*"],
+  matcher: ["/((?!api|_next|monitoring|.*\\..*).*)"],
 };
