@@ -17,6 +17,7 @@ import {
 } from '@phosphor-icons/react'
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import PricingPreview from '@/components/marketing/PricingPreview'
+import { useBrandHref } from '@/lib/brand'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -24,6 +25,7 @@ const spring = { type: 'spring', stiffness: 100, damping: 20 }
    Section 1 — Page Hero
    ─────────────────────────────────────────────── */
 function PageHero() {
+  const brandHref = useBrandHref()
   return (
     <section className="pt-32 pb-16 px-6">
       <div className="max-w-[800px] mx-auto text-center">
@@ -52,7 +54,7 @@ function PageHero() {
           className="mt-8"
         >
           <Link
-            href="/register"
+            href={brandHref('/register')}
             className="shiny-cta inline-flex items-center gap-1.5 px-6 py-3 min-h-12"
           >
             Start Your Challenge
@@ -161,6 +163,7 @@ const SCALING_QUALIFICATIONS = [
 ]
 
 function StepCard({ step, index }) {
+  const brandHref = useBrandHref()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
@@ -231,7 +234,7 @@ function StepCard({ step, index }) {
           </p>
           {step.cta && (
             <Link
-              href="/register"
+              href={brandHref('/register')}
               className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-teal-400 hover:text-teal-300 transition-colors"
             >
               Get started

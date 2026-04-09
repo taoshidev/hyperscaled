@@ -45,10 +45,14 @@ const BRANDS = {
 
 const BrandContext = createContext(BRANDS.hyperscaled)
 
-export function BrandProvider({ brand = 'hyperscaled', children }) {
+export function BrandProvider({ brand = 'hyperscaled', prefixOverride, children }) {
   const config = BRANDS[brand] || BRANDS.hyperscaled
+  const providerConfig = {
+    ...config,
+    prefix: prefixOverride ?? config.prefix,
+  }
   return (
-    <BrandContext.Provider value={config}>
+    <BrandContext.Provider value={providerConfig}>
       {children}
     </BrandContext.Provider>
   )

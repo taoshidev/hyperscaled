@@ -11,6 +11,7 @@ import { StepConfirmation } from "./step-confirmation";
 import { RegistrationHelpProvider } from "./registration-help-context";
 import { RegistrationSidebar } from "./registration-sidebar";
 import { MobileHelpSheet } from "./mobile-help-sheet";
+import { useBrandHref } from "@/lib/brand";
 
 const STEP_LABELS = ["Select Plan", "Connect & Pay", "Confirm", "Done"];
 const DEFAULT_MINER_SLUG = "vanta";
@@ -65,8 +66,10 @@ export function RegistrationFlow({
   initialPaymentWallet = null,
   logo = "/hyperscaled-logo.svg",
   logoAlt = "Hyperscaled",
-  homeHref = "/",
+  homeHref,
 }) {
+  const brandHref = useBrandHref();
+  const resolvedHomeHref = homeHref ?? brandHref("/");
   const [recovered] = useState(getRecoveredRegistration);
   const [currentStep, setCurrentStep] = useState(recovered ? 3 : 0);
   const [selectedTier, setSelectedTier] = useState(recovered ? {
@@ -127,14 +130,14 @@ export function RegistrationFlow({
     <main className="min-h-[100dvh] flex flex-col">
       {/* D2: Minimal nav bar */}
       <nav className="flex items-center justify-between py-4 px-6 w-full max-w-5xl mx-auto">
-        <Link href={homeHref} className="outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg">
+        <Link href={resolvedHomeHref} className="outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg">
           <img
             src={logo}
             alt={logoAlt}
             className="h-7 w-auto"
           />
         </Link>
-        <Link href={homeHref}>
+        <Link href={resolvedHomeHref}>
           <Button
             variant="outline"
             className="text-sm h-11 border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 cursor-pointer"

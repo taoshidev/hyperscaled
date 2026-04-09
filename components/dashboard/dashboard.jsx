@@ -8,6 +8,7 @@ import { AlertCircle, RefreshCw } from "lucide-react";
 import { MagnifyingGlass, Wallet, ArrowRight, Warning, WifiSlash } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useBrandHref } from "@/lib/brand";
 
 import { useDashboardData, usePayoutData } from "@/hooks/use-dashboard";
 import { useDashboardStream } from "@/hooks/use-dashboard-stream";
@@ -26,6 +27,7 @@ import { KycVerification } from "./kyc-verification";
 const FUNDED_DEMO_LOOKUP = "0x7939aF2C9889F59A96C3921B515300A9a70898BD".toLowerCase();
 
 export function Dashboard() {
+  const brandHref = useBrandHref();
   const { address, isConnected } = useAccount();
   const searchParams = useSearchParams();
   const preloadAddr = searchParams.get("addr") || "";
@@ -273,7 +275,7 @@ export function Dashboard() {
             This wallet is not registered with any entity miner.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-            <Link href="/register">
+            <Link href={brandHref("/register")}>
               <span className="shiny-cta px-6 py-3 inline-flex items-center gap-1.5">
                 <span className="flex items-center gap-1.5">
                   Register Now
