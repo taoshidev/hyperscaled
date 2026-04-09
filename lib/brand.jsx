@@ -25,7 +25,7 @@ const BRANDS = {
   vanta: {
     id: 'vanta',
     name: 'Vanta Trading',
-    prefix: '/vanta',
+    prefix: '',
     logo: '/vanta-logo.svg',
     tagline: 'Funded Trading on Hyperliquid',
     siteUrl: 'https://vantatrading.io',
