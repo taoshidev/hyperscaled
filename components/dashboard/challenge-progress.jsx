@@ -11,7 +11,9 @@ export function ChallengeProgress({ accountSize, accountSizeData, drawdown, chal
     challengePeriod.bucket === "SUBACCOUNT_ALPHA";
 
   const profitTarget = accountSize * 0.1;
-  const totalPnl = accountSizeData?.total_realized_pnl ?? 0;
+  const totalPnl = (accountSizeData?.balance != null && accountSizeData?.account_size != null)
+    ? accountSizeData.balance - accountSizeData.account_size
+    : 0;
   const profitPct = profitTarget > 0 ? Math.max(0, (totalPnl / profitTarget) * 100) : 0;
 
   const intradayDD = Math.max(0, drawdown.intraday_drawdown_pct ?? 0);
