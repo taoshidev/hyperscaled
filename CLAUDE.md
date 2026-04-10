@@ -6,6 +6,7 @@ Read this file at the start of every session before writing any code.
 
 Hyperscaled is a decentralized prop trading network built on Hyperliquid. This repo is the frontend — marketing site, trader dashboard, leaderboard, miner detail pages, and registration flow. All data is currently mock/fake. The focus is UI/UX quality, not backend integration.
 
+
 ## Repo Map
 
 ```
