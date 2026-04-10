@@ -4,7 +4,7 @@ import { JsonLd } from '@/components/shared/JsonLd'
 import { getPricingTiers } from '@/lib/pricing'
 
 export const metadata = buildMetadata({
-  title: 'Pricing — Hyperscaled Funded Trading Accounts',
+  title: 'Pricing — Hyperscaled Scaled Trading Accounts',
   description:
     'One-time USDC fee. $5K to $100K funded accounts. 100% profit split. No subscriptions, no hidden charges.',
   ogTitle: 'Hyperscaled Pricing — One Fee. One Challenge. Keep Everything You Earn.',

@@ -4,7 +4,7 @@ import { JsonLd } from '@/components/shared/JsonLd'
 import { FAQ_ITEMS } from '@/lib/constants'
 
 export const metadata = buildMetadata({
-  title: 'FAQ — Vanta Trading Funded Trading Questions',
+  title: 'FAQ — Vanta Trading Scaled Trading Questions',
   description:
     'Common questions about Vanta Trading — challenges, payouts, KYC, account scaling, and how the protocol works.',
   ogTitle: 'Vanta Trading FAQ — Everything You Need to Know',

@@ -2,7 +2,7 @@ import { BrandProvider } from '@/lib/brand'
 
 export const metadata = {
   title: {
-    default: 'Vanta Trading — Funded Trading on Hyperliquid',
+    default: 'Vanta Trading — Scaled Trading on Hyperliquid',
     template: '%s',
   },
 }

@@ -5,13 +5,13 @@ const OG_IMAGE = {
   url: "/og.png",
   width: 1200,
   height: 630,
-  alt: "Hyperscaled — Funded Trading on Hyperliquid",
+  alt: "Hyperscaled — Scaled Trading on Hyperliquid",
 };
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Hyperscaled — Funded Trading on Hyperliquid",
+    default: "Hyperscaled — Scaled Trading on Hyperliquid",
     template: "%s",
   },
   description:
@@ -20,7 +20,7 @@ export const metadata = {
   openGraph: {
     type: "website",
     siteName: "Hyperscaled",
-    title: "Hyperscaled — Funded Trading on Hyperliquid",
+    title: "Hyperscaled — Scaled Trading on Hyperliquid",
     description:
       "The most advanced decentralized prop trading infrastructure. 1-step challenge, 100% profit split, onchain USDC payouts, no KYC to start. Trade your way to $2.5M.",
     url: SITE_URL,
@@ -30,7 +30,7 @@ export const metadata = {
     card: "summary_large_image",
     site: "@hyperscaled",
     creator: "@hyperscaled",
-    title: "Hyperscaled — Funded Trading on Hyperliquid",
+    title: "Hyperscaled — Scaled Trading on Hyperliquid",
     description:
       "The most advanced decentralized prop trading infrastructure. 1-step challenge, 100% profit split, onchain USDC payouts, no KYC to start.",
     images: ["/og.png"],

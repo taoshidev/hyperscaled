@@ -7,10 +7,10 @@ export const dynamic = "force-dynamic";
 import { buildMetadata } from "@/lib/metadata";
 
 export const metadata = buildMetadata({
-  title: "Hyperscaled — Funded Trading on Hyperliquid",
+  title: "Hyperscaled — Scaled Trading on Hyperliquid",
   description:
     "Trade on Hyperliquid. Get a funded account. Keep 100% of your profits. 1-step challenge. Monthly USDC payouts. Scale to $2.5M.",
-  ogTitle: "Hyperscaled — Funded Trading on Hyperliquid",
+  ogTitle: "Hyperscaled — Scaled Trading on Hyperliquid",
   ogDescription:
     "The most advanced decentralized prop trading infrastructure. 1-step challenge, 100% profit split, onchain USDC payouts, no KYC to start. Trade your way to $2.5M.",
   path: "/",

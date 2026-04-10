@@ -4,7 +4,7 @@ import { JsonLd } from '@/components/shared/JsonLd'
 import { getPricingTiers } from '@/lib/pricing'
 
 export const metadata = buildMetadata({
-  title: 'How It Works — Vanta Trading Funded Trading',
+  title: 'How It Works — Vanta Trading Scaled Trading',
   description:
     'See exactly how Vanta Trading works. Connect your wallet, trade on Hyperliquid, pass the challenge, and keep 100% of your monthly USDC payouts.',
   ogTitle: 'How Vanta Trading Works — Trade on Hyperliquid, Get Funded, Keep 100%',

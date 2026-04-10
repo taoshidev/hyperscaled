@@ -40,8 +40,8 @@ Mark up inline or add comments. Anything not marked will ship as-is.
 
 **Eyebrow badge**: `Built on Hyperliquid · Powered by Bittensor`
 
-**H1**: `Permissionless Funded Trading on Hyperliquid`
-*(Note: "Funded Trading" is highlighted in teal)*
+**H1**: `Permissionless Scaled Trading on Hyperliquid`
+*(Note: "Scaled Trading" is highlighted in teal)*
 
 **Subheadline**: `Trade with more capital without risking your own stack. Keep 100% of your profits. Grow your account to $2.5M. Built on the biggest decentralized prop firm infrastructure in the world.`
 

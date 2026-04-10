@@ -8,7 +8,7 @@ const BRANDS = {
     name: 'Hyperscaled',
     prefix: '',
     logo: '/hyperscaled-logo.svg',
-    tagline: 'Funded Trading on Hyperliquid',
+    tagline: 'Scaled Trading on Hyperliquid',
     siteUrl: 'https://hyperscaled.trade',
     twitter: '@hyperscaledhq',
     socials: {
@@ -27,7 +27,7 @@ const BRANDS = {
     name: 'Vanta Trading',
     prefix: '',
     logo: '/vanta-logo.svg',
-    tagline: 'Funded Trading on Hyperliquid',
+    tagline: 'Scaled Trading on Hyperliquid',
     siteUrl: 'https://vantatrading.io',
     twitter: '@vantatrading',
     socials: {

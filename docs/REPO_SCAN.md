@@ -194,7 +194,7 @@
 | # | Component | Section | Key Copy | Spec Match | Issues |
 |---|-----------|---------|----------|------------|--------|
 | 1 | `Nav` | Navigation | "Start Evaluation" CTA | ⚠️ | Links don't match spec (see Nav Audit) |
-| 2 | `Hero` | Hero + CTA | "Permissionless Funded Trading on Hyperliquid" | ⚠️ | "Built on Hyperliquid · Powered by Bittensor" eyebrow. "Chrome Extension" secondary CTA links to dead `/extension` route. "Keep 100% of your profits" claim. |
+| 2 | `Hero` | Hero + CTA | "Permissionless Scaled Trading on Hyperliquid" | ⚠️ | "Built on Hyperliquid · Powered by Bittensor" eyebrow. "Chrome Extension" secondary CTA links to dead `/extension` route. "Keep 100% of your profits" claim. |
 | 3 | `Stats` | Network statistics | "$1B+ Network Volume" | ✅ | Stats hardcoded in component, not centralized |
 | 4 | `Problem` | Pain points | "Prop firms take up to 30%. Then ghost you on payouts." | ✅ | "100% payouts" claim in body2 |
 | 5 | `Solution` | Protocol pillars + comparison | "Permissionless. Open-Source. Onchain." | ⚠️ | "Up to 100%" in comparison table. "Cryptographic KYC" copy conflicts with FAQ (Privado) |

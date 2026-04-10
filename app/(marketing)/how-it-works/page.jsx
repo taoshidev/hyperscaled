@@ -4,7 +4,7 @@ import { JsonLd } from '@/components/shared/JsonLd'
 import { getPricingTiers } from '@/lib/pricing'
 
 export const metadata = buildMetadata({
-  title: 'How It Works — Hyperscaled Funded Trading',
+  title: 'How It Works — Hyperscaled Scaled Trading',
   description:
     'See exactly how Hyperscaled works. Connect your wallet, trade on Hyperliquid, pass the challenge, and keep 100% of your monthly USDC payouts.',
   ogTitle: 'How Hyperscaled Works — Trade on Hyperliquid, Get Funded, Keep 100%',

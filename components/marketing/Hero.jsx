@@ -57,7 +57,7 @@ export default function Hero() {
               variants={itemVariants}
               className="text-5xl md:text-6xl xl:text-7xl tracking-tighter leading-none font-bold mb-6"
             >
-              <span className="text-teal-400">Funded Trading</span>{' '}
+              <span className="text-teal-400">Scaled Trading</span>{' '}
               on Hyperliquid
             </motion.h1>
 
