@@ -38,7 +38,7 @@ Last updated: 2026-03-26
 | Page route + metadata | Done |
 | Launch pricing banner | Done — CRA: updated to "Save up to 50% for a limited time" |
 | Page hero | Done — CRA: subtext "take the Hyperscaled challenge. No hidden fees." |
-| 3-tier pricing cards (shiny-border on popular) | Done — CRA: Most Popular moved to $100K, tier I/II scaling → $100K, payout cycle → Weekly |
+| 3-tier pricing cards (shiny-border on popular) | Done — CRA: Most Popular moved to $100K, tier I/II scaling → $100K, payout cycle → Monthly |
 | What's Included feature grid | Done — CRA: replaced badge row with 6-card grid (icons + title + desc) |
 | A Model Built for Traders section | Done — CRA: bullet list + EvalProgressWidget mockup |
 | Scaling path visual | Done |
@@ -54,12 +54,12 @@ Last updated: 2026-03-26
 | Item | State |
 |------|-------|
 | Page route + metadata | Done |
-| Page hero + CTA | Done — CRB: headline "Trade on Hyperliquid. Get funded by the network.", subtext shortened |
+| Page hero + CTA | Done — CRB: headline "Trade on Hyperliquid. Get scaled by the network.", subtext shortened |
 | 4-step flow (register, trade, track, pass) | Done — CRB/UB: all titles/bodies/details rewritten, step 01 has "Get started" CTA, step 02 Minimum Trading Capital row removed |
 | Key details boxes per step | Done — CRB: simplified labels, Chrome Plugin mention |
 | Scaling path visual + tier note | Done — CRB: body shortened |
 | Non-custodial explainer + comparison | Done — CRB/UB: callout bar above comparison, spacing tightened (mb-6) |
-| Payout mechanics + flow diagram | Done — CRB: headline "Automated. Weekly. Onchain.", body + KYC note shortened |
+| Payout mechanics + flow diagram | Done — CRB: headline "Automated. Monthly. Onchain.", body + KYC note shortened |
 | Callout box (100% profit) | Done |
 | PricingPreview widget | Done — CRB: added between payout mechanics and bottom CTA |
 | Bottom CTA | Done — CRB: removed "View Pricing" link |
@@ -133,10 +133,10 @@ Last updated: 2026-03-26
 | NETWORK_STATS | Done — 5 stats (value/label/description). UB: label "Rewards Distributed" → "Network Rewards Distributed" |
 | HERO_STATS | Done — CRA/UA: 1-Step Challenge, 100% Profit Split, $30M+ Rewards |
 | EVAL_RULES | Done — 10 challenge rules (UA: Evaluation→Challenge rename) |
-| FUNDED_RULES | Done — 7 funded account rules |
+| FUNDED_RULES | Done — 7 scaled account rules |
 | SCALING_PATH | Done — 9 steps ($100K → $2.5M) |
 | SCALING_MILESTONES | Done — 12 milestones ($25K → $2.5M) |
-| PRICING_TIERS | Done — CRA: popular moved to tier-3, tier I/II scaling → $100K, payout → Weekly |
+| PRICING_TIERS | Done — CRA: popular moved to tier-3, tier I/II scaling → $100K, payout → Monthly |
 | FAQ_ITEMS | Done — 5 categories (UA: "The Evaluation"→"The Challenge"), 22 entries. UB: removed minimum-capital, added trading-pairs |
 | HOME_FAQ_IDS | Done — 5-item subset for home page |
 | PRICING_FAQ / PRICING_FAQ_IDS | Done — 3 pricing-specific entries |
@@ -245,7 +245,7 @@ Last updated: 2026-03-26
 |------|-------|
 | Leaderboard page | Done |
 | Mock miner data | Done |
-| Wallet address search | Done — search input above table, filters funded + challenge tabs by partial address match, ?addr= query param support, clear/reset, no-results state |
+| Wallet address search | Done — search input above table, filters scaled + challenge tabs by partial address match, ?addr= query param support, clear/reset, no-results state |
 | Page metadata + OG | Done — title, description, openGraph with url in leaderboard layout.jsx |
 
 **Next action**: Design polish, responsive layout

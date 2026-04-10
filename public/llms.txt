@@ -2,7 +2,7 @@
 # https://hyperscaled.trade
 
 ## About
-Hyperscaled is a decentralized prop trading network built on Hyperliquid. Traders complete a 1-step challenge to earn a funded trading account. 100% of performance rewards go to the trader. USDC payouts happen every 7 days onchain. Accounts scale from $25K up to $2.5M.
+Hyperscaled is a decentralized prop trading network built on Hyperliquid. Traders complete a 1-step challenge to earn a scaled trading account. 100% of performance rewards go to the trader. USDC payouts happen every 7 days onchain. Accounts scale from $25K up to $2.5M.
 
 ## Key Pages
 - Homepage: https://hyperscaled.trade/

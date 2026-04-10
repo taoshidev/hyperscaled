@@ -13,12 +13,12 @@ const FALLBACK_LB = {
   summary: {
     totalPaidOut: 30000000,
     totalTraders: 4200,
-    fundedTraders: 310,
+    scaledTraders: 310,
     inChallenge: 2840,
     eliminated: 1050,
     totalVolume: 1000000000,
   },
-  fundedTraders: [
+  scaledTraders: [
     { address: '0x7a3b...f41d', pnl: 48230, funding: 400000, sharpe: 2.14, trades: 847, winRate: 68, payouts: 12480, since: 'Oct 2024' },
     { address: '0xd4e5...b2c3', pnl: 35120, funding: 200000, sharpe: 1.87, trades: 623, winRate: 64, payouts: 8750, since: 'Nov 2024' },
     { address: '0x9f0a...e8d7', pnl: 28940, funding: 200000, sharpe: 1.95, trades: 512, winRate: 71, payouts: 7200, since: 'Sep 2024' },
@@ -49,7 +49,7 @@ export default function Leaderboard({ initialSearch = '' }) {
   const router = useRouter()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
-  const [activeTab, setActiveTab] = useState('funded')
+  const [activeTab, setActiveTab] = useState('scaled')
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -85,13 +85,13 @@ export default function Leaderboard({ initialSearch = '' }) {
   }, [])
 
   const summary = data?.summary || FALLBACK_LB.summary
-  const funded = data?.fundedTraders || FALLBACK_LB.fundedTraders
+  const scaled = data?.scaledTraders || FALLBACK_LB.scaledTraders
   const challenge = data?.challengeTraders || FALLBACK_LB.challengeTraders
 
   const networkStats = [
     { label: 'Total Paid Out', value: fmtCompact(summary.totalPaidOut || 0), color: 'text-teal-400' },
     { label: 'Traders', value: fmt(summary.totalTraders || 0) + '+', color: 'text-white' },
-    { label: 'Active Funded', value: fmt(summary.fundedTraders || 0), color: 'text-blue-400' },
+    { label: 'Active Funded', value: fmt(summary.scaledTraders || 0), color: 'text-blue-400' },
     { label: 'In Challenge', value: fmt(summary.inChallenge || 0), color: 'text-amber-400' },
     { label: 'Eliminated', value: fmt(summary.eliminated || 0), color: 'text-red-400' },
     { label: 'Network Volume', value: fmtCompact(summary.totalVolume || 0), color: 'text-white' },
@@ -99,8 +99,8 @@ export default function Leaderboard({ initialSearch = '' }) {
 
   const query = searchQuery.trim().toLowerCase()
   const filteredFunded = useMemo(() =>
-    query ? funded.filter((t) => (t.address || t.addr || '').toLowerCase().includes(query)) : funded,
-    [funded, query]
+    query ? scaled.filter((t) => (t.address || t.addr || '').toLowerCase().includes(query)) : scaled,
+    [scaled, query]
   )
   const filteredChallenge = useMemo(() =>
     query ? challenge.filter((t) => (t.address || t.addr || '').toLowerCase().includes(query)) : challenge,
@@ -231,7 +231,7 @@ export default function Leaderboard({ initialSearch = '' }) {
             {/* Tabs */}
             <div className="flex gap-0 border-b border-white/[0.06] mb-5">
               {[
-                ['funded', `Funded (${filteredFunded.length})`],
+                ['scaled', `Funded (${filteredFunded.length})`],
                 ['challenge', `In Challenge (${filteredChallenge.length})`],
               ].map(([tab, label]) => (
                 <button
@@ -249,7 +249,7 @@ export default function Leaderboard({ initialSearch = '' }) {
             </div>
 
             {/* Funded table */}
-            {activeTab === 'funded' && (
+            {activeTab === 'scaled' && (
               <div className="bg-zinc-900/40 border border-white/[0.06] rounded-2xl overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[900px] tabular-nums">

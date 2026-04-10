@@ -28,7 +28,7 @@ const features = [
   {
     icon: CheckCircle,
     title: 'One-Step Challenge',
-    body: 'Trade, perform, and unlock funded capital through our one-step\u00a0challenge.',
+    body: 'Trade, perform, and unlock scaled capital through our one-step\u00a0challenge.',
     span: 'md:col-span-7',
     large: true,
     extra: (

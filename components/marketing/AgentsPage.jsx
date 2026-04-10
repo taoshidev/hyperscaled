@@ -227,7 +227,7 @@ function IntegrationPaths() {
                 { text: '> register  trade  positions  orders  rules  payouts', teal: true },
               ]} />
               <div className="flex items-center gap-3 mt-5">
-                <a href="https://clawhub.ai/taoshidev1/funded-account" target="_blank" rel="noreferrer" className="shiny-cta px-4 py-2 text-sm">
+                <a href="https://clawhub.ai/taoshidev1/scaled-account" target="_blank" rel="noreferrer" className="shiny-cta px-4 py-2 text-sm">
                   <span className="flex items-center gap-1.5">
                     Install Skill
                     <ArrowRight size={14} weight="bold" />
@@ -367,7 +367,7 @@ const whyFeatures = [
       <CodeBlock lines={[
         { text: 'AccountInfo(', dim: true },
         { text: '  balance=201271.23,', teal: true },
-        { text: '  phase="funded",', teal: true },
+        { text: '  phase="scaled",', teal: true },
         { text: '  profit_pct=4.2', teal: true },
         { text: ')', dim: true },
       ]} />
@@ -524,7 +524,7 @@ function CTABanner() {
               Install the OpenClaw skill or drop the Python SDK directly into your agent workflow.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
-              <a href="https://clawhub.ai/taoshidev1/funded-account" target="_blank" rel="noreferrer" className="shiny-cta px-6 py-2.5">
+              <a href="https://clawhub.ai/taoshidev1/scaled-account" target="_blank" rel="noreferrer" className="shiny-cta px-6 py-2.5">
                 <span className="flex items-center gap-1.5">
                   Install OpenClaw Skill
                   <ArrowRight size={15} weight="bold" />

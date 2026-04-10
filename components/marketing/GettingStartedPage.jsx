@@ -468,7 +468,7 @@ function RegistrationSection() {
               </p>
               <TipBox label="Payout schedule">
                 <p>
-                  Once you pass the challenge and your funded account is active, you
+                  Once you pass the challenge and your scaled account is active, you
                   will receive an email notification every time a payout is sent. You
                   can update your payout address in the dashboard at any&nbsp;time.
                 </p>
@@ -688,7 +688,7 @@ function ChallengeRulesSection() {
           </h2>
           <p className="text-sm sm:text-base text-zinc-400 leading-relaxed mb-10">
             The Hyperscaled challenge is one step with straightforward rules. Every
-            account size follows the same objectives. Pass once, and your funded account
+            account size follows the same objectives. Pass once, and your scaled account
             activates&nbsp;immediately.
           </p>
         </AnimatedSection>
@@ -798,7 +798,7 @@ function ChallengeRulesSection() {
                 After You Pass: Account Scaling
               </h3>
               <p className="text-sm text-zinc-400 leading-relaxed mb-4">
-                Passing the challenge activates your funded account immediately. From
+                Passing the challenge activates your scaled account immediately. From
                 there, consistent quarterly performance unlocks progressively larger
                 account sizes, with no additional fees and no&nbsp;application.
               </p>
@@ -894,7 +894,7 @@ function AfterRegistrationSection() {
                 {
                   icon: Eye,
                   title: 'Trades Are Mirrored Automatically',
-                  body: 'Hyperscaled reads your fills from the public data stream and mirrors every trade proportionally to your simulated funded account. No action needed from you.',
+                  body: 'Hyperscaled reads your fills from the public data stream and mirrors every trade proportionally to your simulated scaled account. No action needed from you.',
                 },
                 {
                   icon: Target,
@@ -904,7 +904,7 @@ function AfterRegistrationSection() {
                 {
                   icon: HandCoins,
                   title: 'Get Paid When Profitable',
-                  body: 'Pass the 10% profit target and your funded account activates. From there, monthly USDC payouts are calculated automatically and sent to your payout wallet.',
+                  body: 'Pass the 10% profit target and your scaled account activates. From there, monthly USDC payouts are calculated automatically and sent to your payout wallet.',
                 },
               ].map((step) => {
                 const Icon = step.icon
@@ -942,7 +942,7 @@ function AfterRegistrationSection() {
               style={{ textWrap: 'balance' }}
             >
               Pick your account size, pay once, and start trading on Hyperliquid.
-              Your funded account is one challenge&nbsp;away.
+              Your scaled account is one challenge&nbsp;away.
             </p>
             <Link
               href="/prod-register"

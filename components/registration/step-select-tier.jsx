@@ -89,19 +89,6 @@ export function StepSelectTier({
 
   return (
     <div className="flex flex-col">
-      {/* Powered-by callout (white-label brands only) */}
-      {brand.poweredBy && brand.id !== 'hyperscaled' && (
-        <div className="flex justify-center mb-4">
-          <a
-            href="https://hs.vantatrading.io"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-white/[0.08] bg-white/[0.03] text-sm text-zinc-400 hover:text-white hover:border-white/[0.14] transition-[color,border-color]"
-          >
-            Powered by <span className="font-semibold text-white">{brand.poweredBy.name}</span>
-            <ArrowUpRight size={13} weight="bold" className="text-zinc-500" />
-          </a>
-        </div>
-      )}
-
       {/* Promo banner */}
       <div className="flex justify-center">
         <p className="bg-teal-400/10 text-teal-400 text-sm font-medium px-4 py-2 rounded-lg text-center text-balance">
@@ -112,7 +99,7 @@ export function StepSelectTier({
       {/* Header */}
       <div className="text-center space-y-2 mt-3">
         <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-          Choose your funded account size
+          Choose your scaled account size
         </h2>
         <p className="text-sm text-muted-foreground max-w-md mx-auto text-balance">
           One challenge. No recurring fees. 100%&nbsp;of performance
@@ -120,10 +107,23 @@ export function StepSelectTier({
         </p>
       </div>
 
+      {/* Powered-by callout (white-label brands only) */}
+      {brand.poweredBy && brand.id !== 'hyperscaled' && (
+        <div className="flex justify-center mt-4">
+          <a
+            href="https://hs.vantatrading.io"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-white/[0.08] bg-white/[0.03] text-sm text-zinc-400 hover:text-white hover:border-white/[0.14] transition-[color,border-color]"
+          >
+            Powered by <span className="font-semibold text-white">{brand.poweredBy.name}</span>
+            <ArrowUpRight size={13} weight="bold" className="text-zinc-500" />
+          </a>
+        </div>
+      )}
+
       {/* Tier cards — native radio + label (reliable clicks across browsers) */}
       <div
         role="radiogroup"
-        aria-label="Choose your funded account size"
+        aria-label="Choose your scaled account size"
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mt-10"
       >
         {!Array.isArray(tiers)
@@ -151,7 +151,7 @@ export function StepSelectTier({
                   type="button"
                   role="radio"
                   aria-checked={isSelected}
-                  aria-label={`${tier.name} — ${formatShortName(tier.accountSize)} funded account — ${formatPrice(tier.promoPrice)}`}
+                  aria-label={`${tier.name} — ${formatShortName(tier.accountSize)} scaled account — ${formatPrice(tier.promoPrice)}`}
                   tabIndex={isSelected || (selectedIndex < 0 && i === 0) ? 0 : -1}
                   onClick={() => handleSelectIndex(i)}
                   onKeyDown={(e) => handleArrowNav(e, i)}

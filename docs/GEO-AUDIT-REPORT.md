@@ -84,7 +84,7 @@ Sitemap: https://hyperscaled.trade/sitemap.xml
 ## High Priority Issues
 
 ### 6. Missing H1 on /leaderboard and /register
-The leaderboard page uses an `<h2>` for "Top traders on the network." and the register page uses `<h2>` for "Choose your funded account size." Both should be `<h1>` tags for proper heading hierarchy.
+The leaderboard page uses an `<h2>` for "Top traders on the network." and the register page uses `<h2>` for "Choose your scaled account size." Both should be `<h1>` tags for proper heading hierarchy.
 
 ### 7. No Canonical URLs on Any Page
 No `<link rel="canonical">` tags are present. This can cause duplicate content issues if the site is accessible via multiple URLs (www vs non-www, HTTP vs HTTPS, trailing slashes).

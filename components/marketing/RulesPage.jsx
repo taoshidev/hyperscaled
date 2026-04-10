@@ -18,7 +18,7 @@ import { useBrand, useBrandHref } from '@/lib/brand'
 const TOC_SECTIONS = [
   { id: 'challenge', label: 'Challenge' },
   { id: 'pairs', label: 'Available Pairs' },
-  { id: 'funded', label: 'Funded Account' },
+  { id: 'scaled', label: 'Funded Account' },
   { id: 'scaling', label: 'Scaling' },
   { id: 'disqualification', label: 'Disqualification' },
   { id: 'kyc', label: 'KYC & Payouts' },
@@ -248,13 +248,13 @@ function AvailablePairsSection() {
    ─────────────────────────────────────────────── */
 function FundedRulesSection() {
   return (
-    <section id="funded" className="px-6 pb-20 scroll-mt-[110px]">
+    <section id="scaled" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Funded Account Phase
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
-          Once you pass the challenge, your funded account is activated immediately. These rules apply for the duration of your funded&nbsp;trading.
+          Once you pass the challenge, your scaled account is activated immediately. These rules apply for the duration of your scaled&nbsp;trading.
         </p>
 
         <RulesTable rules={FUNDED_RULES} />
@@ -268,8 +268,8 @@ function FundedRulesSection() {
    ─────────────────────────────────────────────── */
 
 const DOES_DISQUALIFY = [
-  'Breaching the daily loss limit (5% during the challenge / 8% when funded)',
-  'Breaching the EOD trailing loss limit (5% during the challenge / 8% when funded)',
+  'Breaching the daily loss limit (5% during the challenge / 8% when scaled)',
+  'Breaching the EOD trailing loss limit (5% during the challenge / 8% when scaled)',
   'Attempting to manipulate challenge performance (wash trading, coordinated cross-account hedging)',
 ]
 
@@ -290,7 +290,7 @@ function ScalingRulesSection() {
           Account Scaling
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-10">
-          Consistent performance on your funded account unlocks access to progressively larger account sizes, up to a maximum of $2.5M. Scaling is automatic and based on performance thresholds — no application required, no additional&nbsp;fees.
+          Consistent performance on your scaled account unlocks access to progressively larger account sizes, up to a maximum of $2.5M. Scaling is automatic and based on performance thresholds — no application required, no additional&nbsp;fees.
         </p>
 
         {/* Qualifications callout boxes */}
@@ -409,7 +409,7 @@ function DisqualificationSection() {
           Disqualification
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
-          Not every risk leads to disqualification. Here is what does and does not end your challenge or funded&nbsp;account.
+          Not every risk leads to disqualification. Here is what does and does not end your challenge or scaled&nbsp;account.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -466,7 +466,7 @@ function KYCSection() {
             KYC is not required to register, trade, or complete the challenge. It is required only to receive a&nbsp;payout.
           </p>
           <p>
-            When your funded account reaches payout eligibility at the end of a 7-day cycle, you will be prompted to complete a brief identity verification to unlock payouts. Payouts are then sent in USDC directly to your connected wallet. The entire payout flow is automated and verifiable&nbsp;onchain.
+            When your scaled account reaches payout eligibility at the end of a 7-day cycle, you will be prompted to complete a brief identity verification to unlock payouts. Payouts are then sent in USDC directly to your connected wallet. The entire payout flow is automated and verifiable&nbsp;onchain.
           </p>
         </div>
       </div>

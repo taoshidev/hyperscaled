@@ -15,7 +15,7 @@ export const metadata = {
     template: "%s",
   },
   description:
-    "Trade on Hyperliquid. Get a funded account. Keep 100% of your profits. 1-step challenge. Monthly USDC payouts. Scale to $2.5M.",
+    "Trade on Hyperliquid. Get a scaled account. Keep 100% of your profits. 1-step challenge. Monthly USDC payouts. Scale to $2.5M.",
   robots: { index: true, follow: true },
   openGraph: {
     type: "website",

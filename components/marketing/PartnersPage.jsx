@@ -93,7 +93,7 @@ function PageHero() {
           className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1]"
           style={{ textWrap: 'balance' }}
         >
-          Run your own funded trading&nbsp;firm.
+          Run your own scaled trading&nbsp;firm.
           <br />
           <span className="text-zinc-400">
             Powered by Hyperscaled&nbsp;infrastructure.

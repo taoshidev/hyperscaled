@@ -296,7 +296,7 @@ export const HELP_CONTENT = {
     content: (
       <>
         <p className="text-[13px] text-muted-foreground leading-relaxed mb-2">
-          When you trade profitably on your funded account, your share of the
+          When you trade profitably on your scaled account, your share of the
           profits is calculated and sent directly to this wallet —{" "}
           <strong className="text-foreground font-semibold">automatically, with no manual withdrawal
           needed</strong>. Every payout cycle, earned profits land here.

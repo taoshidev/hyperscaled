@@ -83,7 +83,7 @@ export default function Solution() {
                 Open. Onchain.<br />No middlemen.
               </h2>
               <p className="text-base text-zinc-400 leading-relaxed max-w-[52ch] [text-wrap:pretty]">
-                {brand.name} mirrors your Hyperliquid trades into a protocol-funded simulated account
+                {brand.name} mirrors your Hyperliquid trades into a protocol-scaled simulated account
                 and pays out performance rewards in USDC — onchain, automatically, monthly.
               </p>
             </motion.div>

@@ -54,7 +54,7 @@ Mark up inline or add comments. Anything not marked will ship as-is.
 | `$1B+` | `Network Volume` |
 | `$30M+` | `Token Value Distributed` |
 
-**Hero card** (mock funded account):
+**Hero card** (mock scaled account):
 | Element | Copy |
 |---------|------|
 | Label | `Funded Account` |
@@ -84,7 +84,7 @@ Mark up inline or add comments. Anything not marked will ship as-is.
 | `$1B+` | `Network Volume` | `Total trading volume processed across the network` | `Live` |
 | `4200+` | `Funded Traders` | `Funded traders deployed across all integrated prop firms` | — |
 | `$30M+` | `Token Value Distributed` | `Token equivalent value distributed directly to trader wallets, onchain and verifiable` | — |
-| `$2.5M` | `Max Account Size` | `Top-tier funded capital available through performance scaling` | `Scaling Active` |
+| `$2.5M` | `Max Account Size` | `Top-tier scaled capital available through performance scaling` | `Scaling Active` |
 | `100%` | `Max Profit Split` | `Keep every dollar you earn with the best-in-class industry profit split` | — |
 
 ---
@@ -96,7 +96,7 @@ Mark up inline or add comments. Anything not marked will ship as-is.
 **H2**: `Prop firms take up to 30%. Then ghost you on payouts.`
 *(Second sentence in muted color)*
 
-**Subheading**: `Legacy funded trading is broken by design. KYC walls, profit extraction, and centralized discretion mean profitable traders are systematically underserved.`
+**Subheading**: `Legacy scaled trading is broken by design. KYC walls, profit extraction, and centralized discretion mean profitable traders are systematically underserved.`
 
 **Card 1** — Tag: `Rejected`
 - **Title**: `KYC and geographic bans lock out most of the world`
@@ -122,7 +122,7 @@ Mark up inline or add comments. Anything not marked will ship as-is.
 
 **H2**: `Permissionless. No middlemen.`
 
-**Body**: `Hyperscaled mirrors your Hyperliquid trades into a protocol-funded simulated account and pays out performance rewards in USDC — onchain, automatically, monthly.`
+**Body**: `Hyperscaled mirrors your Hyperliquid trades into a protocol-scaled simulated account and pays out performance rewards in USDC — onchain, automatically, monthly.`
 
 **Pillars**:
 | Title | Description |
@@ -149,13 +149,13 @@ Mark up inline or add comments. Anything not marked will ship as-is.
 
 **Section label**: `How It Works`
 
-**H2**: `Trade on Hyperliquid. Get funded by the network.`
+**H2**: `Trade on Hyperliquid. Get scaled by the network.`
 
 **Step 01** — `Choose a Prop Firm`
 > Select from verified prop firms offering competitive pricing and profit splits. No hidden fees, instant credentials.
 
 **Step 02** — `Install the Chrome Extension`
-> The Hyperscaled extension wraps around Hyperliquid interface, showing real-time funded account progress and risk warnings.
+> The Hyperscaled extension wraps around Hyperliquid interface, showing real-time scaled account progress and risk warnings.
 
 **Step 03** — `Trade & Get Funded`
 > Hit 10% profit targets to scale up to $2.5M. Payouts are automated onchain monthly directly to your wallet.
@@ -183,7 +183,7 @@ Mark up inline or add comments. Anything not marked will ship as-is.
 **H2**: `Built for traders who trade with an edge.`
 
 **Feature 1** — `One-Step Evaluation`
-> Trade, perform, and unlock funded capital through a transparent, rules-based evaluation. Hit 10% profit, keep drawdown under 5%. One step — no second phase, no retakes.
+> Trade, perform, and unlock scaled capital through a transparent, rules-based evaluation. Hit 10% profit, keep drawdown under 5%. One step — no second phase, no retakes.
 - Detail: `Profit Target: 10%` · `Max Drawdown: 5%` · `Evaluation Phases: 1` · `Time Limit: None`
 
 **Feature 2** — `Grow Your Account`
@@ -220,10 +220,10 @@ Mark up inline or add comments. Anything not marked will ship as-is.
 | Question | Answer |
 |----------|--------|
 | `Do I need to submit KYC documents?` | `No, you simply use a digital signature via Privado. Hyperscaled is a permissionless protocol. You connect with a Hyperliquid wallet address. Traders in 150+ countries can participate today.` |
-| `How does the one-step evaluation work?` | `Trade on Hyperliquid normally while the protocol mirrors your wallet into a simulated funded account. Hit 10% profit on your evaluation account while keeping max drawdown under 5%. That's it — no second phase, no surprise rule changes.` |
+| `How does the one-step evaluation work?` | `Trade on Hyperliquid normally while the protocol mirrors your wallet into a simulated scaled account. Hit 10% profit on your evaluation account while keeping max drawdown under 5%. That's it — no second phase, no surprise rule changes.` |
 | `When and how do I get paid?` | `Funded traders receive USDC directly to their connected wallet every month. Every payout is recorded onchain — no centralized discretion, no hold periods, no withdrawal fees.` |
 | `What markets can I trade?` | `BTC, ETH, ADA, XRP, SOL, DOGE perps on Hyperliquid with HYPE, TAO, LINK, ZEC, BCH, XMR, and LTC being added. News trading and weekend trading are both allowed. No restricted windows.` |
-| `How does account scaling work?` | `Strong quarterly performance triggers automatic promotions. Traders can scale from $100K up to $2.5M funded capital with no additional evaluation fees. Every scaling milestone is governed by a decentralized set of rules set by validators.` |
+| `How does account scaling work?` | `Strong quarterly performance triggers automatic promotions. Traders can scale from $100K up to $2.5M scaled capital with no additional evaluation fees. Every scaling milestone is governed by a decentralized set of rules set by validators.` |
 | `What is Hyperscaled built on?` | `Hyperscaled is a Web3 protocol built on Hyperliquid's order book infrastructure and powered by the Bittensor network. All rules, payout logic, and trader records are open-source and verifiable onchain.` |
 
 ---
@@ -232,7 +232,7 @@ Mark up inline or add comments. Anything not marked will ship as-is.
 
 | Element | Copy |
 |---------|------|
-| Brand tagline | `Permissionless funded trading on Hyperliquid. Built on Bittensor.` |
+| Brand tagline | `Permissionless scaled trading on Hyperliquid. Built on Bittensor.` |
 | Column: Protocol | `How It Works` · `Features` · `Leaderboard` · `Evaluation Rules` · `Docs` |
 | Column: Community | `Twitter / X` · `Discord` · `GitHub` |
 | Column: Legal | `Terms of Service` · `Privacy Policy` · `Risk Disclosure` · `Audit Report` |

@@ -28,7 +28,7 @@ const BRANDS = {
   },
   vanta: {
     id: 'vanta',
-    name: 'Hyperscaled',
+    name: 'Vanta Trading',
     prefix: '',
     logo: '/vanta-logo.svg',
     tagline: 'Scaled Trading on Hyperliquid',

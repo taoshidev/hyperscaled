@@ -16,7 +16,7 @@ export const metadata = buildMetadata({
 const HOW_TO_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "HowTo",
-  name: "How to get a funded trading account on Hyperscaled",
+  name: "How to get a scaled trading account on Hyperscaled",
   description:
     "Connect your wallet, trade on Hyperliquid, pass the 1-step challenge, and keep 100% of your USDC payouts.",
   step: [

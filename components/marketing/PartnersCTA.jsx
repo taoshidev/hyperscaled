@@ -29,7 +29,7 @@ export default function PartnersCTA() {
               For Operators & Institutions
             </span>
             <h2 className="text-3xl md:text-5xl tracking-tighter leading-none font-bold">
-              Run your own funded trading&nbsp;firm.
+              Run your own scaled trading&nbsp;firm.
             </h2>
           </div>
 

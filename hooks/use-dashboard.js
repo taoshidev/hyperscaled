@@ -16,7 +16,7 @@ function buildFundedDemoDashboard(hlAddress) {
   return {
     status: "success",
     timestamp: now,
-    synthetic_hotkey: "hk_demo_funded_01",
+    synthetic_hotkey: "hk_demo_scaled_01",
     subaccount_uuid: FUNDED_DEMO_SUBACCOUNT_UUID,
     subaccount_id: 1842,
     asset_class: "crypto",
@@ -59,7 +59,7 @@ function buildFundedDemoDashboard(hlAddress) {
       total_leverage: 1.42,
       positions: [
         {
-          position_uuid: "funded-demo-pos-1",
+          position_uuid: "scaled-demo-pos-1",
           trade_pair: "BTC/USD",
           position_type: "LONG",
           open_ms: now - 18 * 3_600_000,
@@ -76,7 +76,7 @@ function buildFundedDemoDashboard(hlAddress) {
           fees: 16.42,
         },
         {
-          position_uuid: "funded-demo-pos-2",
+          position_uuid: "scaled-demo-pos-2",
           trade_pair: "ETH/USD",
           position_type: "SHORT",
           open_ms: now - 10 * 3_600_000,
@@ -93,7 +93,7 @@ function buildFundedDemoDashboard(hlAddress) {
           fees: 9.65,
         },
         {
-          position_uuid: "funded-demo-pos-3",
+          position_uuid: "scaled-demo-pos-3",
           trade_pair: "SOL/USD",
           position_type: "FLAT",
           open_ms: now - 4 * week,
@@ -110,7 +110,7 @@ function buildFundedDemoDashboard(hlAddress) {
           fees: 22.47,
         },
         {
-          position_uuid: "funded-demo-pos-4",
+          position_uuid: "scaled-demo-pos-4",
           trade_pair: "BTC/USD",
           position_type: "FLAT",
           open_ms: now - 3 * week,
@@ -127,7 +127,7 @@ function buildFundedDemoDashboard(hlAddress) {
           fees: 28.14,
         },
         {
-          position_uuid: "funded-demo-pos-5",
+          position_uuid: "scaled-demo-pos-5",
           trade_pair: "XRP/USD",
           position_type: "FLAT",
           open_ms: now - 2 * week,
@@ -207,7 +207,7 @@ function buildFundedDemoPayout() {
   return {
     status: "success",
     data: {
-      hotkey: "hk_demo_funded_01",
+      hotkey: "hk_demo_scaled_01",
       total_checkpoints: 4,
       payout: 2850.23,
       checkpoints: [

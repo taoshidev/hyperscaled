@@ -109,7 +109,7 @@
 
 | File:Line | Text Found |
 |-----------|------------|
-| `components/marketing/Footer.jsx:41` | `Permissionless funded trading on Hyperliquid. Built on Bittensor.` |
+| `components/marketing/Footer.jsx:41` | `Permissionless scaled trading on Hyperliquid. Built on Bittensor.` |
 | `components/marketing/Footer.jsx:101-109` | `Powered by Bittensor` with link |
 | `components/marketing/Hero.jsx:52` | `Built on Hyperliquid · Powered by Bittensor` (eyebrow badge) |
 
@@ -171,7 +171,7 @@
 ## Footer Status
 
 **Current column structure:**
-1. **Brand column** — Logo, tagline ("Permissionless funded trading on Hyperliquid. Built on Bittensor."), social icons (Twitter, Discord, GitHub — all `href="#"`)
+1. **Brand column** — Logo, tagline ("Permissionless scaled trading on Hyperliquid. Built on Bittensor."), social icons (Twitter, Discord, GitHub — all `href="#"`)
 2. **Protocol** — How It Works, Features, Leaderboard, Evaluation Rules, Docs (external)
 3. **Community** — Twitter/X, Discord, GitHub (all external, all `href="#"` effectively)
 4. **Legal** — Terms of Service, Privacy Policy, Risk Disclosure, Audit Report
@@ -198,7 +198,7 @@
 | 3 | `Stats` | Network statistics | "$1B+ Network Volume" | ✅ | Stats hardcoded in component, not centralized |
 | 4 | `Problem` | Pain points | "Prop firms take up to 30%. Then ghost you on payouts." | ✅ | "100% payouts" claim in body2 |
 | 5 | `Solution` | Protocol pillars + comparison | "Permissionless. Open-Source. Onchain." | ⚠️ | "Up to 100%" in comparison table. "Cryptographic KYC" copy conflicts with FAQ (Privado) |
-| 6 | `HowItWorks` | 3-step process | "Trade on Hyperliquid. Get funded by the network." | ⚠️ | "Vanta Trading" in Step 1 mockup. "Chrome Extension" is Step 2. |
+| 6 | `HowItWorks` | 3-step process | "Trade on Hyperliquid. Get scaled by the network." | ⚠️ | "Vanta Trading" in Step 1 mockup. "Chrome Extension" is Step 2. |
 | 7 | `Features` | Feature bento grid | "Built for traders who trade with an edge." | ⚠️ | "we bring the funding" (Features card #5) |
 | 8 | `FAQ` | FAQ accordion | "Questions traders actually ask." | ✅ | Data hardcoded, not in constants |
 | 9 | `Footer` | Footer | "© 2025 Hyperscaled Protocol" | ⚠️ | Wrong year. Dead social links. "Built on Bittensor." |

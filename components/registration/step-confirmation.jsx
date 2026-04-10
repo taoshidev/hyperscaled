@@ -307,7 +307,7 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
               You&#8217;re registered
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Your funded account is being provisioned on Hyperscaled.
+              Your scaled account is being provisioned on Hyperscaled.
             </p>
           </div>
         </div>

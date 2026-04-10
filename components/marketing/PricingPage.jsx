@@ -310,7 +310,7 @@ function ModelSection() {
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
   const bullets = [
-    'A funded account upon challenge completion',
+    'A scaled account upon challenge completion',
     'Verifiable payouts through onchain technology',
     '100% profit split — you keep your earnings',
     'A system designed for trader success',
@@ -376,7 +376,7 @@ function ScalingSection() {
             Start at $25K. Scale to&nbsp;$2.5M.
           </h2>
           <p className="mt-4 text-sm sm:text-base text-zinc-400 max-w-[56ch] mx-auto leading-relaxed" style={{ textWrap: 'balance' }}>
-            Every funded trader starts at their selected account size. Consistent performance unlocks the next tier automatically — no additional&nbsp;fees.
+            Every scaled trader starts at their selected account size. Consistent performance unlocks the next tier automatically — no additional&nbsp;fees.
           </p>
         </motion.div>
         <ScalingPathVisual />

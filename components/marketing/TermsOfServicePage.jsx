@@ -431,7 +431,7 @@ function FeesSection() {
           <p>Challenge Entry Fees are paid in USDC using the on-chain payment method, wallet address, smart contract, chain/network, or other instructions specified by Vanta on the Platform. You are solely responsible for sending the correct token, on the correct chain/network, in the correct amount, to the correct destination, and with sufficient network&nbsp;fees/gas.</p>
 
           <h4 className={heading4}>5.3 No General Cancellation Right; Finality of On-Chain Payments</h4>
-          <p>Except as required by Applicable Law, once you submit or authorize an on-chain payment for a Challenge Entry Fee, the purchase is final and cannot be canceled, reversed, or&nbsp;refunded.</p>
+          <p>Except as required by Applicable Law, once you submit or authorize an on-chain payment for a Challenge Entry Fee, the purchase is final and cannot be canceled, reversed, or&nbsp;rescaled.</p>
 
           <h4 className={heading4}>5.4 EU/UK Consumer Withdrawal Rights</h4>
           <p>If you are a consumer located in the United Kingdom or European Union, you may have a statutory right to withdraw from this Agreement within fourteen (14) days of purchase under applicable consumer protection&nbsp;laws.</p>

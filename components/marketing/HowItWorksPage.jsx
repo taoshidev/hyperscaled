@@ -17,7 +17,7 @@ import {
 } from '@phosphor-icons/react'
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import PricingPreview from '@/components/marketing/PricingPreview'
-import { useBrandHref } from '@/lib/brand'
+import { useBrand, useBrandHref } from '@/lib/brand'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -25,7 +25,13 @@ const spring = { type: 'spring', stiffness: 100, damping: 20 }
    Section 1 — Page Hero
    ─────────────────────────────────────────────── */
 function PageHero() {
+  const brand = useBrand()
   const brandHref = useBrandHref()
+  const heroTitle =
+    brand.poweredBy && brand.id !== 'hyperscaled'
+      ? `Hyperliquid trading on ${brand.name.replace('Trading', '')} \n\n powered by Hyperscaled`
+      : 'Trade on Hyperliquid. Get scaled by the network.'
+
   return (
     <section className="pt-32 pb-16 px-6">
       <div className="max-w-[800px] mx-auto text-center">
@@ -36,7 +42,7 @@ function PageHero() {
           className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1]"
           style={{ textWrap: 'balance' }}
         >
-          Trade on Hyperliquid. Get funded by the&nbsp;network.
+          {heroTitle}
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 16 }}
@@ -45,7 +51,7 @@ function PageHero() {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[62ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          No API keys. No custody. Just Hyperliquid, your wallet, and your trades — we handle the&nbsp;rest.
+          No API keys. No custody. Just Hyperliquid, your wallet, and your trades — Hyperscaled handles the&nbsp;rest.
         </motion.p>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -108,7 +114,7 @@ const STEPS = [
     number: '01',
     icon: Wallet,
     title: 'Register & Choose Your Size',
-    body: 'Visit our app, connect your wallet, and pay the one-time fee to immediately begin your\u00a0challenge.',
+    body: 'Connect your wallet and pay the one-time fee to begin your challenge. Choose a $5K to $100K account.',
     cta: true,
     details: [
       { label: 'Account Sizes', value: '$5K / $10K / $25K / $50K / $100K' },
@@ -143,7 +149,7 @@ const STEPS = [
     number: '04',
     icon: CurrencyDollar,
     title: 'Pass. Get Funded. Get Paid.',
-    body: 'Hit the 10% profit target with drawdown under 5% to immediately activate your funded account. Keep 100% of profits with payouts delivered in USDC monthly. Scale to $2.5M with continued\u00a0performance.',
+    body: 'Hit the 10% profit target with drawdown under 5% to immediately activate your scaled account. Keep 100% of profits with payouts delivered in USDC monthly. Scale to $2.5M with continued\u00a0performance.',
     details: [
       { label: 'Profit Target', value: '10%' },
       { label: 'Max Drawdown (Challenge)', value: '5% daily / 5% EOD trailing' },
@@ -284,7 +290,7 @@ function ScalingSection() {
             Scaling path: $100K to&nbsp;$2.5M
           </h2>
           <p className="mt-4 text-sm sm:text-base text-zinc-400 max-w-[56ch] mx-auto leading-relaxed" style={{ textWrap: 'balance' }}>
-            Consistently hit quarterly performance targets and your funded account grows automatically with no additional&nbsp;fees.
+            Consistently hit quarterly performance targets and your scaled account grows automatically with no additional&nbsp;fees.
           </p>
         </motion.div>
         <ScalingPathVisual />

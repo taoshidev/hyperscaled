@@ -66,7 +66,7 @@ export default function Problem() {
             <span className="text-zinc-500">Then ghost you on&nbsp;payouts.</span>
           </h2>
           <p className="text-base text-zinc-400 leading-relaxed max-w-[60ch] [text-wrap:pretty]">
-            Legacy funded trading is broken by design. KYC walls, profit extraction, and centralized
+            Legacy scaled trading is broken by design. KYC walls, profit extraction, and centralized
             discretion mean profitable traders are systematically&nbsp;underserved.
           </p>
         </motion.div>
