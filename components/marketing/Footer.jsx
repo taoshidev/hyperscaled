@@ -127,12 +127,12 @@ export default function Footer() {
             {' '}&middot;{' '}
             Powered by{' '}
             <a
-              href="https://bittensor.com"
+              href={brand.poweredBy.url}
               target="_blank"
               rel="noopener noreferrer"
               className="text-zinc-500 hover:text-zinc-300 transition-colors"
             >
-              Bittensor
+              {brand.poweredBy.name}
             </a>
           </p>
         </div>

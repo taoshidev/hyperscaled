@@ -21,10 +21,14 @@ const BRANDS = {
     showExtension: true,
     showBetaBadge: true,
     showLiquidCrystal: true,
+    showPartnersCTA: true,
+    heroEyebrow: 'Built on Hyperliquid · Powered by Bittensor',
+    heroSub: 'Trade with more capital without risking your own stack. Keep 100% of your profits and grow your account to\u00a0$2.5M. Built on the most advanced decentralized prop trading infrastructure in the\u00a0world.',
+    poweredBy: { name: 'Bittensor', url: 'https://bittensor.com' },
   },
   vanta: {
     id: 'vanta',
-    name: 'Vanta Trading',
+    name: 'Hyperscaled',
     prefix: '',
     logo: '/vanta-logo.svg',
     tagline: 'Scaled Trading on Hyperliquid',
@@ -40,6 +44,11 @@ const BRANDS = {
     showExtension: false,
     showBetaBadge: false,
     showLiquidCrystal: false,
+    showPartnersCTA: false,
+    parentSite: { label: 'Back to Vanta Trading', url: 'https://vantatrading.io' },
+    heroEyebrow: 'Built on Hyperliquid · Powered by Hyperscaled',
+    heroSub: 'Trade with more capital without risking your own stack. Keep 100% of your profits and grow your account to\u00a0$2.5M. Built on Vanta, the most advanced decentralized prop trading infrastructure in the world. Powered by Hyperscaled.',
+    poweredBy: { name: 'Hyperscaled', url: 'https://hyperscaled.trade' },
   },
 }
 

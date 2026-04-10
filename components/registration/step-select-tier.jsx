@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useRef } from "react";
-import { Check, ArrowRight, Star } from "@phosphor-icons/react";
+import { Check, ArrowRight, Star, ArrowUpRight } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import { useBrand } from "@/lib/brand";
 
 function formatPrice(price) {
   if (price == null || Number.isNaN(Number(price))) return "—";
@@ -84,8 +85,23 @@ export function StepSelectTier({
     handleSelectIndex(nextIndex);
   }
 
+  const brand = useBrand();
+
   return (
     <div className="flex flex-col">
+      {/* Powered-by callout (white-label brands only) */}
+      {brand.poweredBy && brand.id !== 'hyperscaled' && (
+        <div className="flex justify-center mb-4">
+          <a
+            href="https://hs.vantatrading.io"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-white/[0.08] bg-white/[0.03] text-sm text-zinc-400 hover:text-white hover:border-white/[0.14] transition-[color,border-color]"
+          >
+            Powered by <span className="font-semibold text-white">{brand.poweredBy.name}</span>
+            <ArrowUpRight size={13} weight="bold" className="text-zinc-500" />
+          </a>
+        </div>
+      )}
+
       {/* Promo banner */}
       <div className="flex justify-center">
         <p className="bg-teal-400/10 text-teal-400 text-sm font-medium px-4 py-2 rounded-lg text-center text-balance">

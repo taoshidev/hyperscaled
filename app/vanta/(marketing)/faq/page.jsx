@@ -4,12 +4,12 @@ import { JsonLd } from '@/components/shared/JsonLd'
 import { FAQ_ITEMS } from '@/lib/constants'
 
 export const metadata = buildMetadata({
-  title: 'FAQ — Vanta Trading Scaled Trading Questions',
+  title: 'FAQ — Hyperscaled Scaled Trading Questions',
   description:
-    'Common questions about Vanta Trading — challenges, payouts, KYC, account scaling, and how the protocol works.',
-  ogTitle: 'Vanta Trading FAQ — Everything You Need to Know',
+    'Common questions about Hyperscaled — challenges, payouts, KYC, account scaling, and how the protocol works.',
+  ogTitle: 'Hyperscaled FAQ — Everything You Need to Know',
   ogDescription:
-    'Everything you need to know about Vanta Trading. How the challenge works, when you get paid, how scaling works, and what KYC is required.',
+    'Everything you need to know about Hyperscaled. How the challenge works, when you get paid, how scaling works, and what KYC is required.',
   path: '/vanta/faq',
   brand: 'vanta',
 })

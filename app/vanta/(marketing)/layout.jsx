@@ -5,11 +5,11 @@ import { JsonLd } from '@/components/shared/JsonLd'
 const ORGANIZATION_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "Vanta Trading",
+  name: "Hyperscaled",
   url: "https://vantatrading.io",
   logo: "https://vantatrading.io/vanta-logo.svg",
   description:
-    "Decentralized prop trading network built on Hyperliquid. 1-step challenge, 100% profit split, onchain USDC payouts.",
+    "Decentralized prop trading network built on Hyperliquid. 1-step challenge, 100% profit split, onchain USDC payouts. Powered by Hyperscaled.",
   sameAs: [
     "https://x.com/vantatrading",
     "https://discord.gg/vantatrading",
@@ -19,7 +19,7 @@ const ORGANIZATION_SCHEMA = {
 const WEBSITE_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "Vanta Trading",
+  name: "Hyperscaled",
   url: "https://vantatrading.io",
 }
 

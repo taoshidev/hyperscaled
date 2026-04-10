@@ -11,7 +11,7 @@ import { StepConfirmation } from "./step-confirmation";
 import { RegistrationHelpProvider } from "./registration-help-context";
 import { RegistrationSidebar } from "./registration-sidebar";
 import { MobileHelpSheet } from "./mobile-help-sheet";
-import { useBrandHref } from "@/lib/brand";
+import { useBrand, useBrandHref } from "@/lib/brand";
 
 const STEP_LABELS = ["Select Plan", "Connect & Pay", "Confirm", "Done"];
 const DEFAULT_MINER_SLUG = "vanta";
@@ -68,6 +68,7 @@ export function RegistrationFlow({
   logoAlt = "Hyperscaled",
   homeHref,
 }) {
+  const brand = useBrand();
   const brandHref = useBrandHref();
   const resolvedHomeHref = homeHref ?? brandHref("/");
   const [recovered] = useState(getRecoveredRegistration);
@@ -250,6 +251,7 @@ export function RegistrationFlow({
           </div>
         </div>
       )}
+
     </main>
   );
 }

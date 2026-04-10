@@ -13,7 +13,9 @@ import {
   LinkSimple,
   Star,
 } from '@phosphor-icons/react'
+import Link from 'next/link'
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
+import { useBrandHref } from '@/lib/brand'
 import FAQAccordion from '@/components/shared/FAQAccordion'
 import { PRICING_TIERS, PRICING_FAQ } from '@/lib/constants'
 
@@ -64,6 +66,7 @@ function PricingHero() {
 
 /* ── Single Pricing Card ── */
 function PricingCard({ tier, index }) {
+  const brandHref = useBrandHref()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
 
@@ -130,10 +133,8 @@ function PricingCard({ tier, index }) {
       </ul>
 
       {/* CTA */}
-      <a
-        href="https://app.hyperscaled.trade"
-        target="_blank"
-        rel="noopener noreferrer"
+      <Link
+        href={brandHref('/register')}
         className={`mt-8 flex items-center justify-center gap-1.5 min-h-12 rounded-xl text-sm font-semibold transition-colors ${
           tier.popular
             ? 'shiny-cta px-6 py-3'
@@ -142,7 +143,7 @@ function PricingCard({ tier, index }) {
       >
         {tier.cta}
         <ArrowRight size={14} weight="bold" />
-      </a>
+      </Link>
     </motion.div>
   )
 }

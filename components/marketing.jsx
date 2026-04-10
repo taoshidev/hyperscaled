@@ -8,8 +8,11 @@ import Solution from './marketing/Solution'
 import Problem from './marketing/Problem'
 import PartnersCTA from './marketing/PartnersCTA'
 import FAQ from './marketing/FAQ'
+import { useBrand } from '@/lib/brand'
 
 export default function App({ tiers }) {
+  const brand = useBrand()
+
   return (
     <>
       <Hero />
@@ -18,7 +21,7 @@ export default function App({ tiers }) {
       <Features />
       <Solution />
       <Problem />
-      <PartnersCTA />
+      {brand.showPartnersCTA && <PartnersCTA />}
       <FAQ />
     </>
   )

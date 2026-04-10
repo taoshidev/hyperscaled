@@ -8,7 +8,7 @@ export const metadata = buildMetadata({
   title: "Trading Dashboard",
   description:
     "Monitor your challenge progress, open positions, and payout history in real time.",
-  ogTitle: "Vanta Trading Dashboard",
+  ogTitle: "Hyperscaled Dashboard",
   ogDescription:
     "Track your funded account performance, open positions, and USDC payouts in real time.",
   path: "/vanta/dashboard",

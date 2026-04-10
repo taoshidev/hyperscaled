@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { ArrowRight, DownloadSimple, List, X } from '@phosphor-icons/react'
+import { ArrowLeft, ArrowRight, DownloadSimple, List, X } from '@phosphor-icons/react'
 import ExtensionModal from '@/components/marketing/ExtensionModal'
 import { useBrand, useBrandHref } from '@/lib/brand'
 
@@ -47,11 +47,24 @@ export default function Nav() {
 
   return (
     <>
+    {brand.parentSite && (
+      <div className="fixed top-0 left-0 right-0 z-50 bg-zinc-900/90 border-b border-white/[0.06] backdrop-blur-sm">
+        <div className="max-w-[1400px] mx-auto px-6 h-8 flex items-center">
+          <a
+            href={brand.parentSite.url}
+            className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors"
+          >
+            <ArrowLeft size={12} weight="bold" />
+            {brand.parentSite.label}
+          </a>
+        </div>
+      </div>
+    )}
     <motion.header
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={spring}
-      className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-[#09090b]/60 border-b border-white/[0.06]"
+      className={`fixed left-0 right-0 z-50 backdrop-blur-xl bg-[#09090b]/60 border-b border-white/[0.06] ${brand.parentSite ? 'top-8' : 'top-0'}`}
     >
       <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between gap-4 relative">
         {/* Logo */}

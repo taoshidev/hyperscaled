@@ -4,10 +4,10 @@ import { JsonLd } from '@/components/shared/JsonLd'
 import { getPricingTiers } from '@/lib/pricing'
 
 export const metadata = buildMetadata({
-  title: 'Pricing — Vanta Trading Funded Accounts',
+  title: 'Pricing — Hyperscaled Funded Accounts',
   description:
     'One-time USDC fee. $5K to $100K funded accounts. 100% profit split. No subscriptions, no hidden charges.',
-  ogTitle: 'Vanta Trading Pricing — One Fee. One Challenge. Keep Everything You Earn.',
+  ogTitle: 'Hyperscaled Pricing — One Fee. One Challenge. Keep Everything You Earn.',
   ogDescription:
     'Start from $39. Choose $5K to $100K accounts. 100% profit split, monthly USDC payouts, and scaling up to $2.5M.',
   path: '/vanta/pricing',
@@ -20,7 +20,7 @@ export default async function VantaPricing() {
   const productSchemas = tiers.map((tier) => ({
     "@context": "https://schema.org",
     "@type": "Product",
-    name: `Vanta Trading ${tier.name} Funded Account`,
+    name: `Hyperscaled ${tier.name} Funded Account`,
     description: `${tier.accountSize} funded trading account on Hyperliquid. 10% profit target, 5% max drawdown, ${tier.profitSplit} profit split.`,
     offers: {
       "@type": "Offer",

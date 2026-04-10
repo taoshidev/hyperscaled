@@ -8,7 +8,7 @@ export const metadata = buildMetadata({
   title: "Start Your Challenge",
   description:
     "Choose your funded account size and begin your one-step challenge on Hyperliquid. No recurring fees. 100% of performance rewards are yours.",
-  ogTitle: "Start Your Challenge — Vanta Trading Scaled Trading",
+  ogTitle: "Start Your Challenge — Hyperscaled Scaled Trading",
   ogDescription:
     "Choose from $5K to $100K. One-time USDC fee. Pass the challenge. Keep 100% of your profits.",
   path: "/vanta/register",
@@ -72,7 +72,7 @@ export default async function VantaRegisterPage() {
       initialMinerTiers={initialMinerTiers}
       initialPaymentWallet={initialPaymentWallet}
       logo="/vanta-logo.svg"
-      logoAlt="Vanta Trading"
+      logoAlt="Hyperscaled"
       homeHref="https://vantatrading.io"
     />
   )

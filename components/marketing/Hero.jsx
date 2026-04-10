@@ -29,7 +29,7 @@ export default function Hero() {
   const brandHref = useBrandHref()
 
   return (
-    <section className="relative min-h-[100dvh] flex items-center overflow-hidden pt-16">
+    <section className={`relative min-h-[100dvh] flex items-center overflow-hidden ${brand.parentSite ? 'pt-24' : 'pt-16'}`}>
       {/* Liquid crystal shader background */}
       {brand.showLiquidCrystal && <LiquidCrystalBg className="pointer-events-none" />}
       <div className="absolute inset-0 bg-zinc-950/60 pointer-events-none" />
@@ -48,7 +48,7 @@ export default function Hero() {
             <motion.div variants={itemVariants} className="mb-6">
               <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-teal-400/20 bg-teal-400/8 text-xs text-teal-400 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-teal-400 pulse-teal" />
-                Built on Hyperliquid · Powered by Bittensor
+                {brand.heroEyebrow}
               </span>
             </motion.div>
 
@@ -66,7 +66,7 @@ export default function Hero() {
               variants={itemVariants}
               className="text-base text-zinc-400 leading-relaxed max-w-[56ch] mb-8"
             >
-              Trade with more capital without risking your own stack. Keep 100% of your profits and grow your account to&nbsp;$2.5M. Built on the most advanced decentralized prop trading infrastructure in the&nbsp;world.
+              {brand.heroSub}
             </motion.p>
 
             {/* CTA buttons */}
