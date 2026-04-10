@@ -24,7 +24,7 @@ const HOW_TO_SCHEMA = {
       "@type": "HowToStep",
       position: 1,
       name: "Register and pay",
-      text: "Connect your wallet at app.hyperscaled.trade. Choose a $25K, $50K, or $100K account. Pay a one-time USDC fee on Base.",
+      text: "Connect your wallet at app.hyperscaled.trade. Choose a $5K to $100K account. Pay a one-time USDC fee on Base.",
     },
     {
       "@type": "HowToStep",

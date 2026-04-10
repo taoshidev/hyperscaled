@@ -341,7 +341,7 @@ function ScalingRulesSection() {
 
         {/* Tier note */}
         <p className="text-xs text-zinc-500 leading-relaxed mb-10">
-          Tier I and Tier II accounts ($25K and $50K) can scale up to $100K. Tier III accounts ($100K) can scale up to&nbsp;$2.5M.
+          Tier I through Tier IV accounts ($5K, $10K, $25K, and $50K) can scale up to $100K. Tier V accounts ($100K) can scale up to&nbsp;$2.5M.
         </p>
 
         {/* Scaling path table */}

@@ -22,7 +22,7 @@ Hyperscaled is a decentralized prop trading network built on Hyperliquid. Trader
 - Time limit: None (unlimited trading period)
 - Profit split: 100% to trader
 - Payout cycle: Every 7 days in USDC
-- Account sizes: $25K, $50K, $100K
+- Account sizes: $5K, $10K, $25K, $50K, $100K
 - Scaling: Up to $2.5M for $100K accounts
 - KYC: Not required to start; required before first payout
 - Platform: Hyperliquid DEX (trade directly on Hyperliquid)

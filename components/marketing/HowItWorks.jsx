@@ -114,7 +114,7 @@ export default function HowItWorks({ tiers = [] }) {
       number: '01',
       icon: CurrencyDollar,
       title: 'Start your Challenge',
-      body: 'Choose your account size — $25K, $50K, or $100K. Pay a one-time fee. No recurring charges or\u00a0subscriptions.',
+      body: 'Choose your account size — from $5K to $100K. Pay a one-time fee. No recurring charges or\u00a0subscriptions.',
       mockup: <TierSelectorMockup tiers={tiers} />,
     },
     {

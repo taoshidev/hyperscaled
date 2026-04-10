@@ -18,7 +18,7 @@ import {
 const WHAT_YOU_CONTROL = [
   {
     title: 'Set your own pricing',
-    body: 'Choose your challenge fees across $25K, $50K, and $100K\u00a0tiers',
+    body: 'Choose your challenge fees across $5K, $10K, $25K, $50K, and $100K\u00a0tiers',
     icon: CurrencyDollar,
   },
   {

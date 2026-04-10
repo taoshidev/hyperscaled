@@ -10,7 +10,7 @@ export const metadata = buildMetadata({
     "Choose your funded account size and begin your one-step challenge on Hyperliquid. No recurring fees. 100% of performance rewards are yours.",
   ogTitle: "Start Your Challenge — Vanta Trading Funded Trading",
   ogDescription:
-    "Choose $25K, $50K, or $100K. One-time USDC fee. Pass the challenge. Keep 100% of your profits.",
+    "Choose from $5K to $100K. One-time USDC fee. Pass the challenge. Keep 100% of your profits.",
   path: "/vanta/register",
   brand: "vanta",
 })

@@ -19,7 +19,7 @@ import { PRICING_TIERS, PRICING_FAQ } from '@/lib/constants'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
-const TIER_LABELS = { 'tier-1': 'Tier I', 'tier-2': 'Tier II', 'tier-3': 'Tier III' }
+const TIER_LABELS = { 'tier-1': 'Tier I', 'tier-2': 'Tier II', 'tier-3': 'Tier III', 'tier-4': 'Tier IV', 'tier-5': 'Tier V' }
 
 /* ── Launch Pricing Banner ── */
 function LaunchBanner() {
@@ -151,7 +151,7 @@ function PricingCard({ tier, index }) {
 function PricingCards({ tiers }) {
   return (
     <section className="px-6 pb-20">
-      <div className="max-w-[1100px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-5">
+      <div className="max-w-[1400px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 md:gap-5">
         {tiers.map((tier, i) => (
           <PricingCard key={tier.id} tier={tier} index={i} />
         ))}

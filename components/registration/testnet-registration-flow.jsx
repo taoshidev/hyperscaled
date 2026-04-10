@@ -98,10 +98,10 @@ function StepSelectSize({ tiers, selectedTier, onSelect, onContinue }) {
       <div
         role="radiogroup"
         aria-label="Choose your testnet account size"
-        className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mt-10"
       >
         {!tiers
-          ? [0, 1, 2].map((i) => <div key={i} className="skeleton rounded-2xl h-56" />)
+          ? [0, 1, 2, 3, 4].map((i) => <div key={i} className="skeleton rounded-2xl h-56" />)
           : tiers.map((tier, i) => {
               const isSelected = selectedTier?.accountSize === tier.accountSize;
               const isPopular = tier.accountSize === 50000;

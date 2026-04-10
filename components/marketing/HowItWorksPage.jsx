@@ -111,7 +111,7 @@ const STEPS = [
     body: 'Visit our app, connect your wallet, and pay the one-time fee to immediately begin your\u00a0challenge.',
     cta: true,
     details: [
-      { label: 'Account Sizes', value: '$25K / $50K / $100K' },
+      { label: 'Account Sizes', value: '$5K / $10K / $25K / $50K / $100K' },
       { label: 'Challenge', value: 'One-Step' },
       { label: 'KYC Required', value: 'None' },
       { label: 'Activation', value: 'Immediate' },
@@ -300,7 +300,7 @@ function ScalingSection() {
         </motion.div>
 
         <p className="mt-6 text-xs text-zinc-500 text-center max-w-[72ch] mx-auto leading-relaxed">
-          This path applies to Tier III ($100K) accounts. Tier I ($25K) and Tier II ($50K) accounts scale up to $100K maximum, at which point the full scaling path&nbsp;applies.
+          This path applies to Tier V ($100K) accounts. Tier I through Tier IV ($5K, $10K, $25K, $50K) accounts scale up to $100K maximum, at which point the full scaling path&nbsp;applies.
         </p>
       </div>
     </section>

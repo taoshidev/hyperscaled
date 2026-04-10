@@ -108,15 +108,15 @@ export function StepSelectTier({
       <div
         role="radiogroup"
         aria-label="Choose your funded account size"
-        className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mt-10"
       >
         {!Array.isArray(tiers)
-          ? [0, 1, 2].map((i) => (
+          ? [0, 1, 2, 3, 4].map((i) => (
               <div key={i} className="skeleton rounded-2xl h-72" />
             ))
           : tiers.length === 0
           ? (
-            <div className="md:col-span-3 rounded-2xl border border-border bg-zinc-900/50 p-6 text-center">
+            <div className="col-span-full rounded-2xl border border-border bg-zinc-900/50 p-6 text-center">
               <p className="text-sm text-muted-foreground">
                 No challenge tiers are available right now. Please try again in a moment.
               </p>

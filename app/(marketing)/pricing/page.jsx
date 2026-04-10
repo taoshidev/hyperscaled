@@ -6,10 +6,10 @@ import { getPricingTiers } from '@/lib/pricing'
 export const metadata = buildMetadata({
   title: 'Pricing — Hyperscaled Funded Trading Accounts',
   description:
-    'One-time USDC fee. $25K, $50K, or $100K funded accounts. 100% profit split. No subscriptions, no hidden charges.',
+    'One-time USDC fee. $5K to $100K funded accounts. 100% profit split. No subscriptions, no hidden charges.',
   ogTitle: 'Hyperscaled Pricing — One Fee. One Challenge. Keep Everything You Earn.',
   ogDescription:
-    'Start from $149. Choose $25K, $50K, or $100K accounts. 100% profit split, monthly USDC payouts, and scaling up to $2.5M for $100K accounts. No subscriptions, ever.',
+    'Start from $39. Choose $5K to $100K accounts. 100% profit split, monthly USDC payouts, and scaling up to $2.5M. No subscriptions, ever.',
   path: '/pricing',
 })
 

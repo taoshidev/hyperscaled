@@ -9,7 +9,7 @@ import { useBrandHref } from '@/lib/brand'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
-const TIER_LABELS = { 'tier-1': 'Tier I', 'tier-2': 'Tier II', 'tier-3': 'Tier III' }
+const TIER_LABELS = { 'tier-1': 'Tier I', 'tier-2': 'Tier II', 'tier-3': 'Tier III', 'tier-4': 'Tier IV', 'tier-5': 'Tier V' }
 
 function PricingCard({ tier, index, brandHref }) {
   const ref = useRef(null)
@@ -100,7 +100,7 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
 
   return (
     <section ref={ref} className="py-24 px-6">
-      <div className="max-w-[1100px] mx-auto">
+      <div className="max-w-[1400px] mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -115,7 +115,7 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 md:gap-5">
           {tiers.map((tier, i) => (
             <PricingCard key={tier.id} tier={tier} index={i} brandHref={brandHref} />
           ))}

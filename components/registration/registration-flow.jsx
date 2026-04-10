@@ -188,7 +188,7 @@ export function RegistrationFlow({
       ) : (
         /* Steps 0 and 3: Single-column centered layout */
         <div className="flex-1 flex flex-col items-center justify-start pt-6 pb-20 px-4">
-          <div className={`w-full ${currentStep === 3 ? "max-w-5xl" : "max-w-3xl"}`}>
+          <div className={`w-full ${currentStep === 3 ? "max-w-5xl" : currentStep === 0 ? "max-w-7xl" : "max-w-3xl"}`}>
             {currentStep === 3 ? (
               <div className="mb-10 flex justify-center">
                 <p className="text-sm font-medium text-teal-400">
