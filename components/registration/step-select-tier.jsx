@@ -111,7 +111,7 @@ export function StepSelectTier({
       {brand.poweredBy && brand.id !== 'hyperscaled' && (
         <div className="flex justify-center mt-4">
           <a
-            href="https://hs.vantatrading.io"
+            href="/how-it-works"
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-white/[0.08] bg-white/[0.03] text-sm text-zinc-400 hover:text-white hover:border-white/[0.14] transition-[color,border-color]"
           >
             Powered by <span className="font-semibold text-white">{brand.poweredBy.name}</span>
