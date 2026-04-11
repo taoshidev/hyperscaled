@@ -16,13 +16,9 @@ function PricingCard({ tier, index, brandHref }) {
   const inView = useInView(ref, { once: true, margin: '-40px' })
 
   const details = [
-    { label: 'Account Size', value: tier.accountSize },
-    { label: 'Profit Target', value: `${tier.profitTarget} (${tier.profitTargetAmount} target)` },
-    { label: 'Max Drawdown', value: `${tier.maxDrawdown} (${tier.maxDrawdownAmount} limit)` },
-    { label: 'Profit Split', value: tier.profitSplit },
-    { label: 'Payout Cycle', value: tier.payoutCycle },
-    { label: 'Scaling Path', value: tier.scalingPath },
-    { label: 'Time Limit', value: tier.timeLimit },
+    { label: 'Profit Target', value: tier.profitTargetAmount },
+    { label: 'Max Drawdown', value: `${tier.maxDrawdownAmount} limit` },
+    { label: 'Scaling', value: tier.scalingPath },
   ]
 
   return (
@@ -121,14 +117,15 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
           ))}
         </div>
 
-        {/* Launch pricing note */}
+        {/* Universal rules */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ ...spring, delay: 0.3 }}
-          className="text-center text-xs text-zinc-500 mt-6"
+          className="text-center text-sm text-zinc-500 mt-8 max-w-[60ch] mx-auto"
+          style={{ textWrap: 'balance' }}
         >
-          Launch pricing active. Limited-time&nbsp;pricing.
+          All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time&nbsp;limit
         </motion.p>
       </div>
     </section>

@@ -57,7 +57,7 @@ function PricingHero() {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[60ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          Pay a one-time USDC registration fee to take the challenge. No hidden&nbsp;fees.
+          Take the Hyperscaled Challenge with no hidden rules, fees, or time limit. Rewards distributed&nbsp;weekly.
         </motion.p>
       </div>
     </section>
@@ -71,13 +71,9 @@ function PricingCard({ tier, index }) {
   const inView = useInView(ref, { once: true, margin: '-40px' })
 
   const details = [
-    { label: 'Account Size', value: tier.accountSize },
-    { label: 'Profit Target', value: `${tier.profitTarget} (${tier.profitTargetAmount} target)` },
-    { label: 'Max Drawdown', value: `${tier.maxDrawdown} (${tier.maxDrawdownAmount} limit)` },
-    { label: 'Profit Split', value: tier.profitSplit },
-    { label: 'Payout Cycle', value: tier.payoutCycle },
-    { label: 'Scaling Path', value: tier.scalingPath },
-    { label: 'Time Limit', value: tier.timeLimit },
+    { label: 'Profit Target', value: tier.profitTargetAmount },
+    { label: 'Max Drawdown', value: `${tier.maxDrawdownAmount} limit` },
+    { label: 'Scaling', value: tier.scalingPath },
   ]
 
   return (
@@ -157,6 +153,9 @@ function PricingCards({ tiers }) {
           <PricingCard key={tier.id} tier={tier} index={i} />
         ))}
       </div>
+      <p className="text-center text-sm text-zinc-500 mt-8 max-w-[60ch] mx-auto" style={{ textWrap: 'balance' }}>
+        All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time&nbsp;limit
+      </p>
     </section>
   )
 }
