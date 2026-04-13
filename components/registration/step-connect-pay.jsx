@@ -1224,7 +1224,9 @@ export function StepConnectAndPay({
                   onClick={async () => {
                     try {
                       await disconnectAsync();
-                    } catch {}
+                    } catch {
+                      /* ignore disconnect errors */
+                    }
                     setConfirmed(false);
                     if (paymentState === "error") {
                       setPaymentState("idle");
