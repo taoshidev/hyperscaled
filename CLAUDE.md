@@ -4,7 +4,9 @@ Read this file at the start of every session before writing any code.
 
 ## What This Is
 
-Hyperscaled is a decentralized prop trading network built on Hyperliquid. This repo is the frontend — marketing site, trader dashboard, leaderboard, miner detail pages, and registration flow. All data is currently mock/fake. The focus is UI/UX quality, not backend integration.
+Hyperscaled is a decentralized prop trading network built on Hyperliquid. This repo is the frontend — marketing site, trader dashboard, leaderboard, miner detail pages, and registration flow.
+
+Data is wired to the live validator API via Next.js route handlers under `app/api/*` (e.g. `/api/dashboard`, `/api/leaderboard`). Routes read `VALIDATOR_API_URL` / `VALIDATOR_API_KEY` from env and proxy real trader, leaderboard, and payout data to the UI. Components fetch from these internal routes — do not hit the validator directly from the client. Fallback/stub data inside components is only for API-unreachable states and must look real.
 
 
 ## Repo Map

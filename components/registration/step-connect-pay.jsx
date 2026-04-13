@@ -7,6 +7,7 @@ import {
   useReadContract,
   useWalletClient,
   useSwitchChain,
+  useDisconnect,
 } from "wagmi";
 import { parseUnits, formatUnits } from "viem";
 import {
@@ -58,6 +59,7 @@ export function StepConnectAndPay({
 }) {
   const { address, isConnected, chainId } = useAccount();
   const { switchChain, switchChainAsync } = useSwitchChain();
+  const { disconnectAsync } = useDisconnect();
   const { data: walletClient } = useWalletClient();
 
   const [paymentState, setPaymentState] = useState("idle");
@@ -1205,16 +1207,38 @@ export function StepConnectAndPay({
       {/* Wallet connected indicator */}
       {paymentMethod && (paymentMethod === "eip712" || paymentMethod === "base") && isConnected && (
         <div className="w-full max-w-lg mt-4">
-          <div className="rounded-xl border border-border bg-zinc-900/50 px-5 py-3.5 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
+          <div className="rounded-xl border border-border bg-zinc-900/50 px-5 py-3.5 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
               <span className="w-2 h-2 rounded-full bg-teal-400 shrink-0" />
-              <span className="text-sm font-mono text-foreground">
+              <span className="text-sm font-mono text-foreground truncate">
                 {truncateAddress(address)}
               </span>
+              <span className="text-xs text-muted-foreground hidden sm:inline">
+                Connected
+              </span>
             </div>
-            <span className="text-xs text-muted-foreground">
-              Connected
-            </span>
+            <ConnectButton.Custom>
+              {({ openConnectModal }) => (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await disconnectAsync();
+                    } catch {}
+                    setConfirmed(false);
+                    if (paymentState === "error") {
+                      setPaymentState("idle");
+                      setErrorMessage("");
+                    }
+                    openConnectModal?.();
+                  }}
+                  className="shrink-0 h-8 px-3 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:border-white/[0.15] transition-[border-color,color] duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  aria-label="Change connected wallet"
+                >
+                  Change
+                </button>
+              )}
+            </ConnectButton.Custom>
           </div>
         </div>
       )}

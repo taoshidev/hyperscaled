@@ -8,34 +8,14 @@ import { useBrand } from '@/lib/brand'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
-// Fallback mock data when API is unavailable
-const FALLBACK_LB = {
-  summary: {
-    totalPaidOut: 30000000,
-    totalTraders: 4200,
-    scaledTraders: 310,
-    inChallenge: 2840,
-    eliminated: 1050,
-    totalVolume: 1000000000,
-  },
-  scaledTraders: [
-    { address: '0x7a3b...f41d', pnl: 48230, funding: 400000, sharpe: 2.14, trades: 847, winRate: 68, payouts: 12480, since: 'Oct 2024' },
-    { address: '0xd4e5...b2c3', pnl: 35120, funding: 200000, sharpe: 1.87, trades: 623, winRate: 64, payouts: 8750, since: 'Nov 2024' },
-    { address: '0x9f0a...e8d7', pnl: 28940, funding: 200000, sharpe: 1.95, trades: 512, winRate: 71, payouts: 7200, since: 'Sep 2024' },
-    { address: '0x2c3d...a1b0', pnl: 22100, funding: 100000, sharpe: 1.62, trades: 389, winRate: 62, payouts: 5500, since: 'Dec 2024' },
-    { address: '0xf8a9...c4d5', pnl: 18750, funding: 100000, sharpe: 1.78, trades: 445, winRate: 66, payouts: 4680, since: 'Nov 2024' },
-    { address: '0x5e6f...8a9b', pnl: 15320, funding: 100000, sharpe: 1.54, trades: 298, winRate: 60, payouts: 3800, since: 'Jan 2025' },
-    { address: '0xb1c2...f0a1', pnl: 12840, funding: 50000, sharpe: 1.41, trades: 267, winRate: 63, payouts: 3200, since: 'Dec 2024' },
-    { address: '0x3d4e...7a8b', pnl: 9620, funding: 50000, sharpe: 1.33, trades: 198, winRate: 58, payouts: 2400, since: 'Jan 2025' },
-  ],
-  challengeTraders: [
-    { address: '0xa0b1...d3e4', pnl: 4180, progress: 16.7, sharpe: 1.12, trades: 142, winRate: 57, drawdown: 0, since: 'Feb 2025' },
-    { address: '0x6c7d...9f0a', pnl: 2940, progress: 11.8, sharpe: 0.98, trades: 89, winRate: 55, drawdown: 0, since: 'Feb 2025' },
-    { address: '0xe2f3...b5c6', pnl: 1820, progress: 7.3, sharpe: 0.87, trades: 64, winRate: 53, drawdown: 0, since: 'Feb 2025' },
-    { address: '0x4a5b...8d9e', pnl: -1240, progress: 0, sharpe: 0.42, trades: 51, winRate: 41, drawdown: 5.0, since: 'Feb 2025' },
-  ],
+const EMPTY_LB = {
+  summary: { totalPaidOut: 0, totalTraders: 0, fundedTraders: 0, inChallenge: 0, eliminated: 0, totalVolume: 0 },
+  fundedTraders: [],
+  challengeTraders: [],
 }
 
+// Validator returns -100 as a sentinel when there isn't enough history for a sharpe.
+function fmtSharpe(s) { return s == null || s <= -99 ? '--' : s.toFixed(2) }
 function fmt(n) { return n.toLocaleString('en-US') }
 function fmtUSD(n) { return '$' + fmt(n) }
 function fmtCompact(n) {
@@ -76,7 +56,7 @@ export default function Leaderboard({ initialSearch = '' }) {
       .catch((err) => {
         if (!cancelled) {
           setError(err.message)
-          setData(FALLBACK_LB)
+          setData(EMPTY_LB)
           setLoading(false)
         }
       })
@@ -84,14 +64,14 @@ export default function Leaderboard({ initialSearch = '' }) {
     return () => { cancelled = true }
   }, [])
 
-  const summary = data?.summary || FALLBACK_LB.summary
-  const scaled = data?.scaledTraders || FALLBACK_LB.scaledTraders
-  const challenge = data?.challengeTraders || FALLBACK_LB.challengeTraders
+  const summary = data?.summary || EMPTY_LB.summary
+  const funded = data?.fundedTraders || EMPTY_LB.fundedTraders
+  const challenge = data?.challengeTraders || EMPTY_LB.challengeTraders
 
   const networkStats = [
     { label: 'Total Paid Out', value: fmtCompact(summary.totalPaidOut || 0), color: 'text-teal-400' },
-    { label: 'Traders', value: fmt(summary.totalTraders || 0) + '+', color: 'text-white' },
-    { label: 'Active Funded', value: fmt(summary.scaledTraders || 0), color: 'text-blue-400' },
+    { label: 'Traders', value: fmt(summary.totalTraders || 0), color: 'text-white' },
+    { label: 'Active Funded', value: fmt(summary.fundedTraders || 0), color: 'text-blue-400' },
     { label: 'In Challenge', value: fmt(summary.inChallenge || 0), color: 'text-amber-400' },
     { label: 'Eliminated', value: fmt(summary.eliminated || 0), color: 'text-red-400' },
     { label: 'Network Volume', value: fmtCompact(summary.totalVolume || 0), color: 'text-white' },
@@ -99,8 +79,8 @@ export default function Leaderboard({ initialSearch = '' }) {
 
   const query = searchQuery.trim().toLowerCase()
   const filteredFunded = useMemo(() =>
-    query ? scaled.filter((t) => (t.address || t.addr || '').toLowerCase().includes(query)) : scaled,
-    [scaled, query]
+    query ? funded.filter((t) => (t.address || t.addr || '').toLowerCase().includes(query)) : funded,
+    [funded, query]
   )
   const filteredChallenge = useMemo(() =>
     query ? challenge.filter((t) => (t.address || t.addr || '').toLowerCase().includes(query)) : challenge,
@@ -210,7 +190,7 @@ export default function Leaderboard({ initialSearch = '' }) {
         {/* Error banner */}
         {error && !loading && (
           <div className="mb-6 px-4 py-3 rounded-lg bg-amber-400/10 border border-amber-400/20 text-sm text-amber-400">
-            Could not reach live data — showing cached results.
+            Could not reach live data — try again in a moment.
           </div>
         )}
 
@@ -261,6 +241,13 @@ export default function Leaderboard({ initialSearch = '' }) {
                       </tr>
                     </thead>
                     <tbody>
+                      {filteredFunded.length === 0 && (
+                        <tr>
+                          <td colSpan={9} className="px-4 py-10 text-center text-sm text-zinc-500">
+                            No funded traders yet.
+                          </td>
+                        </tr>
+                      )}
                       {filteredFunded.map((t, i) => (
                         <tr
                           key={i}
@@ -273,7 +260,7 @@ export default function Leaderboard({ initialSearch = '' }) {
                             {(t.pnl || 0) >= 0 ? '+' : ''}{fmtUSD(t.pnl || 0)}
                           </td>
                           <td className="px-4 py-3 text-sm text-zinc-300">{fmtUSD(t.funding || 0)}</td>
-                          <td className="px-4 py-3 text-sm text-zinc-300">{t.sharpe != null ? t.sharpe.toFixed(2) : '--'}</td>
+                          <td className="px-4 py-3 text-sm text-zinc-300">{fmtSharpe(t.sharpe)}</td>
                           <td className="px-4 py-3 text-sm text-zinc-300">{fmt(t.trades || 0)}</td>
                           <td className={`px-4 py-3 text-sm ${(t.winRate || 0) >= 60 ? 'text-teal-400' : 'text-white'}`}>{t.winRate != null ? `${t.winRate}%` : '--'}</td>
                           <td className="px-4 py-3 text-sm text-teal-400">{fmtUSD(t.payouts || 0)}</td>
@@ -299,6 +286,13 @@ export default function Leaderboard({ initialSearch = '' }) {
                       </tr>
                     </thead>
                     <tbody>
+                      {filteredChallenge.length === 0 && (
+                        <tr>
+                          <td colSpan={8} className="px-4 py-10 text-center text-sm text-zinc-500">
+                            No traders in challenge.
+                          </td>
+                        </tr>
+                      )}
                       {filteredChallenge.map((t, i) => {
                         const pct = t.progress != null ? t.progress : Math.max(0, ((t.pnl || 0) / 25000 * 10) * 100)
                         return (
@@ -322,7 +316,7 @@ export default function Leaderboard({ initialSearch = '' }) {
                                 <span className="text-xs text-zinc-500">{pct.toFixed(1)}%</span>
                               </div>
                             </td>
-                            <td className="px-4 py-3 text-sm text-zinc-300">{t.sharpe != null ? t.sharpe.toFixed(2) : '--'}</td>
+                            <td className="px-4 py-3 text-sm text-zinc-300">{fmtSharpe(t.sharpe)}</td>
                             <td className="px-4 py-3 text-sm text-zinc-300">{fmt(t.trades || 0)}</td>
                             <td className={`px-4 py-3 text-sm ${(t.winRate || 0) >= 60 ? 'text-teal-400' : 'text-white'}`}>{t.winRate != null ? `${t.winRate}%` : '--'}</td>
                             <td className="px-4 py-3 text-sm text-zinc-300">
