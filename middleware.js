@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 const VANTA_HOSTNAMES = new Set(["hs.vantatrading.io"]);
 const INTERNAL_PATH_PREFIXES = ["/_next", "/api", "/monitoring"];
+const AFFILIATE_SLUG_ROUTES = new Set(["strato"]);
 
 function getHostname(request) {
   const forwardedHost = request.headers.get("x-forwarded-host");
@@ -86,6 +87,27 @@ export function middleware(request) {
       url.pathname = `/miner/${entryCookie}`;
       return NextResponse.redirect(url);
     }
+  }
+
+  const affiliateSlugMatch = pathname.match(/^\/([^/]+)\/?$/);
+  if (affiliateSlugMatch && AFFILIATE_SLUG_ROUTES.has(affiliateSlugMatch[1])) {
+    const slug = affiliateSlugMatch[1];
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    const response = NextResponse.rewrite(url);
+    response.cookies.set("hs_affiliate", slug, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+    });
+    if (!entryCookie) {
+      response.cookies.set("hs_entry", "home", {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 365,
+        sameSite: "lax",
+      });
+    }
+    return response;
   }
 
   let response;

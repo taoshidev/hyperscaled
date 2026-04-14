@@ -10,8 +10,8 @@ import { getMinerBySlug, getTiersForMiner, TIERS } from "@/lib/miners";
 import { isValidHLAddress, isValidEvmAddress, isValidEmail } from "@/lib/validation";
 import { USDC_ADDRESS, USDC_DECIMALS, USDC_EIP712_NAME, USDC_EIP712_VERSION, BASE_NETWORK, FACILITATOR_URL, BASESCAN_URL } from "@/lib/constants";
 import { db } from "@/lib/db";
-import { users, registrations } from "@/lib/db/schema";
-import { eq, and, inArray } from "drizzle-orm";
+import { users, registrations, affiliates } from "@/lib/db/schema";
+import { eq, and, inArray, sql } from "drizzle-orm";
 import { facilitator as cdpFacilitator } from "@coinbase/x402";
 import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
 import { isDevTestWallet, DEV_TEST_PRICE } from "@/lib/dev-test";
@@ -465,8 +465,27 @@ export async function POST(request) {
     effectivePayoutAddress = payoutAddress || paymentPayload?.payload?.authorization?.from;
   }
 
+  // Resolve affiliate (if any) before upserting user
+  let resolvedAffiliateId = null;
+  if (affiliateUtm) {
+    try {
+      const [aff] = await db
+        .select({ id: affiliates.id })
+        .from(affiliates)
+        .where(and(eq(affiliates.slug, affiliateUtm), eq(affiliates.isActive, true)))
+        .limit(1);
+      if (aff) resolvedAffiliateId = aff.id;
+    } catch (err) {
+      reportError(err, {
+        source: "api/register",
+        metadata: { step: "affiliate_lookup", affiliateUtm },
+      });
+    }
+  }
+
   // Upsert user record
   let userId = null;
+  let didAttributeAffiliate = false;
   try {
     const [existing] = await db
       .select()
@@ -479,15 +498,35 @@ export async function POST(request) {
       const updates = {};
       if (email && email !== existing.email) updates.email = email;
       if (affiliateUtm && !existing.utmCode) updates.utmCode = affiliateUtm;
+      if (resolvedAffiliateId && !existing.affiliateId) {
+        updates.affiliateId = resolvedAffiliateId;
+        didAttributeAffiliate = true;
+      }
       if (Object.keys(updates).length > 0) {
         await db.update(users).set({ ...updates, updatedAt: new Date() }).where(eq(users.id, existing.id));
       }
     } else {
       const [newUser] = await db
         .insert(users)
-        .values({ wallet: effectivePayoutAddress, email: email || null, utmCode: affiliateUtm || null })
+        .values({
+          wallet: effectivePayoutAddress,
+          email: email || null,
+          utmCode: affiliateUtm || null,
+          affiliateId: resolvedAffiliateId,
+        })
         .returning({ id: users.id });
       userId = newUser.id;
+      if (resolvedAffiliateId) didAttributeAffiliate = true;
+    }
+
+    if (didAttributeAffiliate && resolvedAffiliateId) {
+      await db
+        .update(affiliates)
+        .set({
+          useCount: sql`${affiliates.useCount} + 1`,
+          updatedAt: new Date(),
+        })
+        .where(eq(affiliates.id, resolvedAffiliateId));
     }
   } catch (err) {
     reportCritical(err, {

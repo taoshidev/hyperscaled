@@ -8,6 +8,13 @@
       "when": 1774573280596,
       "tag": "0000_wet_bill_hollister",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1776201795643,
+      "tag": "0001_talented_nighthawk",
+      "breakpoints": true
     }
   ]
 }
