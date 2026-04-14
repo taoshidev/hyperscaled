@@ -57,7 +57,7 @@ function PricingHero() {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[60ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          Take the Hyperscaled Challenge with no hidden rules, fees, or time limit. Rewards distributed&nbsp;weekly.
+          Take the Hyperscaled Challenge with no hidden rules, fees, or time limit. Rewards distributed&nbsp;monthly.
         </motion.p>
       </div>
     </section>
