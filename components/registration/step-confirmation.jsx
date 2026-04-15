@@ -21,6 +21,7 @@ import { copyToClipboard } from "@/lib/utils";
 import { formatAccountSize, truncateAddress } from "@/lib/format";
 import { useBrandHref } from "@/lib/brand";
 import { useExtensionBridge } from "@/hooks/use-extension-bridge";
+import { OnboardingChecklist } from "./onboarding-checklist";
 
 function CopyButton({ text, label }) {
   const [copied, setCopied] = useState(false);
@@ -440,6 +441,19 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
             </div>
           </div>
         </div>
+
+        {/* Recommended setup checklist */}
+        <OnboardingChecklist
+          hlAddress={hlAddress}
+          extensionDetected={extensionDetected}
+          onInstallExtension={() => {
+            const a = document.createElement("a");
+            a.href = "/hyperscaled_extension.zip";
+            a.download = "hyperscaled_extension.zip";
+            a.click();
+            setExtensionModalOpen(true);
+          }}
+        />
 
         {/* Dashboard link — secondary, below receipt */}
         {!extensionDetected && (

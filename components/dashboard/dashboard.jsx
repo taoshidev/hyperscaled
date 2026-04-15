@@ -14,6 +14,8 @@ import { useDashboardData, usePayoutData } from "@/hooks/use-dashboard";
 import { useDashboardStream } from "@/hooks/use-dashboard-stream";
 import { truncateAddress } from "@/lib/format";
 import { AccountOverview } from "./account-overview";
+import { AccountTranslation } from "./account-translation";
+import { SetupChecklist } from "./setup-checklist";
 import { ChallengeProgress } from "./challenge-progress";
 import { PerformanceStats } from "./performance-stats";
 import { OpenPositions } from "./open-positions";
@@ -419,8 +421,23 @@ export function Dashboard() {
         {/* Performance Tab */}
         {dashTab === "performance" && (
           <div className="space-y-6">
+            {/* Finish-setup banner (hidden once all three steps are done or snoozed) */}
+            <SetupChecklist
+              dashboard={data}
+              events={eventsData}
+              watchedAddress={activeAddress}
+              canReadHlBalance={useConnectedWallet && isConnected && !useFundedDemo}
+            />
+
             {/* Top Stat Cards */}
             <AccountOverview dashboard={data} />
+
+            {/* Account Translation — how HL activity maps to the challenge */}
+            <AccountTranslation
+              dashboard={data}
+              watchedAddress={activeAddress}
+              canReadHlBalance={useConnectedWallet && isConnected && !useFundedDemo}
+            />
 
             {/* Challenge Progress */}
             <ChallengeProgress
