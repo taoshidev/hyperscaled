@@ -36,7 +36,7 @@ const HOW_TO_SCHEMA = {
       "@type": "HowToStep",
       position: 3,
       name: "Track your progress",
-      text: "Monitor your challenge progress in real time via the Hyperscaled dashboard or Chrome extension. 10% profit target, 5% max drawdown, no time limit.",
+      text: "Monitor your challenge progress in real time via the Hyperscaled dashboard or the open-source Chrome extension, which overlays live stats on Hyperliquid, previews how each order scales to your funded account, and blocks trades that would breach your drawdown. 10% profit target, 5% max drawdown, no time limit.",
     },
     {
       "@type": "HowToStep",

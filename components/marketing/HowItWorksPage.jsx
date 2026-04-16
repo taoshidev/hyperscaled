@@ -5,15 +5,22 @@ import { motion, useInView } from 'framer-motion'
 import Link from 'next/link'
 import {
   ArrowRight,
+  ArrowsLeftRight,
+  Bell,
+  Broadcast,
   CheckCircle,
-  XCircle,
-  Wallet,
   ChartLineUp,
-  Target,
+  ClockCountdown,
   CurrencyDollar,
   Eye,
-  ClockCountdown,
+  Gauge,
+  GithubLogo,
+  PuzzlePiece,
+  Scales,
   ShieldCheck,
+  Target,
+  Wallet,
+  XCircle,
 } from '@phosphor-icons/react'
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import PricingPreview from '@/components/marketing/PricingPreview'
@@ -137,12 +144,13 @@ const STEPS = [
   {
     number: '03',
     icon: Target,
-    title: 'Track in Real Time',
-    body: 'Your dashboard and Hyperscaled Chrome plugin show your live P&L, drawdown, profit target progress, and expected payout. Updates in real time as you\u00a0trade.',
+    title: 'Track & Enforce in Real Time',
+    body: 'Your dashboard shows live P&L, drawdown, and profit target progress. The Hyperscaled Chrome extension overlays the same data directly onto Hyperliquid — previewing how each order scales to your funded account and blocking trades that would breach your\u00a0limits.',
     compact: true,
     details: [
-      { label: 'Platform', value: 'Hyperscaled App & Chrome Plugin' },
-      { label: 'Updates', value: 'Always in real-time' },
+      { label: 'Surfaces', value: 'Hyperscaled App & Chrome Extension' },
+      { label: 'Extension', value: 'Open source on GitHub' },
+      { label: 'Updates', value: 'Real-time as you trade' },
     ],
   },
   {
@@ -265,6 +273,133 @@ function StepByStepFlow() {
         {STEPS.map((step, i) => (
           <StepCard key={step.number} step={step} index={i} />
         ))}
+      </div>
+    </section>
+  )
+}
+
+/* ───────────────────────────────────────────────
+   Chrome Extension Section
+   ─────────────────────────────────────────────── */
+
+const EXTENSION_FEATURES = [
+  {
+    icon: Broadcast,
+    title: 'Live challenge banner',
+    body: 'Profit target, daily drawdown, and trailing drawdown overlaid on every Hyperliquid page.',
+  },
+  {
+    icon: ArrowsLeftRight,
+    title: 'Mirror preview',
+    body: 'See how each order scales to your funded account — mirrored size, ratio, and remaining capacity.',
+  },
+  {
+    icon: Scales,
+    title: 'Auto size clamping',
+    body: 'Orders that exceed per-pair or portfolio caps get trimmed to the largest allowed fill automatically.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Drawdown guardrails',
+    body: 'Trades that would breach daily or trailing drawdown limits are blocked before they execute.',
+  },
+  {
+    icon: Gauge,
+    title: 'Popup dashboard',
+    body: 'Balance, open positions, live P&L, and challenge progress — one click from any tab.',
+  },
+  {
+    icon: Bell,
+    title: 'Position notifications',
+    body: 'Desktop alerts on opens, closes, and significant P&L moves.',
+  },
+]
+
+function ChromeExtensionSection() {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-60px' })
+
+  return (
+    <section ref={ref} className="px-6 pb-24">
+      <div className="max-w-[1100px] mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={spring}
+          className="text-center mb-4"
+        >
+          <span className="inline-flex items-center gap-2 text-xs font-mono text-teal-400 tracking-widest uppercase">
+            <PuzzlePiece size={14} weight="fill" />
+            Chrome Extension
+          </span>
+          <h2 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight" style={{ textWrap: 'balance' }}>
+            Your guardrails, built into&nbsp;Hyperliquid
+          </h2>
+          <p className="mt-4 text-sm sm:text-base text-zinc-400 max-w-[56ch] mx-auto leading-relaxed" style={{ textWrap: 'balance' }}>
+            See how every trade scales, stay inside your limits, and track your challenge — without leaving&nbsp;Hyperliquid.
+          </p>
+        </motion.div>
+
+        {/* Open source callout */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ ...spring, delay: 0.08 }}
+          className="mt-6 mb-10 flex justify-center"
+        >
+          <a
+            href="https://github.com/taoshidev/hyperscaled_extension"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.02] hover:border-teal-400/30 hover:bg-teal-400/[0.04] px-4 py-2 text-xs sm:text-sm text-zinc-300 transition-colors"
+          >
+            <GithubLogo size={16} weight="fill" className="text-teal-400" />
+            <span>Fully open source —</span>
+            <span className="font-mono text-teal-400">taoshidev/hyperscaled_extension</span>
+            <ArrowRight size={13} weight="bold" className="text-zinc-500" />
+          </a>
+        </motion.div>
+
+        {/* Feature grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ ...spring, delay: 0.16 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+        >
+          {EXTENSION_FEATURES.map((feature) => {
+            const Icon = feature.icon
+            return (
+              <div
+                key={feature.title}
+                className="rounded-2xl border border-white/[0.08] bg-[#09090b] p-6 flex flex-col"
+              >
+                <div className="w-10 h-10 rounded-xl bg-teal-400/10 border border-teal-400/20 flex items-center justify-center mb-4">
+                  <Icon size={20} weight="fill" className="text-teal-400" />
+                </div>
+                <h3 className="text-base font-semibold tracking-tight mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-sm text-zinc-400 leading-relaxed">
+                  {feature.body}
+                </p>
+              </div>
+            )
+          })}
+        </motion.div>
+
+        {/* Open source note */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ ...spring, delay: 0.24 }}
+          className="mt-6 max-w-[700px] mx-auto rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-5 text-center"
+        >
+          <p className="text-sm text-teal-400 font-medium leading-relaxed" style={{ textWrap: 'balance' }}>
+            Every rule the extension enforces is the same rule the network enforces onchain. The code is public — audit&nbsp;it, fork&nbsp;it, or build your&nbsp;own.
+          </p>
+        </motion.div>
       </div>
     </section>
   )
@@ -527,6 +662,7 @@ export default function HowItWorksPage({ tiers }) {
     <>
       <PageHero />
       <StepByStepFlow />
+      <ChromeExtensionSection />
       <ScalingSection />
       <NonCustodialExplainer />
       <PayoutMechanics />
