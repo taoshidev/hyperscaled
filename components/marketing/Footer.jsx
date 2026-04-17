@@ -16,12 +16,12 @@ function useFooterLinks() {
       { label: 'For Agents', href: brandHref('/agents') },
     ],
     Community: [
-      { label: 'Twitter / X', href: brand.socials.twitter, external: true, icon: TwitterLogo },
-      { label: 'Discord', href: brand.socials.discord, external: true, icon: DiscordLogo },
-      { label: 'GitHub', href: brand.socials.github, external: true, icon: GithubLogo },
-      { label: 'Telegram Bot', href: brand.socials.telegram, external: true, icon: TelegramLogo },
-      { label: 'Contact Support', href: brand.socials.support, external: true },
-    ],
+      brand.socials.twitter && { label: 'Twitter / X', href: brand.socials.twitter, external: true, icon: TwitterLogo },
+      brand.socials.discord && { label: 'Discord', href: brand.socials.discord, external: true, icon: DiscordLogo },
+      brand.socials.github && { label: 'GitHub', href: brand.socials.github, external: true, icon: GithubLogo },
+      brand.socials.telegram && { label: 'Telegram Bot', href: brand.socials.telegram, external: true, icon: TelegramLogo },
+      brand.socials.support && { label: 'Contact Support', href: brand.socials.support, external: true },
+    ].filter(Boolean),
     Legal: [
       { label: 'Terms of Service', href: brandHref('/terms') },
       { label: 'Privacy Policy', href: brandHref('/privacy') },
@@ -35,10 +35,11 @@ export default function Footer() {
   const footerLinks = useFooterLinks()
 
   const socialIcons = [
-    { Icon: TwitterLogo, href: brand.socials.twitter, label: 'Twitter' },
-    { Icon: DiscordLogo, href: brand.socials.discord, label: 'Discord' },
-    { Icon: GithubLogo, href: brand.socials.github, label: 'GitHub' },
-  ]
+    brand.socials.twitter && { Icon: TwitterLogo, href: brand.socials.twitter, label: 'Twitter' },
+    brand.socials.discord && { Icon: DiscordLogo, href: brand.socials.discord, label: 'Discord' },
+    brand.socials.github && { Icon: GithubLogo, href: brand.socials.github, label: 'GitHub' },
+    brand.socials.telegram && !brand.socials.discord && { Icon: TelegramLogo, href: brand.socials.telegram, label: 'Telegram' },
+  ].filter(Boolean)
 
   return (
     <footer className="border-t border-white/[0.06] pt-16 pb-8 px-6">
