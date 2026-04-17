@@ -417,6 +417,91 @@ textarea:active {
 }
 
 /* ══════════════════════════════════════════════
+   Bitcast brand overrides
+   Applied via data-brand="bitcast" on a wrapper div
+   ══════════════════════════════════════════════ */
+
+[data-brand="bitcast"] {
+  --brand-glow: 224, 64, 251;
+  --background: oklch(0 0 0);
+  --card: oklch(0.06 0 0);
+  font-family: 'Geist', 'Helvetica Neue', Arial, ui-sans-serif, system-ui, sans-serif;
+}
+
+[data-brand="bitcast"] .text-teal-400 {
+  color: #e879f9;
+}
+[data-brand="bitcast"] .text-teal-300 {
+  color: #f0abfc;
+}
+[data-brand="bitcast"] .border-teal-400\/20,
+[data-brand="bitcast"] .border-teal-400\/30 {
+  border-color: rgba(224, 64, 251, 0.25);
+}
+[data-brand="bitcast"] .bg-teal-400\/10,
+[data-brand="bitcast"] .bg-teal-400\/8,
+[data-brand="bitcast"] .bg-teal-400\/5 {
+  background-color: rgba(224, 64, 251, 0.08);
+}
+
+[data-brand="bitcast"] .shiny-cta {
+  --shiny-cta-bg: #000000;
+  --shiny-cta-bg-subtle: #130a15;
+  --shiny-cta-highlight: #e040fb;
+  --shiny-cta-highlight-subtle: #a21caf;
+}
+
+[data-brand="bitcast"] .shiny-border {
+  --shiny-cta-bg: #000000;
+  --shiny-cta-bg-subtle: #130a15;
+  --shiny-cta-highlight: #e040fb;
+  --shiny-cta-highlight-subtle: #a21caf;
+  box-shadow:
+    inset 0 0 0 1px rgba(224, 64, 251, 0.2),
+    inset 0 -20px 40px -20px rgba(224, 64, 251, 0.1);
+}
+[data-brand="bitcast"] .shiny-border:is(:hover, :focus-visible) {
+  box-shadow:
+    inset 0 0 0 1px rgba(224, 64, 251, 0.35),
+    inset 0 -24px 48px -20px rgba(224, 64, 251, 0.18);
+}
+
+[data-brand="bitcast"] .pulse-teal {
+  animation-name: pulse-bitcast;
+}
+@keyframes pulse-bitcast {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(224, 64, 251, 0.4); }
+  50%       { box-shadow: 0 0 0 5px rgba(224, 64, 251, 0); }
+}
+
+[data-brand="bitcast"] .hl-shiny-border::before {
+  background: conic-gradient(
+    transparent 40%,
+    rgba(224, 64, 251, 0.4) 48%,
+    rgba(224, 64, 251, 0.7) 50%,
+    rgba(224, 64, 251, 0.4) 52%,
+    transparent 60%
+  );
+}
+
+[data-brand="bitcast"] .bg-\[\#09090b\],
+[data-brand="bitcast"] .bg-\[\#09090b\]\/60,
+[data-brand="bitcast"] .bg-\[\#09090b\]\/95 {
+  background-color: #000000;
+}
+[data-brand="bitcast"] .bg-zinc-950\/60 {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+[data-brand="bitcast"] .focus-visible\:ring-teal-400\/50:focus-visible {
+  --tw-ring-color: rgba(224, 64, 251, 0.3);
+}
+
+[data-brand="bitcast"] ::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+/* ══════════════════════════════════════════════
    LunarCrush brand overrides
    Applied via data-brand="lunarcrush" on a wrapper div
    ══════════════════════════════════════════════ */
