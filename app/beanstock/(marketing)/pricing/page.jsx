@@ -1,7 +1,7 @@
 import PricingPage from '@/components/marketing/PricingPage'
 import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
-import { getPricingTiers } from '@/lib/pricing'
+import { PRICING_TIERS } from '@/lib/constants'
 
 export const metadata = buildMetadata({
   title: 'Pricing — Beanstock Funded Accounts',
@@ -15,7 +15,7 @@ export const metadata = buildMetadata({
 })
 
 export default async function BeanstockPricing() {
-  const tiers = await getPricingTiers()
+  const tiers = PRICING_TIERS
 
   const productSchemas = tiers.map((tier) => ({
     "@context": "https://schema.org",

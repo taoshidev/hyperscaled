@@ -1,6 +1,6 @@
 import { cookies } from "next/headers"
 import App from "@/components/marketing"
-import { getPricingTiers } from "@/lib/pricing"
+import { PRICING_TIERS } from "@/lib/constants"
 import { buildMetadata } from "@/lib/metadata"
 
 export const dynamic = "force-dynamic"
@@ -20,6 +20,5 @@ export default async function BeanstockHomePage() {
   const cookieStore = await cookies()
   const entry = cookieStore.get("hs_entry")?.value
   const lockedMiner = entry && entry !== "home" ? entry : null
-  const tiers = await getPricingTiers()
-  return <App lockedMiner={lockedMiner} tiers={tiers} />
+  return <App lockedMiner={lockedMiner} tiers={PRICING_TIERS} />
 }
