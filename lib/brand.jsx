@@ -47,7 +47,7 @@ const BRANDS = {
     showPartnersCTA: false,
     parentSite: { label: 'Back to Bitcast', url: 'https://bitcast.network' },
     heroEyebrow: 'Built on Hyperliquid · Powered by Hyperscaled',
-    heroSub: 'Trade with more capital without risking your own stack. Keep 100% of your profits and grow your account to\u00a0$2.5M. Built on Bitcast, the most advanced decentralized prop trading infrastructure in the world. Powered by Hyperscaled.',
+    heroSub: 'Trade with more capital without risking your own stack. Keep 100% of your profits and grow your account to\u00a0$2.5M. Powered by Hyperscaled.',
     poweredBy: { name: 'Hyperscaled', url: 'https://hyperscaled.trade' },
   },
   lunarcrush: {
@@ -72,7 +72,7 @@ const BRANDS = {
     showPartnersCTA: false,
     parentSite: { label: 'Back to LunarCrush', url: 'https://lunarcrush.com' },
     heroEyebrow: 'Built on Hyperliquid · Powered by Hyperscaled',
-    heroSub: 'Trade with more capital without risking your own stack. Keep 100% of your profits and grow your account to\u00a0$2.5M. Built on LunarCrush, the most advanced decentralized prop trading infrastructure in the world. Powered by Hyperscaled.',
+    heroSub: 'Trade with more capital without risking your own stack. Keep 100% of your profits and grow your account to\u00a0$2.5M. Powered by Hyperscaled.',
     poweredBy: { name: 'Hyperscaled', url: 'https://hyperscaled.trade' },
   },
   beanstock: {
@@ -96,7 +96,7 @@ const BRANDS = {
     showPartnersCTA: false,
     parentSite: { label: 'Back to Beanstock', url: 'https://jollygreeninvestor.com' },
     heroEyebrow: 'Built on Hyperliquid · Powered by Hyperscaled',
-    heroSub: 'Trade with more capital without risking your own stack. Keep 100% of your profits and grow your account to\u00a0$2.5M. Built on Beanstock, the most advanced decentralized prop trading infrastructure in the world. Powered by Hyperscaled.',
+    heroSub: 'Trade with more capital without risking your own stack. Keep 100% of your profits and grow your account to\u00a0$2.5M. Powered by Hyperscaled.',
     poweredBy: { name: 'Hyperscaled', url: 'https://hyperscaled.trade' },
   },
   vanta: {

@@ -15,7 +15,7 @@ import {
 } from '@phosphor-icons/react'
 import Link from 'next/link'
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
-import { useBrandHref } from '@/lib/brand'
+import { useBrand, useBrandHref } from '@/lib/brand'
 import FAQAccordion from '@/components/shared/FAQAccordion'
 import { PRICING_TIERS, PRICING_FAQ } from '@/lib/constants'
 
@@ -38,6 +38,7 @@ function LaunchBanner() {
 
 /* ── Page Hero ── */
 function PricingHero() {
+  const brand = useBrand()
   return (
     <section className="pt-16 pb-16 px-6">
       <div className="max-w-[800px] mx-auto text-center">
@@ -57,7 +58,7 @@ function PricingHero() {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[60ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          Take the Hyperscaled Challenge with no hidden rules, fees, or time limit. Rewards distributed&nbsp;monthly.
+          Take the {brand.name} Challenge with no hidden rules, fees, or time limit. Rewards distributed&nbsp;monthly.
         </motion.p>
       </div>
     </section>
