@@ -19,7 +19,7 @@ const itemVariants = {
 const painPoints = [
   {
     number: '01',
-    title: 'KYC and geographic bans lock out most of the\u00a0world.',
+    title: 'Opaque rules and profit cuts lock out the best\u00a0traders.',
     body: 'Many prop firms immediately reject traders in 150+ countries, blocking them from access to\u00a0capital.',
     accentColor: 'text-red-400',
     tagBg: 'bg-red-400/8 border-red-400/20',
