@@ -1,0 +1,24 @@
+import { cookies } from "next/headers"
+import App from "@/components/marketing"
+import { PRICING_TIERS } from "@/lib/constants"
+import { buildMetadata } from "@/lib/metadata"
+
+export const dynamic = "force-dynamic"
+
+export const metadata = buildMetadata({
+  title: "Zoku — Scaled Trading on Hyperliquid",
+  description:
+    "Trade on Hyperliquid. Get a scaled account. Keep 100% of your profits. 1-step challenge. Monthly USDC payouts. Scale to $2.5M.",
+  ogTitle: "Zoku — Scaled Trading on Hyperliquid",
+  ogDescription:
+    "1-step challenge, 100% profit split, onchain USDC payouts. Trade your way to $2.5M.",
+  path: "/zoku",
+  brand: "zoku",
+})
+
+export default async function ZokuHomePage() {
+  const cookieStore = await cookies()
+  const entry = cookieStore.get("hs_entry")?.value
+  const lockedMiner = entry && entry !== "home" ? entry : null
+  return <App lockedMiner={lockedMiner} tiers={PRICING_TIERS} />
+}

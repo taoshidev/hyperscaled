@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 148 36" fill="none">
+  <!-- Geometric block icon — angular pixel-art Z form, no rounded corners -->
+  <!-- Top bar -->
+  <rect x="0" y="0" width="30" height="8" fill="white"/>
+  <!-- Right column top -->
+  <rect x="22" y="0" width="8" height="16" fill="white"/>
+  <!-- Diagonal step: middle-left block -->
+  <rect x="0" y="10" width="14" height="8" fill="white"/>
+  <!-- Diagonal step: middle-right block -->
+  <rect x="16" y="10" width="14" height="8" fill="white"/>
+  <!-- Left column bottom -->
+  <rect x="0" y="20" width="8" height="16" fill="white"/>
+  <!-- Bottom bar -->
+  <rect x="0" y="28" width="30" height="8" fill="white"/>
+
+  <!-- ZOKU wordmark — bold, wide-tracked -->
+  <text x="42" y="27" font-family="'Helvetica Neue', Arial, ui-sans-serif, sans-serif" font-weight="800" font-size="22" letter-spacing="2.5" fill="white">ZOKU</text>
+</svg>

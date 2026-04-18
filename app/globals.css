@@ -771,3 +771,96 @@ textarea:active {
 [data-brand="vanta"] ::-webkit-scrollbar-track {
   background: #000000;
 }
+
+/* ══════════════════════════════════════════════
+   Zoku brand overrides
+   Applied via data-brand="zoku" on a wrapper div
+   ══════════════════════════════════════════════ */
+
+[data-brand="zoku"] {
+  --brand-glow: 124, 58, 237;
+  --background: oklch(0 0 0);
+  --card: oklch(0.06 0 0);
+  font-family: 'Geist', 'Helvetica Neue', Arial, ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Teal → violet accent mapping for Zoku */
+[data-brand="zoku"] .text-teal-400 {
+  color: #7c3aed;
+}
+[data-brand="zoku"] .text-teal-300 {
+  color: #a78bfa;
+}
+[data-brand="zoku"] .border-teal-400\/20,
+[data-brand="zoku"] .border-teal-400\/30 {
+  border-color: rgba(124, 58, 237, 0.25);
+}
+[data-brand="zoku"] .bg-teal-400\/10,
+[data-brand="zoku"] .bg-teal-400\/8,
+[data-brand="zoku"] .bg-teal-400\/5 {
+  background-color: rgba(124, 58, 237, 0.1);
+}
+
+/* Shiny CTA — violet glow */
+[data-brand="zoku"] .shiny-cta {
+  --shiny-cta-bg: #09090b;
+  --shiny-cta-bg-subtle: #0d0b14;
+  --shiny-cta-highlight: #7c3aed;
+  --shiny-cta-highlight-subtle: #a78bfa;
+}
+
+/* Shiny border — violet */
+[data-brand="zoku"] .shiny-border {
+  --shiny-cta-bg: #09090b;
+  --shiny-cta-bg-subtle: #0d0b14;
+  --shiny-cta-highlight: #7c3aed;
+  --shiny-cta-highlight-subtle: #a78bfa;
+  box-shadow:
+    inset 0 0 0 1px rgba(124, 58, 237, 0.2),
+    inset 0 -20px 40px -20px rgba(124, 58, 237, 0.1);
+}
+[data-brand="zoku"] .shiny-border:is(:hover, :focus-visible) {
+  box-shadow:
+    inset 0 0 0 1px rgba(124, 58, 237, 0.35),
+    inset 0 -24px 48px -20px rgba(124, 58, 237, 0.18);
+}
+
+/* Pulse — violet glow */
+[data-brand="zoku"] .pulse-teal {
+  animation-name: pulse-zoku;
+}
+@keyframes pulse-zoku {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4); }
+  50%       { box-shadow: 0 0 0 5px rgba(124, 58, 237, 0); }
+}
+
+/* HL shiny border — violet tones */
+[data-brand="zoku"] .hl-shiny-border::before {
+  background: conic-gradient(
+    transparent 40%,
+    rgba(124, 58, 237, 0.4) 48%,
+    rgba(124, 58, 237, 0.7) 50%,
+    rgba(124, 58, 237, 0.4) 52%,
+    transparent 60%
+  );
+}
+
+/* Background overrides */
+[data-brand="zoku"] .bg-\[\#09090b\],
+[data-brand="zoku"] .bg-\[\#09090b\]\/60,
+[data-brand="zoku"] .bg-\[\#09090b\]\/95 {
+  background-color: #000000;
+}
+[data-brand="zoku"] .bg-zinc-950\/60 {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+/* Focus ring — violet */
+[data-brand="zoku"] .focus-visible\:ring-teal-400\/50:focus-visible {
+  --tw-ring-color: rgba(124, 58, 237, 0.35);
+}
+
+/* Scrollbar track for zoku */
+[data-brand="zoku"] ::-webkit-scrollbar-track {
+  background: #000000;
+}
