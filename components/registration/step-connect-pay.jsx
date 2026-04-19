@@ -46,6 +46,27 @@ function formatRulesSummary(details) {
   return details.map((d) => `${d.value} ${d.label.toLowerCase()}`).join(" · ");
 }
 
+// Runs the backend's duplicate + validity checks without moving money so the
+// HL/EIP-712 path can surface "already registered" / "invalid tier" errors
+// before the user signs a transfer they can't complete. Throws on failure.
+async function runPreflight(body) {
+  let res;
+  try {
+    res = await fetch("/api/register/preflight", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error("Could not reach the registration server. Please try again.");
+  }
+  if (res.ok) return;
+  const data = await res.json().catch(() => ({}));
+  throw new Error(
+    data.error || data.message || "Registration is not available right now.",
+  );
+}
+
 export function StepConnectAndPay({
   selectedTier,
   tierIndex,
@@ -219,6 +240,9 @@ export function StepConnectAndPay({
         hlTransferSender: address,
       };
 
+      // Block "already registered" and similar errors before requesting payment.
+      await runPreflight(body);
+
       const probeRes = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -321,6 +345,18 @@ export function StepConnectAndPay({
     onPaymentProcessing?.(true);
 
     try {
+      // Step 0 — Preflight validation (duplicate check, tier/miner sanity).
+      // Runs before any signing/transfer so users never pay only to be told
+      // they can't register.
+      await runPreflight({
+        minerSlug,
+        hlAddress: resolvedHlAddress,
+        accountSize: selectedTier.accountSize,
+        payoutAddress: resolvedPayoutAddress || address,
+        tierIndex,
+        hlTransferSender: address,
+      });
+
       const amount = String(price);
       const nonce = Date.now();
 
@@ -443,38 +479,52 @@ export function StepConnectAndPay({
         );
       }
 
-      // Step 5 — Look up the transfer hash from HL info endpoint
+      // Step 5 — Look up the transfer hash from HL info endpoint.
+      // HL's non-funding ledger can lag the exchange API by several seconds.
+      // Poll up to ~60s and accept updates within a 10-minute window to match
+      // the backend's verification window.
       setEip712Step("verifying");
       let hlHash = "";
-      try {
-        const infoRes = await fetch(`${HL_API_URL}/info`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "userNonFundingLedgerUpdates",
-            user: address,
-          }),
-        });
-        if (infoRes.ok) {
-          const updates = await infoRes.json();
-          if (Array.isArray(updates)) {
-            // Find the most recent USDC send to the payment wallet
-            const match = updates.find((u) => {
-              const d = u.delta;
-              return (
-                d &&
-                d.type === "send" &&
-                d.token === "USDC" &&
-                (d.destination || "").toLowerCase() === paymentWallet.toLowerCase() &&
-                Math.abs(Number(d.amount || 0) - price) < 0.01 &&
-                Date.now() - (u.time || 0) < 2 * 60 * 1000
-              );
-            });
-            if (match) hlHash = match.hash || "";
+      const lookupStart = Date.now();
+      const LOOKUP_TIMEOUT_MS = 60 * 1000;
+      const LOOKUP_INTERVAL_MS = 3 * 1000;
+      const MATCH_WINDOW_MS = 10 * 60 * 1000;
+
+      while (!hlHash && Date.now() - lookupStart < LOOKUP_TIMEOUT_MS) {
+        try {
+          const infoRes = await fetch(`${HL_API_URL}/info`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "userNonFundingLedgerUpdates",
+              user: address,
+              startTime: Date.now() - MATCH_WINDOW_MS,
+            }),
+          });
+          if (infoRes.ok) {
+            const updates = await infoRes.json();
+            if (Array.isArray(updates)) {
+              const match = updates.find((u) => {
+                const d = u.delta;
+                return (
+                  d &&
+                  d.type === "send" &&
+                  d.token === "USDC" &&
+                  (d.destination || "").toLowerCase() === paymentWallet.toLowerCase() &&
+                  Math.abs(Number(d.amount || 0) - price) < 0.01 &&
+                  Date.now() - (u.time || 0) < MATCH_WINDOW_MS
+                );
+              });
+              if (match) {
+                hlHash = match.hash || "";
+                break;
+              }
+            }
           }
+        } catch (e) {
+          console.warn("Failed to look up HL transfer hash:", e.message);
         }
-      } catch (e) {
-        console.warn("Failed to look up HL transfer hash:", e.message);
+        await new Promise((r) => setTimeout(r, LOOKUP_INTERVAL_MS));
       }
 
       if (!hlHash) {

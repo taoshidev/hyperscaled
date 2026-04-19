@@ -280,92 +280,145 @@ export async function POST(request) {
       ? "https://api.hyperliquid-testnet.xyz"
       : "https://api.hyperliquid.xyz";
 
-    let transferVerified = false;
-    try {
-      const verifyRes = await fetch(hlApiUrl + "/info", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "userNonFundingLedgerUpdates",
-          user: minerWallet,
-        }),
-      });
+    const TEN_MINUTES = 10 * 60 * 1000;
 
-      if (verifyRes.ok) {
-        const updates = await verifyRes.json();
-        const now = Date.now();
-        const TEN_MINUTES = 10 * 60 * 1000;
+    // Query both the sender's ledger (reliable "send" delta, low-volume) and
+    // the receiver's ledger (as fallback). Busy miner wallets can push the
+    // relevant update out of the default response window on the receiver side,
+    // and the receiver's ledger sometimes surfaces the transfer under a delta
+    // type other than "send" ("spotSend", "internalTransfer", …). Querying
+    // the sender is the robust path when we have a claimed/derivable sender.
+    const senderCandidates = [hlTransferSender, hlAddress]
+      .map((a) => (a ? String(a).toLowerCase() : ""))
+      .filter((a) => /^0x[a-f0-9]{40}$/.test(a));
+    const uniqueSenders = Array.from(new Set(senderCandidates));
 
-        if (Array.isArray(updates)) {
-          for (const update of updates) {
-            const delta = update.delta;
-            if (!delta || delta.type !== "send") continue;
-            if (delta.token !== "USDC") continue;
-
-            const updateHash = (update.hash || "").toLowerCase();
-            if (updateHash !== normalizedTxHash) continue;
-
-            // Exact hash matched — validate sender, amount, and recency
-            const transferSender = (delta.user || "").toLowerCase();
-            const transferAmount = Number(delta.amount || delta.usdcValue || 0);
-            const isRecent = (now - (update.time || 0)) < TEN_MINUTES;
-
-            // Log if sender differs from hlAddress (cross-wallet payment is allowed)
-            if (transferSender !== hlAddress.toLowerCase()) {
-              console.info("[register] HL sender differs from hlAddress (cross-wallet payment)", {
-                minerSlug,
-                txHash: update.hash,
-                hlAddress,
-                actualSender: transferSender,
-                claimedSender: hlTransferSender || "not provided",
-              });
-            }
-
-            // Recompute using the verified on-chain sender so the discount
-            // applies even when the client claim was missing/incorrect.
-            const trueDevTest = isAnyDevTestWallet(hlAddress, transferSender);
-            const trueEffectivePrice = trueDevTest ? DEV_TEST_PRICE : price;
-
-            if (Math.abs(transferAmount - trueEffectivePrice) >= 0.01) {
-              console.warn("[register] HL amount mismatch on hash match", {
-                minerSlug,
-                txHash: update.hash,
-                expected: trueEffectivePrice,
-                actual: transferAmount,
-                devTest: trueDevTest,
-              });
-              return NextResponse.json(
-                { error: "Transfer amount does not match the expected price." },
-                { status: 400 },
-              );
-            }
-
-            if (!isRecent) {
-              console.warn("[register] HL transfer too old", {
-                minerSlug,
-                txHash: update.hash,
-                transferTime: update.time,
-              });
-              return NextResponse.json(
-                { error: "Transfer is too old. Please make a new transfer." },
-                { status: 400 },
-              );
-            }
-
-            transferVerified = true;
-            console.info("[register] hyperliquid transfer verified (exact hash)", {
-              minerSlug,
-              txHash: update.hash,
-              transferSender,
-              transferAmount,
-              transferTime: update.time,
-            });
-            break;
-          }
-        }
+    const fetchLedger = async (user, startTime) => {
+      try {
+        const res = await fetch(hlApiUrl + "/info", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "userNonFundingLedgerUpdates",
+            user,
+            ...(startTime ? { startTime } : {}),
+          }),
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
+      } catch (err) {
+        console.warn("[register] HL ledger fetch failed", { user, error: err.message });
+        return [];
       }
-    } catch (err) {
-      console.warn("[register] HL transfer verification error:", err.message);
+    };
+
+    // Accept any delta type that represents a USDC spot transfer. "send" is
+    // what the sender's ledger shows; receivers sometimes show these under
+    // alternate names — keep the set broad so we don't reject real transfers.
+    const ACCEPTED_SEND_TYPES = new Set([
+      "send",
+      "spotSend",
+      "spotTransfer",
+      "accountClassTransfer",
+      "internalTransfer",
+    ]);
+
+    const nowMs = Date.now();
+    const startTime = nowMs - TEN_MINUTES;
+    const ledgerQueries = [
+      ...uniqueSenders.map((u) => fetchLedger(u, startTime)),
+      fetchLedger(minerWallet, startTime),
+    ];
+    const ledgerResults = await Promise.all(ledgerQueries);
+
+    let matchedUpdate = null;
+    for (const updates of ledgerResults) {
+      for (const update of updates) {
+        const delta = update?.delta;
+        if (!delta) continue;
+        if (!ACCEPTED_SEND_TYPES.has(delta.type)) continue;
+        if (delta.token && delta.token !== "USDC") continue;
+        const updateHash = (update.hash || "").toLowerCase();
+        if (updateHash !== normalizedTxHash) continue;
+        matchedUpdate = update;
+        break;
+      }
+      if (matchedUpdate) break;
+    }
+
+    let transferVerified = false;
+    if (matchedUpdate) {
+      const delta = matchedUpdate.delta;
+      // Sender is usually `delta.user`; on receiver-side ledgers it may be
+      // `delta.source` or `delta.from`. Try them all.
+      const rawSender = delta.user || delta.source || delta.from || "";
+      const transferSender = String(rawSender).toLowerCase();
+      const transferAmount = Math.abs(
+        Number(delta.amount ?? delta.usdcValue ?? 0),
+      );
+      const isRecent = nowMs - (matchedUpdate.time || 0) < TEN_MINUTES;
+
+      if (transferSender && transferSender !== hlAddress.toLowerCase()) {
+        console.info(
+          "[register] HL sender differs from hlAddress (cross-wallet payment)",
+          {
+            minerSlug,
+            txHash: matchedUpdate.hash,
+            hlAddress,
+            actualSender: transferSender,
+            claimedSender: hlTransferSender || "not provided",
+          },
+        );
+      }
+
+      // Recompute discount using the verified on-chain sender AND the claimed
+      // sender — either one qualifying is enough to grant the discount.
+      const trueDevTest = isAnyDevTestWallet(
+        hlAddress,
+        transferSender,
+        hlTransferSender,
+      );
+      const trueEffectivePrice = trueDevTest ? DEV_TEST_PRICE : price;
+
+      // Allow exact match (±0.01 for HL's internal rounding) OR overpayment.
+      // Rejecting only when the user under-paid protects revenue without
+      // stranding users whose transfer rounded differently from the UI.
+      const underpaid = transferAmount < trueEffectivePrice - 0.01;
+      if (underpaid) {
+        console.warn("[register] HL amount mismatch on hash match", {
+          minerSlug,
+          txHash: matchedUpdate.hash,
+          expected: trueEffectivePrice,
+          actual: transferAmount,
+          devTest: trueDevTest,
+        });
+        return NextResponse.json(
+          { error: "Transfer amount does not match the expected price." },
+          { status: 400 },
+        );
+      }
+
+      if (!isRecent) {
+        console.warn("[register] HL transfer too old", {
+          minerSlug,
+          txHash: matchedUpdate.hash,
+          transferTime: matchedUpdate.time,
+        });
+        return NextResponse.json(
+          { error: "Transfer is too old. Please make a new transfer." },
+          { status: 400 },
+        );
+      }
+
+      transferVerified = true;
+      console.info("[register] hyperliquid transfer verified (exact hash)", {
+        minerSlug,
+        txHash: matchedUpdate.hash,
+        transferSender,
+        transferAmount,
+        transferTime: matchedUpdate.time,
+      });
     }
 
     if (!transferVerified) {
@@ -611,25 +664,48 @@ export async function POST(request) {
   }
 
   // Insert registration record — this MUST succeed; the user already paid.
-  try {
-    await db.insert(registrations).values({
-      userId,
-      minerHotkey: miner.hotkey,
-      hlAddress,
-      accountSize,
-      payoutAddress: effectivePayoutAddress,
-      tierIndex,
-      priceUsdc: String(effectivePrice),
-      txHash,
-      status: registered ? "registered" : "pending",
-      statusDetail: {
-        paymentMethod: paymentMethod || "x402",
-        ...(devTest ? { devTest: true, originalPrice: price } : {}),
-        ...(statusDetail || {}),
-      },
-    });
-  } catch (err) {
-    reportCritical(err, {
+  // Retry with backoff so a transient DB blip doesn't strand the user on the
+  // "contact support" message when their payment has already settled.
+  const registrationRow = {
+    userId,
+    minerHotkey: miner.hotkey,
+    hlAddress,
+    accountSize,
+    payoutAddress: effectivePayoutAddress,
+    tierIndex,
+    priceUsdc: String(effectivePrice),
+    txHash,
+    status: registered ? "registered" : "pending",
+    statusDetail: {
+      paymentMethod: paymentMethod || "x402",
+      ...(devTest ? { devTest: true, originalPrice: price } : {}),
+      ...(statusDetail || {}),
+    },
+  };
+
+  let insertErr = null;
+  const INSERT_ATTEMPTS = 3;
+  for (let attempt = 1; attempt <= INSERT_ATTEMPTS; attempt++) {
+    try {
+      await db.insert(registrations).values(registrationRow);
+      insertErr = null;
+      break;
+    } catch (err) {
+      insertErr = err;
+      console.warn("[register] registration insert failed", {
+        attempt,
+        hlAddress,
+        txHash,
+        error: err?.message,
+      });
+      if (attempt < INSERT_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, 250 * 2 ** (attempt - 1)));
+      }
+    }
+  }
+
+  if (insertErr) {
+    reportCritical(insertErr, {
       source: "api/register",
       metadata: {
         step: "registration_insert",
@@ -640,7 +716,8 @@ export async function POST(request) {
         userId,
         payoutAddress: effectivePayoutAddress,
         minerHotkey: miner.hotkey,
-        dbError: err?.message,
+        dbError: insertErr?.message,
+        attempts: INSERT_ATTEMPTS,
       },
     });
 
