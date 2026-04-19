@@ -12,6 +12,7 @@ import { RegistrationHelpProvider } from "./registration-help-context";
 import { RegistrationSidebar } from "./registration-sidebar";
 import { MobileHelpSheet } from "./mobile-help-sheet";
 import { useBrandHref } from "@/lib/brand";
+import { reportCritical } from "@/lib/errors";
 
 const STEP_LABELS = ["Select Plan", "Connect & Pay", "Confirm", "Done"];
 const DEFAULT_MINER_SLUG = "vanta";
@@ -117,6 +118,19 @@ export function RegistrationFlow({
         console.warn("[REGISTRATION] miner API unavailable — using empty tiers", { initialMinerSlug, err });
         setMinerTiers([]);
         setPaymentWallet(MOCK_WALLET);
+        // If this branch fires in prod, paymentWallet is 0x000…000 and any
+        // downstream payment would target the zero address. Must page on this.
+        reportCritical(
+          err instanceof Error ? err : new Error(`miner API fetch failed: ${err}`),
+          {
+            source: "RegistrationFlow",
+            metadata: {
+              step: "miner_api_fallback_to_mock_wallet",
+              minerSlug: initialMinerSlug,
+              status: typeof err === "number" ? err : undefined,
+            },
+          },
+        );
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: guard uses initial state only; deps would refetch in a loop
   }, [initialMinerSlug]);

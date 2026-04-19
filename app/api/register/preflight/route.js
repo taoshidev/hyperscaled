@@ -6,6 +6,7 @@ import { registrations } from "@/lib/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
 import { isAnyDevTestWallet, DEV_TEST_PRICE } from "@/lib/dev-test";
+import { reportError } from "@/lib/errors";
 
 // POST /api/register/preflight
 // Runs every check that /api/register runs before payment, so callers on the
@@ -142,6 +143,10 @@ export async function POST(request) {
     }
   } catch (err) {
     console.error("[REGISTRATION][preflight] duplicate check failed", { reqId, error: err.message });
+    reportError(err, {
+      source: "api/register/preflight",
+      metadata: { step: "duplicate_check", reqId, minerSlug, hlAddress },
+    });
     // Fall through — better to let the user try than block on a transient DB error.
   }
 

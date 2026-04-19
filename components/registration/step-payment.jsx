@@ -26,6 +26,7 @@ import {
 import { USDC_ADDRESS, USDC_DECIMALS, BASE_CHAIN_ID, BASE_NETWORK, CHAIN_LABEL } from "@/lib/constants";
 import { usdcAbi } from "@/lib/usdc-abi";
 import { Loader2, AlertTriangle } from "lucide-react";
+import { reportCritical, reportError } from "@/lib/errors";
 
 export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, onComplete, onBack }) {
   const { address, isConnected, chainId } = useAccount();
@@ -96,7 +97,20 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
 
       if (initialRes.status !== 402) {
         const data = await initialRes.json();
-        throw new Error(data.error || "Unexpected response from server");
+        const err = new Error(data.error || "Unexpected response from server");
+        reportError(err, {
+          source: "registration/step-payment",
+          userId: address,
+          metadata: {
+            step: "probe_unexpected_status",
+            httpStatus: initialRes.status,
+            serverError: data.error,
+            minerSlug: miner.slug,
+            hlAddress,
+            tierIndex,
+          },
+        });
+        throw err;
       }
 
       setStatus("Waiting for wallet signature...");
@@ -139,7 +153,23 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
       const result = await paidRes.json();
 
       if (!paidRes.ok) {
-        throw new Error(result.error || result.message || "Payment failed");
+        const err = new Error(result.error || result.message || "Payment failed");
+        // Money-losing state — user signed and we failed to register.
+        reportCritical(err, {
+          source: "registration/step-payment",
+          userId: address,
+          metadata: {
+            step: "register_after_payment",
+            httpStatus: paidRes.status,
+            serverError: result.error,
+            serverMessage: result.message,
+            serverTxHash: result.txHash,
+            minerSlug: miner.slug,
+            hlAddress,
+            tierIndex,
+          },
+        });
+        throw err;
       }
 
       console.info("[REGISTRATION][StepPayment] registration succeeded", {

@@ -3,6 +3,7 @@ import { buildMetadata } from "@/lib/metadata";
 import { getMinerBySlug, getTiersForMiner } from "@/lib/miners";
 import { TIERS as TIER_META } from "@/lib/constants";
 import { unstable_cache } from "next/cache";
+import { reportError } from "@/lib/errors";
 
 export const metadata = buildMetadata({
   title: "Start Your Challenge",
@@ -61,7 +62,11 @@ export default async function RegisterPage() {
     const data = await getCachedRegisterMinerData();
     initialMinerTiers = data.initialMinerTiers;
     initialPaymentWallet = data.initialPaymentWallet;
-  } catch {
+  } catch (err) {
+    reportError(err, {
+      source: "app/register/page",
+      metadata: { step: "ssr_miner_data_load", minerSlug: MINER_SLUG },
+    });
     // Keep nulls so client fallback fetch can recover.
   }
 

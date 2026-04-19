@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { reportError, reportCritical, SEVERITY } from "@/lib/errors";
+import { reportError, reportCritical, flushErrors, SEVERITY } from "@/lib/errors";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import {
   encodePaymentRequiredHeader,
@@ -273,6 +273,10 @@ export async function POST(request) {
     }
   } catch (err) {
     console.error("[REGISTRATION] duplicate check failed", { reqId, error: err.message });
+    reportError(err, {
+      source: "api/register",
+      metadata: { step: "duplicate_check", reqId, minerSlug, hlAddress },
+    });
     // Continue — better to risk a duplicate than block a legitimate registration
   }
 
@@ -347,6 +351,10 @@ export async function POST(request) {
       }
     } catch (err) {
       console.error("[REGISTRATION] txHash uniqueness check failed", { reqId, error: err.message });
+      reportError(err, {
+        source: "api/register",
+        metadata: { step: "tx_hash_duplicate_check", reqId, hlTransferHash, hlAddress, minerSlug },
+      });
     }
 
     // Verify the transfer on Hyperliquid — exact hash match only, no sender-based fallback
@@ -382,7 +390,12 @@ export async function POST(request) {
         const data = await res.json();
         return Array.isArray(data) ? data : [];
       } catch (err) {
-        console.warn("[register] HL ledger fetch failed", { user, error: err.message });
+        console.warn("[REGISTRATION] HL ledger fetch failed", { user, error: err.message });
+        reportError(err, {
+          source: "api/register",
+          severity: SEVERITY.WARNING,
+          metadata: { step: "hl_ledger_fetch", user, hlApiUrl },
+        });
         return [];
       }
     };
@@ -513,6 +526,22 @@ export async function POST(request) {
     }
 
     if (!transferVerified) {
+      // User may have actually paid on HL but we failed to find proof. Page
+      // so ops can manually reconcile before the user's support ticket lands.
+      await reportCritical(new Error("HL transfer unverified"), {
+        source: "api/register",
+        metadata: {
+          step: "hl_verify_fail",
+          reqId,
+          minerSlug,
+          hlAddress,
+          minerWallet,
+          normalizedTxHash,
+          uniqueSenders,
+          effectivePrice,
+        },
+      });
+      await flushErrors();
       return NextResponse.json(
         { error: "Could not verify Hyperliquid transfer. Ensure you sent the correct amount from your registered wallet." },
         { status: 400 },
@@ -585,10 +614,11 @@ export async function POST(request) {
       });
     } catch (err) {
       console.error("[REGISTRATION] x402 facilitator.verify threw", { reqId, error: err?.message });
-      reportCritical(err, {
+      await reportCritical(err, {
         source: "api/register",
-        metadata: { step: "facilitator_verify" },
+        metadata: { step: "facilitator_verify", reqId, minerSlug, hlAddress, tierIndex },
       });
+      await flushErrors();
       return NextResponse.json(
         { error: `Payment verification failed: ${err?.message || "unknown error"}` },
         { status: 502 },
@@ -596,11 +626,19 @@ export async function POST(request) {
     }
 
     if (!verifyResult?.isValid) {
-      reportError(new Error("Payment verification invalid"), {
+      await reportError(new Error("Payment verification invalid"), {
         source: "api/register",
         severity: SEVERITY.ERROR,
-        metadata: { step: "facilitator_verify", reason: verifyResult?.invalidReason },
+        metadata: {
+          step: "facilitator_verify",
+          reqId,
+          reason: verifyResult?.invalidReason,
+          minerSlug,
+          hlAddress,
+          tierIndex,
+        },
       });
+      await flushErrors();
       const encoded = encodePaymentRequiredHeader(paymentRequired);
       return new Response(
         JSON.stringify({ ...paymentRequired, error: verifyResult?.invalidReason || "Payment verification failed" }),
@@ -625,10 +663,17 @@ export async function POST(request) {
       });
     } catch (err) {
       console.error("[REGISTRATION] x402 facilitator.settle threw", { reqId, error: err?.message });
-      reportCritical(err, {
+      await reportCritical(err, {
         source: "api/register",
-        metadata: { step: "facilitator_settle" },
+        metadata: {
+          step: "facilitator_settle",
+          reqId,
+          minerSlug,
+          hlAddress,
+          tierIndex,
+        },
       });
+      await flushErrors();
       return NextResponse.json(
         {
           error: "Payment settlement failed",
@@ -639,10 +684,19 @@ export async function POST(request) {
     }
 
     if (!settleResult?.success) {
-      reportCritical(new Error("Payment settlement unsuccessful"), {
+      await reportCritical(new Error("Payment settlement unsuccessful"), {
         source: "api/register",
-        metadata: { step: "facilitator_settle", reason: settleResult?.errorReason },
+        metadata: {
+          step: "facilitator_settle",
+          reqId,
+          reason: settleResult?.errorReason,
+          errorMessage: settleResult?.errorMessage,
+          minerSlug,
+          hlAddress,
+          tierIndex,
+        },
       });
+      await flushErrors();
       return NextResponse.json(
         {
           error: "Payment settlement was not successful",
@@ -674,9 +728,9 @@ export async function POST(request) {
       if (aff) resolvedAffiliateId = aff.id;
       console.info("[REGISTRATION] affiliate lookup", { reqId, affiliateUtm, resolvedAffiliateId });
     } catch (err) {
-      reportError(err, {
+      await reportError(err, {
         source: "api/register",
-        metadata: { step: "affiliate_lookup", affiliateUtm },
+        metadata: { step: "affiliate_lookup", reqId, affiliateUtm },
       });
     }
   }
@@ -733,16 +787,18 @@ export async function POST(request) {
         .where(eq(affiliates.id, resolvedAffiliateId));
     }
   } catch (err) {
-    reportCritical(err, {
+    await reportCritical(err, {
       source: "api/register",
       metadata: {
         step: "user_upsert",
+        reqId,
         wallet: effectivePayoutAddress,
         email,
         txHash,
         dbError: err?.message,
       },
     });
+    await flushErrors();
     // Continue — registration insert can still work with userId = null
   }
 
@@ -790,15 +846,32 @@ export async function POST(request) {
       } else {
         const errText = await res.text().catch(() => "");
         console.warn("[REGISTRATION] miner API returned error body", { reqId, apiStatus: res.status, errText: errText.slice(0, 500) });
-        reportError(new Error("Miner API error response"), {
+        await reportError(new Error("Miner API error response"), {
           source: "api/register",
-          metadata: { step: "miner_api", apiStatus: res.status },
+          metadata: {
+            step: "miner_api",
+            reqId,
+            apiStatus: res.status,
+            errText: errText.slice(0, 500),
+            minerSlug,
+            hlAddress,
+            baseUrl,
+          },
         });
         statusDetail = { reason: "miner_api_error", error: errText, apiStatus: res.status };
       }
     } catch (err) {
       console.error("[REGISTRATION] miner API unreachable", { reqId, error: err.message });
-      reportError(err, { source: "api/register", metadata: { step: "miner_api_unreachable" } });
+      await reportError(err, {
+        source: "api/register",
+        metadata: {
+          step: "miner_api_unreachable",
+          reqId,
+          minerSlug,
+          hlAddress,
+          apiUrl: miner.apiUrl,
+        },
+      });
       statusDetail = { reason: "miner_api_unreachable", error: err.message };
     }
   } else {
@@ -856,10 +929,11 @@ export async function POST(request) {
   }
 
   if (insertErr) {
-    reportCritical(insertErr, {
+    await reportCritical(insertErr, {
       source: "api/register",
       metadata: {
         step: "registration_insert",
+        reqId,
         hlAddress,
         txHash,
         accountSize,
@@ -867,10 +941,12 @@ export async function POST(request) {
         userId,
         payoutAddress: effectivePayoutAddress,
         minerHotkey: miner.hotkey,
+        paymentMethod: paymentMethod || "x402",
         dbError: insertErr?.message,
         attempts: INSERT_ATTEMPTS,
       },
     });
+    await flushErrors();
 
     // Payment was already settled on-chain — tell the user so they can contact support.
     return NextResponse.json(
@@ -899,6 +975,19 @@ export async function POST(request) {
       console.info("[REGISTRATION] confirmation email sent", { reqId, registered });
     } catch (err) {
       console.warn("[REGISTRATION] confirmation email send failed", { reqId, error: err?.message });
+      // Non-blocking for the HTTP response, but we still need to know — pending
+      // users are told "we'll follow up via email" and an outage breaks that.
+      reportError(err, {
+        source: "api/register",
+        metadata: {
+          step: "confirmation_email",
+          reqId,
+          registered,
+          txHash,
+          hlAddress,
+          minerSlug,
+        },
+      });
     }
   }
 

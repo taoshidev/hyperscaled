@@ -41,6 +41,7 @@ import {
   decodePaymentRequiredHeader,
   encodePaymentSignatureHeader,
 } from "@x402/core/http";
+import { reportCritical, reportError } from "@/lib/errors";
 
 function formatRulesSummary(details) {
   return details.map((d) => `${d.value} ${d.label.toLowerCase()}`).join(" · ");
@@ -296,14 +297,48 @@ export function StepConnectAndPay({
 
       if (probeRes.status !== 402) {
         const data = await probeRes.json().catch(() => ({}));
-        throw new Error(data.error || "Unexpected response from registration server.");
+        const err = new Error(data.error || "Unexpected response from registration server.");
+        reportError(err, {
+          source: "registration/pay-base",
+          userId: address,
+          metadata: {
+            step: "base_probe_unexpected",
+            httpStatus: probeRes.status,
+            serverError: data.error,
+            minerSlug,
+            hlAddress: resolvedHlAddress,
+            tierIndex,
+          },
+        });
+        throw err;
       }
 
       const paymentRequiredHeader = probeRes.headers.get("PAYMENT-REQUIRED");
-      if (!paymentRequiredHeader) throw new Error("No payment requirements received.");
+      if (!paymentRequiredHeader) {
+        const err = new Error("No payment requirements received.");
+        reportCritical(err, {
+          source: "registration/pay-base",
+          userId: address,
+          metadata: { step: "base_probe_header_missing", minerSlug, hlAddress: resolvedHlAddress },
+        });
+        throw err;
+      }
       const paymentRequired = decodePaymentRequiredHeader(paymentRequiredHeader);
       const requirements = paymentRequired.accepts?.[0];
-      if (!requirements) throw new Error("No valid payment requirement in response.");
+      if (!requirements) {
+        const err = new Error("No valid payment requirement in response.");
+        reportCritical(err, {
+          source: "registration/pay-base",
+          userId: address,
+          metadata: {
+            step: "base_probe_accepts_empty",
+            acceptsLength: paymentRequired.accepts?.length ?? 0,
+            minerSlug,
+            hlAddress: resolvedHlAddress,
+          },
+        });
+        throw err;
+      }
       console.info("[REGISTRATION] Base: payment requirements decoded", {
         amount: requirements.amount,
         payTo: requirements.payTo,
@@ -339,9 +374,28 @@ export function StepConnectAndPay({
 
       if (!registerRes.ok) {
         const data = await registerRes.json().catch(() => ({}));
-        throw new Error(
+        const err = new Error(
           data.error || data.message || "Registration failed. Please contact support.",
         );
+        // User's Base USDC payment went through (or at least got signed) but
+        // /api/register failed — money-losing state, must reach Sentry even if
+        // the server-side reportCritical was dropped.
+        reportCritical(err, {
+          source: "registration/pay-base",
+          userId: address,
+          metadata: {
+            step: "register_after_payment",
+            httpStatus: registerRes.status,
+            serverError: data.error,
+            serverMessage: data.message,
+            serverTxHash: data.txHash,
+            minerSlug,
+            hlAddress: resolvedHlAddress,
+            payoutAddress: resolvedPayoutAddress || address,
+            tierIndex,
+          },
+        });
+        throw err;
       }
 
       const result = await registerRes.json();
@@ -553,7 +607,23 @@ export function StepConnectAndPay({
       if (!exchangeRes.ok) {
         const data = await exchangeRes.json().catch(() => ({}));
         console.error("[REGISTRATION] EIP-712: HL /exchange non-ok", { status: exchangeRes.status, data });
-        throw new Error(data.error || data.message || "Hyperliquid transfer failed.");
+        const err = new Error(data.error || data.message || "Hyperliquid transfer failed.");
+        reportCritical(err, {
+          source: "registration/pay-eip712",
+          userId: address,
+          metadata: {
+            step: "hl_exchange_http",
+            httpStatus: exchangeRes.status,
+            serverError: data.error,
+            serverMessage: data.message,
+            destinationWallet: paymentWallet,
+            amount,
+            nonce,
+            minerSlug,
+            hlAddress: resolvedHlAddress,
+          },
+        });
+        throw err;
       }
 
       const exchangeResult = await exchangeRes.json();
@@ -564,11 +634,26 @@ export function StepConnectAndPay({
 
       // HL exchange returns 200 even on failure — check the status field
       if (exchangeResult.status !== "ok") {
-        throw new Error(
+        const err = new Error(
           typeof exchangeResult.response === "string"
             ? exchangeResult.response
             : "Hyperliquid transfer failed.",
         );
+        reportCritical(err, {
+          source: "registration/pay-eip712",
+          userId: address,
+          metadata: {
+            step: "hl_exchange_status",
+            hlStatus: exchangeResult.status,
+            hlResponse: exchangeResult.response,
+            destinationWallet: paymentWallet,
+            amount,
+            nonce,
+            minerSlug,
+            hlAddress: resolvedHlAddress,
+          },
+        });
+        throw err;
       }
 
       // Step 5 — Look up the transfer hash from HL info endpoint.
@@ -635,7 +720,24 @@ export function StepConnectAndPay({
           pollCount,
           elapsedMs: Date.now() - lookupStart,
         });
-        throw new Error("Transfer succeeded but could not retrieve transaction hash. Please contact support.");
+        // User's HL USDC transfer succeeded but we can't find the hash in 60s.
+        // Server never saw this — it's the only signal Sentry will get.
+        const err = new Error("Transfer succeeded but could not retrieve transaction hash. Please contact support.");
+        reportCritical(err, {
+          source: "registration/pay-eip712",
+          userId: address,
+          metadata: {
+            step: "tx_hash_lookup_timeout",
+            minerSlug,
+            hlAddress: resolvedHlAddress,
+            destinationWallet: paymentWallet,
+            amount,
+            nonce,
+            pollCount,
+            elapsedMs: Date.now() - lookupStart,
+          },
+        });
+        throw err;
       }
 
       // Step 6 — Register with our backend
@@ -666,9 +768,28 @@ export function StepConnectAndPay({
 
       if (!registerRes.ok) {
         const data = await registerRes.json().catch(() => ({}));
-        throw new Error(
+        const err = new Error(
           data.error || data.message || "Registration failed. Please contact support.",
         );
+        // HL transfer already settled — user has paid. Must reach Sentry even
+        // if the server-side reportCritical flush was dropped.
+        reportCritical(err, {
+          source: "registration/pay-eip712",
+          userId: address,
+          metadata: {
+            step: "register_after_payment",
+            httpStatus: registerRes.status,
+            serverError: data.error,
+            serverMessage: data.message,
+            serverTxHash: data.txHash,
+            hlTransferHash: hlHash,
+            minerSlug,
+            hlAddress: resolvedHlAddress,
+            payoutAddress: resolvedPayoutAddress || address,
+            tierIndex,
+          },
+        });
+        throw err;
       }
 
       const result = await registerRes.json();

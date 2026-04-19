@@ -21,6 +21,7 @@ import { isValidEmail, isValidHLAddress } from "@/lib/validation";
 import { copyToClipboard, cn } from "@/lib/utils";
 import { truncateAddress, formatAccountSize } from "@/lib/format";
 import ExtensionModal from "@/components/marketing/ExtensionModal";
+import { reportError } from "@/lib/errors";
 
 const STEP_LABELS = ["Account Size", "Your Info", "Confirmation"];
 
@@ -285,6 +286,17 @@ function StepInfo({ selectedTier, onSubmit, onBack }) {
       if (!res.ok) {
         setApiError(data.error || "Registration failed. Please try again.");
         setSubmitting(false);
+        reportError(new Error("testnet_register_failed"), {
+          source: "registration/testnet",
+          metadata: {
+            step: "testnet_register",
+            httpStatus: res.status,
+            serverError: data.error,
+            hlAddress: hlAddress.trim(),
+            accountSize: selectedTier.accountSize,
+            tierIndex: selectedTier.tierIndex,
+          },
+        });
         return;
       }
 
@@ -293,9 +305,18 @@ function StepInfo({ selectedTier, onSubmit, onBack }) {
         hlAddress: hlAddress.trim(),
         registrationStatus: data.status,
       });
-    } catch {
+    } catch (err) {
       setApiError("Network error. Please check your connection and try again.");
       setSubmitting(false);
+      reportError(err, {
+        source: "registration/testnet",
+        metadata: {
+          step: "testnet_register_network",
+          hlAddress: hlAddress.trim(),
+          accountSize: selectedTier.accountSize,
+          tierIndex: selectedTier.tierIndex,
+        },
+      });
     }
   }
 

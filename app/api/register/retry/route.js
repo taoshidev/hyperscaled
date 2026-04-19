@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { registrations, entityMiners } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { reportError, reportCritical, reportWarning } from "@/lib/errors";
 
 function timingSafeEqual(a, b) {
   const bufA = Buffer.from(a);
@@ -56,19 +57,36 @@ export async function POST(request) {
   const retrySecret = process.env.RETRY_SECRET;
   if (!retrySecret) {
     console.error("[REGISTRATION][retry] RETRY_SECRET not configured", { reqId });
+    reportCritical(new Error("retry_secret_missing"), {
+      source: "api/register/retry",
+      metadata: { step: "config_missing", reqId },
+    });
     return NextResponse.json({ error: "Retry endpoint not configured" }, { status: 500 });
   }
 
   const auth = request.headers.get("authorization");
   if (!timingSafeEqual(retrySecret, auth?.replace(/^Bearer\s+/i, "") || "")) {
     console.warn("[REGISTRATION][retry] unauthorized", { reqId, hasAuth: Boolean(auth) });
+    reportWarning("retry_unauthorized", {
+      source: "api/register/retry",
+      metadata: { step: "unauthorized", reqId, hasAuth: Boolean(auth) },
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const pending = await db
-    .select()
-    .from(registrations)
-    .where(eq(registrations.status, "pending"));
+  let pending;
+  try {
+    pending = await db
+      .select()
+      .from(registrations)
+      .where(eq(registrations.status, "pending"));
+  } catch (err) {
+    reportCritical(err, {
+      source: "api/register/retry",
+      metadata: { step: "load_pending_registrations", reqId },
+    });
+    return NextResponse.json({ error: "Failed to load pending registrations" }, { status: 500 });
+  }
 
   console.info("[REGISTRATION][retry] pending count", { reqId, pendingCount: pending.length });
 
@@ -80,12 +98,19 @@ export async function POST(request) {
   const hotkeySet = [...new Set(pending.map((r) => r.minerHotkey))];
   const miners = {};
   for (const hotkey of hotkeySet) {
-    const [miner] = await db
-      .select()
-      .from(entityMiners)
-      .where(eq(entityMiners.hotkey, hotkey))
-      .limit(1);
-    if (miner) miners[hotkey] = miner;
+    try {
+      const [miner] = await db
+        .select()
+        .from(entityMiners)
+        .where(eq(entityMiners.hotkey, hotkey))
+        .limit(1);
+      if (miner) miners[hotkey] = miner;
+    } catch (err) {
+      reportError(err, {
+        source: "api/register/retry",
+        metadata: { step: "load_miner", reqId, hotkey },
+      });
+    }
   }
 
   const results = [];
@@ -142,6 +167,18 @@ export async function POST(request) {
           apiStatus: res.status,
           errText: errText.slice(0, 300),
         });
+        reportError(new Error("retry_miner_api_error"), {
+          source: "api/register/retry",
+          metadata: {
+            step: "miner_api_error",
+            reqId,
+            regId: reg.id,
+            minerHotkey: reg.minerHotkey,
+            hlAddress: reg.hlAddress,
+            apiStatus: res.status,
+            errText: errText.slice(0, 500),
+          },
+        });
         results.push({ id: reg.id, status: "still_pending", apiStatus: res.status });
       }
     } catch (err) {
@@ -154,6 +191,17 @@ export async function POST(request) {
         reqId,
         regId: reg.id,
         error: err.message,
+      });
+      reportError(err, {
+        source: "api/register/retry",
+        metadata: {
+          step: "miner_api_unreachable",
+          reqId,
+          regId: reg.id,
+          minerHotkey: reg.minerHotkey,
+          hlAddress: reg.hlAddress,
+          apiUrl: miner.apiUrl,
+        },
       });
       results.push({ id: reg.id, status: "still_pending", error: err.message });
     }
