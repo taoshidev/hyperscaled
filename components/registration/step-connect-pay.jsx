@@ -87,16 +87,18 @@ export function StepConnectAndPay({
   const hlWalletValid = isValidHLAddress(hlWallet);
   const showHlWalletError = hlWalletTouched && hlWallet.length > 0 && !hlWalletValid;
 
-  // Re-fetch tier pricing when HL wallet is entered (dev wallets get reduced price).
-  // Must use hlWallet (the HL trading address) because the backend checks hlAddress,
-  // which can differ from the connected Base/Arbitrum wallet.
+  // Re-fetch tier pricing when HL wallet is entered (dev wallets get reduced
+  // price). Discount applies if either the HL trading wallet OR the connected
+  // paying wallet is in DEV_TEST_WALLETS.
   useEffect(() => {
     if (!hlWalletValid || !minerSlug) {
       setDevPrice(null);
       return;
     }
     const controller = new AbortController();
-    fetch(`/api/miners/${minerSlug}?wallet=${hlWallet}`, {
+    const params = new URLSearchParams({ wallet: hlWallet });
+    if (address) params.set("payer", address);
+    fetch(`/api/miners/${minerSlug}?${params.toString()}`, {
       signal: controller.signal,
     })
       .then((r) => (r.ok ? r.json() : null))
@@ -113,7 +115,7 @@ export function StepConnectAndPay({
       })
       .catch(() => {});
     return () => controller.abort();
-  }, [hlWallet, hlWalletValid, minerSlug, selectedTier.accountSize, selectedTier.promoPrice]);
+  }, [hlWallet, hlWalletValid, minerSlug, address, selectedTier.accountSize, selectedTier.promoPrice]);
 
   const price = devPrice ?? selectedTier.promoPrice;
 
@@ -212,6 +214,9 @@ export function StepConnectAndPay({
         accountSize: selectedTier.accountSize,
         payoutAddress: resolvedPayoutAddress || address,
         tierIndex,
+        // Used by the backend to qualify the dev-wallet discount; the actual
+        // signer in the payment payload is the source of truth on retry.
+        hlTransferSender: address,
       };
 
       const probeRes = await fetch("/api/register", {

@@ -14,7 +14,7 @@ import { users, registrations, affiliates } from "@/lib/db/schema";
 import { eq, and, inArray, sql } from "drizzle-orm";
 import { facilitator as cdpFacilitator } from "@coinbase/x402";
 import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
-import { isDevTestWallet, DEV_TEST_PRICE } from "@/lib/dev-test";
+import { isAnyDevTestWallet, DEV_TEST_PRICE } from "@/lib/dev-test";
 
 const USE_TESTNET = process.env.USE_TESTNET === "true";
 
@@ -215,10 +215,14 @@ export async function POST(request) {
     // Continue — better to risk a duplicate than block a legitimate registration
   }
 
-  // Compute wallet and price early — both payment paths need them
+  // Compute wallet and price early — both payment paths need them.
+  // The discount applies if EITHER the HL trading wallet OR the paying wallet
+  // is in DEV_TEST_WALLETS. The paying wallet is `hlTransferSender` for both
+  // EIP-712 (passed in body) and x402 (the connected signer). For x402, the
+  // claim is verified later against `paymentPayload.payload.authorization.from`.
   const minerWallet = miner.usdcWallet;
   const price = Number(tier.priceUsdc);
-  const devTest = isDevTestWallet(hlAddress);
+  const devTest = isAnyDevTestWallet(hlAddress, hlTransferSender);
   const effectivePrice = devTest ? DEV_TEST_PRICE : price;
 
   if (!minerWallet) {
@@ -317,13 +321,18 @@ export async function POST(request) {
               });
             }
 
-            if (Math.abs(transferAmount - effectivePrice) >= 0.01) {
+            // Recompute using the verified on-chain sender so the discount
+            // applies even when the client claim was missing/incorrect.
+            const trueDevTest = isAnyDevTestWallet(hlAddress, transferSender);
+            const trueEffectivePrice = trueDevTest ? DEV_TEST_PRICE : price;
+
+            if (Math.abs(transferAmount - trueEffectivePrice) >= 0.01) {
               console.warn("[register] HL amount mismatch on hash match", {
                 minerSlug,
                 txHash: update.hash,
-                expected: effectivePrice,
+                expected: trueEffectivePrice,
                 actual: transferAmount,
-                devTest,
+                devTest: trueDevTest,
               });
               return NextResponse.json(
                 { error: "Transfer amount does not match the expected price." },
@@ -398,9 +407,24 @@ export async function POST(request) {
       return NextResponse.json({ error: "Invalid payment signature" }, { status: 400 });
     }
 
+    // Recompute the discount against the actual signer (truth source). If the
+    // client lied about the payer to get cheaper requirements, the rebuilt
+    // requirements will charge full price and the signed payload will fail
+    // facilitator verification (signed amount won't match required amount).
+    const actualSigner = paymentPayload?.payload?.authorization?.from;
+    const trueDevTest = isAnyDevTestWallet(hlAddress, actualSigner);
+    const trueRequirements = trueDevTest === devTest
+      ? requirements
+      : buildPaymentRequirements(
+          miner,
+          tier,
+          request.url,
+          trueDevTest ? DEV_TEST_PRICE : undefined,
+        ).requirements;
+
     let verifyResult;
     try {
-      verifyResult = await facilitator.verify(paymentPayload, requirements);
+      verifyResult = await facilitator.verify(paymentPayload, trueRequirements);
     } catch (err) {
       reportCritical(err, {
         source: "api/register",
@@ -432,7 +456,7 @@ export async function POST(request) {
     }
 
     try {
-      settleResult = await facilitator.settle(paymentPayload, requirements);
+      settleResult = await facilitator.settle(paymentPayload, trueRequirements);
     } catch (err) {
       reportCritical(err, {
         source: "api/register",
