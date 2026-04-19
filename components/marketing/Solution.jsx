@@ -30,8 +30,8 @@ const pillars = [
   },
   {
     icon: Globe,
-    title: 'Open to Everyone',
-    desc: 'Open to every trader in every country. No geographic exclusions.',
+    title: 'Trade From Anywhere',
+    desc: 'No broker, no institution, no intermediary required to get started.',
   },
   {
     icon: Fingerprint,
