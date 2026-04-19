@@ -50,6 +50,13 @@ function formatRulesSummary(details) {
 // HL/EIP-712 path can surface "already registered" / "invalid tier" errors
 // before the user signs a transfer they can't complete. Throws on failure.
 async function runPreflight(body) {
+  console.info("[REGISTRATION] preflight request", {
+    minerSlug: body.minerSlug,
+    hlAddress: body.hlAddress,
+    accountSize: body.accountSize,
+    tierIndex: body.tierIndex,
+    hlTransferSender: body.hlTransferSender,
+  });
   let res;
   try {
     res = await fetch("/api/register/preflight", {
@@ -57,11 +64,14 @@ async function runPreflight(body) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-  } catch {
+  } catch (err) {
+    console.error("[REGISTRATION] preflight fetch failed", { error: err?.message });
     throw new Error("Could not reach the registration server. Please try again.");
   }
+  console.info("[REGISTRATION] preflight response", { status: res.status, ok: res.ok });
   if (res.ok) return;
   const data = await res.json().catch(() => ({}));
+  console.warn("[REGISTRATION] preflight rejected", { status: res.status, error: data.error });
   throw new Error(
     data.error || data.message || "Registration is not available right now.",
   );
@@ -129,12 +139,22 @@ export function StepConnectAndPay({
           (t) => t.accountSize === selectedTier.accountSize,
         );
         if (match && match.promoPrice !== selectedTier.promoPrice) {
+          console.info("[REGISTRATION] dev-wallet price applied", {
+            hlWallet,
+            payer: address,
+            originalPromo: selectedTier.promoPrice,
+            devPromo: match.promoPrice,
+          });
           setDevPrice(match.promoPrice);
         } else {
           setDevPrice(null);
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (err?.name !== "AbortError") {
+          console.warn("[REGISTRATION] dev-price refetch failed", { error: err?.message });
+        }
+      });
     return () => controller.abort();
   }, [hlWallet, hlWalletValid, minerSlug, address, selectedTier.accountSize, selectedTier.promoPrice]);
 
@@ -205,10 +225,18 @@ export function StepConnectAndPay({
             : 0;
         const perpsWithdrawable =
           perps?.withdrawable != null ? parseFloat(perps.withdrawable) : 0;
-        setHlBalance(spotAvailable + perpsWithdrawable);
+        const total = spotAvailable + perpsWithdrawable;
+        console.info("[REGISTRATION] HL balance fetched", {
+          address,
+          spotAvailable,
+          perpsWithdrawable,
+          total,
+        });
+        setHlBalance(total);
         setHlBalanceLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.warn("[REGISTRATION] HL balance fetch failed", { address, error: err?.message });
         if (!cancelled) {
           setHlBalance(null);
           setHlBalanceLoading(false);
@@ -222,7 +250,17 @@ export function StepConnectAndPay({
 
   // ── Base chain (x402) payment handler ─────────────────────────────────────
   const handlePayBase = useCallback(async () => {
-    if (!walletClient) return;
+    if (!walletClient) {
+      console.warn("[REGISTRATION] handlePayBase called with no walletClient");
+      return;
+    }
+
+    console.info("[REGISTRATION] handlePayBase start", {
+      minerSlug,
+      hlAddress: resolvedHlAddress,
+      payoutAddress: resolvedPayoutAddress || address,
+      tierIndex,
+    });
 
     setPaymentState("processing");
     setErrorMessage("");
@@ -243,11 +281,13 @@ export function StepConnectAndPay({
       // Block "already registered" and similar errors before requesting payment.
       await runPreflight(body);
 
+      console.info("[REGISTRATION] Base: probing /api/register for 402");
       const probeRes = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+      console.info("[REGISTRATION] Base: probe response", { status: probeRes.status });
 
       if (probeRes.status === 409) {
         const data = await probeRes.json().catch(() => ({}));
@@ -264,6 +304,11 @@ export function StepConnectAndPay({
       const paymentRequired = decodePaymentRequiredHeader(paymentRequiredHeader);
       const requirements = paymentRequired.accepts?.[0];
       if (!requirements) throw new Error("No valid payment requirement in response.");
+      console.info("[REGISTRATION] Base: payment requirements decoded", {
+        amount: requirements.amount,
+        payTo: requirements.payTo,
+        network: requirements.network,
+      });
 
       const signer = {
         address: walletClient.account.address,
@@ -281,6 +326,7 @@ export function StepConnectAndPay({
         accepted: requirements,
       };
 
+      console.info("[REGISTRATION] Base: submitting signed payment to /api/register");
       const registerRes = await fetch("/api/register", {
         method: "POST",
         headers: {
@@ -289,6 +335,7 @@ export function StepConnectAndPay({
         },
         body: JSON.stringify(body),
       });
+      console.info("[REGISTRATION] Base: register response", { status: registerRes.status, ok: registerRes.ok });
 
       if (!registerRes.ok) {
         const data = await registerRes.json().catch(() => ({}));
@@ -298,6 +345,10 @@ export function StepConnectAndPay({
       }
 
       const result = await registerRes.json();
+      console.info("[REGISTRATION] Base: registration result", {
+        status: result.status,
+        txHash: result.txHash,
+      });
 
       setPaymentState("success");
       onPaymentProcessing?.(false);
@@ -311,6 +362,7 @@ export function StepConnectAndPay({
         });
       }, 1500);
     } catch (err) {
+      console.error("[REGISTRATION] Base payment failed", { error: err?.message });
       setPaymentState("error");
       onPaymentProcessing?.(false);
 
@@ -337,7 +389,21 @@ export function StepConnectAndPay({
 
   // ── Hyperliquid EIP-712 usdSend payment handler ──────────────────────────
   const handlePayEIP712 = useCallback(async () => {
-    if (!walletClient) return;
+    if (!walletClient) {
+      console.warn("[REGISTRATION] handlePayEIP712 called with no walletClient");
+      return;
+    }
+
+    console.info("[REGISTRATION] handlePayEIP712 start", {
+      minerSlug,
+      hlAddress: resolvedHlAddress,
+      payoutAddress: resolvedPayoutAddress || address,
+      tierIndex,
+      price,
+      destinationWallet: paymentWallet,
+      signerAddress: address,
+      currentChainId: chainId,
+    });
 
     setPaymentState("processing");
     setEip712Step("signing");
@@ -359,15 +425,24 @@ export function StepConnectAndPay({
 
       const amount = String(price);
       const nonce = Date.now();
+      console.info("[REGISTRATION] EIP-712: preflight ok, amount+nonce prepared", { amount, nonce });
 
       // Step 1 — Switch to Arbitrum so the wallet's active chain matches
       // the EIP-712 domain chainId that Hyperliquid requires
       setEip712Step("signing");
       const previousChainId = chainId;
       if (chainId !== HL_SIGNING_CHAIN_ID) {
+        console.info("[REGISTRATION] EIP-712: switching chain for signing", {
+          from: chainId,
+          to: HL_SIGNING_CHAIN_ID,
+        });
         try {
           await switchChainAsync({ chainId: HL_SIGNING_CHAIN_ID });
         } catch (switchErr) {
+          console.error("[REGISTRATION] EIP-712: chain switch failed", {
+            error: switchErr?.message,
+            code: switchErr?.code,
+          });
           const msg = switchErr?.message || "";
           if (
             msg.includes("not supported") ||
@@ -387,6 +462,11 @@ export function StepConnectAndPay({
       // Step 2 — Sign Hyperliquid sendAsset (USDC) via EIP-712
       let signature;
       try {
+        console.info("[REGISTRATION] EIP-712: requesting typed-data signature", {
+          destination: paymentWallet,
+          amount,
+          nonce,
+        });
         // Re-fetch wallet client after chain switch (wagmi may return a new
         // client instance bound to the now-active chain)
         const { getWalletClient } = await import("wagmi/actions");
@@ -426,11 +506,13 @@ export function StepConnectAndPay({
             nonce,
           },
         });
+        console.info("[REGISTRATION] EIP-712: signature obtained", { length: signature?.length });
       } finally {
         // Step 3 — Switch back to Base regardless of signing outcome
         if (previousChainId && previousChainId !== HL_SIGNING_CHAIN_ID) {
-          switchChainAsync({ chainId: previousChainId }).catch(() => {
-            // Best-effort switch back; don't block the flow if the user rejects
+          console.info("[REGISTRATION] EIP-712: switching chain back", { to: previousChainId });
+          switchChainAsync({ chainId: previousChainId }).catch((err) => {
+            console.warn("[REGISTRATION] EIP-712: switch-back failed (non-fatal)", { error: err?.message });
           });
         }
       }
@@ -442,6 +524,11 @@ export function StepConnectAndPay({
 
       // Step 4 — Submit signed transfer to Hyperliquid exchange API
       setEip712Step("submitting");
+      console.info("[REGISTRATION] EIP-712: submitting to HL /exchange", {
+        destination: paymentWallet,
+        amount,
+        nonce,
+      });
       const exchangeRes = await fetch(`${HL_API_URL}/exchange`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -465,10 +552,15 @@ export function StepConnectAndPay({
 
       if (!exchangeRes.ok) {
         const data = await exchangeRes.json().catch(() => ({}));
+        console.error("[REGISTRATION] EIP-712: HL /exchange non-ok", { status: exchangeRes.status, data });
         throw new Error(data.error || data.message || "Hyperliquid transfer failed.");
       }
 
       const exchangeResult = await exchangeRes.json();
+      console.info("[REGISTRATION] EIP-712: HL /exchange response", {
+        status: exchangeResult.status,
+        response: exchangeResult.response,
+      });
 
       // HL exchange returns 200 even on failure — check the status field
       if (exchangeResult.status !== "ok") {
@@ -489,8 +581,14 @@ export function StepConnectAndPay({
       const LOOKUP_TIMEOUT_MS = 60 * 1000;
       const LOOKUP_INTERVAL_MS = 3 * 1000;
       const MATCH_WINDOW_MS = 10 * 60 * 1000;
+      let pollCount = 0;
+      console.info("[REGISTRATION] EIP-712: starting HL tx-hash lookup polling", {
+        timeoutMs: LOOKUP_TIMEOUT_MS,
+        intervalMs: LOOKUP_INTERVAL_MS,
+      });
 
       while (!hlHash && Date.now() - lookupStart < LOOKUP_TIMEOUT_MS) {
+        pollCount += 1;
         try {
           const infoRes = await fetch(`${HL_API_URL}/info`, {
             method: "POST",
@@ -517,22 +615,36 @@ export function StepConnectAndPay({
               });
               if (match) {
                 hlHash = match.hash || "";
+                console.info("[REGISTRATION] EIP-712: tx hash matched", {
+                  hlHash,
+                  pollCount,
+                  elapsedMs: Date.now() - lookupStart,
+                });
                 break;
               }
             }
           }
         } catch (e) {
-          console.warn("Failed to look up HL transfer hash:", e.message);
+          console.warn("[REGISTRATION] EIP-712: HL ledger lookup error", { pollCount, error: e.message });
         }
         await new Promise((r) => setTimeout(r, LOOKUP_INTERVAL_MS));
       }
 
       if (!hlHash) {
+        console.error("[REGISTRATION] EIP-712: tx hash lookup timed out", {
+          pollCount,
+          elapsedMs: Date.now() - lookupStart,
+        });
         throw new Error("Transfer succeeded but could not retrieve transaction hash. Please contact support.");
       }
 
       // Step 6 — Register with our backend
       setEip712Step("provisioning");
+      console.info("[REGISTRATION] EIP-712: calling /api/register to provision", {
+        minerSlug,
+        hlAddress: resolvedHlAddress,
+        hlHash,
+      });
       const registerRes = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -547,6 +659,10 @@ export function StepConnectAndPay({
           hlTransferSender: address,
         }),
       });
+      console.info("[REGISTRATION] EIP-712: /api/register response", {
+        status: registerRes.status,
+        ok: registerRes.ok,
+      });
 
       if (!registerRes.ok) {
         const data = await registerRes.json().catch(() => ({}));
@@ -556,6 +672,10 @@ export function StepConnectAndPay({
       }
 
       const result = await registerRes.json();
+      console.info("[REGISTRATION] EIP-712: registration result", {
+        status: result.status,
+        txHash: result.txHash,
+      });
 
       setPaymentState("success");
       setEip712Step(null);
@@ -570,6 +690,7 @@ export function StepConnectAndPay({
         });
       }, 1500);
     } catch (err) {
+      console.error("[REGISTRATION] EIP-712 payment failed", { error: err?.message });
       setPaymentState("error");
       setEip712Step(null);
       onPaymentProcessing?.(false);

@@ -50,7 +50,21 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
   });
 
   const handlePay = useCallback(async () => {
-    if (!walletClient || !publicClient) return;
+    if (!walletClient || !publicClient) {
+      console.warn("[REGISTRATION][StepPayment] handlePay aborted — missing client", {
+        hasWalletClient: Boolean(walletClient),
+        hasPublicClient: Boolean(publicClient),
+      });
+      return;
+    }
+
+    console.info("[REGISTRATION][StepPayment] handlePay start", {
+      minerSlug: miner.slug,
+      hlAddress,
+      tierIndex,
+      price: tier.priceUsdc,
+      payer: address,
+    });
 
     setError(null);
     setIsPaying(true);
@@ -72,11 +86,13 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
         affiliateUtm,
       };
 
+      console.info("[REGISTRATION][StepPayment] probing /api/register for 402", { affiliateUtm });
       const initialRes = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(registrationData),
       });
+      console.info("[REGISTRATION][StepPayment] probe response", { status: initialRes.status });
 
       if (initialRes.status !== 402) {
         const data = await initialRes.json();
@@ -103,6 +119,7 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
 
       const paymentPayload = await httpClient.createPaymentPayload(paymentRequired);
       const paymentHeaders = httpClient.encodePaymentSignatureHeader(paymentPayload);
+      console.info("[REGISTRATION][StepPayment] payment signature created");
 
       setStatus("Processing payment...");
 
@@ -114,6 +131,10 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
         },
         body: JSON.stringify(registrationData),
       });
+      console.info("[REGISTRATION][StepPayment] paid request response", {
+        status: paidRes.status,
+        ok: paidRes.ok,
+      });
 
       const result = await paidRes.json();
 
@@ -121,6 +142,10 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
         throw new Error(result.error || result.message || "Payment failed");
       }
 
+      console.info("[REGISTRATION][StepPayment] registration succeeded", {
+        status: result.status,
+        txHash: result.txHash,
+      });
       onComplete({
         txHash: result.txHash || "",
         payerAddress: address,
@@ -128,6 +153,7 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
         registrationMessage: result.message || "",
       });
     } catch (err) {
+      console.error("[REGISTRATION][StepPayment] handlePay failed", { error: err?.message });
       setIsPaying(false);
       setStatus(null);
       if (err.message?.includes("User rejected") || err.message?.includes("denied")) {

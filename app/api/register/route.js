@@ -102,11 +102,20 @@ function buildPaymentRequirements(miner, tier, requestUrl, overridePrice) {
 }
 
 export async function POST(request) {
+  const reqId = Math.random().toString(36).slice(2, 10);
+  const hasPaymentSignature = Boolean(request.headers.get("payment-signature"));
+  console.info("[REGISTRATION] POST /api/register received", {
+    reqId,
+    url: request.url,
+    hasPaymentSignature,
+  });
+
   const bodyText = await request.text();
   let body;
   try {
     body = JSON.parse(bodyText);
   } catch {
+    console.warn("[REGISTRATION] invalid JSON body", { reqId, bodyPreview: bodyText.slice(0, 200) });
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
@@ -123,37 +132,75 @@ export async function POST(request) {
     hlTransferSender,
   } = body;
 
+  console.info("[REGISTRATION] body parsed", {
+    reqId,
+    minerSlug,
+    hlAddress,
+    accountSize,
+    payoutAddress,
+    hasEmail: Boolean(email),
+    tierIndex,
+    affiliateUtm,
+    paymentMethod,
+    hasTransferHash: Boolean(hlTransferHash),
+    hlTransferSender,
+  });
+
   if (!minerSlug || !hlAddress || !accountSize || tierIndex == null) {
+    console.warn("[REGISTRATION] missing required fields", { reqId, minerSlug, hlAddress, accountSize, tierIndex });
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
   if (email && !isValidEmail(email)) {
+    console.warn("[REGISTRATION] invalid email", { reqId });
     return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
   }
 
   const miner = await getMinerBySlug(minerSlug);
   if (!miner) {
+    console.warn("[REGISTRATION] unknown miner", { reqId, minerSlug });
     return NextResponse.json({ error: "Unknown miner" }, { status: 400 });
   }
+  console.info("[REGISTRATION] miner resolved", {
+    reqId,
+    minerSlug,
+    minerHotkey: miner.hotkey,
+    hasApiUrl: Boolean(miner.apiUrl),
+    hasDbApiKey: Boolean(miner.apiKey),
+  });
 
   if (!isValidHLAddress(hlAddress)) {
+    console.warn("[REGISTRATION] invalid HL address", { reqId, hlAddress });
     return NextResponse.json({ error: "Invalid HL address" }, { status: 400 });
   }
 
   if (payoutAddress && !isValidEvmAddress(payoutAddress)) {
+    console.warn("[REGISTRATION] invalid payout address", { reqId, payoutAddress });
     return NextResponse.json({ error: "Invalid payout address" }, { status: 400 });
   }
 
   const minerTiers = await getTiersForMiner(miner.hotkey);
   const activeTiers = minerTiers.filter((t) => t.isActive);
+  console.info("[REGISTRATION] tiers loaded", {
+    reqId,
+    totalTiers: minerTiers.length,
+    activeTiers: activeTiers.length,
+    requestedTierIndex: tierIndex,
+  });
 
   if (tierIndex < 0 || tierIndex >= activeTiers.length) {
+    console.warn("[REGISTRATION] tier index out of range", { reqId, tierIndex, activeTiersLength: activeTiers.length });
     return NextResponse.json({ error: "Invalid tier" }, { status: 400 });
   }
 
   const tier = activeTiers[tierIndex];
 
   if (accountSize !== tier.accountSize) {
+    console.warn("[REGISTRATION] account size mismatch", {
+      reqId,
+      accountSize,
+      tierAccountSize: tier.accountSize,
+    });
     return NextResponse.json({ error: "Account size does not match selected tier" }, { status: 400 });
   }
 
@@ -172,10 +219,20 @@ export async function POST(request) {
       .limit(1);
 
     if (existing) {
+      console.info("[REGISTRATION] existing registration found", {
+        reqId,
+        existingId: existing.id,
+        existingStatus: existing.status,
+      });
       if (existing.status === "registered") {
         // Before blocking, check the validator — the user may have been de-registered
         // externally, leaving the DB out of sync.
         const validatorStatus = await checkValidatorStatus(hlAddress);
+        console.info("[REGISTRATION] validator status check", {
+          reqId,
+          hlAddress,
+          validatorStatus: validatorStatus.status,
+        });
         if (isConfirmedDeregistered(validatorStatus.status)) {
           // Validator confirms they're no longer active — sync the DB and allow re-registration
           await db
@@ -197,6 +254,7 @@ export async function POST(request) {
           // Fall through — allow the registration to proceed
         } else {
           // Active on validator (or validator unreachable — safe default: block)
+          console.warn("[REGISTRATION] blocked — already registered and active", { reqId, hlAddress, minerSlug });
           return NextResponse.json(
             { error: "This HL address is already registered with this miner." },
             { status: 409 },
@@ -204,14 +262,17 @@ export async function POST(request) {
         }
       } else {
         // pending — payment already recorded, don't risk a double-charge
+        console.warn("[REGISTRATION] blocked — pending registration already exists", { reqId, hlAddress, minerSlug });
         return NextResponse.json(
           { error: "A registration for this HL address is already being processed. Please wait for it to complete." },
           { status: 409 },
         );
       }
+    } else {
+      console.info("[REGISTRATION] no existing registration — proceeding", { reqId });
     }
   } catch (err) {
-    console.error("[register] Duplicate check failed:", err.message);
+    console.error("[REGISTRATION] duplicate check failed", { reqId, error: err.message });
     // Continue — better to risk a duplicate than block a legitimate registration
   }
 
@@ -225,7 +286,16 @@ export async function POST(request) {
   const devTest = isAnyDevTestWallet(hlAddress, hlTransferSender);
   const effectivePrice = devTest ? DEV_TEST_PRICE : price;
 
+  console.info("[REGISTRATION] pricing computed", {
+    reqId,
+    minerWallet,
+    listPrice: price,
+    devTest,
+    effectivePrice,
+  });
+
   if (!minerWallet) {
+    console.error("[REGISTRATION] miner wallet not configured", { reqId, minerSlug });
     return NextResponse.json({ error: "Miner wallet not configured" }, { status: 500 });
   }
 
@@ -235,7 +305,8 @@ export async function POST(request) {
 
   // ── Hyperliquid payment path (extension "hyperliquid" + direct "eip712") ──
   if (paymentMethod === "hyperliquid" || paymentMethod === "eip712") {
-    console.info("[register] hyperliquid branch entered", {
+    console.info("[REGISTRATION] hyperliquid branch entered", {
+      reqId,
       minerSlug,
       minerWallet,
       hlAddress,
@@ -246,6 +317,7 @@ export async function POST(request) {
     });
 
     if (!hlTransferHash) {
+      console.warn("[REGISTRATION] missing HL transfer hash", { reqId });
       return NextResponse.json({ error: "Missing HL transfer hash" }, { status: 400 });
     }
 
@@ -254,6 +326,7 @@ export async function POST(request) {
       : null;
 
     if (!normalizedTxHash) {
+      console.warn("[REGISTRATION] invalid HL transfer hash format", { reqId, hlTransferHash });
       return NextResponse.json({ error: "Invalid HL transfer hash format" }, { status: 400 });
     }
 
@@ -266,13 +339,14 @@ export async function POST(request) {
         .limit(1);
 
       if (existingTx) {
+        console.warn("[REGISTRATION] duplicate tx hash", { reqId, hlTransferHash, existingId: existingTx.id });
         return NextResponse.json(
           { error: "This transaction has already been used for a registration." },
           { status: 409 },
         );
       }
     } catch (err) {
-      console.error("[register] txHash uniqueness check failed:", err.message);
+      console.error("[REGISTRATION] txHash uniqueness check failed", { reqId, error: err.message });
     }
 
     // Verify the transfer on Hyperliquid — exact hash match only, no sender-based fallback
@@ -326,11 +400,22 @@ export async function POST(request) {
 
     const nowMs = Date.now();
     const startTime = nowMs - TEN_MINUTES;
+    console.info("[REGISTRATION] querying HL ledgers", {
+      reqId,
+      normalizedTxHash,
+      uniqueSenders,
+      minerWallet,
+      windowMs: TEN_MINUTES,
+    });
     const ledgerQueries = [
       ...uniqueSenders.map((u) => fetchLedger(u, startTime)),
       fetchLedger(minerWallet, startTime),
     ];
     const ledgerResults = await Promise.all(ledgerQueries);
+    console.info("[REGISTRATION] HL ledger responses", {
+      reqId,
+      responseCounts: ledgerResults.map((r) => r.length),
+    });
 
     let matchedUpdate = null;
     for (const updates of ledgerResults) {
@@ -361,8 +446,9 @@ export async function POST(request) {
 
       if (transferSender && transferSender !== hlAddress.toLowerCase()) {
         console.info(
-          "[register] HL sender differs from hlAddress (cross-wallet payment)",
+          "[REGISTRATION] HL sender differs from hlAddress (cross-wallet payment)",
           {
+            reqId,
             minerSlug,
             txHash: matchedUpdate.hash,
             hlAddress,
@@ -386,7 +472,8 @@ export async function POST(request) {
       // stranding users whose transfer rounded differently from the UI.
       const underpaid = transferAmount < trueEffectivePrice - 0.01;
       if (underpaid) {
-        console.warn("[register] HL amount mismatch on hash match", {
+        console.warn("[REGISTRATION] HL amount mismatch on hash match", {
+          reqId,
           minerSlug,
           txHash: matchedUpdate.hash,
           expected: trueEffectivePrice,
@@ -400,7 +487,8 @@ export async function POST(request) {
       }
 
       if (!isRecent) {
-        console.warn("[register] HL transfer too old", {
+        console.warn("[REGISTRATION] HL transfer too old", {
+          reqId,
           minerSlug,
           txHash: matchedUpdate.hash,
           transferTime: matchedUpdate.time,
@@ -412,13 +500,16 @@ export async function POST(request) {
       }
 
       transferVerified = true;
-      console.info("[register] hyperliquid transfer verified (exact hash)", {
+      console.info("[REGISTRATION] hyperliquid transfer verified (exact hash)", {
+        reqId,
         minerSlug,
         txHash: matchedUpdate.hash,
         transferSender,
         transferAmount,
         transferTime: matchedUpdate.time,
       });
+    } else {
+      console.warn("[REGISTRATION] no matching HL ledger entry for tx", { reqId, normalizedTxHash });
     }
 
     if (!transferVerified) {
@@ -433,6 +524,7 @@ export async function POST(request) {
 
   // ── x402 payment path (Base chain USDC) ───────────────────────────────────
   } else {
+    console.info("[REGISTRATION] x402 branch entered", { reqId, minerSlug, devTest });
     const { requirements, paymentRequired } = buildPaymentRequirements(
       miner,
       tier,
@@ -443,6 +535,7 @@ export async function POST(request) {
     const paymentSignatureHeader = request.headers.get("payment-signature");
 
     if (!paymentSignatureHeader) {
+      console.info("[REGISTRATION] x402 probe — returning 402 Payment Required", { reqId });
       const encoded = encodePaymentRequiredHeader(paymentRequired);
       return new Response(JSON.stringify(paymentRequired), {
         status: 402,
@@ -456,9 +549,15 @@ export async function POST(request) {
     let paymentPayload;
     try {
       paymentPayload = decodePaymentSignatureHeader(paymentSignatureHeader);
-    } catch {
+    } catch (err) {
+      console.warn("[REGISTRATION] x402 invalid payment signature header", { reqId, error: err?.message });
       return NextResponse.json({ error: "Invalid payment signature" }, { status: 400 });
     }
+    console.info("[REGISTRATION] x402 payment payload decoded", {
+      reqId,
+      actualSigner: paymentPayload?.payload?.authorization?.from,
+      x402Version: paymentPayload?.x402Version,
+    });
 
     // Recompute the discount against the actual signer (truth source). If the
     // client lied about the payer to get cheaper requirements, the rebuilt
@@ -477,8 +576,15 @@ export async function POST(request) {
 
     let verifyResult;
     try {
+      console.info("[REGISTRATION] x402 calling facilitator.verify", { reqId, trueDevTest });
       verifyResult = await facilitator.verify(paymentPayload, trueRequirements);
+      console.info("[REGISTRATION] x402 facilitator.verify result", {
+        reqId,
+        isValid: verifyResult?.isValid,
+        invalidReason: verifyResult?.invalidReason,
+      });
     } catch (err) {
+      console.error("[REGISTRATION] x402 facilitator.verify threw", { reqId, error: err?.message });
       reportCritical(err, {
         source: "api/register",
         metadata: { step: "facilitator_verify" },
@@ -509,8 +615,16 @@ export async function POST(request) {
     }
 
     try {
+      console.info("[REGISTRATION] x402 calling facilitator.settle", { reqId });
       settleResult = await facilitator.settle(paymentPayload, trueRequirements);
+      console.info("[REGISTRATION] x402 facilitator.settle result", {
+        reqId,
+        success: settleResult?.success,
+        transaction: settleResult?.transaction,
+        errorReason: settleResult?.errorReason,
+      });
     } catch (err) {
+      console.error("[REGISTRATION] x402 facilitator.settle threw", { reqId, error: err?.message });
       reportCritical(err, {
         source: "api/register",
         metadata: { step: "facilitator_settle" },
@@ -542,6 +656,12 @@ export async function POST(request) {
     effectivePayoutAddress = payoutAddress || paymentPayload?.payload?.authorization?.from;
   }
 
+  console.info("[REGISTRATION] payment accepted, proceeding to user upsert", {
+    reqId,
+    txHash,
+    effectivePayoutAddress,
+  });
+
   // Resolve affiliate (if any) before upserting user
   let resolvedAffiliateId = null;
   if (affiliateUtm) {
@@ -552,6 +672,7 @@ export async function POST(request) {
         .where(and(eq(affiliates.slug, affiliateUtm), eq(affiliates.isActive, true)))
         .limit(1);
       if (aff) resolvedAffiliateId = aff.id;
+      console.info("[REGISTRATION] affiliate lookup", { reqId, affiliateUtm, resolvedAffiliateId });
     } catch (err) {
       reportError(err, {
         source: "api/register",
@@ -582,6 +703,11 @@ export async function POST(request) {
       if (Object.keys(updates).length > 0) {
         await db.update(users).set({ ...updates, updatedAt: new Date() }).where(eq(users.id, existing.id));
       }
+      console.info("[REGISTRATION] user upsert — existing", {
+        reqId,
+        userId,
+        updatedFields: Object.keys(updates),
+      });
     } else {
       const [newUser] = await db
         .insert(users)
@@ -594,6 +720,7 @@ export async function POST(request) {
         .returning({ id: users.id });
       userId = newUser.id;
       if (resolvedAffiliateId) didAttributeAffiliate = true;
+      console.info("[REGISTRATION] user upsert — inserted new", { reqId, userId });
     }
 
     if (didAttributeAffiliate && resolvedAffiliateId) {
@@ -629,10 +756,19 @@ export async function POST(request) {
       const hadDbKey = Boolean(sanitizeApiKey(miner.apiKey));
       if (!apiKey) {
         console.warn(
-          `[register] No API key for miner slug=${miner.slug}; set entity_miners.api_key or ENTITY_MINER_API_KEY_${miner.slug.replace(/-/g, "_").toUpperCase()}`,
+          `[REGISTRATION] No API key for miner slug=${miner.slug}; set entity_miners.api_key or ENTITY_MINER_API_KEY_${miner.slug.replace(/-/g, "_").toUpperCase()}`,
+          { reqId },
         );
       }
       const baseUrl = miner.apiUrl.replace(/\/+$/, "");
+      console.info("[REGISTRATION] calling miner API create-hl-subaccount", {
+        reqId,
+        baseUrl,
+        hasApiKey: Boolean(apiKey),
+        hl_address: hlAddress,
+        account_size: accountSize,
+        payout_address: effectivePayoutAddress,
+      });
       const res = await postCreateHlSubaccount(
         baseUrl,
         {
@@ -642,15 +778,18 @@ export async function POST(request) {
         },
         apiKey,
       );
+      console.info("[REGISTRATION] miner API response", { reqId, status: res.status, ok: res.ok });
       if (!res.ok && res.status === 401 && apiKey) {
         console.warn(
-          `[register] Miner API 401 Unauthorized: key must match an entry in the entity miner's api_keys.json (same string as entity_miners.api_key; from DB=${hadDbKey}, len=${apiKey.length})`,
+          `[REGISTRATION] Miner API 401 Unauthorized: key must match an entry in the entity miner's api_keys.json (same string as entity_miners.api_key; from DB=${hadDbKey}, len=${apiKey.length})`,
+          { reqId },
         );
       }
       if (res.ok) {
         registered = true;
       } else {
         const errText = await res.text().catch(() => "");
+        console.warn("[REGISTRATION] miner API returned error body", { reqId, apiStatus: res.status, errText: errText.slice(0, 500) });
         reportError(new Error("Miner API error response"), {
           source: "api/register",
           metadata: { step: "miner_api", apiStatus: res.status },
@@ -658,9 +797,12 @@ export async function POST(request) {
         statusDetail = { reason: "miner_api_error", error: errText, apiStatus: res.status };
       }
     } catch (err) {
+      console.error("[REGISTRATION] miner API unreachable", { reqId, error: err.message });
       reportError(err, { source: "api/register", metadata: { step: "miner_api_unreachable" } });
       statusDetail = { reason: "miner_api_unreachable", error: err.message };
     }
+  } else {
+    console.info("[REGISTRATION] miner has no apiUrl — skipping miner API call", { reqId, minerSlug });
   }
 
   // Insert registration record — this MUST succeed; the user already paid.
@@ -683,16 +825,25 @@ export async function POST(request) {
     },
   };
 
+  console.info("[REGISTRATION] inserting registration row", {
+    reqId,
+    rowStatus: registrationRow.status,
+    userId,
+    txHash,
+  });
+
   let insertErr = null;
   const INSERT_ATTEMPTS = 3;
   for (let attempt = 1; attempt <= INSERT_ATTEMPTS; attempt++) {
     try {
       await db.insert(registrations).values(registrationRow);
       insertErr = null;
+      console.info("[REGISTRATION] registration insert succeeded", { reqId, attempt });
       break;
     } catch (err) {
       insertErr = err;
-      console.warn("[register] registration insert failed", {
+      console.warn("[REGISTRATION] registration insert failed", {
+        reqId,
         attempt,
         hlAddress,
         txHash,
@@ -745,8 +896,9 @@ export async function POST(request) {
           ? registeredEmailHtml(miner, accountSize, hlAddress, effectivePayoutAddress, txHash)
           : pendingEmailHtml(miner, accountSize, hlAddress, effectivePayoutAddress, txHash),
       });
-    } catch {
-      // Email send failure is non-blocking
+      console.info("[REGISTRATION] confirmation email sent", { reqId, registered });
+    } catch (err) {
+      console.warn("[REGISTRATION] confirmation email send failed", { reqId, error: err?.message });
     }
   }
 
@@ -762,6 +914,12 @@ export async function POST(request) {
   if (settleResult) {
     responseHeaders["PAYMENT-RESPONSE"] = encodePaymentResponseHeader(settleResult);
   }
+
+  console.info("[REGISTRATION] POST /api/register complete", {
+    reqId,
+    status: responseBody.status,
+    txHash,
+  });
 
   return new Response(JSON.stringify(responseBody), {
     status: 200,
