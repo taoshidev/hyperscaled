@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { TwitterLogo, DiscordLogo, GithubLogo, TelegramLogo, ArrowUpRight } from '@phosphor-icons/react'
+import { TwitterLogo, DiscordLogo, GithubLogo, TelegramLogo, YoutubeLogo, ArrowUpRight } from '@phosphor-icons/react'
 import { useBrand, useBrandHref } from '@/lib/brand'
 
 function useFooterLinks() {
@@ -19,7 +19,8 @@ function useFooterLinks() {
       brand.socials.twitter && { label: 'Twitter / X', href: brand.socials.twitter, external: true, icon: TwitterLogo },
       brand.socials.discord && { label: 'Discord', href: brand.socials.discord, external: true, icon: DiscordLogo },
       brand.socials.github && { label: 'GitHub', href: brand.socials.github, external: true, icon: GithubLogo },
-      brand.socials.telegram && { label: 'Telegram Bot', href: brand.socials.telegram, external: true, icon: TelegramLogo },
+      brand.socials.telegram && { label: 'Telegram', href: brand.socials.telegram, external: true, icon: TelegramLogo },
+      brand.socials.youtube && { label: 'YouTube', href: brand.socials.youtube, external: true, icon: YoutubeLogo },
       brand.socials.support && { label: 'Contact Support', href: brand.socials.support, external: true },
     ].filter(Boolean),
     Legal: [
@@ -39,6 +40,7 @@ export default function Footer() {
     brand.socials.discord && { Icon: DiscordLogo, href: brand.socials.discord, label: 'Discord' },
     brand.socials.github && { Icon: GithubLogo, href: brand.socials.github, label: 'GitHub' },
     brand.socials.telegram && !brand.socials.discord && { Icon: TelegramLogo, href: brand.socials.telegram, label: 'Telegram' },
+    brand.socials.youtube && { Icon: YoutubeLogo, href: brand.socials.youtube, label: 'YouTube' },
   ].filter(Boolean)
 
   return (
@@ -52,7 +54,7 @@ export default function Footer() {
               <img src={brand.logo} alt={brand.name} className="h-7 w-auto" />
             </Link>
             <p className="text-xs text-zinc-500 leading-relaxed max-w-[24ch] [text-wrap:pretty]">
-              Funded trading on&nbsp;Hyperliquid.
+              {brand.footerTagline || 'Funded trading on\u00a0Hyperliquid.'}
             </p>
             <div className="flex items-center gap-3 mt-5">
               {socialIcons.map(({ Icon, href, label }, i) => (
