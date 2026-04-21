@@ -284,7 +284,7 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
       if (typeof window === "undefined" || !window.tolt) return;
       if (window.tolt_data?.customer_id) return;
       window.tolt.signup(hlAddress);
-    } catch (_e) {}
+    } catch { /* tolt unavailable */ }
   }, [hlAddress]);
 
   const isRegistered = status === "registered";
