@@ -34,7 +34,7 @@ function getNormalizedVantaPath(pathname) {
   return null;
 }
 
-function applyTrackingCookies(response, { entryCookie, affiliateCookie, minerMatch, pathname, searchParams }) {
+function applyTrackingCookies(response, { entryCookie, affiliateCookie, toltRefCookie, minerMatch, pathname, searchParams }) {
   if (!entryCookie) {
     const entryValue = minerMatch ? minerMatch[1] : pathname === "/" ? "home" : null;
     if (entryValue) {
@@ -56,6 +56,17 @@ function applyTrackingCookies(response, { entryCookie, affiliateCookie, minerMat
       });
     }
   }
+
+  if (!toltRefCookie) {
+    const ref = searchParams.get("ref");
+    if (ref) {
+      response.cookies.set("tolt_ref", ref, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 90,
+        sameSite: "lax",
+      });
+    }
+  }
 }
 
 export function middleware(request) {
@@ -63,6 +74,7 @@ export function middleware(request) {
   const hostname = getHostname(request);
   const entryCookie = request.cookies.get("hs_entry")?.value;
   const affiliateCookie = request.cookies.get("hs_affiliate")?.value;
+  const toltRefCookie = request.cookies.get("tolt_ref")?.value;
   const minerMatch = pathname.match(/^\/miner\/([^/]+)/);
   const normalizedVantaPath = getNormalizedVantaPath(pathname);
 
@@ -73,6 +85,7 @@ export function middleware(request) {
     applyTrackingCookies(response, {
       entryCookie,
       affiliateCookie,
+      toltRefCookie,
       minerMatch,
       pathname: normalizedVantaPath,
       searchParams,
@@ -123,6 +136,7 @@ export function middleware(request) {
   applyTrackingCookies(response, {
     entryCookie,
     affiliateCookie,
+    toltRefCookie,
     minerMatch,
     pathname,
     searchParams,

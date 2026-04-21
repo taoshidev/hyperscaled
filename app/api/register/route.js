@@ -15,6 +15,7 @@ import { eq, and, inArray, sql } from "drizzle-orm";
 import { facilitator as cdpFacilitator } from "@coinbase/x402";
 import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
 import { isAnyDevTestWallet, DEV_TEST_PRICE } from "@/lib/dev-test";
+import { trackConversion } from "@/lib/tolt";
 
 const USE_TESTNET = process.env.USE_TESTNET === "true";
 
@@ -127,6 +128,7 @@ export async function POST(request) {
     email,
     tierIndex,
     affiliateUtm,
+    toltRef,
     paymentMethod,
     hlTransferHash,
     hlTransferSender,
@@ -958,6 +960,14 @@ export async function POST(request) {
       },
       { status: 500 },
     );
+  }
+
+  if (toltRef) {
+    trackConversion({
+      refSlug: toltRef,
+      customerIdentifier: email || hlAddress,
+      amountUsdc: effectivePrice,
+    });
   }
 
   if (process.env.SMTP_USER && email) {
