@@ -86,7 +86,7 @@ const BRANDS = {
     socials: {
       twitter: 'https://x.com/jollygreenmoney',
       discord: 'https://discord.com/invite/wSC49Gtjsy',
-      github: 'https://github.com/taoshidev',
+      github: null,
       telegram: 'https://t.me/beanstockcalls',
       support: 'mailto:support@jollygreeninvestor.com',
     },

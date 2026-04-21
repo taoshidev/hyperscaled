@@ -771,3 +771,89 @@ textarea:active {
 [data-brand="vanta"] ::-webkit-scrollbar-track {
   background: #000000;
 }
+
+/* ══════════════════════════════════════════════
+   Beanstock brand overrides
+   Applied via data-brand="beanstock" on a wrapper div
+   Accent: #62be57 (Beanstock green, from logo letterforms)
+   ══════════════════════════════════════════════ */
+
+[data-brand="beanstock"] {
+  --brand-glow: 98, 190, 87;
+  --background: oklch(0 0 0);
+  --card: oklch(0.06 0 0);
+  font-family: 'Geist', 'Helvetica Neue', Arial, ui-sans-serif, system-ui, sans-serif;
+}
+
+[data-brand="beanstock"] .text-teal-400 {
+  color: #62be57;
+}
+[data-brand="beanstock"] .text-teal-300 {
+  color: #87dc4b;
+}
+[data-brand="beanstock"] .border-teal-400\/20,
+[data-brand="beanstock"] .border-teal-400\/30 {
+  border-color: rgba(98, 190, 87, 0.25);
+}
+[data-brand="beanstock"] .bg-teal-400\/10,
+[data-brand="beanstock"] .bg-teal-400\/8,
+[data-brand="beanstock"] .bg-teal-400\/5 {
+  background-color: rgba(98, 190, 87, 0.08);
+}
+
+[data-brand="beanstock"] .shiny-cta {
+  --shiny-cta-bg: #000000;
+  --shiny-cta-bg-subtle: #071006;
+  --shiny-cta-highlight: #62be57;
+  --shiny-cta-highlight-subtle: #4a9640;
+}
+
+[data-brand="beanstock"] .shiny-border {
+  --shiny-cta-bg: #000000;
+  --shiny-cta-bg-subtle: #071006;
+  --shiny-cta-highlight: #62be57;
+  --shiny-cta-highlight-subtle: #4a9640;
+  box-shadow:
+    inset 0 0 0 1px rgba(98, 190, 87, 0.2),
+    inset 0 -20px 40px -20px rgba(98, 190, 87, 0.1);
+}
+[data-brand="beanstock"] .shiny-border:is(:hover, :focus-visible) {
+  box-shadow:
+    inset 0 0 0 1px rgba(98, 190, 87, 0.35),
+    inset 0 -24px 48px -20px rgba(98, 190, 87, 0.18);
+}
+
+[data-brand="beanstock"] .pulse-teal {
+  animation-name: pulse-beanstock;
+}
+@keyframes pulse-beanstock {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(98, 190, 87, 0.4); }
+  50%       { box-shadow: 0 0 0 5px rgba(98, 190, 87, 0); }
+}
+
+[data-brand="beanstock"] .hl-shiny-border::before {
+  background: conic-gradient(
+    transparent 40%,
+    rgba(98, 190, 87, 0.4) 48%,
+    rgba(98, 190, 87, 0.7) 50%,
+    rgba(98, 190, 87, 0.4) 52%,
+    transparent 60%
+  );
+}
+
+[data-brand="beanstock"] .bg-\[\#09090b\],
+[data-brand="beanstock"] .bg-\[\#09090b\]\/60,
+[data-brand="beanstock"] .bg-\[\#09090b\]\/95 {
+  background-color: #000000;
+}
+[data-brand="beanstock"] .bg-zinc-950\/60 {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+[data-brand="beanstock"] .focus-visible\:ring-teal-400\/50:focus-visible {
+  --tw-ring-color: rgba(98, 190, 87, 0.3);
+}
+
+[data-brand="beanstock"] ::-webkit-scrollbar-track {
+  background: #000000;
+}
