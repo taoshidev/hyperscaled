@@ -75,9 +75,7 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
 
               {/* CTA */}
               <a
-                href="https://hyperscaled.trade"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/register"
                 className={`w-full flex items-center justify-center gap-1.5 min-h-12 rounded-xl text-sm font-semibold transition-colors ${
                   tier.popular
                     ? 'shiny-cta px-6 py-3'
