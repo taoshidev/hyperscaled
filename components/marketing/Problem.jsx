@@ -19,7 +19,7 @@ const itemVariants = {
 const painPoints = [
   {
     number: '01',
-    title: 'KYC and geographic bans lock out most of the\u00a0world.',
+    title: 'Opaque rules and profit cuts lock out the best\u00a0traders.',
     body: 'Many prop firms immediately reject traders in 150+ countries, blocking them from access to\u00a0capital.',
     accentColor: 'text-red-400',
     tagBg: 'bg-red-400/8 border-red-400/20',
@@ -66,8 +66,7 @@ export default function Problem() {
             <span className="text-zinc-500">Then ghost you on&nbsp;payouts.</span>
           </h2>
           <p className="text-base text-zinc-400 leading-relaxed max-w-[60ch] [text-wrap:pretty]">
-            Legacy scaled trading is broken by design. KYC walls, profit extraction, and centralized
-            discretion mean profitable traders are systematically&nbsp;underserved.
+            {brand.copy?.problemIntro || 'Legacy scaled trading is broken by design. KYC walls, profit extraction, and centralized discretion mean profitable traders are systematically\u00a0underserved.'}
           </p>
         </motion.div>
 

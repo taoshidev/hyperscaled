@@ -8,17 +8,19 @@ const ORGANIZATION_SCHEMA = {
   name: "LunarCrush",
   url: "https://lunarcrush.com",
   description:
-    "Decentralized prop trading network built on Hyperliquid. 1-step challenge, 100% profit split, onchain USDC payouts.",
+    "Scaled trading on Hyperliquid with live LunarCrush social intelligence. 1-step challenge, 100% profit split, onchain USDC payouts.",
   sameAs: [
-    "https://x.com/lunarcrush",
+    "https://x.com/LunarCrush",
     "https://t.me/lunarcrush",
+    "https://youtube.com/@LunarCrush",
+    "https://github.com/lunarcrush",
   ],
 }
 
 const WEBSITE_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "LunarCrush",
+  name: "LunarCrush Scaled",
   url: "https://lunarcrush.com",
 }
 

@@ -25,11 +25,13 @@ const TIER_LABELS = { 'tier-1': 'Tier I', 'tier-2': 'Tier II', 'tier-3': 'Tier I
 
 /* ── Launch Pricing Banner ── */
 function LaunchBanner() {
+  const brand = useBrand()
+  const bannerText = brand.copy?.pricingBanner || 'Launch Pricing Active \u2014 Save up to 50% for a limited\u00a0time.'
   return (
     <div className="mt-16 bg-teal-400/10 border-b border-teal-400/20">
       <div className="max-w-[1400px] mx-auto px-6 py-3 text-center">
         <p className="text-sm text-teal-400 font-medium" style={{ textWrap: 'balance' }}>
-          Launch Pricing Active — Save up to 50% for a limited&nbsp;time.
+          {bannerText}
         </p>
       </div>
     </div>
@@ -39,6 +41,7 @@ function LaunchBanner() {
 /* ── Page Hero ── */
 function PricingHero() {
   const brand = useBrand()
+  const suffix = brand.copy?.pricingSubheadlineSuffix || 'Rewards distributed\u00a0monthly.'
   return (
     <section className="pt-16 pb-16 px-6">
       <div className="max-w-[800px] mx-auto text-center">
@@ -58,7 +61,7 @@ function PricingHero() {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[60ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          Take the {brand.name} Challenge with no hidden rules, fees, or time limit. Rewards distributed&nbsp;monthly.
+          Take the {brand.name} Challenge with no hidden rules, fees, or time limit. {suffix}
         </motion.p>
       </div>
     </section>
@@ -147,22 +150,28 @@ function PricingCard({ tier, index }) {
 
 /* ── Pricing Cards Grid ── */
 function PricingCards({ tiers }) {
+  const brand = useBrand()
+  const footerLine = brand.copy?.pricingFooter || 'All tiers: 10% profit target \u00b7 5% max drawdown \u00b7 100% profit split \u00b7 Monthly payouts \u00b7 No time\u00a0limit'
+  // Allow brand to override which tier is marked popular
+  const resolvedTiers = brand.popularTier
+    ? tiers.map((t) => ({ ...t, popular: t.id === brand.popularTier }))
+    : tiers
   return (
     <section className="px-6 pb-20">
       <div className="max-w-[1400px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 md:gap-5">
-        {tiers.map((tier, i) => (
+        {resolvedTiers.map((tier, i) => (
           <PricingCard key={tier.id} tier={tier} index={i} />
         ))}
       </div>
       <p className="text-center text-sm text-zinc-500 mt-8 max-w-[60ch] mx-auto" style={{ textWrap: 'balance' }}>
-        All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time&nbsp;limit
+        {footerLine}
       </p>
     </section>
   )
 }
 
 /* ── What's Included Feature Grid ── */
-const INCLUDED_FEATURES = [
+const BASE_INCLUDED_FEATURES = [
   {
     icon: ListChecks,
     title: 'One-Step Challenge',
@@ -196,6 +205,14 @@ const INCLUDED_FEATURES = [
 ]
 
 function WhatsIncludedGrid() {
+  const brand = useBrand()
+  const c = brand.copy || {}
+  const INCLUDED_FEATURES = BASE_INCLUDED_FEATURES.map((f, i) => {
+    if (i === 4 && c.pricingIncluded5Title) {
+      return { ...f, title: c.pricingIncluded5Title, desc: c.pricingIncluded5Desc || f.desc }
+    }
+    return f
+  })
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
 

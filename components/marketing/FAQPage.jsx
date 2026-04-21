@@ -7,12 +7,41 @@ import { FAQ_ITEMS } from '@/lib/constants'
 import { useBrand } from '@/lib/brand'
 
 /* ───────────────────────────────────────────────
-   TOC sections — derived from FAQ_ITEMS categories
+   Build brand-aware FAQ items
+   Applies faqOverrides (answer replacements) and
+   faqAddons (additional items merged by category)
    ─────────────────────────────────────────────── */
-const TOC_SECTIONS = FAQ_ITEMS.map((group) => ({
-  id: group.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, ''),
-  label: group.category,
-}))
+function buildFAQItems(brand) {
+  const overrides = brand.faqOverrides || {}
+  const addons = brand.faqAddons || []
+
+  // Apply overrides to existing items
+  let items = FAQ_ITEMS.map((group) => ({
+    ...group,
+    items: group.items.map((item) =>
+      overrides[item.id] ? { ...item, answer: overrides[item.id] } : item
+    ),
+  }))
+
+  // Merge addons into matching categories
+  addons.forEach((addon) => {
+    const existing = items.find((g) => g.category === addon.category)
+    if (existing) {
+      existing.items = [...existing.items, ...addon.items]
+    } else {
+      items = [...items, addon]
+    }
+  })
+
+  return items
+}
+
+function tocFromItems(items) {
+  return items.map((group) => ({
+    id: group.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, ''),
+    label: group.category,
+  }))
+}
 
 /* ───────────────────────────────────────────────
    Sticky TOC (desktop sidebar + mobile jump bar)
@@ -26,7 +55,7 @@ function handleTocClick(e, id) {
   history.replaceState(null, '', `#${id}`)
 }
 
-function TableOfContents({ activeId }) {
+function TableOfContents({ activeId, tocSections }) {
   const navRef = useRef(null)
 
   useEffect(() => {
@@ -53,7 +82,7 @@ function TableOfContents({ activeId }) {
         aria-label="FAQ sections"
       >
         <ul className="space-y-1">
-          {TOC_SECTIONS.map((s) => (
+          {tocSections.map((s) => (
             <li key={s.id}>
               <a
                 href={`#${s.id}`}
@@ -75,7 +104,7 @@ function TableOfContents({ activeId }) {
       <div className="lg:hidden sticky top-[94px] z-30 bg-[#09090b]/95 backdrop-blur-sm border-b border-white/[0.06]">
         <div className="overflow-x-auto scrollbar-hide">
           <div className="flex items-center gap-1 px-4 py-2 min-w-max">
-            {TOC_SECTIONS.map((s) => (
+            {tocSections.map((s) => (
               <a
                 key={s.id}
                 href={`#${s.id}`}
@@ -99,11 +128,11 @@ function TableOfContents({ activeId }) {
 /* ───────────────────────────────────────────────
    Active section tracker hook
    ─────────────────────────────────────────────── */
-function useActiveSection() {
-  const [activeId, setActiveId] = useState(TOC_SECTIONS[0]?.id)
+function useActiveSection(tocSections) {
+  const [activeId, setActiveId] = useState(tocSections[0]?.id)
 
   useEffect(() => {
-    const ids = TOC_SECTIONS.map((s) => s.id)
+    const ids = tocSections.map((s) => s.id)
     const elements = ids.map((id) => document.getElementById(id)).filter(Boolean)
 
     if (elements.length === 0) return
@@ -123,7 +152,7 @@ function useActiveSection() {
 
     elements.forEach((el) => observer.observe(el))
     return () => observer.disconnect()
-  }, [])
+  }, [tocSections])
 
   return activeId
 }
@@ -158,11 +187,11 @@ function PageHero() {
    Uses FAQAccordion grouped mode with sectionIds
    for TOC anchor linking
    ─────────────────────────────────────────────── */
-function FAQSection() {
+function FAQSection({ faqItems }) {
   return (
     <section className="px-6 pb-20">
       <div className="max-w-[900px] mx-auto">
-        <FAQAccordion items={FAQ_ITEMS} grouped sectionIds />
+        <FAQAccordion items={faqItems} grouped sectionIds />
       </div>
     </section>
   )
@@ -172,21 +201,26 @@ function FAQSection() {
    Section 3 — Bottom contact links
    ─────────────────────────────────────────────── */
 function ContactSection() {
+  const brand = useBrand()
+  const discordUrl = brand.socials?.discord
+  const supportUrl = brand.socials?.support || 'mailto:support@hyperscaled.trade'
   return (
     <section className="px-6 pb-24">
       <div className="max-w-[900px] mx-auto flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10">
+        {discordUrl && (
+          <a
+            href={discordUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-teal-400 hover:text-teal-300 transition-colors inline-flex items-center gap-2"
+          >
+            <DiscordLogo size={18} weight="fill" />
+            Still have questions? Join our Discord
+            <ArrowRight size={14} weight="bold" />
+          </a>
+        )}
         <a
-          href="https://discord.gg/hyperscaledhq"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm text-teal-400 hover:text-teal-300 transition-colors inline-flex items-center gap-2"
-        >
-          <DiscordLogo size={18} weight="fill" />
-          Still have questions? Join our Discord
-          <ArrowRight size={14} weight="bold" />
-        </a>
-        <a
-          href="mailto:support@hyperscaled.trade"
+          href={supportUrl}
           className="text-sm text-zinc-400 hover:text-zinc-300 transition-colors inline-flex items-center gap-2"
         >
           <Envelope size={18} />
@@ -202,14 +236,17 @@ function ContactSection() {
    Page Compose
    ─────────────────────────────────────────────── */
 export default function FAQPage() {
-  const activeId = useActiveSection()
+  const brand = useBrand()
+  const faqItems = buildFAQItems(brand)
+  const tocSections = tocFromItems(faqItems)
+  const activeId = useActiveSection(tocSections)
 
   return (
     <>
       <PageHero />
-      <TableOfContents activeId={activeId} />
+      <TableOfContents activeId={activeId} tocSections={tocSections} />
       <div data-toc-content>
-        <FAQSection />
+        <FAQSection faqItems={faqItems} />
         <ContactSection />
       </div>
     </>

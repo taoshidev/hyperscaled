@@ -52,7 +52,7 @@ export default function Footer() {
               <img src={brand.logo} alt={brand.name} className="h-7 w-auto" />
             </Link>
             <p className="text-xs text-zinc-500 leading-relaxed max-w-[24ch] [text-wrap:pretty]">
-              Funded trading on&nbsp;Hyperliquid.
+              {brand.footerTagline || 'Funded trading on\u00a0Hyperliquid.'}
             </p>
             <div className="flex items-center gap-3 mt-5">
               {socialIcons.map(({ Icon, href, label }, i) => (

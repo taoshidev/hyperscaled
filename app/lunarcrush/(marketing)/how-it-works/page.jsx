@@ -6,10 +6,10 @@ import { PRICING_TIERS } from '@/lib/constants'
 export const metadata = buildMetadata({
   title: 'How It Works — LunarCrush Scaled Trading',
   description:
-    'See exactly how LunarCrush scaled trading works. Connect your wallet, trade on Hyperliquid, pass the challenge, and keep 100% of your monthly USDC payouts.',
-  ogTitle: 'How LunarCrush Works — Trade on Hyperliquid, Get Funded, Keep 100%',
+    'Connect your Hyperliquid wallet, pass the challenge, get paid monthly in USDC. See how LunarCrush social intelligence turns attention into trading edge.',
+  ogTitle: 'How LunarCrush Scaled Trading Works — Connect, Trade, Earn',
   ogDescription:
-    'No API keys. No custody. Register, trade on Hyperliquid, pass the 1-step challenge, and collect 100% of your profits monthly.',
+    'Connect your Hyperliquid wallet, pass the one-step challenge, get paid 100% monthly in USDC. LunarCrush social data on every asset.',
   path: '/lunarcrush/how-it-works',
   brand: 'lunarcrush',
 })

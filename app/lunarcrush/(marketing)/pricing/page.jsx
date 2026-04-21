@@ -4,10 +4,10 @@ import { JsonLd } from '@/components/shared/JsonLd'
 import { PRICING_TIERS } from '@/lib/constants'
 
 export const metadata = buildMetadata({
-  title: 'Pricing — LunarCrush Funded Accounts',
-  description: 'One-time USDC fee. $5K to $100K scaled accounts. 100% profit split. No subscriptions, no hidden charges.',
+  title: 'Pricing — LunarCrush Scaled Trading Accounts',
+  description: 'One-time USDC fee. $5K to $100K scaled accounts. 100% profit split. Live social data included. No subscriptions, no hidden charges.',
   ogTitle: 'LunarCrush Pricing — One Fee. One Challenge. Keep Everything You Earn.',
-  ogDescription: 'Start from $39. Choose $5K to $100K accounts. 100% profit split, monthly USDC payouts, and scaling up to $2.5M.',
+  ogDescription: 'One-time USDC fee. $5K to $100K scaled accounts. 100% profit split, monthly USDC payouts, and live LunarCrush social data on every asset.',
   path: '/lunarcrush/pricing',
   brand: 'lunarcrush',
 })

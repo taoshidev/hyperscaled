@@ -17,7 +17,7 @@ const itemVariants = {
   visible: { opacity: 1, x: 0, transition: spring },
 }
 
-const pillars = [
+const DEFAULT_PILLARS = [
   {
     icon: ShieldCheck,
     title: 'Non-Custodial',
@@ -56,10 +56,18 @@ const hsBest = new Set(['10%', '1-Step', 'Yes', 'No', '100%', 'Onchain', '$2.5M'
 
 export default function Solution() {
   const brand = useBrand()
+  const c = brand.copy || {}
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
   const tableRef = useRef(null)
   const tableInView = useInView(tableRef, { once: true, margin: '-80px' })
+
+  const pillars = DEFAULT_PILLARS.map((p, i) => {
+    if (i === 2 && c.solutionPillar3Title) {
+      return { ...p, title: c.solutionPillar3Title, desc: c.solutionPillar3Desc || p.desc }
+    }
+    return p
+  })
 
   return (
     <section id="solution" ref={ref} className="py-24 px-6">
@@ -80,11 +88,10 @@ export default function Solution() {
                 The {brand.name} Protocol
               </span>
               <h2 className="text-4xl md:text-5xl tracking-tighter leading-none font-bold mb-5 text-balance">
-                Open. Onchain.<br />No middlemen.
+                {c.solutionHeading || <>Open. Onchain.<br />No middlemen.</>}
               </h2>
               <p className="text-base text-zinc-400 leading-relaxed max-w-[52ch] [text-wrap:pretty]">
-                {brand.name} mirrors your Hyperliquid trades into a protocol-scaled simulated account
-                and pays out performance rewards in USDC — onchain, automatically, monthly.
+                {c.solutionIntro || `${brand.name} mirrors your Hyperliquid trades into a protocol-scaled simulated account and pays out performance rewards in USDC — onchain, automatically, monthly.`}
               </p>
             </motion.div>
 

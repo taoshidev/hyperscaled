@@ -109,6 +109,7 @@ function PayoutMockup() {
 
 export default function HowItWorks({ tiers = [] }) {
   const brand = useBrand()
+  const c = brand.copy || {}
   const steps = [
     {
       number: '01',
@@ -120,15 +121,15 @@ export default function HowItWorks({ tiers = [] }) {
     {
       number: '02',
       icon: TrendUp,
-      title: 'Trade on Hyperliquid',
-      body: `Connect your Hyperliquid wallet. Trade exactly how you trade today \u2014 same interface, same order book, same fills. ${brand.name} reads your performance automatically in the\u00a0background.`,
+      title: c.howItWorksStep2Title || 'Trade on Hyperliquid',
+      body: c.howItWorksStep2Body || `Connect your Hyperliquid wallet. Trade exactly how you trade today \u2014 same interface, same order book, same fills. ${brand.name} reads your performance automatically in the\u00a0background.`,
       mockup: <DashboardMockup />,
     },
     {
       number: '03',
       icon: Trophy,
       title: 'Hit the Target. Get Paid.',
-      body: `Hit the 10% profit target to pass the ${brand.name} Challenge and activate your scaled account immediately. Payouts are delivered to your wallet every 7 days, and you keep 100% of everything you\u00a0earn.`,
+      body: c.howItWorksStep3Body || `Hit the 10% profit target to pass the ${brand.name} Challenge and activate your scaled account immediately. Payouts are delivered to your wallet every 7 days, and you keep 100% of everything you\u00a0earn.`,
       mockup: <PayoutMockup />,
     },
   ]
@@ -153,8 +154,11 @@ export default function HowItWorks({ tiers = [] }) {
             How It Works
           </span>
           <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-2xl text-balance">
-            Trade with Hyperliquid.{' '}
-            <span className="text-zinc-500">Earn a scaled trading&nbsp;account.</span>
+            {c.howItWorksHeading ? (
+              c.howItWorksHeading
+            ) : (
+              <>Trade with Hyperliquid.{' '}<span className="text-zinc-500">Earn a scaled trading&nbsp;account.</span></>
+            )}
           </h2>
         </motion.div>
 

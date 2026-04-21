@@ -6,10 +6,10 @@ import { FAQ_ITEMS } from '@/lib/constants'
 export const metadata = buildMetadata({
   title: 'FAQ — LunarCrush Scaled Trading Questions',
   description:
-    'Common questions about LunarCrush — challenges, payouts, KYC, account scaling, and how the protocol works.',
-  ogTitle: 'LunarCrush FAQ — Everything You Need to Know',
+    'Answers on challenges, payouts, KYC, account scaling, and how LunarCrush social data is integrated across every Hyperliquid pair.',
+  ogTitle: 'LunarCrush FAQ — Scaled Trading Questions Answered',
   ogDescription:
-    'Everything you need to know about LunarCrush scaled trading. How the challenge works, when you get paid, how scaling works, and what KYC is required.',
+    'Answers on challenges, payouts, KYC, account scaling, and how LunarCrush social data is integrated across every Hyperliquid pair.',
   path: '/lunarcrush/faq',
   brand: 'lunarcrush',
 })
