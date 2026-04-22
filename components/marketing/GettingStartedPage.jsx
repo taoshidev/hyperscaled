@@ -442,7 +442,7 @@ function RegistrationSection() {
                   </div>
                   <div className="px-4 py-3 text-right text-zinc-200 font-mono">$100K</div>
                   <div className="px-4 py-3 text-right text-zinc-200 font-mono">$449</div>
-                  <div className="px-4 py-3 text-right text-teal-400 font-mono">$2.5M</div>
+                  <div className="px-4 py-3 text-right text-teal-400 font-mono">$400K</div>
                 </div>
               </div>
 
@@ -753,7 +753,7 @@ function ChallengeRulesSection() {
                 <p className="text-2xl font-bold font-mono text-teal-400 mb-2">100%</p>
                 <p className="text-sm text-zinc-500 leading-relaxed">
                   Hyperscaled takes 0% of your profits, including on scaled accounts
-                  up to&nbsp;$2.5M.
+                  up to&nbsp;$400K.
                 </p>
               </div>
             </div>
@@ -809,7 +809,7 @@ function ChallengeRulesSection() {
                   </h4>
                   <p className="text-sm text-zinc-300">
                     $25K and $50K accounts scale up to{' '}
-                    <strong className="font-mono font-semibold">$100K</strong> maximum
+                    <strong className="font-mono font-semibold">$400K</strong> maximum
                   </p>
                 </div>
                 <div className="rounded-lg border border-teal-400/20 bg-teal-400/[0.04] p-4">
@@ -818,7 +818,7 @@ function ChallengeRulesSection() {
                   </h4>
                   <p className="text-sm text-zinc-300">
                     $100K accounts scale up to{' '}
-                    <strong className="font-mono font-semibold text-teal-400">$2.5M</strong> maximum
+                    <strong className="font-mono font-semibold text-teal-400">$400K</strong> maximum
                   </p>
                 </div>
               </div>
@@ -828,7 +828,7 @@ function ChallengeRulesSection() {
                 <Link href="/rules#scaling" className="text-teal-400 hover:underline">
                   full scaling rules
                 </Link>{' '}
-                for the complete path from $100K to&nbsp;$2.5M.
+                for the complete scaling&nbsp;path.
               </p>
             </div>
           </AnimatedSection>

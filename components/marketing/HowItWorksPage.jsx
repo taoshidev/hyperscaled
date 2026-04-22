@@ -157,7 +157,7 @@ const STEPS = [
     number: '04',
     icon: CurrencyDollar,
     title: 'Pass. Get Funded. Get Paid.',
-    body: 'Hit the 10% profit target with drawdown under 5% to immediately activate your scaled account. Keep 100% of profits with payouts delivered in USDC monthly. Scale to $2.5M with continued\u00a0performance.',
+    body: 'Hit the 10% profit target with drawdown under 5% to immediately activate your scaled account. Keep 100% of profits with payouts delivered in USDC monthly. Scale to $400K with continued\u00a0performance.',
     details: [
       { label: 'Profit Target', value: '10%' },
       { label: 'Max Drawdown (Challenge)', value: '5% daily / 5% EOD trailing' },
@@ -172,7 +172,7 @@ const STEPS = [
 const SCALING_QUALIFICATIONS = [
   { label: 'Scaling Qualification', value: '5% quarterly return + all-time Sharpe ratio > 1' },
   { label: '25% Bonus', value: '2% quarterly return + all-time Sharpe ratio > 1' },
-  { label: 'Max Account Size', value: '$2.5M' },
+  { label: 'Max Account Size', value: '$400K' },
   { label: 'Funded Account Profit Target', value: 'None' },
 ]
 
@@ -422,7 +422,7 @@ function ScalingSection() {
           className="text-center mb-10"
         >
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            Scaling path: $100K to&nbsp;$2.5M
+            Scaling path: up to&nbsp;$400K
           </h2>
           <p className="mt-4 text-sm sm:text-base text-zinc-400 max-w-[56ch] mx-auto leading-relaxed" style={{ textWrap: 'balance' }}>
             Consistently hit quarterly performance targets and your scaled account grows automatically with no additional&nbsp;fees.
@@ -441,7 +441,7 @@ function ScalingSection() {
         </motion.div>
 
         <p className="mt-6 text-xs text-zinc-500 text-center max-w-[72ch] mx-auto leading-relaxed">
-          This path applies to Tier V ($100K) accounts. Tier I through Tier IV ($5K, $10K, $25K, $50K) accounts scale up to $100K maximum, at which point the full scaling path&nbsp;applies.
+          All accounts can scale up to $400K maximum through continued&nbsp;performance.
         </p>
       </div>
     </section>
@@ -646,7 +646,7 @@ function PayoutMechanics() {
           className="max-w-[700px] mx-auto rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-5 sm:p-6 text-center"
         >
           <p className="text-sm sm:text-base text-teal-400 font-medium leading-relaxed" style={{ textWrap: 'balance' }}>
-            100% of profits go to you. Hyperscaled takes 0%, including on scaled accounts up to&nbsp;$2.5M.
+            100% of profits go to you. Hyperscaled takes 0%, including on scaled accounts up to&nbsp;$400K.
           </p>
         </motion.div>
       </div>

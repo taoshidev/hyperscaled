@@ -368,7 +368,7 @@ function ScalingSection() {
           className="text-center mb-10"
         >
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            Start at $25K. Scale to&nbsp;$2.5M.
+            Start at $25K. Scale to&nbsp;$400K.
           </h2>
           <p className="mt-4 text-sm sm:text-base text-zinc-400 max-w-[56ch] mx-auto leading-relaxed" style={{ textWrap: 'balance' }}>
             Every scaled trader starts at their selected account size. Consistent performance unlocks the next tier automatically — no additional&nbsp;fees.
