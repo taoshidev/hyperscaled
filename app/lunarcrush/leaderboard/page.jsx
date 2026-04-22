@@ -9,7 +9,7 @@ function LeaderboardContent() {
   const searchParams = useSearchParams()
   const initialAddr = searchParams.get('addr') || ''
   return (
-    <div className="bg-black text-white font-sans min-h-[100dvh]">
+    <div className="bg-background text-white font-sans min-h-[100dvh]">
       <Nav />
       <main className="pt-16">
         <Leaderboard initialSearch={initialAddr} />
@@ -20,7 +20,7 @@ function LeaderboardContent() {
 
 export default function LunarCrushLeaderboardPage() {
   return (
-    <Suspense fallback={<div className="bg-black min-h-[100dvh]" />}>
+    <Suspense fallback={<div className="bg-background min-h-[100dvh]" />}>
       <LeaderboardContent />
     </Suspense>
   )

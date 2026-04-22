@@ -15,7 +15,7 @@ export const metadata = buildMetadata({
 
 export default function LunarCrushDashboardPage() {
   return (
-    <Suspense fallback={<div className="bg-black min-h-[100dvh]" />}>
+    <Suspense fallback={<div className="bg-background min-h-[100dvh]" />}>
       <Dashboard />
     </Suspense>
   )

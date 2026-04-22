@@ -26,7 +26,7 @@ const WEBSITE_SCHEMA = {
 
 export default function LunarCrushMarketingLayout({ children }) {
   return (
-    <div className="bg-black text-white font-sans min-h-[100dvh]">
+    <div className="bg-background text-white font-sans min-h-[100dvh]">
       <JsonLd data={ORGANIZATION_SCHEMA} />
       <JsonLd data={WEBSITE_SCHEMA} />
       <Nav />
