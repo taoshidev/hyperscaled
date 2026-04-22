@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { users, registrations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { isValidEvmAddress, isValidEmail } from "@/lib/validation";
@@ -215,6 +215,7 @@ async function handleSyncKyc(body) {
 }
 
 export async function POST(request) {
+  const db = await getDb();
   const authError = authenticate(request);
   if (authError) {
     return NextResponse.json(

@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { registrations, entityMiners } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { reportError, reportCritical, reportWarning } from "@/lib/errors";
@@ -51,6 +51,7 @@ async function postCreateHlSubaccount(baseUrl, payload, apiKey) {
  * or admins can trigger it.
  */
 export async function POST(request) {
+  const db = await getDb();
   const reqId = Math.random().toString(36).slice(2, 10);
   console.info("[REGISTRATION][retry] POST /api/register/retry received", { reqId });
 

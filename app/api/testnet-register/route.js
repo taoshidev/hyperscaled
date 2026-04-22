@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { getMinerBySlug, getTiersForMiner } from "@/lib/miners";
 import { isValidHLAddress, isValidEmail } from "@/lib/validation";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { users, registrations } from "@/lib/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
@@ -23,6 +23,7 @@ function resolveMinerApiKey(miner) {
 }
 
 export async function POST(request) {
+  const db = await getDb();
   let body;
   try {
     body = await request.json();

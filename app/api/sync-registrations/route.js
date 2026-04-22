@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { registrations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
@@ -34,6 +34,7 @@ const BUDGET_MS = parseInt(process.env.SYNC_BUDGET_MS || "55000", 10);
  * Schedule is defined in vercel.json.
  */
 export async function GET(request) {
+  const db = await getDb();
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) {
     return NextResponse.json({ error: "CRON_SECRET not configured" }, { status: 500 });

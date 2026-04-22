@@ -9,7 +9,7 @@ import {
 import { getMinerBySlug, getTiersForMiner, TIERS } from "@/lib/miners";
 import { isValidHLAddress, isValidEvmAddress, isValidEmail } from "@/lib/validation";
 import { USDC_ADDRESS, USDC_DECIMALS, USDC_EIP712_NAME, USDC_EIP712_VERSION, BASE_NETWORK, FACILITATOR_URL, BASESCAN_URL } from "@/lib/constants";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { users, registrations, affiliates } from "@/lib/db/schema";
 import { eq, and, inArray, sql } from "drizzle-orm";
 import { facilitator as cdpFacilitator } from "@coinbase/x402";
@@ -103,6 +103,7 @@ function buildPaymentRequirements(miner, tier, requestUrl, overridePrice) {
 }
 
 export async function POST(request) {
+  const db = await getDb();
   const reqId = Math.random().toString(36).slice(2, 10);
   const hasPaymentSignature = Boolean(request.headers.get("payment-signature"));
   console.info("[REGISTRATION] POST /api/register received", {

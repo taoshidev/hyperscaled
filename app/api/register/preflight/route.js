@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getMinerBySlug, getTiersForMiner } from "@/lib/miners";
 import { isValidHLAddress, isValidEvmAddress, isValidEmail } from "@/lib/validation";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { registrations } from "@/lib/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
@@ -14,6 +14,7 @@ import { reportError } from "@/lib/errors";
 // complete. The x402 path already gets this implicitly via the initial 402
 // probe, but using the same endpoint there is harmless.
 export async function POST(request) {
+  const db = await getDb();
   const reqId = Math.random().toString(36).slice(2, 10);
   console.info("[REGISTRATION] POST /api/register/preflight received", { reqId });
 
