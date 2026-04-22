@@ -111,15 +111,7 @@ function PricingCard({ tier, index }) {
         <ins className="text-3xl sm:text-4xl font-bold font-mono no-underline text-white">
           ${tier.launchPrice}
         </ins>
-        {tier.standardPrice != null && (
-          <del className="text-sm text-zinc-600 font-mono">${tier.standardPrice}</del>
-        )}
         <span className="text-xs text-zinc-500 font-medium">USDC</span>
-        {tier.standardPrice != null && (
-          <span className="sr-only">
-            Launch price {tier.launchPrice} USDC, was {tier.standardPrice} USDC
-          </span>
-        )}
       </div>
 
       {/* Details */}
