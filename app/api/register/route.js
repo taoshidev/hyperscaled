@@ -558,6 +558,13 @@ export async function POST(request) {
   // ── x402 payment path (Base chain USDC) ───────────────────────────────────
   } else {
     console.info("[REGISTRATION] x402 branch entered", { reqId, minerSlug, devTest });
+
+    const devBypass = process.env.NODE_ENV === 'development';
+    if (devBypass) {
+      console.info("[REGISTRATION] dev mode — skipping x402 payment", { reqId });
+      txHash = `dev-${Date.now()}`;
+      effectivePayoutAddress = payoutAddress || hlAddress;
+    } else {
     const { requirements, paymentRequired } = buildPaymentRequirements(
       miner,
       tier,
@@ -712,6 +719,7 @@ export async function POST(request) {
 
     txHash = settleResult?.transaction || "";
     effectivePayoutAddress = payoutAddress || paymentPayload?.payload?.authorization?.from;
+    } // end else (x402 payment)
   }
 
   console.info("[REGISTRATION] payment accepted, proceeding to user upsert", {
@@ -810,7 +818,10 @@ export async function POST(request) {
   let registered = false;
   let statusDetail = null;
 
-  if (miner.apiUrl) {
+  if (process.env.SKIP_ENTITY_MINER_CALL === 'true') {
+    console.info("[REGISTRATION] SKIP_ENTITY_MINER_CALL set — skipping miner API call", { reqId });
+    registered = true;
+  } else if (miner.apiUrl) {
     try {
       const apiKey = resolveMinerApiKey(miner);
       const hadDbKey = Boolean(sanitizeApiKey(miner.apiKey));

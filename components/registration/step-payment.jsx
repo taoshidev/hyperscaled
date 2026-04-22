@@ -208,6 +208,39 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
   const formattedBalance = balance != null ? formatUnits(balance, USDC_DECIMALS) : null;
   const hasEnough = balance != null && balance >= parseUnits(String(price), USDC_DECIMALS);
   const isOnBase = chainId === BASE_CHAIN_ID;
+  const isDev = process.env.NODE_ENV === 'development';
+
+  const handleDevPay = useCallback(async () => {
+    setError(null);
+    setIsPaying(true);
+    setStatus("Registering...");
+    try {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          minerSlug: miner.slug,
+          hlAddress,
+          accountSize: tier.accountSize,
+          payoutAddress: hlAddress,
+          email,
+          tierIndex,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Registration failed");
+      onComplete({
+        txHash: result.txHash || "",
+        payerAddress: hlAddress,
+        registrationStatus: result.status || "pending",
+        registrationMessage: result.message || "",
+      });
+    } catch (err) {
+      setError(err.message || "Registration failed");
+      setIsPaying(false);
+      setStatus(null);
+    }
+  }, [miner, hlAddress, tier, email, tierIndex, onComplete]);
 
   return (
     <div className="space-y-6 max-w-md mx-auto">
@@ -242,7 +275,21 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
         </CardContent>
       </Card>
 
-      {!isConnected ? (
+      {isDev ? (
+        <div className="space-y-3">
+          <div className="rounded-md border border-yellow-500/30 bg-yellow-500/10 p-3 text-center">
+            <p className="text-xs font-medium text-yellow-500">Dev Mode — Registration Free</p>
+          </div>
+          <Button
+            className="w-full"
+            onClick={handleDevPay}
+            disabled={isPaying}
+            style={{ backgroundColor: miner.color, color: "#fff" }}
+          >
+            {isPaying ? (status || "Registering...") : "Register Free (Dev Mode)"}
+          </Button>
+        </div>
+      ) : !isConnected ? (
         <div className="flex justify-center">
           <ConnectButton />
         </div>
