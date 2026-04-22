@@ -80,6 +80,10 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
         .split("; ")
         .find((c) => c.startsWith("tolt_ref="))
         ?.split("=")[1] || null;
+      const toltReferralId = document.cookie
+        .split("; ")
+        .find((c) => c.startsWith("tolt_referral="))
+        ?.split("=")[1] || null;
 
       const registrationData = {
         minerSlug: miner.slug,
@@ -90,6 +94,7 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
         tierIndex,
         affiliateUtm,
         toltRef,
+        toltReferralId,
       };
 
       console.info("[REGISTRATION][StepPayment] probing /api/register for 402", { affiliateUtm });

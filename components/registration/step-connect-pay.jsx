@@ -269,6 +269,7 @@ export function StepConnectAndPay({
 
     try {
       const toltRef = document.cookie.split("; ").find(c => c.startsWith("tolt_ref="))?.split("=")[1] || null;
+      const toltReferralId = document.cookie.split("; ").find(c => c.startsWith("tolt_referral="))?.split("=")[1] || null;
 
       const body = {
         minerSlug,
@@ -277,6 +278,7 @@ export function StepConnectAndPay({
         payoutAddress: resolvedPayoutAddress || address,
         tierIndex,
         toltRef,
+        toltReferralId,
         // Used by the backend to qualify the dev-wallet discount; the actual
         // signer in the payment payload is the source of truth on retry.
         hlTransferSender: address,
@@ -469,6 +471,7 @@ export function StepConnectAndPay({
 
     try {
       const toltRef = document.cookie.split("; ").find(c => c.startsWith("tolt_ref="))?.split("=")[1] || null;
+      const toltReferralId = document.cookie.split("; ").find(c => c.startsWith("tolt_referral="))?.split("=")[1] || null;
 
       // Step 0 — Preflight validation (duplicate check, tier/miner sanity).
       // Runs before any signing/transfer so users never pay only to be told
@@ -762,6 +765,7 @@ export function StepConnectAndPay({
           payoutAddress: resolvedPayoutAddress || address,
           tierIndex,
           toltRef,
+          toltReferralId,
           paymentMethod: "eip712",
           hlTransferHash: hlHash,
           hlTransferSender: address,

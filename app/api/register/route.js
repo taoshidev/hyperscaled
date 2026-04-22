@@ -130,6 +130,7 @@ export async function POST(request) {
     tierIndex,
     affiliateUtm,
     toltRef,
+    toltReferralId,
     paymentMethod,
     hlTransferHash,
     hlTransferSender,
@@ -963,9 +964,10 @@ export async function POST(request) {
     );
   }
 
-  if (toltRef) {
+  if (toltRef || toltReferralId) {
     trackConversion({
       refSlug: toltRef,
+      referralId: toltReferralId,
       customerIdentifier: email || hlAddress,
       amountUsdc: effectivePrice,
     });

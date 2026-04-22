@@ -279,13 +279,6 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
     };
   }, [status, hlAddress]);
 
-  useEffect(() => {
-    try {
-      if (typeof window === "undefined" || !window.tolt) return;
-      if (window.tolt_data?.customer_id) return;
-      window.tolt.signup(hlAddress);
-    } catch { /* tolt unavailable */ }
-  }, [hlAddress]);
 
   const isRegistered = status === "registered";
   const isFailed = status === "failed";
