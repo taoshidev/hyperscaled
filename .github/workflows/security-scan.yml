@@ -2,7 +2,8 @@ name: Security Scan
 
 on:
   push:
-    branches: [main]
+    # TODO: remove mw--scanning-workflows once the flow is verified.
+    branches: [main, mw--scanning-workflows]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -15,9 +16,11 @@ jobs:
     name: Snyk Open Source (SCA)
     runs-on: ubuntu-latest
     # Run on PRs + manual dispatch always; on pushes only when deps change.
+    # TODO: remove the mw--scanning-workflows override once the flow is verified.
     if: |
       github.event_name == 'pull_request' ||
       github.event_name == 'workflow_dispatch' ||
+      github.ref == 'refs/heads/mw--scanning-workflows' ||
       (github.event_name == 'push' && (
         contains(github.event.head_commit.modified, 'package.json') ||
         contains(github.event.head_commit.modified, 'package-lock.json') ||
