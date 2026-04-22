@@ -5,7 +5,7 @@ import { motion, useInView } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight, Star } from '@phosphor-icons/react'
 import { PRICING_TIERS } from '@/lib/constants'
-import { useBrandHref } from '@/lib/brand'
+import { useBrand, useBrandHref } from '@/lib/brand'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -56,10 +56,14 @@ function PricingCard({ tier, index, brandHref }) {
         <ins className="text-3xl sm:text-4xl font-bold font-mono no-underline text-white">
           ${tier.launchPrice}
         </ins>
-        <del className="text-sm text-zinc-600 font-mono">${tier.standardPrice}</del>
+        {tier.standardPrice && (
+          <del className="text-sm text-zinc-600 font-mono">${tier.standardPrice}</del>
+        )}
         <span className="text-xs text-zinc-500 font-medium">USDC</span>
         <span className="sr-only">
-          Launch price {tier.launchPrice} USDC, was {tier.standardPrice} USDC
+          {tier.standardPrice
+            ? `Launch price ${tier.launchPrice} USDC, was ${tier.standardPrice} USDC`
+            : `${tier.launchPrice} USDC`}
         </span>
       </div>
 
@@ -90,7 +94,9 @@ function PricingCard({ tier, index, brandHref }) {
 }
 
 export default function HomePricing({ tiers = PRICING_TIERS }) {
+  const brand = useBrand()
   const brandHref = useBrandHref()
+  tiers = brand.pricingTiers || tiers
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 

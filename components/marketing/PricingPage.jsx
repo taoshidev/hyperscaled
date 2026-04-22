@@ -112,10 +112,14 @@ function PricingCard({ tier, index }) {
         <ins className="text-3xl sm:text-4xl font-bold font-mono no-underline text-white">
           ${tier.launchPrice}
         </ins>
-        <del className="text-sm text-zinc-600 font-mono">${tier.standardPrice}</del>
+        {tier.standardPrice && (
+          <del className="text-sm text-zinc-600 font-mono">${tier.standardPrice}</del>
+        )}
         <span className="text-xs text-zinc-500 font-medium">USDC</span>
         <span className="sr-only">
-          Launch price {tier.launchPrice} USDC, was {tier.standardPrice} USDC
+          {tier.standardPrice
+            ? `Launch price ${tier.launchPrice} USDC, was ${tier.standardPrice} USDC`
+            : `${tier.launchPrice} USDC`}
         </span>
       </div>
 
@@ -415,11 +419,13 @@ function PricingFAQSection() {
 
 /* ── Page Compose ── */
 export default function PricingPage({ tiers = PRICING_TIERS }) {
+  const brand = useBrand()
+  const resolvedTiers = brand.pricingTiers || tiers
   return (
     <>
       <LaunchBanner />
       <PricingHero />
-      <PricingCards tiers={tiers} />
+      <PricingCards tiers={resolvedTiers} />
       <WhatsIncludedGrid />
       <ModelSection />
       <ScalingSection />
