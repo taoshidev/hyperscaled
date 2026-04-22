@@ -268,8 +268,15 @@ export function StepConnectAndPay({
     onPaymentProcessing?.(true);
 
     try {
-      const toltRef = document.cookie.split("; ").find(c => c.startsWith("tolt_ref="))?.split("=")[1] || null;
-      const toltReferralId = document.cookie.split("; ").find(c => c.startsWith("tolt_referral="))?.split("=")[1] || null;
+      // Call tolt.signup() now so we have a customer_id before the server
+      // records the transaction. Guard against double-calls on retry.
+      let toltCustomerId = window.tolt_data?.customer_id || null;
+      if (!toltCustomerId && window.tolt) {
+        try {
+          const result = await window.tolt.signup(resolvedHlAddress);
+          toltCustomerId = result?.customer_id || window.tolt_data?.customer_id || null;
+        } catch { /* tolt unavailable */ }
+      }
 
       const body = {
         minerSlug,
@@ -277,8 +284,7 @@ export function StepConnectAndPay({
         accountSize: selectedTier.accountSize,
         payoutAddress: resolvedPayoutAddress || address,
         tierIndex,
-        toltRef,
-        toltReferralId,
+        toltCustomerId,
         // Used by the backend to qualify the dev-wallet discount; the actual
         // signer in the payment payload is the source of truth on retry.
         hlTransferSender: address,
@@ -470,8 +476,15 @@ export function StepConnectAndPay({
     onPaymentProcessing?.(true);
 
     try {
-      const toltRef = document.cookie.split("; ").find(c => c.startsWith("tolt_ref="))?.split("=")[1] || null;
-      const toltReferralId = document.cookie.split("; ").find(c => c.startsWith("tolt_referral="))?.split("=")[1] || null;
+      // Call tolt.signup() now so we have a customer_id before the server
+      // records the transaction. Guard against double-calls on retry.
+      let toltCustomerId = window.tolt_data?.customer_id || null;
+      if (!toltCustomerId && window.tolt) {
+        try {
+          const result = await window.tolt.signup(resolvedHlAddress);
+          toltCustomerId = result?.customer_id || window.tolt_data?.customer_id || null;
+        } catch { /* tolt unavailable */ }
+      }
 
       // Step 0 — Preflight validation (duplicate check, tier/miner sanity).
       // Runs before any signing/transfer so users never pay only to be told
@@ -764,8 +777,7 @@ export function StepConnectAndPay({
           accountSize: selectedTier.accountSize,
           payoutAddress: resolvedPayoutAddress || address,
           tierIndex,
-          toltRef,
-          toltReferralId,
+          toltCustomerId,
           paymentMethod: "eip712",
           hlTransferHash: hlHash,
           hlTransferSender: address,

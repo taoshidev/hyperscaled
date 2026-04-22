@@ -129,8 +129,7 @@ export async function POST(request) {
     email,
     tierIndex,
     affiliateUtm,
-    toltRef,
-    toltReferralId,
+    toltCustomerId,
     paymentMethod,
     hlTransferHash,
     hlTransferSender,
@@ -145,6 +144,7 @@ export async function POST(request) {
     hasEmail: Boolean(email),
     tierIndex,
     affiliateUtm,
+    hasToltCustomerId: Boolean(toltCustomerId),
     paymentMethod,
     hasTransferHash: Boolean(hlTransferHash),
     hlTransferSender,
@@ -964,13 +964,8 @@ export async function POST(request) {
     );
   }
 
-  if (toltRef || toltReferralId) {
-    trackConversion({
-      refSlug: toltRef,
-      referralId: toltReferralId,
-      customerIdentifier: email || hlAddress,
-      amountUsdc: effectivePrice,
-    });
+  if (toltCustomerId) {
+    trackConversion({ customerId: toltCustomerId, amountUsdc: effectivePrice });
   }
 
   if (process.env.SMTP_USER && email) {
