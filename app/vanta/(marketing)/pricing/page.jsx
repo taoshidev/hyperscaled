@@ -1,7 +1,7 @@
 import PricingPage from '@/components/marketing/PricingPage'
 import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
-import { PRICING_TIERS } from '@/lib/constants'
+import { fetchDbPricingTiers } from '@/lib/pricing-db'
 
 export const metadata = buildMetadata({
   title: 'Pricing — Vanta Trading Funded Accounts',
@@ -15,7 +15,8 @@ export const metadata = buildMetadata({
 })
 
 export default async function VantaPricing() {
-  const productSchemas = PRICING_TIERS.map((tier) => ({
+  const tiers = await fetchDbPricingTiers('vanta')
+  const productSchemas = tiers.map((tier) => ({
     "@context": "https://schema.org",
     "@type": "Product",
     name: `Vanta Trading ${tier.name} Funded Account`,
@@ -34,7 +35,7 @@ export default async function VantaPricing() {
       {productSchemas.map((schema, i) => (
         <JsonLd key={i} data={schema} />
       ))}
-      <PricingPage tiers={PRICING_TIERS} />
+      <PricingPage tiers={tiers} />
     </>
   )
 }
