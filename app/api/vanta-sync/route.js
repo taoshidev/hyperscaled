@@ -66,6 +66,7 @@ async function handleSyncRegistration(body) {
   const finalPayoutAddress = (payoutAddress || hlAddress).toLowerCase();
 
   try {
+    const db = await getDb();
     // --- Upsert user ---
     const [existingUser] = await db
       .select()
@@ -166,6 +167,7 @@ async function handleSyncKyc(body) {
   const normalizedWallet = wallet.toLowerCase();
 
   try {
+    const db = await getDb();
     const [existingUser] = await db
       .select()
       .from(users)
@@ -215,7 +217,6 @@ async function handleSyncKyc(body) {
 }
 
 export async function POST(request) {
-  const db = await getDb();
   const authError = authenticate(request);
   if (authError) {
     return NextResponse.json(
