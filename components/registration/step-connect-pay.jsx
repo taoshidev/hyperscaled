@@ -34,6 +34,7 @@ import {
 } from "@/lib/constants";
 import { usdcAbi } from "@/lib/usdc-abi";
 import { formatAccountSize, truncateAddress } from "@/lib/format";
+import { ensureBuilderFeeApproved } from "@/lib/hl-builder-fee";
 import { useExtensionBridge } from "@/hooks/use-extension-bridge";
 import { useRegistrationHelp } from "./registration-help-context";
 import { ExactEvmScheme } from "@x402/evm/exact/client";
@@ -107,7 +108,7 @@ export function StepConnectAndPay({
   const [editingHlWallet, setEditingHlWallet] = useState(true);
   const [hlBalance, setHlBalance] = useState(null);
   const [hlBalanceLoading, setHlBalanceLoading] = useState(false);
-  const [eip712Step, setEip712Step] = useState(null); // "signing" | "submitting" | "verifying" | "provisioning"
+  const [eip712Step, setEip712Step] = useState(null); // "builderFee" | "signing" | "submitting" | "verifying" | "provisioning"
   const [devPrice, setDevPrice] = useState(null);
 
   const {
@@ -160,6 +161,7 @@ export function StepConnectAndPay({
   }, [hlWallet, hlWalletValid, minerSlug, address, selectedTier.accountSize, selectedTier.promoPrice]);
 
   const price = devPrice ?? selectedTier.promoPrice;
+  const isFree = Number(price) === 0;
 
   const resolvedHlAddress = hlWallet;
   const hlAddressReady = hlWallet.length > 0 && hlWalletValid;
@@ -292,6 +294,25 @@ export function StepConnectAndPay({
 
       // Block "already registered" and similar errors before requesting payment.
       await runPreflight(body);
+
+      // Ensure the Hyperscaled builder fee is approved on the connected wallet
+      // before we sign the payment. This is silent for users who already have
+      // an approval on file; otherwise we switch to Arbitrum, prompt a
+      // signature, and switch back to Base before the x402 flow.
+      console.info("[REGISTRATION] Base: ensuring builder fee approval");
+      const prevChainIdForBuilder = chainId;
+      try {
+        const result = await ensureBuilderFeeApproved({
+          address,
+          chainId,
+          switchChainAsync,
+        });
+        console.info("[REGISTRATION] Base: builder fee approval", result);
+      } finally {
+        if (prevChainIdForBuilder && prevChainIdForBuilder !== HL_SIGNING_CHAIN_ID) {
+          await switchChainAsync({ chainId: prevChainIdForBuilder }).catch(() => {});
+        }
+      }
 
       console.info("[REGISTRATION] Base: probing /api/register for 402");
       const probeRes = await fetch("/api/register", {
@@ -446,6 +467,8 @@ export function StepConnectAndPay({
     selectedTier,
     tierIndex,
     address,
+    chainId,
+    switchChainAsync,
     resolvedHlAddress,
     resolvedPayoutAddress,
     onPaymentComplete,
@@ -471,7 +494,7 @@ export function StepConnectAndPay({
     });
 
     setPaymentState("processing");
-    setEip712Step("signing");
+    setEip712Step("builderFee");
     setErrorMessage("");
     onPaymentProcessing?.(true);
 
@@ -504,7 +527,6 @@ export function StepConnectAndPay({
 
       // Step 1 — Switch to Arbitrum so the wallet's active chain matches
       // the EIP-712 domain chainId that Hyperliquid requires
-      setEip712Step("signing");
       const previousChainId = chainId;
       if (chainId !== HL_SIGNING_CHAIN_ID) {
         console.info("[REGISTRATION] EIP-712: switching chain for signing", {
@@ -534,7 +556,19 @@ export function StepConnectAndPay({
         }
       }
 
+      // Step 1.5 — Ensure Hyperscaled builder fee is approved.
+      // Already on Arbitrum, so no extra chain switching. Silent skip when an
+      // approval already exists on this wallet.
+      console.info("[REGISTRATION] EIP-712: ensuring builder fee approval");
+      const builderFeeResult = await ensureBuilderFeeApproved({
+        address,
+        chainId: HL_SIGNING_CHAIN_ID,
+        switchChainAsync,
+      });
+      console.info("[REGISTRATION] EIP-712: builder fee approval", builderFeeResult);
+
       // Step 2 — Sign Hyperliquid sendAsset (USDC) via EIP-712
+      setEip712Step("signing");
       let signature;
       try {
         console.info("[REGISTRATION] EIP-712: requesting typed-data signature", {
@@ -863,6 +897,147 @@ export function StepConnectAndPay({
     onPaymentProcessing,
   ]);
 
+  // ── Free tier signup handler ──────────────────────────────────────────────
+  const handleFreeSignup = useCallback(async () => {
+    if (!walletClient) {
+      console.warn("[REGISTRATION] handleFreeSignup called with no walletClient");
+      return;
+    }
+
+    console.info("[REGISTRATION] handleFreeSignup start", {
+      minerSlug,
+      hlAddress: resolvedHlAddress,
+      payoutAddress: resolvedPayoutAddress || address,
+      tierIndex,
+    });
+
+    setPaymentState("processing");
+    setEip712Step("builderFee");
+    setErrorMessage("");
+    onPaymentProcessing?.(true);
+
+    try {
+      let toltCustomerId = window.tolt_data?.customer_id || null;
+      if (!toltCustomerId && window.tolt) {
+        try {
+          const result = await window.tolt.signup(resolvedHlAddress);
+          toltCustomerId = result?.customer_id || window.tolt_data?.customer_id || null;
+        } catch { /* tolt unavailable */ }
+      }
+
+      await runPreflight({
+        minerSlug,
+        hlAddress: resolvedHlAddress,
+        accountSize: selectedTier.accountSize,
+        payoutAddress: resolvedPayoutAddress || address,
+        tierIndex,
+        hlTransferSender: address,
+      });
+
+      // Builder fee approval — silent skip if already approved.
+      const previousChainId = chainId;
+      const builderFeeResult = await ensureBuilderFeeApproved({
+        address,
+        chainId,
+        switchChainAsync,
+      });
+      console.info("[REGISTRATION] Free: builder fee approval", builderFeeResult);
+      if (previousChainId && previousChainId !== HL_SIGNING_CHAIN_ID) {
+        switchChainAsync({ chainId: previousChainId }).catch(() => {});
+      }
+
+      setEip712Step("provisioning");
+
+      const registerRes = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          minerSlug,
+          hlAddress: resolvedHlAddress,
+          accountSize: selectedTier.accountSize,
+          payoutAddress: resolvedPayoutAddress || address,
+          tierIndex,
+          toltCustomerId,
+          paymentMethod: "free",
+          hlTransferSender: address,
+        }),
+      });
+
+      if (!registerRes.ok) {
+        const data = await registerRes.json().catch(() => ({}));
+        const err = new Error(
+          data.error || data.message || "Registration failed. Please contact support.",
+        );
+        reportCritical(err, {
+          source: "registration/free",
+          userId: address,
+          metadata: {
+            step: "register_free",
+            httpStatus: registerRes.status,
+            serverError: data.error,
+            serverMessage: data.message,
+            minerSlug,
+            hlAddress: resolvedHlAddress,
+            payoutAddress: resolvedPayoutAddress || address,
+            tierIndex,
+          },
+        });
+        throw err;
+      }
+
+      const result = await registerRes.json();
+      console.info("[REGISTRATION] Free: registration result", {
+        status: result.status,
+        txHash: result.txHash,
+      });
+
+      setPaymentState("success");
+      setEip712Step(null);
+      onPaymentProcessing?.(false);
+
+      setTimeout(() => {
+        onPaymentComplete({
+          txHash: result.txHash || "",
+          hlAddress: resolvedHlAddress,
+          registrationStatus: result.status,
+          paymentMethod: "free",
+        });
+      }, 1500);
+    } catch (err) {
+      console.error("[REGISTRATION] Free signup failed", { error: err?.message });
+      setPaymentState("error");
+      setEip712Step(null);
+      onPaymentProcessing?.(false);
+
+      if (
+        err.message?.includes("User rejected") ||
+        err.message?.includes("denied")
+      ) {
+        setErrorMessage("Signature rejected — you can try again when ready.");
+      } else {
+        setErrorMessage(err.message || "Signup failed — please try again.");
+      }
+    }
+  }, [
+    walletClient,
+    minerSlug,
+    selectedTier,
+    tierIndex,
+    address,
+    chainId,
+    switchChainAsync,
+    resolvedHlAddress,
+    resolvedPayoutAddress,
+    onPaymentComplete,
+    onPaymentProcessing,
+  ]);
+
+  const canFreeSignup =
+    isConnected &&
+    hlAddressReady &&
+    confirmed &&
+    paymentState !== "processing";
+
   const canPayBase =
     isConnected &&
     isOnBase &&
@@ -903,10 +1078,12 @@ export function StepConnectAndPay({
   // ── Confirm phase: "Continue to review" readiness ──────────────────────────
   const canContinueToConfirm =
     hlAddressReady &&
-    paymentMethod &&
-    (paymentMethod === "base"
-      ? isConnected && isOnBase
-      : isConnected);
+    (isFree
+      ? isConnected
+      : paymentMethod &&
+        (paymentMethod === "base"
+          ? isConnected && isOnBase
+          : isConnected));
 
   if (phase === "confirm") {
     return (
@@ -1080,8 +1257,38 @@ export function StepConnectAndPay({
             </div>
           )}
 
+          {/* ── Free tier signup flow ── */}
+          {isFree && paymentState !== "success" && paymentState !== "error" && (
+            <div className="space-y-4">
+              {paymentState === "idle" && (
+                <Button
+                  onClick={handleFreeSignup}
+                  disabled={!canFreeSignup}
+                  aria-label={`Sign up for ${selectedTier.name} free account`}
+                  className="w-full h-11 text-sm font-semibold cursor-pointer bg-teal-400 text-zinc-950 hover:bg-teal-400/90 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {!confirmed
+                    ? "Confirm your details above to continue"
+                    : "Sign Up"}
+                </Button>
+              )}
+
+              {paymentState === "processing" && (
+                <div className="rounded-xl border border-border bg-zinc-900/50 p-5 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <span className="w-2.5 h-2.5 rounded-full bg-teal-400 pulse-teal shrink-0" />
+                    <p className="text-sm font-semibold text-foreground">
+                      {eip712Step === "builderFee" && "Preparing your account…"}
+                      {eip712Step === "provisioning" && "Provisioning account…"}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ── Base wallet payment flow ── */}
-          {paymentMethod === "base" && paymentState !== "success" && paymentState !== "error" && (
+          {!isFree && paymentMethod === "base" && paymentState !== "success" && paymentState !== "error" && (
             <div className="space-y-4">
               {formattedBalance != null && (
                 <p className="text-xs text-center text-muted-foreground">
@@ -1120,7 +1327,7 @@ export function StepConnectAndPay({
           )}
 
           {/* ── Hyperliquid EIP-712 payment flow ── */}
-          {paymentMethod === "eip712" && paymentState !== "success" && paymentState !== "error" && (
+          {!isFree && paymentMethod === "eip712" && paymentState !== "success" && paymentState !== "error" && (
             <div className="space-y-4">
               {/* Wallet mismatch warning */}
               {hlAddressReady && !walletMatchesHL && paymentState === "idle" && (
@@ -1178,6 +1385,7 @@ export function StepConnectAndPay({
                   <div className="flex items-center gap-3">
                     <span className="w-2.5 h-2.5 rounded-full bg-teal-400 pulse-teal shrink-0" />
                     <p className="text-sm font-semibold text-foreground">
+                      {eip712Step === "builderFee" && "Preparing your account\u2026"}
                       {eip712Step === "signing" && "Signing transaction\u2026"}
                       {eip712Step === "submitting" && "Submitting to Hyperliquid L1\u2026"}
                       {eip712Step === "verifying" && "Verifying receipt\u2026"}
@@ -1274,25 +1482,34 @@ export function StepConnectAndPay({
 
         <div className="border-t border-border" />
 
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Challenge fee</span>
-          <div className="flex items-baseline gap-2">
-            <del className="text-xs text-[oklch(0.65_0_0)]">
-              <span className="sr-only">Original price: </span>${selectedTier.fullPrice}
-            </del>
-            <ins className="no-underline">
-              <span className="sr-only">Sale price: </span>
-              <span className="text-teal-400 font-bold font-mono">${selectedTier.promoPrice}</span>
-            </ins>
+        {!isFree && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Challenge fee</span>
+            <div className="flex items-baseline gap-2">
+              <del className="text-xs text-[oklch(0.65_0_0)]">
+                <span className="sr-only">Original price: </span>${selectedTier.fullPrice}
+              </del>
+              <ins className="no-underline">
+                <span className="sr-only">Sale price: </span>
+                <span className="text-teal-400 font-bold font-mono">${selectedTier.promoPrice}</span>
+              </ins>
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="border-t border-border" />
+        {!isFree && <div className="border-t border-border" />}
 
         <div className="flex items-center justify-between">
           <span className="font-bold">Total</span>
           <span className="text-xl font-bold font-mono text-teal-400">
-            ${price} <span className="text-sm font-semibold text-muted-foreground">USDC</span>
+            {isFree ? (
+              "Free"
+            ) : (
+              <>
+                ${price}{" "}
+                <span className="text-sm font-semibold text-muted-foreground">USDC</span>
+              </>
+            )}
           </span>
         </div>
 
@@ -1400,7 +1617,8 @@ export function StepConnectAndPay({
         </div>
       </div>
 
-      {/* ─── 2. Payment Method Selector ─── */}
+      {/* ─── 2. Payment Method Selector (hidden for free tier) ─── */}
+      {!isFree && (
       <div className="w-full max-w-lg mt-2 space-y-3">
         <p className="text-xs font-medium text-muted-foreground">
           Payment method
@@ -1495,14 +1713,17 @@ export function StepConnectAndPay({
           </p>
         )}
       </div>
+      )}
 
-      {/* ─── 3. Wallet Connection (for eip712/base) ─── */}
-      {paymentMethod && (paymentMethod === "eip712" || paymentMethod === "base") && !isConnected && (
+      {/* ─── 3. Wallet Connection (for eip712/base/free) ─── */}
+      {(isFree || (paymentMethod && (paymentMethod === "eip712" || paymentMethod === "base"))) && !isConnected && (
         <div className="w-full max-w-lg mt-4 space-y-4 text-center">
           <p className="text-sm text-muted-foreground text-balance max-w-md mx-auto">
-            {paymentMethod === "base"
-              ? <>Connect the wallet you&#8217;ll use to pay with USDC on&nbsp;Base.</>
-              : "Connect the wallet that owns your Hyperliquid account to sign and transfer USDC."}
+            {isFree
+              ? "Connect the wallet that owns your Hyperliquid account to finish signup."
+              : paymentMethod === "base"
+                ? <>Connect the wallet you&#8217;ll use to pay with USDC on&nbsp;Base.</>
+                : "Connect the wallet that owns your Hyperliquid account to sign and transfer USDC."}
           </p>
           <ConnectButton.Custom>
             {({ openConnectModal }) => (
@@ -1524,7 +1745,7 @@ export function StepConnectAndPay({
       )}
 
       {/* Wallet connected indicator */}
-      {paymentMethod && (paymentMethod === "eip712" || paymentMethod === "base") && isConnected && (
+      {(isFree || (paymentMethod && (paymentMethod === "eip712" || paymentMethod === "base"))) && isConnected && (
         <div className="w-full max-w-lg mt-4">
           <div className="rounded-xl border border-border bg-zinc-900/50 px-5 py-3.5 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -1607,8 +1828,8 @@ export function StepConnectAndPay({
         </div>
       )}
 
-      {/* ─── 4. Payout Wallet (shown after payment method selected) ─── */}
-      {paymentMethod && hlAddressReady && (
+      {/* ─── 4. Payout Wallet (shown after payment method selected or for free tier) ─── */}
+      {(isFree || paymentMethod) && hlAddressReady && (
         <div className="w-full max-w-lg mt-4 space-y-1.5">
           <label htmlFor="payout-wallet" className="text-xs font-medium text-muted-foreground">
             Payout wallet <span className="text-muted-foreground/60">(where you receive payouts)</span>

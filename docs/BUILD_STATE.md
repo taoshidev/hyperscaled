@@ -1,6 +1,6 @@
 # Build State
 
-Last updated: 2026-03-26
+Last updated: 2026-04-22
 
 ## Marketing Site (`/`)
 
@@ -176,7 +176,7 @@ Last updated: 2026-03-26
 
 ## Registration Flow (`/register`)
 
-**Status**: Complete — 4-step flow (Select Plan → Connect & Pay → Confirm → Done)
+**Status**: Complete — 4-step flow (Select Plan → Connect & Pay → Confirm → Done). Free $1K tier + builder fee approval added (2026-04-23).
 
 | Item | State |
 |------|-------|
@@ -234,6 +234,10 @@ Last updated: 2026-03-26
 | Polish: Remove copy button from Connect & Pay (Phase 6) | Done — copy button removed from HL wallet field, kept only on Confirm and success screens |
 | Polish: Full EVM address on Confirm (Phase 6) | Done — full address in text-xs font-mono on confirm screen, break-all for mobile wrap |
 | Polish: Remove Help sidebar (Phase 6) | Done — removed RegistrationHelpProvider, RegistrationSidebar, MobileHelpSheet from registration flow; single-column centered layout for steps 1-2 |
+| Free $1K tier | Done — added entity_tiers row for Vanta miner ($1K, $0.00, 100% split); TIERS meta in lib/constants.js; tierIndex=0 in /api/miners/vanta response |
+| Free tier UX | Done — payment method selector hidden, payment wallet step skipped, order summary shows "Free", Sign Up button triggers /api/register with paymentMethod="free" |
+| Builder fee approval in registration | Done — all payment paths (free, EIP-712, Base) call ensureBuilderFeeApproved before proceeding; silent skip if maxBuilderFee already >0; no dedicated UI, just runs when user hits Sign Up / Pay |
+| /api/register paymentMethod="free" branch | Done — validates tier.priceUsdc === 0, skips transfer verification, writes synthetic txHash `free-${ts}-${wallet}` to registrations row |
 
 **Next action**: UI polish pass across other pages
 
@@ -260,6 +264,24 @@ Last updated: 2026-03-26
 | Miner detail page | Done |
 
 **Next action**: Design polish, PnL charts, performance metrics
+
+## Builder Code (`/builder`)
+
+**Status**: Complete (first pass)
+
+| Item | State |
+|------|-------|
+| Page route + layout (Providers) | Done |
+| Page metadata + OG | Done — title "Builder Code \| Hyperscaled", description, og.url |
+| Hero + explainer card | Done — short copy describing builder codes + revocability |
+| Wallet connect (RainbowKit) | Done |
+| Current approval query (`maxBuilderFee` info) | Done — skeleton loading, pulse-teal active state, refresh button |
+| Max fee rate input with validation | Done — default `0.05%`, blocks >1%, warns >0.1% |
+| EIP-712 `approveBuilderFee` signing | Done — mirrors existing `handlePayEIP712` pattern, chain-switch to Arbitrum, `/exchange` POST |
+| aria-live progress + error display | Done |
+| Post-success refresh | Done — re-queries `maxBuilderFee` after `status: "ok"` |
+
+**Next action**: Link from extension setup / docs once ready. Consider adding a revoke flow (sign with rate `"0%"`).
 
 ## Status Page (`/status`)
 

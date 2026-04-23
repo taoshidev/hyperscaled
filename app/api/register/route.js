@@ -311,8 +311,31 @@ export async function POST(request) {
   let effectivePayoutAddress;
   let settleResult = null;
 
+  // ── Free tier path (no payment required) ─────────────────────────────────
+  if (paymentMethod === "free") {
+    if (price !== 0) {
+      console.warn("[REGISTRATION] free payment method requested but tier has a price", {
+        reqId,
+        minerSlug,
+        tierIndex,
+        price,
+      });
+      return NextResponse.json(
+        { error: "This tier requires payment." },
+        { status: 400 },
+      );
+    }
+    txHash = `free-${Date.now()}-${hlAddress.slice(2, 10).toLowerCase()}`;
+    effectivePayoutAddress = payoutAddress || hlAddress;
+    console.info("[REGISTRATION] free tier — skipping payment verification", {
+      reqId,
+      minerSlug,
+      hlAddress,
+      txHash,
+    });
+
   // ── Hyperliquid payment path (extension "hyperliquid" + direct "eip712") ──
-  if (paymentMethod === "hyperliquid" || paymentMethod === "eip712") {
+  } else if (paymentMethod === "hyperliquid" || paymentMethod === "eip712") {
     console.info("[REGISTRATION] hyperliquid branch entered", {
       reqId,
       minerSlug,
