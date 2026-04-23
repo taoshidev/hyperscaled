@@ -8,7 +8,7 @@ export const metadata = buildMetadata({
   ogTitle: 'Trading on Hyperliquid: How it Works — Powered by Hyperscaled',
   ogDescription:
     'Register for a scaled trading account on Hyperliquid. Non-custodial, 100% performance rewards, monthly USDC payouts.',
-  path: '/start',
+  path: '/vanta/start',
   robots: { index: false, follow: true },
   brand: 'vanta',
 })
