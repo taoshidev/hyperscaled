@@ -74,6 +74,7 @@ export default async function VantaRegisterPage() {
       logo="/vanta-logo.svg"
       logoAlt="Vanta Trading"
       homeHref="https://vantatrading.io"
+      brandVariant="vanta"
     />
   )
 }

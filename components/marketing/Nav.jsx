@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowLeft, ArrowRight, DownloadSimple, List, X } from '@phosphor-icons/react'
 import ExtensionModal from '@/components/marketing/ExtensionModal'
 import { useBrand, useBrandHref } from '@/lib/brand'
+import { trackCtaClick } from '@/lib/analytics'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -104,6 +105,7 @@ export default function Nav() {
           )}
           <Link
             href={brandHref('/register')}
+            onClick={() => trackCtaClick({ label: 'Start Challenge', location: 'nav' })}
             className="shiny-cta px-5 py-2"
           >
             <span className="flex items-center gap-1.5">

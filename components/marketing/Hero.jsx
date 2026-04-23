@@ -6,6 +6,7 @@ import { ArrowRight, TrendUp, ArrowsClockwise } from '@phosphor-icons/react'
 import { HERO_STATS } from '@/lib/constants'
 import LiquidCrystalBg from './LiquidCrystalBg'
 import { useBrand, useBrandHref } from '@/lib/brand'
+import { trackCtaClick } from '@/lib/analytics'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -73,6 +74,7 @@ export default function Hero() {
             <motion.div variants={itemVariants} className="flex flex-col items-center sm:items-start sm:flex-row gap-3 mb-10">
               <Link
                 href={brandHref('/register')}
+                onClick={() => trackCtaClick({ label: 'Start Your Challenge', location: 'hero' })}
                 className="shiny-cta px-6 py-3 min-h-12 whitespace-nowrap text-center"
               >
                 <span className="flex items-center justify-center gap-1.5">

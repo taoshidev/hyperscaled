@@ -16,6 +16,7 @@ import {
 import Link from 'next/link'
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import { useBrandHref } from '@/lib/brand'
+import { trackCtaClick } from '@/lib/analytics'
 import FAQAccordion from '@/components/shared/FAQAccordion'
 import { PRICING_TIERS, PRICING_FAQ } from '@/lib/constants'
 
@@ -111,15 +112,7 @@ function PricingCard({ tier, index }) {
         <ins className="text-3xl sm:text-4xl font-bold font-mono no-underline text-white">
           ${tier.launchPrice}
         </ins>
-        {tier.standardPrice != null && (
-          <del className="text-sm text-zinc-600 font-mono">${tier.standardPrice}</del>
-        )}
         <span className="text-xs text-zinc-500 font-medium">USDC</span>
-        {tier.standardPrice != null && (
-          <span className="sr-only">
-            Launch price {tier.launchPrice} USDC, was {tier.standardPrice} USDC
-          </span>
-        )}
       </div>
 
       {/* Details */}
@@ -135,6 +128,7 @@ function PricingCard({ tier, index }) {
       {/* CTA */}
       <Link
         href={brandHref('/register')}
+        onClick={() => trackCtaClick({ label: tier.cta, location: `pricing_page:${tier.name || tier.accountSize || 'unknown'}` })}
         className={`mt-8 flex items-center justify-center gap-1.5 min-h-12 rounded-xl text-sm font-semibold transition-colors ${
           tier.popular
             ? 'shiny-cta px-6 py-3'
@@ -376,7 +370,7 @@ function ScalingSection() {
           className="text-center mb-10"
         >
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            Start at $25K. Scale to&nbsp;$2.5M.
+            Start at $25K. Scale to&nbsp;$400K.
           </h2>
           <p className="mt-4 text-sm sm:text-base text-zinc-400 max-w-[56ch] mx-auto leading-relaxed" style={{ textWrap: 'balance' }}>
             Every scaled trader starts at their selected account size. Consistent performance unlocks the next tier automatically — no additional&nbsp;fees.

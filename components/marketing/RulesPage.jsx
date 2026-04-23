@@ -11,6 +11,7 @@ import {
 import RulesTable from '@/components/shared/RulesTable'
 import { EVAL_RULES, FUNDED_RULES, SCALING_PATH } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
+import { trackCtaClick } from '@/lib/analytics'
 
 /* ───────────────────────────────────────────────
    TOC sections definition
@@ -290,7 +291,7 @@ function ScalingRulesSection() {
           Account Scaling
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-10">
-          Consistent performance on your scaled account unlocks access to progressively larger account sizes, up to a maximum of $2.5M. Scaling is automatic and based on performance thresholds — no application required, no additional&nbsp;fees.
+          Consistent performance on your scaled account unlocks access to progressively larger account sizes, up to a maximum of $400K. Scaling is automatic and based on performance thresholds — no application required, no additional&nbsp;fees.
         </p>
 
         {/* Qualifications callout boxes */}
@@ -341,7 +342,7 @@ function ScalingRulesSection() {
 
         {/* Tier note */}
         <p className="text-xs text-zinc-500 leading-relaxed mb-10">
-          Tier I through Tier IV accounts ($5K, $10K, $25K, and $50K) can scale up to $100K. Tier V accounts ($100K) can scale up to&nbsp;$2.5M.
+          All accounts ($5K, $10K, $25K, $50K, and $100K) can scale up to&nbsp;$400K.
         </p>
 
         {/* Scaling path table */}
@@ -498,6 +499,7 @@ function ProtocolSection() {
         <div className="mt-8">
           <Link
             href={brandHref('/register')}
+            onClick={() => trackCtaClick({ label: 'Start Your Challenge', location: 'rules_bottom' })}
             className="text-sm text-teal-400 hover:text-teal-300 transition-colors inline-flex items-center gap-1.5"
           >
             Start Your Challenge

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowRight, Star } from '@phosphor-icons/react'
 import { PRICING_TIERS } from '@/lib/constants'
 import { useBrandHref } from '@/lib/brand'
+import { trackCtaClick } from '@/lib/analytics'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -56,15 +57,7 @@ function PricingCard({ tier, index, brandHref }) {
         <ins className="text-3xl sm:text-4xl font-bold font-mono no-underline text-white">
           ${tier.launchPrice}
         </ins>
-        {tier.standardPrice != null && (
-          <del className="text-sm text-zinc-600 font-mono">${tier.standardPrice}</del>
-        )}
         <span className="text-xs text-zinc-500 font-medium">USDC</span>
-        {tier.standardPrice != null && (
-          <span className="sr-only">
-            Launch price {tier.launchPrice} USDC, was {tier.standardPrice} USDC
-          </span>
-        )}
       </div>
 
       {/* Details */}
@@ -80,6 +73,7 @@ function PricingCard({ tier, index, brandHref }) {
       {/* CTA */}
       <Link
         href={brandHref('/register')}
+        onClick={() => trackCtaClick({ label: tier.cta, location: `home_pricing:${tier.name || tier.accountSize || 'unknown'}` })}
         className={`mt-8 flex items-center justify-center gap-1.5 min-h-12 rounded-xl text-sm font-semibold transition-colors ${
           tier.popular
             ? 'shiny-cta px-6 py-3'
