@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { GA_MEASUREMENT_ID, gaAvailable } from "@/lib/analytics";
+import { GA_MEASUREMENT_ID, gaAvailable, getBrand } from "@/lib/analytics";
 
 // Fires a GA4 page_view on App Router client-side navigations. The initial
 // page load is already counted by gtag('config', ...) in layout.jsx, so the
@@ -22,6 +22,7 @@ export function PageViewTracker() {
     const path = query ? `${pathname}?${query}` : pathname;
     window.gtag("config", GA_MEASUREMENT_ID, {
       page_path: path,
+      brand: getBrand(),
     });
   }, [pathname, searchParams]);
 

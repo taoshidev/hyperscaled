@@ -72,7 +72,8 @@ export default function RootLayout({ children }) {
             function gtag(){dataLayer.push(arguments);}
             window.gtag = gtag;
             gtag('js', new Date());
-            gtag('config', '${GA_MEASUREMENT_ID}');
+            var brand = /vantatrading/i.test(location.hostname) ? 'vanta' : 'hyperscaled';
+            gtag('config', '${GA_MEASUREMENT_ID}', { brand: brand });
           `}
         </Script>
         <Suspense fallback={null}>
