@@ -16,6 +16,7 @@ import {
 import Link from 'next/link'
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import { useBrandHref } from '@/lib/brand'
+import { trackCtaClick } from '@/lib/analytics'
 import FAQAccordion from '@/components/shared/FAQAccordion'
 import { PRICING_TIERS, PRICING_FAQ } from '@/lib/constants'
 
@@ -127,6 +128,7 @@ function PricingCard({ tier, index }) {
       {/* CTA */}
       <Link
         href={brandHref('/register')}
+        onClick={() => trackCtaClick({ label: tier.cta, location: `pricing_page:${tier.name || tier.accountSize || 'unknown'}` })}
         className={`mt-8 flex items-center justify-center gap-1.5 min-h-12 rounded-xl text-sm font-semibold transition-colors ${
           tier.popular
             ? 'shiny-cta px-6 py-3'

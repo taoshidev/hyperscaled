@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { trackPageView } from "@/lib/analytics";
+import { trackEvent, trackPageView } from "@/lib/analytics";
 
 // Reusable KOL/partner referral landing page. To add a new referral route
 // (e.g. /twitter, /podcast, /alpha), create app/<slug>/page.jsx that renders
@@ -21,6 +21,8 @@ export function ReferralRedirect({
     } catch {
       // sessionStorage can throw in private modes — tracking still fires below.
     }
+
+    trackEvent("ref_source_set", { ref_source: refSource });
 
     trackPageView({
       path: pagePath,

@@ -13,6 +13,7 @@ import { RegistrationSidebar } from "./registration-sidebar";
 import { MobileHelpSheet } from "./mobile-help-sheet";
 import { useBrandHref } from "@/lib/brand";
 import { reportCritical } from "@/lib/errors";
+import { trackEvent, getRefSource } from "@/lib/analytics";
 
 const STEP_LABELS = ["Select Plan", "Connect & Pay", "Confirm", "Done"];
 const DEFAULT_MINER_SLUG = "vanta";
@@ -76,6 +77,7 @@ export function RegistrationFlow({
   logo = "/hyperscaled-logo.svg",
   logoAlt = "Hyperscaled",
   homeHref,
+  brandVariant = "hyperscaled",
 }) {
   const brandHref = useBrandHref();
   const resolvedHomeHref = homeHref ?? brandHref("/");
@@ -136,6 +138,17 @@ export function RegistrationFlow({
   }, [initialMinerSlug]);
 
 
+  // Funnel entry event. Skip when recovered — user already paid on a prior
+  // visit and is landing directly on the confirmation screen.
+  useEffect(() => {
+    if (recovered) return;
+    trackEvent("register_intent", {
+      ref_source: getRefSource(),
+      brand_variant: brandVariant,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once on mount
+  }, []);
+
   // B1: Browser refresh guard — only during active payment processing
   useEffect(() => {
     if (!paymentProcessing) return;
@@ -193,6 +206,7 @@ export function RegistrationFlow({
                   minerSlug={initialMinerSlug}
                   paymentWallet={paymentWallet}
                   phase={currentStep === 2 ? "confirm" : "connect"}
+                  brandVariant={brandVariant}
                   onContinueToConfirm={() => { console.info("[REGISTRATION] advance: 1 -> 2 (confirm)"); setCurrentStep(2); }}
                   onPaymentProcessing={setPaymentProcessing}
                   onPaymentComplete={({ txHash: hash, hlAddress: addr, registrationStatus: status, paymentMethod: method }) => {
@@ -273,6 +287,13 @@ export function RegistrationFlow({
                   } else {
                     console.info("[REGISTRATION] advance: 0 -> 1 (no tier change)");
                   }
+                  const advancingTier = tierFromStep ? (minerTiers?.[selectedTierIndex] || tierFromStep) : selectedTier;
+                  trackEvent("register_tier_selected", {
+                    tier_name: advancingTier?.name,
+                    tier_price: advancingTier?.promoPrice ?? advancingTier?.fullPrice,
+                    ref_source: getRefSource(),
+                    brand_variant: brandVariant,
+                  });
                   setCurrentStep(1);
                 }}
               />

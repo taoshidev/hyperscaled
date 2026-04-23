@@ -25,6 +25,7 @@ import {
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import PricingPreview from '@/components/marketing/PricingPreview'
 import { useBrand, useBrandHref } from '@/lib/brand'
+import { trackCtaClick } from '@/lib/analytics'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -68,6 +69,7 @@ function PageHero() {
         >
           <Link
             href={brandHref('/register')}
+            onClick={() => trackCtaClick({ label: 'Start Your Challenge', location: 'how_it_works_hero' })}
             className="shiny-cta inline-flex items-center gap-1.5 px-6 py-3 min-h-12"
           >
             Start Your Challenge
@@ -249,6 +251,7 @@ function StepCard({ step, index }) {
           {step.cta && (
             <Link
               href={brandHref('/register')}
+              onClick={() => trackCtaClick({ label: 'Get started', location: 'how_it_works_step' })}
               className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-teal-400 hover:text-teal-300 transition-colors"
             >
               Get started

@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { ArrowRight, Star } from '@phosphor-icons/react'
 import { PRICING_TIERS } from '@/lib/constants'
+import { trackCtaClick } from '@/lib/analytics'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -72,6 +73,7 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
               {/* CTA */}
               <a
                 href="/register"
+                onClick={() => trackCtaClick({ label: tier.cta, location: `pricing_preview:${tier.name || tier.accountSize || 'unknown'}` })}
                 className={`w-full flex items-center justify-center gap-1.5 min-h-12 rounded-xl text-sm font-semibold transition-colors ${
                   tier.popular
                     ? 'shiny-cta px-6 py-3'
