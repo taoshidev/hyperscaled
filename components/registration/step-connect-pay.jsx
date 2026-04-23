@@ -1671,7 +1671,7 @@ export function StepConnectAndPay({
                   New to Hyperliquid?
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Create a free account to start trading
+                  Sign up and get <span className="text-teal-400 font-semibold">4% off fees</span> on your first $25M in volume
                 </p>
               </div>
               <span className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-teal-400/10 text-xs font-semibold text-teal-400 group-hover:bg-teal-400/20 transition-[background-color] duration-200">
