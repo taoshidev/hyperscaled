@@ -1,4 +1,8 @@
+import { Suspense } from "react";
+import Script from "next/script";
 import "./globals.css";
+import { GA_MEASUREMENT_ID } from "@/lib/analytics";
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 
 const SITE_URL = "https://hyperscaled.trade";
 const OG_IMAGE = {
@@ -58,6 +62,22 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className="font-sans antialiased" suppressHydrationWarning>
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="ga4-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            window.gtag = gtag;
+            gtag('js', new Date());
+            gtag('config', '${GA_MEASUREMENT_ID}');
+          `}
+        </Script>
+        <Suspense fallback={null}>
+          <PageViewTracker />
+        </Suspense>
         {children}
       </body>
     </html>
