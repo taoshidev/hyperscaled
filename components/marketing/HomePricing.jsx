@@ -107,6 +107,11 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
           <h2 className="text-3xl md:text-4xl tracking-tighter leading-none font-bold">
             Choose your account&nbsp;size.
           </h2>
+          <div className="mt-5 flex justify-center">
+            <span className="inline-flex items-center px-3 py-1 rounded-full border border-teal-400/20 bg-teal-400/10 text-xs text-teal-400 font-medium">
+              90+ tradeable&nbsp;pairs
+            </span>
+          </div>
         </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 md:gap-5">
