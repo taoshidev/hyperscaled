@@ -9,7 +9,7 @@ import {
   Warning,
 } from '@phosphor-icons/react'
 import RulesTable from '@/components/shared/RulesTable'
-import { EVAL_RULES, FUNDED_RULES, SCALING_PATH } from '@/lib/constants'
+import { EVAL_RULES, FUNDED_RULES, SCALING_PATH, BUYING_POWER_BY_SIZE, LEVERAGE_LIMITS, FEE_RULES } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
 
@@ -19,6 +19,8 @@ import { trackCtaClick } from '@/lib/analytics'
 const TOC_SECTIONS = [
   { id: 'challenge', label: 'Challenge' },
   { id: 'pairs', label: 'Available Pairs' },
+  { id: 'leverage', label: 'Leverage' },
+  { id: 'fees', label: 'Fees' },
   { id: 'scaled', label: 'Funded Account' },
   { id: 'scaling', label: 'Scaling' },
   { id: 'disqualification', label: 'Disqualification' },
@@ -206,6 +208,157 @@ function AvailablePairsSection() {
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed">
           Tradeable pairs on the Hyperscaled challenge dynamically update. We allow all tokens on Hyperliquid with a 30-day mean daily volume in USD of at least 2 million&nbsp;dollars.
         </p>
+      </div>
+    </section>
+  )
+}
+
+/* ───────────────────────────────────────────────
+   Section 2c — Leverage & Buying Power
+   ─────────────────────────────────────────────── */
+function LeverageSection() {
+  const brand = useBrand()
+  return (
+    <section id="leverage" className="px-6 pb-20 scroll-mt-[110px]">
+      <div className="max-w-[900px] mx-auto">
+        <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
+          Leverage & Buying Power
+        </span>
+        <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed">
+          {brand.name} expresses leverage as <span className="text-white font-medium">buying power</span> rather than traditional leverage ratios. The limits below define how much of your account balance you can deploy — per single position, and across your entire portfolio at&nbsp;once.
+        </p>
+        <ul className="mt-4 space-y-2 text-sm text-zinc-400">
+          <li>
+            <span className="text-white font-medium">Single Position Buying Power</span> — the maximum you can allocate to any one trade at a&nbsp;time.
+          </li>
+          <li>
+            <span className="text-white font-medium">Total Portfolio Buying Power</span> — the maximum combined exposure you can have across all open positions at&nbsp;once.
+          </li>
+        </ul>
+        <div className="mt-5 rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-4">
+          <p className="text-sm text-teal-300">
+            All limits are enforced automatically by the&nbsp;platform.
+          </p>
+        </div>
+
+        {/* Buying power by account size */}
+        <h3 className="mt-10 mb-4 text-xs text-zinc-500 tracking-widest uppercase font-medium">
+          Buying Power by Account Size
+        </h3>
+
+        {/* Desktop */}
+        <div className="hidden md:block rounded-lg border border-white/[0.06] overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/[0.06] bg-white/[0.02]">
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Current Account Size</th>
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Challenge Leverage Tier</th>
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Funded Leverage Tier</th>
+              </tr>
+            </thead>
+            <tbody>
+              {BUYING_POWER_BY_SIZE.map((row, i) => (
+                <tr
+                  key={row.size}
+                  className={i < BUYING_POWER_BY_SIZE.length - 1 ? 'border-b border-white/[0.04]' : ''}
+                >
+                  <td className="px-4 py-3 text-white font-medium font-mono whitespace-nowrap">{row.size}</td>
+                  <td className="px-4 py-3 text-zinc-400 font-mono">{row.challenge}</td>
+                  <td className="px-4 py-3 text-zinc-400 font-mono">{row.funded}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile */}
+        <div className="md:hidden space-y-3">
+          {BUYING_POWER_BY_SIZE.map((row) => (
+            <div
+              key={row.size}
+              className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-4"
+            >
+              <div className="text-white font-medium font-mono text-sm mb-2">{row.size}</div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-zinc-500">Challenge tier</span>
+                <span className="text-zinc-200 font-mono">{row.challenge}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm mt-1">
+                <span className="text-zinc-500">Funded tier</span>
+                <span className="text-zinc-200 font-mono">{row.funded}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Leverage limits */}
+        <h3 className="mt-10 mb-4 text-xs text-zinc-500 tracking-widest uppercase font-medium">
+          Leverage Limits by Tier
+        </h3>
+
+        {/* Desktop */}
+        <div className="hidden md:block rounded-lg border border-white/[0.06] overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/[0.06] bg-white/[0.02]">
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Leverage Tier</th>
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Crypto — Single Position</th>
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Crypto — Portfolio</th>
+              </tr>
+            </thead>
+            <tbody>
+              {LEVERAGE_LIMITS.map((row, i) => (
+                <tr
+                  key={row.tier}
+                  className={i < LEVERAGE_LIMITS.length - 1 ? 'border-b border-white/[0.04]' : ''}
+                >
+                  <td className="px-4 py-3 text-white font-medium whitespace-nowrap">{row.tier}</td>
+                  <td className="px-4 py-3 text-zinc-400 font-mono">{row.positional}</td>
+                  <td className="px-4 py-3 text-zinc-400 font-mono">{row.portfolio}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile */}
+        <div className="md:hidden space-y-3">
+          {LEVERAGE_LIMITS.map((row) => (
+            <div
+              key={row.tier}
+              className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-4"
+            >
+              <div className="text-white font-medium text-sm mb-2">{row.tier}</div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-zinc-500">Single position</span>
+                <span className="text-zinc-200 font-mono">{row.positional}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm mt-1">
+                <span className="text-zinc-500">Portfolio</span>
+                <span className="text-zinc-200 font-mono">{row.portfolio}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ───────────────────────────────────────────────
+   Section 2d — Spread, Fees & Slippage
+   ─────────────────────────────────────────────── */
+function FeesSection() {
+  return (
+    <section id="fees" className="px-6 pb-20 scroll-mt-[110px]">
+      <div className="max-w-[900px] mx-auto">
+        <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
+          Spread, Fees & Slippage
+        </span>
+        <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
+          The only trading cost charged by Hyperscaled is a flat transaction fee. Spread, slippage, and funding come directly from the underlying Hyperliquid&nbsp;orderbook.
+        </p>
+        <RulesTable rules={FEE_RULES} />
       </div>
     </section>
   )
@@ -491,6 +644,8 @@ export default function RulesPage() {
       <div data-toc-content>
         <EvalRulesSection />
         <AvailablePairsSection />
+        <LeverageSection />
+        <FeesSection />
         <FundedRulesSection />
         <ScalingRulesSection />
         <DisqualificationSection />
