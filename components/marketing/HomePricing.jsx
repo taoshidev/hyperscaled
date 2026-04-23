@@ -10,7 +10,13 @@ import { trackCtaClick } from '@/lib/analytics'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
-const TIER_LABELS = { 'tier-1': 'Tier I', 'tier-2': 'Tier II', 'tier-3': 'Tier III', 'tier-4': 'Tier IV', 'tier-5': 'Tier V' }
+const TIER_LABELS = { 'free': 'Free', 'tier-1': 'Starter', 'tier-2': 'Tier I', 'tier-3': 'Tier II', 'tier-4': 'Tier III', 'tier-5': 'Tier IV' }
+
+function tierBadge(tier) {
+  if (tier.popular) return 'Most Popular'
+  if (tier.id === 'free') return 'Try for Free'
+  return null
+}
 
 function PricingCard({ tier, index, brandHref }) {
   const ref = useRef(null)
@@ -29,17 +35,17 @@ function PricingCard({ tier, index, brandHref }) {
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ ...spring, delay: index * 0.1 }}
       className={`relative flex flex-col rounded-2xl p-6 sm:p-8 ${
-        tier.popular
+        tier.popular || tier.id === 'free'
           ? 'shiny-border'
           : 'border border-white/[0.08] bg-[#09090b]'
       }`}
     >
-      {/* Popular badge */}
-      {tier.popular && (
+      {/* Badge — Most Popular or Try for Free */}
+      {tierBadge(tier) && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="inline-flex items-center gap-1 bg-teal-400 text-[#09090b] text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full">
             <Star size={12} weight="fill" />
-            Most Popular
+            {tierBadge(tier)}
           </span>
         </div>
       )}
@@ -75,7 +81,7 @@ function PricingCard({ tier, index, brandHref }) {
         href={brandHref('/register')}
         onClick={() => trackCtaClick({ label: tier.cta, location: `home_pricing:${tier.name || tier.accountSize || 'unknown'}` })}
         className={`mt-8 flex items-center justify-center gap-1.5 min-h-12 rounded-xl text-sm font-semibold transition-colors ${
-          tier.popular
+          tier.popular || tier.id === 'free'
             ? 'shiny-cta px-6 py-3'
             : 'bg-white/[0.06] border border-white/[0.08] text-white hover:bg-white/[0.1]'
         }`}
@@ -107,9 +113,14 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
           <h2 className="text-3xl md:text-4xl tracking-tighter leading-none font-bold">
             Choose your account&nbsp;size.
           </h2>
+          <div className="mt-5 flex justify-center">
+            <span className="inline-flex items-center px-3 py-1 rounded-full border border-teal-400/20 bg-teal-400/10 text-xs text-teal-400 font-medium">
+              90+ tradeable&nbsp;pairs
+            </span>
+          </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 md:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-5">
           {tiers.map((tier, i) => (
             <PricingCard key={tier.id} tier={tier} index={i} brandHref={brandHref} />
           ))}

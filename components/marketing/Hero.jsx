@@ -133,7 +133,7 @@ export default function Hero() {
                     Live
                   </span>
                 </div>
-                <div className="text-xs text-zinc-600 font-mono">7d cycle</div>
+                <div className="text-xs text-zinc-600 font-mono">30d cycle</div>
               </div>
 
               {/* Balance */}

@@ -117,10 +117,10 @@ export function StepSelectTier({
       <div
         role="radiogroup"
         aria-label="Choose your scaled account size"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mt-10"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-10"
       >
         {!Array.isArray(tiers)
-          ? [0, 1, 2, 3, 4].map((i) => (
+          ? [0, 1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="skeleton rounded-2xl h-72" />
             ))
           : tiers.length === 0
