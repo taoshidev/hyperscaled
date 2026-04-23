@@ -1,0 +1,178 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  snyk-open-source:
+    name: Snyk Open Source (SCA)
+    runs-on: ubuntu-latest
+    # Run on PRs + manual dispatch always; on pushes only when deps change.
+    if: |
+      github.event_name == 'pull_request' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && (
+        contains(github.event.head_commit.modified, 'package.json') ||
+        contains(github.event.head_commit.modified, 'package-lock.json') ||
+        contains(github.event.head_commit.added, 'package.json') ||
+        contains(github.event.head_commit.added, 'package-lock.json')
+      ))
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - uses: snyk/actions/setup@9adf32b1121593767fc3c057af55b55db032dc04 # master
+
+      - name: Run SCA scan
+        id: snyk_sca
+        run: snyk test --severity-threshold=high --json-file-output=snyk-sca.json
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Write SCA summary
+        if: always()
+        run: |
+          node -e "
+            const fs = require('fs');
+            let md = '## Snyk Open Source (SCA)\n\n';
+            try {
+              const r = JSON.parse(fs.readFileSync('snyk-sca.json', 'utf8'));
+              const vulns = r.vulnerabilities || [];
+              const high = vulns.filter(v => v.severity === 'high' || v.severity === 'critical');
+              if (high.length === 0) {
+                md += '✅ No high/critical vulnerabilities found\n';
+              } else {
+                md += \`❌ **\${high.length} high/critical vulnerabilities found**\n\n\`;
+                md += '| Package | Severity | CVE | Fix |\n|---------|----------|-----|-----|\n';
+                high.slice(0, 20).forEach(v => {
+                  md += \`| \${v.packageName}@\${v.version} | \${v.severity} | \${v.identifiers?.CVE?.[0] || 'N/A'} | \${v.fixedIn?.[0] || 'No fix'} |\n\`;
+                });
+                if (high.length > 20) md += \`\n_...and \${high.length - 20} more_\n\`;
+              }
+            } catch(e) {
+              md += '_Could not parse SCA results_\n';
+            }
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
+          "
+
+      - name: Fail if vulnerabilities found
+        if: steps.snyk_sca.outcome == 'failure'
+        run: exit 1
+
+  semgrep-sast-blocking:
+    name: Semgrep SAST (Blocking)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install Semgrep
+        run: pip install semgrep
+
+      - name: Run SAST scan (ERROR)
+        id: semgrep_blocking
+        run: |
+          semgrep \
+            --config p/react \
+            --config p/nextjs \
+            --severity ERROR \
+            --json \
+            -o semgrep-blocking.json \
+            .
+        continue-on-error: true
+
+      - name: Write SAST blocking summary
+        if: always()
+        run: |
+          node -e "
+            const fs = require('fs');
+            let md = '## Semgrep SAST (Blocking — ERROR)\n\n';
+            try {
+              const r = JSON.parse(fs.readFileSync('semgrep-blocking.json', 'utf8'));
+              const results = r.results || [];
+              if (results.length === 0) {
+                md += '✅ No ERROR-level code issues found\n';
+              } else {
+                md += \`❌ **\${results.length} ERROR-level issues found**\n\n\`;
+                md += '| File | Rule | Message |\n|------|------|--------|\n';
+                results.slice(0, 20).forEach(v => {
+                  md += \`| \${v.path}:\${v.start?.line} | \${v.check_id} | \${(v.extra?.message || '').slice(0, 80)} |\n\`;
+                });
+                if (results.length > 20) md += \`\n_...and \${results.length - 20} more_\n\`;
+              }
+            } catch(e) {
+              md += '_Could not parse SAST results_\n';
+            }
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
+          "
+
+      - name: Fail if issues found
+        if: steps.semgrep_blocking.outcome == 'failure'
+        run: exit 1
+
+  semgrep-sast-advisory:
+    name: Semgrep SAST (Advisory)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install Semgrep
+        run: pip install semgrep
+
+      - name: Run SAST scan (WARNING+)
+        id: semgrep_advisory
+        run: |
+          semgrep \
+            --config p/react \
+            --config p/nextjs \
+            --config p/owasp-top-ten \
+            --config p/nodejs \
+            --config p/javascript \
+            --config p/jwt \
+            --severity WARNING \
+            --json \
+            -o semgrep-advisory.json \
+            .
+        continue-on-error: true
+
+      - name: Write SAST advisory summary
+        if: always()
+        run: |
+          node -e "
+            const fs = require('fs');
+            let md = '## Semgrep SAST (Advisory — WARNING+)\n\n';
+            try {
+              const r = JSON.parse(fs.readFileSync('semgrep-advisory.json', 'utf8'));
+              const results = r.results || [];
+              if (results.length === 0) {
+                md += '✅ No WARNING+ level code issues found\n';
+              } else {
+                const errors = results.filter(v => v.extra?.severity === 'ERROR');
+                const warnings = results.filter(v => v.extra?.severity === 'WARNING');
+                md += \`⚠️ **\${results.length} issues found (\${errors.length} ERROR, \${warnings.length} WARNING)**\n\n\`;
+                md += '| Severity | File | Rule | Message |\n|----------|------|------|--------|\n';
+                results.slice(0, 20).forEach(v => {
+                  const sev = v.extra?.severity || 'UNKNOWN';
+                  md += \`| \${sev} | \${v.path}:\${v.start?.line} | \${v.check_id} | \${(v.extra?.message || '').slice(0, 80)} |\n\`;
+                });
+                if (results.length > 20) md += \`\n_...and \${results.length - 20} more_\n\`;
+              }
+            } catch(e) {
+              md += '_Could not parse SAST results_\n';
+            }
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
+          "
+        # Advisory job never blocks — findings are visible in the job summary only.
