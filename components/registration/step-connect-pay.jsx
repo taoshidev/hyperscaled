@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import {
   useAccount,
@@ -22,6 +22,7 @@ import {
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { isValidHLAddress } from "@/lib/validation";
+import { trackEvent, getRefSource } from "@/lib/analytics";
 import {
   USDC_ADDRESS,
   USDC_DECIMALS,
@@ -88,6 +89,7 @@ export function StepConnectAndPay({
   onBack,
   onContinueToConfirm,
   phase = "connect",
+  brandVariant = "hyperscaled",
 }) {
   const { address, isConnected, chainId } = useAccount();
   const { switchChain, switchChainAsync } = useSwitchChain();
@@ -118,6 +120,34 @@ export function StepConnectAndPay({
 
   const hlWalletValid = isValidHLAddress(hlWallet);
   const showHlWalletError = hlWalletTouched && hlWallet.length > 0 && !hlWalletValid;
+
+  // Funnel events — one-shot so we don't double-count on rerenders, toggling,
+  // or user going back and forward through steps.
+  const walletProvidedFiredRef = useRef(false);
+  const paymentMethodsFiredRef = useRef(new Set());
+
+  useEffect(() => {
+    if (!hlWalletValid || walletProvidedFiredRef.current) return;
+    walletProvidedFiredRef.current = true;
+    trackEvent("register_wallet_provided", {
+      wallet_method: address && hlWallet.toLowerCase() === address.toLowerCase() ? "connected" : "manual",
+      tier_name: selectedTier?.name,
+      ref_source: getRefSource(),
+      brand_variant: brandVariant,
+    });
+  }, [hlWalletValid, address, hlWallet, selectedTier, brandVariant]);
+
+  useEffect(() => {
+    if (!paymentMethod) return;
+    if (paymentMethodsFiredRef.current.has(paymentMethod)) return;
+    paymentMethodsFiredRef.current.add(paymentMethod);
+    trackEvent("register_payment_method_selected", {
+      payment_method: paymentMethod === "base" ? "wallet" : "hyperliquid",
+      tier_name: selectedTier?.name,
+      ref_source: getRefSource(),
+      brand_variant: brandVariant,
+    });
+  }, [paymentMethod, selectedTier, brandVariant]);
 
   // Re-fetch tier pricing when HL wallet is entered (dev wallets get reduced
   // price). Discount applies if either the HL trading wallet OR the connected
@@ -1092,7 +1122,16 @@ export function StepConnectAndPay({
                 </p>
               )}
             <Button
-              onClick={handlePayBase}
+              onClick={() => {
+                trackEvent("register_payment_submitted", {
+                  tier_name: selectedTier?.name,
+                  tier_price: price,
+                  payment_method: "wallet",
+                  ref_source: getRefSource(),
+                  brand_variant: brandVariant,
+                });
+                handlePayBase();
+              }}
               disabled={!canPayBase}
               aria-label={`Pay ${price} USDC for ${selectedTier.name} challenge`}
               className={`
@@ -1162,7 +1201,16 @@ export function StepConnectAndPay({
                   </p>
 
                   <Button
-                    onClick={handlePayEIP712}
+                    onClick={() => {
+                      trackEvent("register_payment_submitted", {
+                        tier_name: selectedTier?.name,
+                        tier_price: price,
+                        payment_method: "hyperliquid",
+                        ref_source: getRefSource(),
+                        brand_variant: brandVariant,
+                      });
+                      handlePayEIP712();
+                    }}
                     disabled={!canPayEIP712}
                     aria-label={`Sign and transfer ${price} USDC via Hyperliquid for ${selectedTier.name} challenge`}
                     className="w-full h-11 text-sm font-semibold cursor-pointer bg-teal-400 text-zinc-950 hover:bg-teal-400/90 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -1648,6 +1696,12 @@ export function StepConnectAndPay({
               setPayoutWallet(hlWallet);
               setPayoutPrefilled(true);
             }
+            trackEvent("register_review_reached", {
+              tier_name: selectedTier?.name,
+              payment_method: paymentMethod === "base" ? "wallet" : "hyperliquid",
+              ref_source: getRefSource(),
+              brand_variant: brandVariant,
+            });
             onContinueToConfirm?.();
           }}
           disabled={!canContinueToConfirm}

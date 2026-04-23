@@ -75,6 +75,7 @@ export default async function RegisterPage() {
       initialMinerSlug={MINER_SLUG}
       initialMinerTiers={initialMinerTiers}
       initialPaymentWallet={initialPaymentWallet}
+      brandVariant="hyperscaled"
     />
   );
 }

@@ -11,6 +11,7 @@ import {
 import RulesTable from '@/components/shared/RulesTable'
 import { EVAL_RULES, FUNDED_RULES, SCALING_PATH } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
+import { trackCtaClick } from '@/lib/analytics'
 
 /* ───────────────────────────────────────────────
    TOC sections definition
@@ -498,6 +499,7 @@ function ProtocolSection() {
         <div className="mt-8">
           <Link
             href={brandHref('/register')}
+            onClick={() => trackCtaClick({ label: 'Start Your Challenge', location: 'rules_bottom' })}
             className="text-sm text-teal-400 hover:text-teal-300 transition-colors inline-flex items-center gap-1.5"
           >
             Start Your Challenge
