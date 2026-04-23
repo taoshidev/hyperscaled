@@ -14,6 +14,7 @@ import {
   CheckCircle,
   ArrowLeft,
   ArrowRight,
+  ArrowSquareOut,
   Warning,
   Wallet,
   Info,
@@ -32,6 +33,7 @@ import {
   HL_API_URL,
   HL_SIGNING_CHAIN_ID,
   HL_CHAIN_NAME,
+  HYPERLIQUID_SIGNUP_URL,
 } from "@/lib/constants";
 import { usdcAbi } from "@/lib/usdc-abi";
 import { formatAccountSize, truncateAddress } from "@/lib/format";
@@ -1653,6 +1655,33 @@ export function StepConnectAndPay({
             </p>
           )}
         </div>
+        {!hlWalletValid && (
+          <a
+            href={HYPERLIQUID_SIGNUP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group block rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-4 mt-1 transition-[border-color,background-color] duration-200 hover:border-teal-400/40 hover:bg-teal-400/[0.07] outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-400/10">
+                <ArrowSquareOut size={20} weight="duotone" className="text-teal-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">
+                  New to Hyperliquid?
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Create a free account to start trading
+                </p>
+              </div>
+              <span className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-teal-400/10 text-xs font-semibold text-teal-400 group-hover:bg-teal-400/20 transition-[background-color] duration-200">
+                Sign up
+                <ArrowSquareOut size={12} weight="bold" />
+              </span>
+            </div>
+            <span className="sr-only"> (opens in a new tab)</span>
+          </a>
+        )}
       </div>
 
       {/* ─── 2. Payment Method Selector (hidden for free tier) ─── */}
