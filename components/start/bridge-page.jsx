@@ -8,6 +8,7 @@ import {
   Lightning,
   ChatsCircle,
   Code,
+  GithubLogo,
 } from '@phosphor-icons/react'
 import { trackEvent } from '@/lib/analytics'
 import { usePreservedQueryString, parseUtms, withPreservedQuery } from '@/lib/preserve-query'
@@ -251,9 +252,19 @@ export function BridgePage() {
             })}
           </div>
 
-          <p className="mt-6 text-center text-xs text-zinc-500">
-            You can use any combination — or none at all. Your trades happen on Hyperliquid regardless.
-          </p>
+          <div className="mt-8 flex justify-center">
+            <a
+              href="https://github.com/taoshidev/hyperscaled_extension"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.02] hover:border-teal-400/30 hover:bg-teal-400/[0.04] px-4 py-2 text-xs sm:text-sm text-zinc-300 transition-colors"
+            >
+              <GithubLogo size={16} weight="fill" className="text-teal-400" />
+              <span>Fully open source —</span>
+              <span className="font-mono text-teal-400">taoshidev/hyperscaled_extension</span>
+              <ArrowRight size={13} weight="bold" className="text-zinc-500" />
+            </a>
+          </div>
         </div>
       </section>
 

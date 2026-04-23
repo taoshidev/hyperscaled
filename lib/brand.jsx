@@ -38,7 +38,7 @@ const BRANDS = {
       twitter: 'https://x.com/vantatrading',
       discord: 'https://discord.gg/vantatrading',
       github: 'https://github.com/taoshidev',
-      telegram: 'https://t.me/vantatrading_bot',
+      telegram: 'https://t.me/hyperscaled_bot',
       support: 'mailto:support@vantatrading.io',
     },
     showExtension: false,
