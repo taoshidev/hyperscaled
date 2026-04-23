@@ -48,7 +48,13 @@ import {
 import { reportCritical, reportError } from "@/lib/errors";
 
 function formatRulesSummary(details) {
-  return details.map((d) => `${d.value} ${d.label.toLowerCase()}`).join(" · ");
+  return details
+    .filter((d) => !(d.label === "Account Scaling" && d.value === "None"))
+    .map((d) => {
+      if (d.label === "Time Limit" && d.value === "None") return "No time limit";
+      return `${d.value} ${d.label.toLowerCase()}`;
+    })
+    .join(" · ");
 }
 
 // Runs the backend's duplicate + validity checks without moving money so the
