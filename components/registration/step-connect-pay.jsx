@@ -1324,15 +1324,7 @@ export function StepConnectAndPay({
 
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Challenge fee</span>
-          <div className="flex items-baseline gap-2">
-            <del className="text-xs text-[oklch(0.65_0_0)]">
-              <span className="sr-only">Original price: </span>${selectedTier.fullPrice}
-            </del>
-            <ins className="no-underline">
-              <span className="sr-only">Sale price: </span>
-              <span className="text-teal-400 font-bold font-mono">${selectedTier.promoPrice}</span>
-            </ins>
-          </div>
+          <span className="text-teal-400 font-bold font-mono">${selectedTier.promoPrice}</span>
         </div>
 
         <div className="border-t border-border" />

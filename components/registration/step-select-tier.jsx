@@ -89,13 +89,6 @@ export function StepSelectTier({
 
   return (
     <div className="flex flex-col">
-      {/* Promo banner */}
-      <div className="flex justify-center">
-        <p className="bg-teal-400/10 text-teal-400 text-sm font-medium px-4 py-2 rounded-lg text-center text-balance">
-          Launch pricing — up to 55% off all challenges
-        </p>
-      </div>
-
       {/* Header */}
       <div className="text-center space-y-2 mt-3">
         <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">
@@ -203,18 +196,11 @@ export function StepSelectTier({
                   {/* Pricing */}
                   <div className="flex items-baseline gap-2 mt-3 mb-5">
                     <ins className="no-underline">
-                      <span className="sr-only">Sale price: </span>
+                      <span className="sr-only">Price: </span>
                       <span className="text-3xl font-bold font-mono text-white">
                         {formatPrice(tier.promoPrice)}
                       </span>
                     </ins>
-                    <del
-                      className="text-sm text-zinc-600 font-mono"
-                      style={{ textDecorationThickness: "1px", textUnderlineOffset: "-3px" }}
-                    >
-                      <span className="sr-only">Original price: </span>
-                      {formatPrice(tier.fullPrice)}
-                    </del>
                     <span className="text-xs text-zinc-500 font-medium">USDC</span>
                   </div>
 
@@ -226,10 +212,10 @@ export function StepSelectTier({
                     {(tier.details ?? []).map((detail) => (
                       <div
                         key={detail.label}
-                        className="flex items-center justify-between text-sm"
+                        className="flex items-center justify-between gap-3 text-sm"
                       >
-                        <span className="text-zinc-500">{detail.label}</span>
-                        <span className="text-foreground font-medium font-mono">
+                        <span className="text-zinc-500 shrink-0">{detail.label}</span>
+                        <span className="text-foreground font-medium font-mono text-right">
                           {detail.value}
                         </span>
                       </div>
