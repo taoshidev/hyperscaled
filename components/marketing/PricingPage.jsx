@@ -30,19 +30,6 @@ function tierBadge(tier) {
   return null
 }
 
-/* ── Launch Pricing Banner ── */
-function LaunchBanner() {
-  return (
-    <div className="mt-16 bg-teal-400/10 border-b border-teal-400/20">
-      <div className="max-w-[1400px] mx-auto px-6 py-3 text-center">
-        <p className="text-sm text-teal-400 font-medium" style={{ textWrap: 'balance' }}>
-          Launch Pricing Active — Save up to 50% for a limited&nbsp;time.
-        </p>
-      </div>
-    </div>
-  )
-}
-
 /* ── Page Hero ── */
 function PricingHero() {
   return (
@@ -420,7 +407,6 @@ function PricingFAQSection() {
 export default function PricingPage({ tiers = PRICING_TIERS }) {
   return (
     <>
-      <LaunchBanner />
       <PricingHero />
       <PricingCards tiers={tiers} />
       <WhatsIncludedGrid />

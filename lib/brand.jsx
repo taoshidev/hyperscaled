@@ -19,7 +19,7 @@ const BRANDS = {
       support: 'mailto:support@hyperscaled.trade',
     },
     showExtension: true,
-    showBetaBadge: true,
+    showBetaBadge: false,
     showLiquidCrystal: true,
     showPartnersCTA: true,
     heroEyebrow: 'Built on Hyperliquid · Powered by Bittensor',
