@@ -26,22 +26,6 @@ const TOC_SECTIONS = [
   { id: 'protocol', label: 'Protocol' },
 ]
 
-const AVAILABLE_PAIRS = [
-  { base: 'ADA', quote: 'USDC' },
-  { base: 'BCH', quote: 'USDC' },
-  { base: 'BTC', quote: 'USDC' },
-  { base: 'DOGE', quote: 'USDC' },
-  { base: 'ETH', quote: 'USDC' },
-  { base: 'HYPE', quote: 'USDC' },
-  { base: 'LINK', quote: 'USDC' },
-  { base: 'LTC', quote: 'USDC' },
-  { base: 'SOL', quote: 'USDC' },
-  { base: 'TAO', quote: 'USDC' },
-  { base: 'XMR', quote: 'USDC' },
-  { base: 'XRP', quote: 'USDC' },
-  { base: 'ZEC', quote: 'USDC' },
-]
-
 /* ───────────────────────────────────────────────
    Sticky TOC (desktop sidebar + mobile jump bar)
    ─────────────────────────────────────────────── */
@@ -219,25 +203,8 @@ function AvailablePairsSection() {
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Available Pairs
         </span>
-        <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
-          The following trading pairs are available during both the Challenge and Funded&nbsp;phases.
-        </p>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {AVAILABLE_PAIRS.map((pair) => (
-            <div
-              key={pair.base}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg bg-white/[0.03] border border-white/[0.06]"
-            >
-              <span className="text-sm font-semibold text-zinc-200">{pair.base}</span>
-              <span className="text-xs text-zinc-600">/</span>
-              <span className="text-sm text-zinc-400">{pair.quote}</span>
-            </div>
-          ))}
-        </div>
-
-        <p className="mt-6 text-xs text-zinc-600">
-          Additional pairs may be added as the network expands. All pairs settle in&nbsp;USDC.
+        <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed">
+          Tradeable pairs on the Hyperscaled challenge dynamically update. We allow all tokens on Hyperliquid with a 30-day mean daily volume in USD of at least 2 million&nbsp;dollars.
         </p>
       </div>
     </section>
@@ -467,7 +434,7 @@ function KYCSection() {
             KYC is not required to register, trade, or complete the challenge. It is required only to receive a&nbsp;payout.
           </p>
           <p>
-            When your scaled account reaches payout eligibility at the end of a 7-day cycle, you will be prompted to complete a brief identity verification to unlock payouts. Payouts are then sent in USDC directly to your connected wallet. The entire payout flow is automated and verifiable&nbsp;onchain.
+            When your scaled account reaches payout eligibility at the end of a 30-day cycle, you will be prompted to complete a brief identity verification to unlock payouts. Payouts are then sent in USDC directly to your connected wallet. The entire payout flow is automated and verifiable&nbsp;onchain.
           </p>
         </div>
       </div>
