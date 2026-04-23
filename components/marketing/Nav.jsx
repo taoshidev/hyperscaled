@@ -30,11 +30,14 @@ const NAV_LINKS = [
   { label: 'FAQ', href: '/faq', visibility: 'hidden xl:block' },
 ]
 
-export default function Nav() {
+export default function Nav({ excludeLinks = [] }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [extensionOpen, setExtensionOpen] = useState(false)
   const brand = useBrand()
   const brandHref = useBrandHref()
+  const links = excludeLinks.length
+    ? NAV_LINKS.filter((l) => !excludeLinks.includes(l.label))
+    : NAV_LINKS
 
   function handleExtensionClick() {
     // Trigger download
@@ -79,7 +82,7 @@ export default function Nav() {
         {/* Desktop nav — centered between logo and CTA */}
         <nav className="hidden md:flex items-center justify-center flex-1 min-w-0 mx-4">
           <div className="flex items-center gap-6 overflow-hidden">
-          {NAV_LINKS.map((l) => (
+          {links.map((l) => (
             <Link
               key={l.label}
               href={brandHref(l.href)}
@@ -138,7 +141,7 @@ export default function Nav() {
             className="xl:hidden border-t border-white/[0.06] bg-[#09090b]/95 backdrop-blur-xl px-6 pb-6 pt-4"
           >
             <div className="flex flex-col gap-1">
-              {NAV_LINKS.map((l) => (
+              {links.map((l) => (
                 <Link
                   key={l.label}
                   href={brandHref(l.href)}
