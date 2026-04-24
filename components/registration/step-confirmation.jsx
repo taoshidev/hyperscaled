@@ -15,8 +15,7 @@ import {
   ShieldCheck,
   Crosshair,
 } from "@phosphor-icons/react";
-import { BASESCAN_URL } from "@/lib/constants";
-import ExtensionModal from "@/components/marketing/ExtensionModal";
+import { BASESCAN_URL, CHROME_EXTENSION_URL } from "@/lib/constants";
 import { copyToClipboard } from "@/lib/utils";
 import { formatAccountSize, truncateAddress } from "@/lib/format";
 import { useBrandHref } from "@/lib/brand";
@@ -247,7 +246,6 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
   const explorerUrl = isHLPayment ? null : `${BASESCAN_URL}/tx/${txHash}`;
 
   const [status, setStatus] = useState(registrationStatus || "pending");
-  const [extensionModalOpen, setExtensionModalOpen] = useState(false);
   const intervalRef = useRef(null);
 
   const { extensionDetected } = useExtensionBridge();
@@ -345,25 +343,20 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
                 displays your challenge progress inside Hyperliquid.
                 Required to&nbsp;participate.
               </p>
-              <button
-                onClick={() => {
-                  const a = document.createElement('a')
-                  a.href = '/hyperscaled_extension.zip'
-                  a.download = 'hyperscaled_extension.zip'
-                  a.click()
-                  setExtensionModalOpen(true)
-                }}
+              <a
+                href={CHROME_EXTENSION_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="shiny-cta h-11 w-full flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <span className="inline-flex items-center gap-2 text-sm font-semibold">
                   <GoogleChromeLogo size={18} weight="bold" />
                   Install Chrome Extension
                 </span>
-              </button>
+              </a>
               <p className="text-xs text-muted-foreground">
                 Available for Chrome and&nbsp;Brave
               </p>
-              <ExtensionModal open={extensionModalOpen} onClose={() => setExtensionModalOpen(false)} />
             </div>
           )}
         </div>

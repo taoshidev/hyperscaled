@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { ArrowLeft, ArrowRight, DownloadSimple, List, X } from '@phosphor-icons/react'
-import ExtensionModal from '@/components/marketing/ExtensionModal'
+import { ArrowLeft, ArrowRight, List, X } from '@phosphor-icons/react'
+import { CHROME_EXTENSION_URL } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
 
@@ -32,22 +32,11 @@ const NAV_LINKS = [
 
 export default function Nav({ excludeLinks = [] }) {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [extensionOpen, setExtensionOpen] = useState(false)
   const brand = useBrand()
   const brandHref = useBrandHref()
   const links = excludeLinks.length
     ? NAV_LINKS.filter((l) => !excludeLinks.includes(l.label))
     : NAV_LINKS
-
-  function handleExtensionClick() {
-    // Trigger download
-    const a = document.createElement('a')
-    a.href = '/hyperscaled_extension.zip'
-    a.download = 'hyperscaled_extension.zip'
-    a.click()
-    // Open install instructions
-    setExtensionOpen(true)
-  }
 
   return (
     <>
@@ -97,14 +86,15 @@ export default function Nav({ excludeLinks = [] }) {
         {/* CTA + hamburger */}
         <div className="flex items-center gap-3 shrink-0 relative z-10">
           {brand.showExtension && (
-            <button
-              type="button"
-              onClick={handleExtensionClick}
-              className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors px-3 py-2 rounded-lg border border-white/[0.08] bg-zinc-900/80"
+            <a
+              href={CHROME_EXTENSION_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackCtaClick({ label: 'Chrome Extension', location: 'nav' })}
+              className="hidden sm:flex items-center text-sm font-medium text-zinc-400 hover:text-white transition-colors px-3 py-2 rounded-lg border border-white/[0.08] bg-zinc-900/80"
             >
-              <DownloadSimple size={15} weight="bold" />
-              Extension
-            </button>
+              Chrome Extension
+            </a>
           )}
           <Link
             href={brandHref('/register')}
@@ -156,8 +146,6 @@ export default function Nav({ excludeLinks = [] }) {
         )}
       </AnimatePresence>
     </motion.header>
-
-    <ExtensionModal open={extensionOpen} onClose={() => setExtensionOpen(false)} />
     </>
   )
 }
