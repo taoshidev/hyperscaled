@@ -73,7 +73,7 @@ export default async function VantaRegisterPage() {
       initialPaymentWallet={initialPaymentWallet}
       logo="/vanta-logo.svg"
       logoAlt="Vanta Trading"
-      homeHref="https://vantatrading.io"
+      homeHref="/vanta/start"
       brandVariant="vanta"
     />
   )

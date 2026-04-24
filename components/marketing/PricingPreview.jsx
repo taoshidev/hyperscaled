@@ -37,14 +37,14 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 xl:gap-3">
           {tiers.map((tier, i) => (
             <motion.div
               key={tier.id}
               initial={{ opacity: 0, y: 20 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ ...spring, delay: i * 0.08 }}
-              className={`relative flex flex-col items-center p-6 rounded-2xl border transition-colors ${
+              className={`relative flex flex-col items-center p-6 xl:p-4 rounded-2xl border transition-colors ${
                 tier.popular || tier.id === 'free'
                   ? 'shiny-border'
                   : 'border-white/[0.08] bg-[#09090b] hover:border-white/[0.12]'

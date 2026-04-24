@@ -117,7 +117,7 @@ export function StepSelectTier({
       <div
         role="radiogroup"
         aria-label="Choose your scaled account size"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-10"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 xl:gap-3 mt-10"
       >
         {!Array.isArray(tiers)
           ? [0, 1, 2, 3, 4, 5].map((i) => (
@@ -149,7 +149,7 @@ export function StepSelectTier({
                   onClick={() => handleSelectIndex(i)}
                   onKeyDown={(e) => handleArrowNav(e, i)}
                   className={`
-                    relative block w-full text-left cursor-pointer rounded-2xl p-6 group
+                    relative block w-full text-left cursor-pointer rounded-2xl p-6 xl:p-4 group
                     text-card-foreground
                     transition-[border-color,box-shadow,transform,opacity] duration-200
                     animate-[fadeInUp_0.35s_ease-out_both]
@@ -194,10 +194,10 @@ export function StepSelectTier({
                   </div>
 
                   {/* Pricing */}
-                  <div className="flex items-baseline gap-2 mt-3 mb-5">
+                  <div className="flex items-baseline gap-2 mt-3 mb-5 xl:mb-4">
                     <ins className="no-underline">
                       <span className="sr-only">Price: </span>
-                      <span className="text-3xl font-bold font-mono text-white">
+                      <span className="text-3xl xl:text-2xl font-bold font-mono text-white">
                         {formatPrice(tier.promoPrice)}
                       </span>
                     </ins>
@@ -205,14 +205,14 @@ export function StepSelectTier({
                   </div>
 
                   {/* Separator */}
-                  <div className="border-t border-border mb-4" aria-hidden="true" />
+                  <div className="border-t border-border mb-4 xl:mb-3" aria-hidden="true" />
 
                   {/* Details — label/value rows */}
-                  <div className="space-y-2.5">
+                  <div className="space-y-2.5 xl:space-y-1.5">
                     {(tier.details ?? []).map((detail) => (
                       <div
                         key={detail.label}
-                        className="flex items-center justify-between gap-3 text-sm"
+                        className="flex items-center justify-between gap-3 xl:gap-2 text-sm xl:text-xs"
                       >
                         <span className="text-zinc-500 shrink-0">{detail.label}</span>
                         <span className="text-foreground font-medium font-mono text-right">
@@ -221,6 +221,29 @@ export function StepSelectTier({
                       </div>
                     ))}
                   </div>
+
+                  {/* Inline Continue CTA — appears only on the selected card */}
+                  {isSelected && (
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onContinue?.(tiers[i], i);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onContinue?.(tiers[i], i);
+                        }
+                      }}
+                      className="mt-4 xl:mt-3 shiny-cta h-10 w-full flex items-center justify-center gap-1.5 text-xs font-semibold cursor-pointer"
+                    >
+                      Continue
+                      <ArrowRight size={14} weight="bold" />
+                    </div>
+                  )}
 
                   {/* Selected indicator */}
                   {isSelected && (
