@@ -193,7 +193,7 @@ Last updated: 2026-04-22
 | Performance: targeted transitions (no transition-all) | Done |
 | Contrast: brightened small muted text (oklch 0.65) | Done |
 | Min font size: text-xs (12px) floor on all labels | Done |
-| Email field | Removed — Phase 1 confirm: removed from flow, state, validation, and all payment handlers |
+| Email field | Done — re-added to Connect & Pay step; optional input between HL wallet and payment method; shown on confirm review card; sent to preflight + register APIs in all payment paths |
 | Connect & Pay step | Done (Phase 1 confirm: HL wallet with Auto-detect, payment method selector, wallet connection, Continue to review) |
 | Confirm step (new) | Done — Phase 1 confirm: review card with trading wallet, inline-editable payout wallet, plan summary, confirmation checkbox, pay button |
 | Old step-hl-address.jsx | Deleted (absorbed into step-connect-pay.jsx) |

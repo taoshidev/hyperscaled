@@ -22,7 +22,7 @@ import {
   PencilSimple,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
-import { isValidHLAddress } from "@/lib/validation";
+import { isValidHLAddress, isValidEmail } from "@/lib/validation";
 import { trackEvent, getRefSource } from "@/lib/analytics";
 import {
   USDC_ADDRESS,
@@ -116,6 +116,8 @@ export function StepConnectAndPay({
   const [editingPayout, setEditingPayout] = useState(false);
   const [editPayoutValue, setEditPayoutValue] = useState("");
   const [editingHlWallet, setEditingHlWallet] = useState(true);
+  const [email, setEmail] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
   const [hlBalance, setHlBalance] = useState(null);
   const [hlBalanceLoading, setHlBalanceLoading] = useState(false);
   const [eip712Step, setEip712Step] = useState(null); // "builderFee" | "signing" | "submitting" | "verifying" | "provisioning"
@@ -129,6 +131,9 @@ export function StepConnectAndPay({
 
   const hlWalletValid = isValidHLAddress(hlWallet);
   const showHlWalletError = hlWalletTouched && hlWallet.length > 0 && !hlWalletValid;
+  const emailValid = email.length === 0 || isValidEmail(email);
+  const emailReady = email.length > 0 && isValidEmail(email);
+  const showEmailError = emailTouched && email.length > 0 && !emailValid;
 
   // Funnel events — one-shot so we don't double-count on rerenders, toggling,
   // or user going back and forward through steps.
@@ -325,6 +330,7 @@ export function StepConnectAndPay({
         payoutAddress: resolvedPayoutAddress || address,
         tierIndex,
         toltCustomerId,
+        email: emailReady ? email : undefined,
         // Used by the backend to qualify the dev-wallet discount; the actual
         // signer in the payment payload is the source of truth on retry.
         hlTransferSender: address,
@@ -509,6 +515,8 @@ export function StepConnectAndPay({
     switchChainAsync,
     resolvedHlAddress,
     resolvedPayoutAddress,
+    email,
+    emailReady,
     onPaymentComplete,
     onPaymentProcessing,
   ]);
@@ -556,6 +564,7 @@ export function StepConnectAndPay({
         accountSize: selectedTier.accountSize,
         payoutAddress: resolvedPayoutAddress || address,
         tierIndex,
+        email: emailReady ? email : undefined,
         hlTransferSender: address,
       });
 
@@ -850,6 +859,7 @@ export function StepConnectAndPay({
           payoutAddress: resolvedPayoutAddress || address,
           tierIndex,
           toltCustomerId,
+          email: emailReady ? email : undefined,
           paymentMethod: "eip712",
           hlTransferHash: hlHash,
           hlTransferSender: address,
@@ -931,6 +941,8 @@ export function StepConnectAndPay({
     paymentWallet,
     resolvedHlAddress,
     resolvedPayoutAddress,
+    email,
+    emailReady,
     onPaymentComplete,
     onPaymentProcessing,
   ]);
@@ -969,6 +981,7 @@ export function StepConnectAndPay({
         accountSize: selectedTier.accountSize,
         payoutAddress: resolvedPayoutAddress || address,
         tierIndex,
+        email: emailReady ? email : undefined,
         hlTransferSender: address,
       });
 
@@ -996,6 +1009,7 @@ export function StepConnectAndPay({
           payoutAddress: resolvedPayoutAddress || address,
           tierIndex,
           toltCustomerId,
+          email: emailReady ? email : undefined,
           paymentMethod: "free",
           hlTransferSender: address,
         }),
@@ -1066,6 +1080,8 @@ export function StepConnectAndPay({
     switchChainAsync,
     resolvedHlAddress,
     resolvedPayoutAddress,
+    email,
+    emailReady,
     onPaymentComplete,
     onPaymentProcessing,
   ]);
@@ -1216,6 +1232,16 @@ export function StepConnectAndPay({
               You can also change this later in your dashboard
             </p>
           </div>
+
+          {emailReady && (
+            <>
+              <div className="border-t border-border" />
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">Email</p>
+                <p className="text-xs text-foreground break-all">{email}</p>
+              </div>
+            </>
+          )}
 
           <div className="border-t border-border" />
 
@@ -1690,7 +1716,43 @@ export function StepConnectAndPay({
         )}
       </div>
 
-      {/* ─── 2. Payment Method Selector (hidden for free tier) ─── */}
+      {/* ─── 2. Email ─── */}
+      <div className="w-full max-w-lg mt-4 space-y-1.5">
+        <label htmlFor="reg-email" className="text-xs font-medium text-muted-foreground">
+          Email address
+        </label>
+        <input
+          id="reg-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          onBlur={() => setEmailTouched(true)}
+          placeholder="you@example.com"
+          aria-label="Email address for registration updates"
+          aria-describedby="email-hint email-error"
+          aria-invalid={showEmailError ? "true" : undefined}
+          className={`
+            w-full rounded-xl border bg-card p-4 text-sm
+            placeholder:text-muted-foreground/50
+            outline-none
+            focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
+            transition-[border-color,box-shadow] duration-200
+            ${showEmailError ? "border-destructive" : "border-border hover:border-white/[0.15]"}
+          `}
+        />
+        <div id="email-error" role="alert" className="min-h-[1.25rem]">
+          {showEmailError && (
+            <p className="text-xs text-destructive">
+              Enter a valid email address
+            </p>
+          )}
+        </div>
+        <p id="email-hint" className="text-xs text-muted-foreground/60">
+          We&#8217;ll send registration confirmation and account updates here
+        </p>
+      </div>
+
+      {/* ─── 3. Payment Method Selector (hidden for free tier) ─── */}
       {!isFree && (
       <div className="w-full max-w-lg mt-2 space-y-3">
         <p className="text-xs font-medium text-muted-foreground">
@@ -1788,7 +1850,7 @@ export function StepConnectAndPay({
       </div>
       )}
 
-      {/* ─── 3. Wallet Connection (for eip712/base/free) ─── */}
+      {/* ─── 4. Wallet Connection (for eip712/base/free) ─── */}
       {(isFree || (paymentMethod && (paymentMethod === "eip712" || paymentMethod === "base"))) && !isConnected && (
         <div className="w-full max-w-lg mt-4 space-y-4 text-center">
           <p className="text-sm text-muted-foreground text-balance max-w-md mx-auto">
@@ -1901,7 +1963,7 @@ export function StepConnectAndPay({
         </div>
       )}
 
-      {/* ─── 4. Payout Wallet (shown after payment method selected or for free tier) ─── */}
+      {/* ─── 5. Payout Wallet (shown after payment method selected or for free tier) ─── */}
       {(isFree || paymentMethod) && hlAddressReady && (
         <div className="w-full max-w-lg mt-4 space-y-1.5">
           <label htmlFor="payout-wallet" className="text-xs font-medium text-muted-foreground">
