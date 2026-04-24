@@ -41,7 +41,7 @@ const BRANDS = {
       telegram: 'https://t.me/hyperscaled_bot',
       support: 'mailto:support@vantatrading.io',
     },
-    showExtension: false,
+    showExtension: true,
     showBetaBadge: false,
     showLiquidCrystal: false,
     showPartnersCTA: false,
