@@ -8,7 +8,7 @@ const SITE_URL = "https://hyperscaled.trade";
 const OG_IMAGE = {
   url: "/og.png",
   width: 1200,
-  height: 630,
+  height: 600,
   alt: "Hyperscaled — Scaled Trading on Hyperliquid",
 };
 

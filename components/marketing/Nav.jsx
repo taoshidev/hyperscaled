@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { ArrowLeft, ArrowRight, DownloadSimple, List, X } from '@phosphor-icons/react'
-import ExtensionModal from '@/components/marketing/ExtensionModal'
+import { ArrowLeft, ArrowRight, List, X } from '@phosphor-icons/react'
+import { CHROME_EXTENSION_URL } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
 
@@ -30,21 +30,13 @@ const NAV_LINKS = [
   { label: 'FAQ', href: '/faq', visibility: 'hidden xl:block' },
 ]
 
-export default function Nav() {
+export default function Nav({ excludeLinks = [] }) {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [extensionOpen, setExtensionOpen] = useState(false)
   const brand = useBrand()
   const brandHref = useBrandHref()
-
-  function handleExtensionClick() {
-    // Trigger download
-    const a = document.createElement('a')
-    a.href = '/hyperscaled_extension.zip'
-    a.download = 'hyperscaled_extension.zip'
-    a.click()
-    // Open install instructions
-    setExtensionOpen(true)
-  }
+  const links = excludeLinks.length
+    ? NAV_LINKS.filter((l) => !excludeLinks.includes(l.label))
+    : NAV_LINKS
 
   return (
     <>
@@ -79,7 +71,7 @@ export default function Nav() {
         {/* Desktop nav — centered between logo and CTA */}
         <nav className="hidden md:flex items-center justify-center flex-1 min-w-0 mx-4">
           <div className="flex items-center gap-6 overflow-hidden">
-          {NAV_LINKS.map((l) => (
+          {links.map((l) => (
             <Link
               key={l.label}
               href={brandHref(l.href)}
@@ -94,14 +86,15 @@ export default function Nav() {
         {/* CTA + hamburger */}
         <div className="flex items-center gap-3 shrink-0 relative z-10">
           {brand.showExtension && (
-            <button
-              type="button"
-              onClick={handleExtensionClick}
-              className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-zinc-400 hover:text-white transition-colors px-3 py-2 rounded-lg border border-white/[0.08] bg-zinc-900/80"
+            <a
+              href={CHROME_EXTENSION_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackCtaClick({ label: 'Chrome Extension', location: 'nav' })}
+              className="hidden sm:flex items-center text-sm font-medium text-zinc-400 hover:text-white transition-colors px-3 py-2 rounded-lg border border-white/[0.08] bg-zinc-900/80"
             >
-              <DownloadSimple size={15} weight="bold" />
-              Extension
-            </button>
+              Chrome Extension
+            </a>
           )}
           <Link
             href={brandHref('/register')}
@@ -138,7 +131,7 @@ export default function Nav() {
             className="xl:hidden border-t border-white/[0.06] bg-[#09090b]/95 backdrop-blur-xl px-6 pb-6 pt-4"
           >
             <div className="flex flex-col gap-1">
-              {NAV_LINKS.map((l) => (
+              {links.map((l) => (
                 <Link
                   key={l.label}
                   href={brandHref(l.href)}
@@ -153,8 +146,6 @@ export default function Nav() {
         )}
       </AnimatePresence>
     </motion.header>
-
-    <ExtensionModal open={extensionOpen} onClose={() => setExtensionOpen(false)} />
     </>
   )
 }

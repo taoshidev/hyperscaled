@@ -34,7 +34,7 @@ function PricingCard({ tier, index, brandHref }) {
       initial={{ opacity: 0, y: 24 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ ...spring, delay: index * 0.1 }}
-      className={`relative flex flex-col rounded-2xl p-6 sm:p-8 ${
+      className={`relative flex flex-col rounded-2xl p-6 sm:p-8 xl:p-4 ${
         tier.popular || tier.id === 'free'
           ? 'shiny-border'
           : 'border border-white/[0.08] bg-[#09090b]'
@@ -60,16 +60,16 @@ function PricingCard({ tier, index, brandHref }) {
 
       {/* Pricing */}
       <div className="mt-4 flex items-baseline gap-2">
-        <ins className="text-3xl sm:text-4xl font-bold font-mono no-underline text-white">
+        <ins className="text-3xl sm:text-4xl xl:text-3xl font-bold font-mono no-underline text-white">
           ${tier.launchPrice}
         </ins>
         <span className="text-xs text-zinc-500 font-medium">USDC</span>
       </div>
 
       {/* Details */}
-      <ul className="mt-6 space-y-3 flex-1">
+      <ul className="mt-6 xl:mt-4 space-y-3 xl:space-y-2 flex-1">
         {details.map((d) => (
-          <li key={d.label} className="flex items-start justify-between gap-4 text-sm">
+          <li key={d.label} className="flex items-start justify-between gap-4 xl:gap-2 text-sm xl:text-xs">
             <span className="text-zinc-500">{d.label}</span>
             <span className="text-right font-medium font-mono text-zinc-200">{d.value}</span>
           </li>
@@ -80,9 +80,9 @@ function PricingCard({ tier, index, brandHref }) {
       <Link
         href={brandHref('/register')}
         onClick={() => trackCtaClick({ label: tier.cta, location: `home_pricing:${tier.name || tier.accountSize || 'unknown'}` })}
-        className={`mt-8 flex items-center justify-center gap-1.5 min-h-12 rounded-xl text-sm font-semibold transition-colors ${
+        className={`mt-8 xl:mt-4 flex items-center justify-center gap-1.5 min-h-12 xl:min-h-10 rounded-xl text-sm xl:text-xs font-semibold transition-colors ${
           tier.popular || tier.id === 'free'
-            ? 'shiny-cta px-6 py-3'
+            ? 'shiny-cta px-6 py-3 xl:px-3 xl:py-2'
             : 'bg-white/[0.06] border border-white/[0.08] text-white hover:bg-white/[0.1]'
         }`}
       >
@@ -120,7 +120,7 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 md:gap-5 xl:gap-3">
           {tiers.map((tier, i) => (
             <PricingCard key={tier.id} tier={tier} index={i} brandHref={brandHref} />
           ))}
