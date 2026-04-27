@@ -211,6 +211,6 @@ export async function POST(request) {
     status: registered ? "registered" : "pending",
     message: registered
       ? "Your testnet account has been created."
-      : "Your registration is being processed. We'll follow up via email.",
+      : "Your registration is being processed.",
   });
 }

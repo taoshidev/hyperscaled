@@ -1002,42 +1002,42 @@ export async function POST(request) {
     trackConversion({ customerId: toltCustomerId, amountUsdc: effectivePrice });
   }
 
-  if (process.env.SMTP_USER && email) {
-    try {
-      const { sendEmail } = await import("@/lib/email");
-      await sendEmail({
-        to: email,
-        subject: registered
-          ? `\u2713 Registered with Hyperscaled Trading`
-          : `\u231B Registration Pending \u2014 Hyperscaled Trading`,
-        html: registered
-          ? registeredEmailHtml(miner, accountSize, hlAddress, effectivePayoutAddress, txHash)
-          : pendingEmailHtml(miner, accountSize, hlAddress, effectivePayoutAddress, txHash),
-      });
-      console.info("[REGISTRATION] confirmation email sent", { reqId, registered });
-    } catch (err) {
-      console.warn("[REGISTRATION] confirmation email send failed", { reqId, error: err?.message });
-      // Non-blocking for the HTTP response, but we still need to know — pending
-      // users are told "we'll follow up via email" and an outage breaks that.
-      reportError(err, {
-        source: "api/register",
-        metadata: {
-          step: "confirmation_email",
-          reqId,
-          registered,
-          txHash,
-          hlAddress,
-          minerSlug,
-        },
-      });
-    }
-  }
+//   if (process.env.SMTP_USER && email) {
+//     try {
+//       const { sendEmail } = await import("@/lib/email");
+//       await sendEmail({
+//         to: email,
+//         subject: registered
+//           ? `\u2713 Registered with Hyperscaled Trading`
+//           : `\u231B Registration Pending \u2014 Hyperscaled Trading`,
+//         html: registered
+//           ? registeredEmailHtml(miner, accountSize, hlAddress, effectivePayoutAddress, txHash)
+//           : pendingEmailHtml(miner, accountSize, hlAddress, effectivePayoutAddress, txHash),
+//       });
+//       console.info("[REGISTRATION] confirmation email sent", { reqId, registered });
+//     } catch (err) {
+//       console.warn("[REGISTRATION] confirmation email send failed", { reqId, error: err?.message });
+//       // Non-blocking for the HTTP response, but we still need to know — pending
+//       // users are told "we'll follow up via email" and an outage breaks that.
+//       reportError(err, {
+//         source: "api/register",
+//         metadata: {
+//           step: "confirmation_email",
+//           reqId,
+//           registered,
+//           txHash,
+//           hlAddress,
+//           minerSlug,
+//         },
+//       });
+//     }
+//   }
 
   const responseBody = {
     status: registered ? "registered" : "pending",
     message: registered
       ? "Your trading account has been created."
-      : "Your payment is confirmed on-chain. Account setup is in progress \u2014 we will follow up via email.",
+      : "Your payment is confirmed on-chain. Account setup is in progress.",
     txHash,
   };
 
