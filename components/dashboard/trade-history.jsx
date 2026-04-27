@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatUSD, formatPrice, formatReturn, formatTime, pnlColor } from "@/lib/format";
+import { ShareButton } from "./share-button";
 
 function pairName(tradePair) {
   if (Array.isArray(tradePair)) return tradePair[1] || tradePair[0];
@@ -48,7 +49,8 @@ export function TradeHistory({ positions }) {
                     <th className="pb-2 pr-4 font-medium">Fees</th>
                     <th className="pb-2 pr-4 font-medium">Return</th>
                     <th className="pb-2 pr-4 font-medium">Opened</th>
-                    <th className="pb-2 font-medium">Closed</th>
+                    <th className="pb-2 pr-4 font-medium">Closed</th>
+                    <th className="pb-2 w-10 font-medium"><span className="sr-only">Share</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -90,8 +92,19 @@ export function TradeHistory({ positions }) {
                         <td className="py-2.5 pr-4 text-zinc-500 text-xs">
                           {openTime ? formatTime(openTime) : "--"}
                         </td>
-                        <td className="py-2.5 text-zinc-500 text-xs">
+                        <td className="py-2.5 pr-4 text-zinc-500 text-xs">
                           {closeTime ? formatTime(closeTime) : "--"}
+                        </td>
+                        <td className="py-2.5 text-right">
+                          <ShareButton
+                            trade={{
+                              ticker: pairName(p.trade_pair || p.pair).replace(/\/.*$/, ""),
+                              direction: direction === "FLAT" ? "CLOSED" : direction,
+                              returnValue: ret || 1,
+                              entryPrice: p.average_entry_price ?? p.entry_price,
+                              markPrice: null,
+                            }}
+                          />
                         </td>
                       </tr>
                     );
