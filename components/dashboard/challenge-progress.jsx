@@ -11,9 +11,13 @@ export function ChallengeProgress({ accountSize, accountSizeData, drawdown, chal
     challengePeriod.bucket === "SUBACCOUNT_ALPHA";
 
   const profitTarget = accountSize * 0.1;
-  const totalPnl = (accountSizeData?.balance != null && accountSizeData?.account_size != null)
-    ? accountSizeData.balance - accountSizeData.account_size
-    : 0;
+  // Use total_realized_pnl to match the leaderboard; fall back to balance delta
+  // if the field is absent (older API responses).
+  const totalPnl = accountSizeData?.total_realized_pnl != null
+    ? accountSizeData.total_realized_pnl
+    : (accountSizeData?.balance != null && accountSizeData?.account_size != null)
+      ? accountSizeData.balance - accountSizeData.account_size
+      : 0;
   const profitPct = profitTarget > 0 ? Math.max(0, (totalPnl / profitTarget) * 100) : 0;
 
   const intradayDD = Math.max(0, drawdown.intraday_drawdown_pct ?? 0);
@@ -64,7 +68,7 @@ export function ChallengeProgress({ accountSize, accountSizeData, drawdown, chal
             <h3 className="text-sm text-zinc-400">Account Progress</h3>
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
               <span>
-                Max Leverage:{" "}
+                Portfolio Size:{" "}
                 <strong className="text-zinc-300 font-medium">{leverageLabel}</strong>
               </span>
               <span>
@@ -217,7 +221,7 @@ function FundedProgress({
             <h3 className="text-sm text-zinc-400">Account Status</h3>
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
               <span>
-                Max Leverage:{" "}
+                Portfolio Size:{" "}
                 <strong className="text-zinc-300 font-medium">{leverageLabel}</strong>
               </span>
               <span>
