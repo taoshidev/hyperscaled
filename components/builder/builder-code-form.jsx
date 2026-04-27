@@ -113,7 +113,6 @@ export function BuilderCodeForm() {
       fetchCurrentApproval(address);
     } else if (!isConnected) {
       lastFetchedFor.current = null;
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset on disconnect
       setCurrentApproval(null);
       setCurrentState("idle");
     }

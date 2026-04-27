@@ -23,10 +23,6 @@ const facilitator = USE_TESTNET
   ? new HTTPFacilitatorClient({ url: FACILITATOR_URL })
   : new HTTPFacilitatorClient(cdpFacilitator);
 
-function escapeHtml(str) {
-  if (typeof str !== "string") str = String(str ?? "");
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
 
 function sanitizeApiKey(key) {
   if (key == null) return null;

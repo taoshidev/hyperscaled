@@ -112,7 +112,6 @@ export const TradeCard = forwardRef(function TradeCard(
       >
         {/* Logo */}
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/hyperscaled-mark.svg"
             alt=""
@@ -261,7 +260,6 @@ export const TradeCard = forwardRef(function TradeCard(
           zIndex: 1,
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/cat-mascot.png"
           alt=""
