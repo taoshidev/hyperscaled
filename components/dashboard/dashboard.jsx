@@ -376,7 +376,9 @@ export function Dashboard() {
                 {isFunded ? "Funded" : "Evaluation"}
               </span>
               <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-white/[0.04] text-zinc-400 border border-white/[0.08]">
-                {isFunded ? "5x" : "1.25x"} Leverage
+                {data.limits?.max_portfolio_usd && data.account_size
+                  ? `${(data.limits.max_portfolio_usd / data.account_size).toFixed(2)}x`
+                  : isFunded ? "5x" : "1x"} Leverage
               </span>
             </div>
           </div>
