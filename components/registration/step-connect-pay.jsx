@@ -949,20 +949,16 @@ export function StepConnectAndPay({
 
   // ── Free tier signup handler ──────────────────────────────────────────────
   const handleFreeSignup = useCallback(async () => {
-    if (!walletClient) {
-      console.warn("[REGISTRATION] handleFreeSignup called with no walletClient");
-      return;
-    }
-
     console.info("[REGISTRATION] handleFreeSignup start", {
       minerSlug,
       hlAddress: resolvedHlAddress,
-      payoutAddress: resolvedPayoutAddress || address,
+      payoutAddress: resolvedPayoutAddress || resolvedHlAddress,
       tierIndex,
+      walletConnected: isConnected,
     });
 
     setPaymentState("processing");
-    setEip712Step("builderFee");
+    setEip712Step(isConnected ? "builderFee" : "provisioning");
     setErrorMessage("");
     onPaymentProcessing?.(true);
 
@@ -979,22 +975,24 @@ export function StepConnectAndPay({
         minerSlug,
         hlAddress: resolvedHlAddress,
         accountSize: selectedTier.accountSize,
-        payoutAddress: resolvedPayoutAddress || address,
+        payoutAddress: resolvedPayoutAddress || resolvedHlAddress,
         tierIndex,
         email: emailReady ? email : undefined,
-        hlTransferSender: address,
+        ...(isConnected && address ? { hlTransferSender: address } : {}),
       });
 
-      // Builder fee approval — silent skip if already approved.
-      const previousChainId = chainId;
-      const builderFeeResult = await ensureBuilderFeeApproved({
-        address,
-        chainId,
-        switchChainAsync,
-      });
-      console.info("[REGISTRATION] Free: builder fee approval", builderFeeResult);
-      if (previousChainId && previousChainId !== HL_SIGNING_CHAIN_ID) {
-        switchChainAsync({ chainId: previousChainId }).catch(() => {});
+      // Builder fee approval — only if wallet is connected.
+      if (isConnected && walletClient) {
+        const previousChainId = chainId;
+        const builderFeeResult = await ensureBuilderFeeApproved({
+          address,
+          chainId,
+          switchChainAsync,
+        });
+        console.info("[REGISTRATION] Free: builder fee approval", builderFeeResult);
+        if (previousChainId && previousChainId !== HL_SIGNING_CHAIN_ID) {
+          switchChainAsync({ chainId: previousChainId }).catch(() => {});
+        }
       }
 
       setEip712Step("provisioning");
@@ -1006,12 +1004,12 @@ export function StepConnectAndPay({
           minerSlug,
           hlAddress: resolvedHlAddress,
           accountSize: selectedTier.accountSize,
-          payoutAddress: resolvedPayoutAddress || address,
+          payoutAddress: resolvedPayoutAddress || resolvedHlAddress,
           tierIndex,
           toltCustomerId,
           email: emailReady ? email : undefined,
           paymentMethod: "free",
-          hlTransferSender: address,
+          ...(isConnected && address ? { hlTransferSender: address } : {}),
         }),
       });
 
@@ -1022,7 +1020,7 @@ export function StepConnectAndPay({
         );
         reportCritical(err, {
           source: "registration/free",
-          userId: address,
+          userId: address || resolvedHlAddress,
           metadata: {
             step: "register_free",
             httpStatus: registerRes.status,
@@ -1030,7 +1028,7 @@ export function StepConnectAndPay({
             serverMessage: data.message,
             minerSlug,
             hlAddress: resolvedHlAddress,
-            payoutAddress: resolvedPayoutAddress || address,
+            payoutAddress: resolvedPayoutAddress || resolvedHlAddress,
             tierIndex,
           },
         });
@@ -1071,6 +1069,7 @@ export function StepConnectAndPay({
       }
     }
   }, [
+    isConnected,
     walletClient,
     minerSlug,
     selectedTier,
@@ -1087,7 +1086,6 @@ export function StepConnectAndPay({
   ]);
 
   const canFreeSignup =
-    isConnected &&
     hlAddressReady &&
     confirmed &&
     paymentState !== "processing";
@@ -1133,7 +1131,7 @@ export function StepConnectAndPay({
   const canContinueToConfirm =
     hlAddressReady &&
     (isFree
-      ? isConnected
+      ? true
       : paymentMethod &&
         (paymentMethod === "base"
           ? isConnected && isOnBase
@@ -1850,15 +1848,13 @@ export function StepConnectAndPay({
       </div>
       )}
 
-      {/* ─── 4. Wallet Connection (for eip712/base/free) ─── */}
-      {(isFree || (paymentMethod && (paymentMethod === "eip712" || paymentMethod === "base"))) && !isConnected && (
+      {/* ─── 4. Wallet Connection (for eip712/base) ─── */}
+      {!isFree && paymentMethod && (paymentMethod === "eip712" || paymentMethod === "base") && !isConnected && (
         <div className="w-full max-w-lg mt-4 space-y-4 text-center">
           <p className="text-sm text-muted-foreground text-balance max-w-md mx-auto">
-            {isFree
-              ? "Connect the wallet that owns your Hyperliquid account to finish signup."
-              : paymentMethod === "base"
-                ? <>Connect the wallet you&#8217;ll use to pay with USDC on&nbsp;Base.</>
-                : "Connect the wallet that owns your Hyperliquid account to sign and transfer USDC."}
+            {paymentMethod === "base"
+              ? <>Connect the wallet you&#8217;ll use to pay with USDC on&nbsp;Base.</>
+              : "Connect the wallet that owns your Hyperliquid account to sign and transfer USDC."}
           </p>
           <ConnectButton.Custom>
             {({ openConnectModal }) => (
@@ -1880,7 +1876,7 @@ export function StepConnectAndPay({
       )}
 
       {/* Wallet connected indicator */}
-      {(isFree || (paymentMethod && (paymentMethod === "eip712" || paymentMethod === "base"))) && isConnected && (
+      {!isFree && paymentMethod && (paymentMethod === "eip712" || paymentMethod === "base") && isConnected && (
         <div className="w-full max-w-lg mt-4">
           <div className="rounded-xl border border-border bg-zinc-900/50 px-5 py-3.5 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 min-w-0">
