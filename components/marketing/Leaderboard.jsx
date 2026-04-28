@@ -294,7 +294,8 @@ export default function Leaderboard({ initialSearch = '' }) {
                         </tr>
                       )}
                       {filteredChallenge.map((t, i) => {
-                        const pct = t.progress != null ? t.progress : Math.max(0, ((t.pnl || 0) / 25000 * 10) * 100)
+                        const noTrades = t.noTrades || t.trades === 0 && t.pnl == null
+                        const pct = noTrades ? 0 : (t.progress != null ? t.progress : Math.max(0, ((t.pnl || 0) / 25000 * 10) * 100))
                         return (
                           <tr
                             key={i}
@@ -302,25 +303,29 @@ export default function Leaderboard({ initialSearch = '' }) {
                             className="border-b border-white/[0.03] hover:bg-white/[0.03] cursor-pointer transition-colors group"
                           >
                             <td className="px-4 py-3 text-xs font-mono text-amber-400 group-hover:text-amber-300 transition-colors">{t.address || t.addr}</td>
-                            <td className={`px-4 py-3 text-sm font-semibold ${(t.pnl || 0) >= 0 ? 'text-teal-400' : 'text-red-400'}`}>
-                              {(t.pnl || 0) >= 0 ? '+' : ''}{fmtUSD(t.pnl || 0)}
+                            <td className={`px-4 py-3 text-sm font-semibold ${noTrades ? 'text-zinc-600' : (t.pnl || 0) >= 0 ? 'text-teal-400' : 'text-red-400'}`}>
+                              {noTrades ? '--' : `${(t.pnl || 0) >= 0 ? '+' : ''}${fmtUSD(t.pnl || 0)}`}
                             </td>
                             <td className="px-4 py-3">
-                              <div className="flex items-center gap-2">
-                                <div className="w-16 h-1 rounded-full bg-white/[0.06] overflow-hidden">
-                                  <div
-                                    className={`h-1 rounded-full ${(t.pnl || 0) >= 0 ? 'bg-teal-400' : 'bg-red-400'}`}
-                                    style={{ width: `${Math.min(100, pct)}%` }}
-                                  />
+                              {noTrades ? (
+                                <span className="text-sm text-zinc-600">--</span>
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-16 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                                    <div
+                                      className={`h-1 rounded-full ${(t.pnl || 0) >= 0 ? 'bg-teal-400' : 'bg-red-400'}`}
+                                      style={{ width: `${Math.min(100, pct)}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-xs text-zinc-500">{pct.toFixed(1)}%</span>
                                 </div>
-                                <span className="text-xs text-zinc-500">{pct.toFixed(1)}%</span>
-                              </div>
+                              )}
                             </td>
-                            <td className="px-4 py-3 text-sm text-zinc-300">{fmtSharpe(t.sharpe)}</td>
-                            <td className="px-4 py-3 text-sm text-zinc-300">{fmt(t.trades || 0)}</td>
-                            <td className={`px-4 py-3 text-sm ${(t.winRate || 0) >= 60 ? 'text-teal-400' : 'text-white'}`}>{t.winRate != null ? `${t.winRate}%` : '--'}</td>
+                            <td className="px-4 py-3 text-sm text-zinc-300">{noTrades ? '--' : fmtSharpe(t.sharpe)}</td>
+                            <td className="px-4 py-3 text-sm text-zinc-300">{noTrades ? '--' : fmt(t.trades || 0)}</td>
+                            <td className={`px-4 py-3 text-sm ${!noTrades && (t.winRate || 0) >= 60 ? 'text-teal-400' : noTrades ? 'text-zinc-600' : 'text-white'}`}>{noTrades ? '--' : t.winRate != null ? `${t.winRate}%` : '--'}</td>
                             <td className="px-4 py-3 text-sm text-zinc-300">
-                              {t.drawdown != null ? `${t.drawdown.toFixed(1)}%` : '0.0%'}
+                              {noTrades ? '--' : t.drawdown != null ? `${t.drawdown.toFixed(1)}%` : '0.0%'}
                             </td>
                             <td className="px-4 py-3 text-xs text-zinc-500">{t.since || t.registered || '--'}</td>
                           </tr>
