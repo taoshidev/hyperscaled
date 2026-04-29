@@ -432,6 +432,7 @@ export function Dashboard() {
               challengePeriod={data.challenge_period}
               statistics={data.statistics}
               quarterlyPnl={data.quarterly_pnl}
+              limits={data.limits}
             />
 
             {/* Performance Stats */}

@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { formatUSD } from "@/lib/format";
 
-export function ChallengeProgress({ accountSize, accountSizeData, drawdown, challengePeriod, statistics, quarterlyPnl: rawQuarterlyPnl }) {
+export function ChallengeProgress({ accountSize, accountSizeData, drawdown, challengePeriod, statistics, quarterlyPnl: rawQuarterlyPnl, limits }) {
   if (!challengePeriod || !drawdown) return null;
 
   const isFunded =
@@ -33,7 +33,10 @@ export function ChallengeProgress({ accountSize, accountSizeData, drawdown, chal
   const eodMaxLoss = accountSize * (eodThreshold / 100);
   const eodRemaining = eodMaxLoss - accountSize * (eodDD / 100);
 
-  const leverageLabel = isFunded ? "5x" : "1.25x";
+  const portfolioMultiplier = limits?.max_portfolio_usd != null && accountSize > 0
+    ? limits.max_portfolio_usd / accountSize
+    : isFunded ? 5 : 1.25;
+  const leverageLabel = `${portfolioMultiplier % 1 === 0 ? portfolioMultiplier.toFixed(0) : portfolioMultiplier.toFixed(2)}x`;
 
   if (isFunded) {
     return <FundedProgress
