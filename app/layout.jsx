@@ -4,7 +4,7 @@ import "./globals.css";
 import { GA_MEASUREMENT_ID } from "@/lib/analytics";
 import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 
-const SITE_URL = "https://hyperscaled.trade";
+const SITE_URL = process.env.HYPERSCALED_BASE_URL || "https://hyperscaled.trade";
 const OG_IMAGE = {
   url: "/og.png",
   width: 1200,
