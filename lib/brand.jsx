@@ -9,7 +9,7 @@ const BRANDS = {
     prefix: '',
     logo: '/hyperscaled-logo.svg',
     tagline: 'Scaled Trading on Hyperliquid',
-    siteUrl: 'https://hyperscaled.trade',
+    siteUrl: process.env.NEXT_PUBLIC_HYPERSCALED_BASE_URL || 'https://hyperscaled.trade',
     twitter: '@hyperscaledhq',
     socials: {
       twitter: 'https://x.com/hyperscaledhq',

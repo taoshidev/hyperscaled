@@ -26,7 +26,7 @@ export default async function Pricing() {
       price: String(tier.launchPrice),
       priceCurrency: "USD",
       availability: "https://schema.org/InStock",
-      url: "https://hyperscaled.trade/register",
+      url: `${process.env.HYPERSCALED_BASE_URL || "https://hyperscaled.trade"}/register`,
     },
   }))
 

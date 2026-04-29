@@ -1,4 +1,4 @@
-const SITE_URL = "https://hyperscaled.trade";
+const SITE_URL = process.env.HYPERSCALED_BASE_URL || "https://hyperscaled.trade";
 
 export default function sitemap() {
   const routes = [
