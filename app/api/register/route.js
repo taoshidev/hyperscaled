@@ -207,7 +207,7 @@ export async function POST(request) {
   // Reject duplicate registrations — don't let users pay twice for the same miner + HL address
   try {
     const [existing] = await db
-      .select({ id: registrations.id, status: registrations.status })
+      .select({ id: registrations.id, status: registrations.status, createdAt: registrations.createdAt })
       .from(registrations)
       .where(
         and(
@@ -225,8 +225,22 @@ export async function POST(request) {
         existingStatus: existing.status,
       });
       if (existing.status === "registered") {
-        // Before blocking, check the validator — the user may have been de-registered
-        // externally, leaving the DB out of sync.
+        // Only check the validator if the registration is old enough for the validator
+        // to have indexed the subaccount. New subaccounts return "failed" or "not_found"
+        // from the validator before they're fully set up, which would incorrectly trigger
+        // de-registration. 24 hours is a safe threshold.
+        const registrationAgeMs = Date.now() - new Date(existing.createdAt).getTime();
+        const VALIDATOR_SYNC_GRACE_MS = 4 * 60 * 60 * 1000;
+
+        if (registrationAgeMs < VALIDATOR_SYNC_GRACE_MS) {
+          console.warn("[REGISTRATION] blocked — registered recently, skipping validator check", { reqId, hlAddress, minerSlug, registrationAgeMs });
+          return NextResponse.json(
+            { error: "This HL address is already registered." },
+            { status: 409 },
+          );
+        }
+
+        // Registration is old enough — check validator to see if they've been de-registered
         const validatorStatus = await checkValidatorStatus(hlAddress);
         console.info("[REGISTRATION] validator status check", {
           reqId,
@@ -256,7 +270,7 @@ export async function POST(request) {
           // Active on validator (or validator unreachable — safe default: block)
           console.warn("[REGISTRATION] blocked — already registered and active", { reqId, hlAddress, minerSlug });
           return NextResponse.json(
-            { error: "This HL address is already registered with this miner." },
+            { error: "This HL address is already registered." },
             { status: 409 },
           );
         }
@@ -879,20 +893,27 @@ export async function POST(request) {
         registered = true;
       } else {
         const errText = await res.text().catch(() => "");
-        console.warn("[REGISTRATION] miner API returned error body", { reqId, apiStatus: res.status, errText: errText.slice(0, 500) });
-        await reportError(new Error("Miner API error response"), {
-          source: "api/register",
-          metadata: {
-            step: "miner_api",
-            reqId,
-            apiStatus: res.status,
-            errText: errText.slice(0, 500),
-            minerSlug,
-            hlAddress,
-            baseUrl,
-          },
-        });
-        statusDetail = { reason: "miner_api_error", error: errText, apiStatus: res.status };
+        // The miner already has a subaccount for this address — treat as success since
+        // the account is active and the re-registration just hit the miner's duplicate guard.
+        if (res.status === 400 && errText.includes("already registered to subaccount")) {
+          console.info("[REGISTRATION] miner reports address already registered — treating as success", { reqId, hlAddress });
+          registered = true;
+        } else {
+          console.warn("[REGISTRATION] miner API returned error body", { reqId, apiStatus: res.status, errText: errText.slice(0, 500) });
+          await reportError(new Error("Miner API error response"), {
+            source: "api/register",
+            metadata: {
+              step: "miner_api",
+              reqId,
+              apiStatus: res.status,
+              errText: errText.slice(0, 500),
+              minerSlug,
+              hlAddress,
+              baseUrl,
+            },
+          });
+          statusDetail = { reason: "miner_api_error", error: errText, apiStatus: res.status };
+        }
       }
     } catch (err) {
       console.error("[REGISTRATION] miner API unreachable", { reqId, error: err.message });
