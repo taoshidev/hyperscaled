@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { registrations } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq, lt } from "drizzle-orm";
 import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
 
 function timingSafeEqual(a, b) {
@@ -47,10 +47,13 @@ export async function GET(request) {
 
   const startTime = Date.now();
 
+  const GRACE_MS = 4 * 60 * 60 * 1000;
+  const cutoff = new Date(Date.now() - GRACE_MS);
+
   const registered = await db
     .select({ id: registrations.id, hlAddress: registrations.hlAddress })
     .from(registrations)
-    .where(eq(registrations.status, "registered"));
+    .where(and(eq(registrations.status, "registered"), lt(registrations.createdAt, cutoff)));
 
   if (registered.length === 0) {
     return NextResponse.json({ checked: 0, deregistered: 0, skipped: 0 });

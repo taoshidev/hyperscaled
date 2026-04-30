@@ -230,7 +230,7 @@ export async function POST(request) {
         // from the validator before they're fully set up, which would incorrectly trigger
         // de-registration. 24 hours is a safe threshold.
         const registrationAgeMs = Date.now() - new Date(existing.createdAt).getTime();
-        const VALIDATOR_SYNC_GRACE_MS = 24 * 60 * 60 * 1000;
+        const VALIDATOR_SYNC_GRACE_MS = 4 * 60 * 60 * 1000;
 
         if (registrationAgeMs < VALIDATOR_SYNC_GRACE_MS) {
           console.warn("[REGISTRATION] blocked — registered recently, skipping validator check", { reqId, hlAddress, minerSlug, registrationAgeMs });
