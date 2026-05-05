@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, startTransition } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, List, X } from '@phosphor-icons/react'
@@ -9,6 +9,38 @@ import { useBrand, useBrandHref } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
+
+/* ───────────────────────────────────────────────
+   Promo Banner — fixed above nav, dismissible
+   ─────────────────────────────────────────────── */
+const PROMO_STORAGE_KEY = 'hs_promo_dismissed'
+
+function PromoBanner({ onDismiss, brandHref }) {
+  return (
+    <div className="fixed top-0 left-0 right-0 z-[51] bg-teal-400 h-10 flex items-center justify-center">
+      <div className="flex items-center justify-center gap-2 px-10 w-full">
+        <Link
+          href={brandHref('/register')}
+          onClick={() => trackCtaClick({ label: 'Promo Banner', location: 'promo_bar' })}
+          className="text-xs sm:text-sm font-medium text-black hover:text-black/80 transition-colors text-center"
+        >
+          Free $1k challenge accounts are live — only 1,000 are available.{' '}
+          <span className="underline underline-offset-2 font-semibold">
+            Claim yours <span className="inline-block">→</span>
+          </span>
+        </Link>
+      </div>
+      <button
+        type="button"
+        onClick={onDismiss}
+        aria-label="Dismiss promo"
+        className="absolute right-3 sm:right-4 text-black/60 hover:text-black transition-colors"
+      >
+        <X size={16} weight="bold" />
+      </button>
+    </div>
+  )
+}
 
 /*
   Progressive responsive collapse:
@@ -32,16 +64,37 @@ const NAV_LINKS = [
 
 export default function Nav({ excludeLinks = [] }) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [showPromo, setShowPromo] = useState(false)
   const brand = useBrand()
   const brandHref = useBrandHref()
   const links = excludeLinks.length
     ? NAV_LINKS.filter((l) => !excludeLinks.includes(l.label))
     : NAV_LINKS
 
+  useEffect(() => {
+    if (sessionStorage.getItem(PROMO_STORAGE_KEY) !== '1') {
+      startTransition(() => setShowPromo(true))
+    }
+  }, [])
+
+  const dismissPromo = () => {
+    setShowPromo(false)
+    sessionStorage.setItem(PROMO_STORAGE_KEY, '1')
+  }
+
+  // Calculate top offsets: promo bar (40px / h-10) + parentSite bar (32px / h-8)
+  const promoH = showPromo ? 40 : 0
+  const parentH = brand.parentSite ? 32 : 0
+  const headerTop = promoH + parentH
+
   return (
     <>
+    {showPromo && <PromoBanner onDismiss={dismissPromo} brandHref={brandHref} />}
     {brand.parentSite && (
-      <div className="fixed top-0 left-0 right-0 z-50 bg-zinc-900/90 border-b border-white/[0.06] backdrop-blur-sm">
+      <div
+        className="fixed left-0 right-0 z-50 bg-zinc-900/90 border-b border-white/[0.06] backdrop-blur-sm"
+        style={{ top: promoH }}
+      >
         <div className="max-w-[1400px] mx-auto px-6 h-8 flex items-center">
           <a
             href={brand.parentSite.url}
@@ -57,7 +110,8 @@ export default function Nav({ excludeLinks = [] }) {
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={spring}
-      className={`fixed left-0 right-0 z-50 backdrop-blur-xl bg-[#09090b]/60 border-b border-white/[0.06] ${brand.parentSite ? 'top-8' : 'top-0'}`}
+      className="fixed left-0 right-0 z-50 backdrop-blur-xl bg-[#09090b]/60 border-b border-white/[0.06]"
+      style={{ top: headerTop }}
     >
       <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between gap-4 relative">
         {/* Logo */}
