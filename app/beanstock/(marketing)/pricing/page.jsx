@@ -14,10 +14,10 @@ export const metadata = buildMetadata({
 })
 
 const BEANSTOCK_TIERS = [
-  { id: 'tier-1', name: '$5K Account', accountSize: '$5,000', launchPrice: 59, profitTarget: '10%', profitTargetAmount: '$500', maxDrawdown: '5%', maxDrawdownAmount: '$250', profitSplit: '100%', payoutCycle: 'Monthly', scalingPath: 'Up to $100K', timeLimit: 'None', cta: 'Start $5K Challenge', popular: false },
-  { id: 'tier-2', name: '$10K Account', accountSize: '$10,000', launchPrice: 109, profitTarget: '10%', profitTargetAmount: '$1,000', maxDrawdown: '5%', maxDrawdownAmount: '$500', profitSplit: '100%', payoutCycle: 'Monthly', scalingPath: 'Up to $100K', timeLimit: 'None', cta: 'Start $10K Challenge', popular: false },
-  { id: 'tier-3', name: '$25K Account', accountSize: '$25,000', launchPrice: 239, profitTarget: '10%', profitTargetAmount: '$2,500', maxDrawdown: '5%', maxDrawdownAmount: '$1,250', profitSplit: '100%', payoutCycle: 'Monthly', scalingPath: 'Up to $100K', timeLimit: 'None', cta: 'Start $25K Challenge', popular: false },
-  { id: 'tier-4', name: '$50K Account', accountSize: '$50,000', launchPrice: 499, profitTarget: '10%', profitTargetAmount: '$5,000', maxDrawdown: '5%', maxDrawdownAmount: '$2,500', profitSplit: '100%', payoutCycle: 'Monthly', scalingPath: 'Up to $100K', timeLimit: 'None', cta: 'Start $50K Challenge', popular: false },
+  { id: 'tier-1', name: '$5K Account', accountSize: '$5,000', launchPrice: 59, profitTarget: '10%', profitTargetAmount: '$500', maxDrawdown: '5%', maxDrawdownAmount: '$250', profitSplit: '100%', payoutCycle: 'Monthly', scalingPath: 'Up to $400K', timeLimit: 'None', cta: 'Start $5K Challenge', popular: false },
+  { id: 'tier-2', name: '$10K Account', accountSize: '$10,000', launchPrice: 109, profitTarget: '10%', profitTargetAmount: '$1,000', maxDrawdown: '5%', maxDrawdownAmount: '$500', profitSplit: '100%', payoutCycle: 'Monthly', scalingPath: 'Up to $400K', timeLimit: 'None', cta: 'Start $10K Challenge', popular: false },
+  { id: 'tier-3', name: '$25K Account', accountSize: '$25,000', launchPrice: 239, profitTarget: '10%', profitTargetAmount: '$2,500', maxDrawdown: '5%', maxDrawdownAmount: '$1,250', profitSplit: '100%', payoutCycle: 'Monthly', scalingPath: 'Up to $400K', timeLimit: 'None', cta: 'Start $25K Challenge', popular: false },
+  { id: 'tier-4', name: '$50K Account', accountSize: '$50,000', launchPrice: 499, profitTarget: '10%', profitTargetAmount: '$5,000', maxDrawdown: '5%', maxDrawdownAmount: '$2,500', profitSplit: '100%', payoutCycle: 'Monthly', scalingPath: 'Up to $400K', timeLimit: 'None', cta: 'Start $50K Challenge', popular: false },
   { id: 'tier-5', name: '$100K Account', accountSize: '$100,000', launchPrice: 799, profitTarget: '10%', profitTargetAmount: '$10,000', maxDrawdown: '5%', maxDrawdownAmount: '$5,000', profitSplit: '100%', payoutCycle: 'Monthly', scalingPath: 'Up to $400K', timeLimit: 'None', cta: 'Start $100K Challenge', popular: true },
 ]
 
