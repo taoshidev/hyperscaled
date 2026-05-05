@@ -32,7 +32,7 @@ const BRANDS = {
     name: 'Vanta Trading',
     prefix: '',
     logo: '/vanta-logo.svg',
-    mark: '/vanta-logo.svg',
+    mark: '/vanta-mark.svg',
     tagline: 'Scaled Trading on Hyperliquid',
     siteUrl: 'https://vantatrading.io',
     twitter: '@vantatrading',
