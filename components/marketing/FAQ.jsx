@@ -5,7 +5,7 @@ import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { Plus, Minus } from '@phosphor-icons/react'
 import Link from 'next/link'
 import { FAQ_ITEMS, HOME_FAQ_IDS } from '@/lib/constants'
-import { useBrand, useBrandHref } from '@/lib/brand'
+import { useBrand, useBrandHref, brandifyText } from '@/lib/brand'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -15,7 +15,7 @@ const faqs = HOME_FAQ_IDS.map((id) => allItems.find((item) => item.id === id)).f
   a: item.answer,
 }))
 
-function FAQItem({ item, index }) {
+function FAQItem({ item, index, brand }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
@@ -34,7 +34,7 @@ function FAQItem({ item, index }) {
         aria-expanded={open}
       >
         <span className="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors leading-snug">
-          {item.q}
+          {brandifyText(item.q, brand)}
         </span>
         <span className="shrink-0 mt-0.5">
           {open ? (
@@ -55,7 +55,7 @@ function FAQItem({ item, index }) {
             style={{ overflow: 'hidden' }}
           >
             <p className="text-sm text-zinc-400 leading-relaxed pb-5 max-w-[68ch]">
-              {item.a}
+              {brandifyText(item.a, brand)}
             </p>
           </motion.div>
         )}
@@ -115,7 +115,7 @@ export default function FAQ() {
           {/* Right — accordion */}
           <div className="divide-y divide-white/[0.06] border-t border-white/[0.06]">
             {faqs.map((item, i) => (
-              <FAQItem key={item.q} item={item} index={i} />
+              <FAQItem key={item.q} item={item} index={i} brand={brand} />
             ))}
           </div>
 

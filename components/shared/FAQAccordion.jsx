@@ -3,10 +3,12 @@
 import { useState, useId } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CaretDown } from '@phosphor-icons/react'
+import { useBrand, brandifyText } from '@/lib/brand'
 
 const spring = { type: 'spring', stiffness: 120, damping: 22 }
 
 function FAQItem({ item, isOpen, onToggle }) {
+  const brand = useBrand()
   const id = useId()
   const headingId = `${id}-heading`
   const panelId = `${id}-panel`
@@ -27,7 +29,7 @@ function FAQItem({ item, isOpen, onToggle }) {
               : 'text-zinc-200 group-hover:text-white'
           }`}
         >
-          {item.question}
+          {brandifyText(item.question, brand)}
         </span>
         <span className="shrink-0 mt-0.5">
           <CaretDown
@@ -55,7 +57,7 @@ function FAQItem({ item, isOpen, onToggle }) {
             style={{ overflow: 'hidden' }}
           >
             <p className="text-sm text-zinc-400 leading-relaxed pb-5 max-w-[68ch]">
-              {item.answer}
+              {brandifyText(item.answer, brand)}
             </p>
           </motion.div>
         )}

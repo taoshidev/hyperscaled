@@ -1,6 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useBrand } from "@/lib/brand";
+
+function AccountType() {
+  const brand = useBrand();
+  return <>{brand.accountType}</>;
+}
+
+function BrandName() {
+  const brand = useBrand();
+  return <>{brand.name}</>;
+}
 
 /* ── Shared visual building blocks matching the widget design ────────────── */
 
@@ -196,8 +207,8 @@ export const HELP_CONTENT = {
       <>
         <p className="text-[13px] text-muted-foreground leading-relaxed mb-2">
           You&rsquo;re a few steps away from mirroring your Hyperliquid trades to a{" "}
-          <strong className="text-foreground font-semibold">Hyperscaled account</strong> — pass the
-          challenge and unlock a scaled account with 100% performance rewards.
+          <strong className="text-foreground font-semibold"><BrandName /> account</strong> — pass the
+          challenge and unlock a <AccountType /> account with 100% performance rewards.
         </p>
         <Tip label="Fastest path (existing HL user)">
           <NumberedSteps
@@ -223,9 +234,9 @@ export const HELP_CONTENT = {
       <>
         <p className="text-[13px] text-muted-foreground leading-relaxed mb-2">
           This is the <strong className="text-foreground font-semibold">wallet address you trade from on
-          Hyperliquid</strong> — it starts with <Code>0x</Code>. Hyperscaled monitors
+          Hyperliquid</strong> — it starts with <Code>0x</Code>. <BrandName /> monitors
           this address on-chain and mirrors every trade proportionally to your
-          Hyperscaled account.
+          <BrandName /> account.
         </p>
 
         <Warn label="Use your active trading address">
@@ -296,7 +307,7 @@ export const HELP_CONTENT = {
     content: (
       <>
         <p className="text-[13px] text-muted-foreground leading-relaxed mb-2">
-          When you trade profitably on your scaled account, your share of the
+          When you trade profitably on your <AccountType /> account, your share of the
           profits is calculated and sent directly to this wallet —{" "}
           <strong className="text-foreground font-semibold">automatically, with no manual withdrawal
           needed</strong>. Every payout cycle, earned profits land here.

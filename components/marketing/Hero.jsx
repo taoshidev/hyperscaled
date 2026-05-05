@@ -62,7 +62,7 @@ export default function Hero() {
               variants={itemVariants}
               className="text-5xl md:text-6xl xl:text-7xl tracking-tighter leading-none font-bold mb-6"
             >
-              <span className="text-teal-400">{brand.id === 'beanstock' ? 'Funded Trading' : 'Scaled Trading'}</span>{' '}
+              <span className="text-teal-400 capitalize">{brand.accountType} Trading</span>{' '}
               on Hyperliquid
             </motion.h1>
 

@@ -18,7 +18,7 @@ import {
 import { BASESCAN_URL, CHROME_EXTENSION_URL } from "@/lib/constants";
 import { copyToClipboard } from "@/lib/utils";
 import { formatAccountSize, truncateAddress } from "@/lib/format";
-import { useBrandHref } from "@/lib/brand";
+import { useBrand, useBrandHref } from "@/lib/brand";
 import { useExtensionBridge } from "@/hooks/use-extension-bridge";
 import { trackEvent, getRefSource, getBrand } from "@/lib/analytics";
 
@@ -242,6 +242,7 @@ const itemVariants = {
 const POLL_INTERVAL_MS = 5000;
 
 export function StepConfirmation({ selectedTier, hlAddress, txHash, registrationStatus, paymentMethod, brandVariant }) {
+  const brand = useBrand();
   const brandHref = useBrandHref();
   const isHLPayment = paymentMethod === "hyperliquid" || paymentMethod === "eip712";
   const explorerUrl = isHLPayment ? null : `${BASESCAN_URL}/tx/${txHash}`;
@@ -322,7 +323,7 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
               You&#8217;re registered
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Your scaled account is being provisioned on Hyperscaled.
+              Your {brand.accountType} account is being provisioned on {brand.name}.
             </p>
           </div>
         </div>

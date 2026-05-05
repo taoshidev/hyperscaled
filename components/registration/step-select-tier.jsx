@@ -92,7 +92,7 @@ export function StepSelectTier({
       {/* Header */}
       <div className="text-center space-y-2 mt-3">
         <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-          Choose your {brand.id === 'beanstock' ? 'funded' : 'scaled'} account size
+          Choose your {brand.accountType} account size
         </h2>
         <p className="text-sm text-muted-foreground max-w-md mx-auto text-balance">
           One challenge. No recurring fees. 100%&nbsp;of performance
@@ -116,7 +116,7 @@ export function StepSelectTier({
       {/* Tier cards — native radio + label (reliable clicks across browsers) */}
       <div
         role="radiogroup"
-        aria-label={`Choose your ${brand.id === 'beanstock' ? 'funded' : 'scaled'} account size`}
+        aria-label={`Choose your ${brand.accountType} account size`}
         className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${Array.isArray(tiers) && tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-4 xl:gap-3 mt-10`}
       >
         {!Array.isArray(tiers)
@@ -144,7 +144,7 @@ export function StepSelectTier({
                   type="button"
                   role="radio"
                   aria-checked={isSelected}
-                  aria-label={`${tier.name} — ${formatShortName(tier.accountSize)} ${brand.id === 'beanstock' ? 'funded' : 'scaled'} account — ${formatPrice(tier.promoPrice)}`}
+                  aria-label={`${tier.name} — ${formatShortName(tier.accountSize)} ${brand.accountType} account — ${formatPrice(tier.promoPrice)}`}
                   tabIndex={isSelected || (selectedIndex < 0 && i === 0) ? 0 : -1}
                   onClick={() => handleSelectIndex(i)}
                   onKeyDown={(e) => handleArrowNav(e, i)}

@@ -305,11 +305,12 @@ function EvalProgressWidget() {
 
 /* ── A Model Built for Traders ── */
 function ModelSection() {
+  const brand = useBrand()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
   const bullets = [
-    'A scaled account upon challenge completion',
+    `A ${brand.accountType} account upon challenge completion`,
     'Verifiable payouts through onchain technology',
     '100% profit split — you keep your earnings',
     'A system designed for trader success',
@@ -359,6 +360,7 @@ function ModelSection() {
 
 /* ── Scaling Path Section ── */
 function ScalingSection() {
+  const brand = useBrand()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
@@ -375,7 +377,7 @@ function ScalingSection() {
             Start at $25K. Scale to&nbsp;$400K.
           </h2>
           <p className="mt-4 text-sm sm:text-base text-zinc-400 max-w-[56ch] mx-auto leading-relaxed" style={{ textWrap: 'balance' }}>
-            Every scaled trader starts at their selected account size. Consistent performance unlocks the next tier automatically — no additional&nbsp;fees.
+            Every {brand.accountType} trader starts at their selected account size. Consistent performance unlocks the next tier automatically — no additional&nbsp;fees.
           </p>
         </motion.div>
         <ScalingPathVisual />
