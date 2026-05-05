@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 const VANTA_HOSTNAMES = new Set(["hs.vantatrading.io"]);
+const BEANSTOCK_HOSTNAMES = new Set(["www.beanstocktrading.com", "beanstocktrading.com"]);
 const INTERNAL_PATH_PREFIXES = ["/_next", "/api", "/monitoring"];
 const AFFILIATE_SLUG_ROUTES = new Set(["strato"]);
 
@@ -22,6 +23,18 @@ function shouldRewriteToVanta(hostname, pathname) {
   return !INTERNAL_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
+function shouldRewriteToBeanstock(hostname, pathname) {
+  if (!BEANSTOCK_HOSTNAMES.has(hostname)) {
+    return false;
+  }
+
+  if (pathname === "/beanstock" || pathname.startsWith("/beanstock/")) {
+    return false;
+  }
+
+  return !INTERNAL_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
 function getNormalizedVantaPath(pathname) {
   if (pathname === "/vanta") {
     return "/";
@@ -29,6 +42,18 @@ function getNormalizedVantaPath(pathname) {
 
   if (pathname.startsWith("/vanta/")) {
     return pathname.replace(/^\/vanta/, "") || "/";
+  }
+
+  return null;
+}
+
+function getNormalizedBeanstockPath(pathname) {
+  if (pathname === "/beanstock") {
+    return "/";
+  }
+
+  if (pathname.startsWith("/beanstock/")) {
+    return pathname.replace(/^\/beanstock/, "") || "/";
   }
 
   return null;
@@ -77,6 +102,7 @@ export function middleware(request) {
   const toltRefCookie = request.cookies.get("tolt_ref")?.value;
   const minerMatch = pathname.match(/^\/miner\/([^/]+)/);
   const normalizedVantaPath = getNormalizedVantaPath(pathname);
+  const normalizedBeanstockPath = getNormalizedBeanstockPath(pathname);
 
   if (VANTA_HOSTNAMES.has(hostname) && normalizedVantaPath) {
     const url = request.nextUrl.clone();
@@ -88,6 +114,21 @@ export function middleware(request) {
       toltRefCookie,
       minerMatch,
       pathname: normalizedVantaPath,
+      searchParams,
+    });
+    return response;
+  }
+
+  if (BEANSTOCK_HOSTNAMES.has(hostname) && normalizedBeanstockPath) {
+    const url = request.nextUrl.clone();
+    url.pathname = normalizedBeanstockPath;
+    const response = NextResponse.redirect(url);
+    applyTrackingCookies(response, {
+      entryCookie,
+      affiliateCookie,
+      toltRefCookie,
+      minerMatch,
+      pathname: normalizedBeanstockPath,
       searchParams,
     });
     return response;
@@ -128,6 +169,10 @@ export function middleware(request) {
   if (shouldRewriteToVanta(hostname, pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = `/vanta${pathname}`;
+    response = NextResponse.rewrite(url);
+  } else if (shouldRewriteToBeanstock(hostname, pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/beanstock${pathname}`;
     response = NextResponse.rewrite(url);
   } else {
     response = NextResponse.next();

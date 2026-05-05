@@ -40,7 +40,7 @@ const getCachedRegisterMinerData = unstable_cache(
     }
 
     const dbTiers = await getTiersForMiner(miner.hotkey)
-    const activeTiers = dbTiers.filter((t) => t.isActive)
+    const activeTiers = dbTiers.filter((t) => t.isActive && t.accountSize > 1000)
 
     return {
       initialMinerTiers: activeTiers.map(enrichTier),

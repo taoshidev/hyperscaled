@@ -36,8 +36,8 @@ export default function Hero() {
       {brand.showLiquidCrystal && <LiquidCrystalBg className="pointer-events-none" />}
       <div className="absolute inset-0 bg-zinc-950/60 pointer-events-none" />
 
-      {/* Promo banner — scrolls with hero */}
-      <PromoBanner />
+      {/* Promo banner — scrolls with hero (hyperscaled only) */}
+      {brand.id === 'hyperscaled' && <PromoBanner />}
 
       <div className="relative max-w-[1400px] mx-auto px-6 w-full py-20 flex-1 flex items-center">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-20 items-center">

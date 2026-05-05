@@ -19,14 +19,14 @@ export const metadata = {
     template: "%s",
   },
   description:
-    "Trade on Hyperliquid. Get a scaled account. Keep 100% of your profits. 1-step challenge. Monthly USDC payouts. Scale to $2.5M.",
+    "Trade on Hyperliquid. Get a scaled account. Keep 100% of your profits. 1-step challenge. Monthly USDC payouts. Scale to $400K.",
   robots: { index: true, follow: true },
   openGraph: {
     type: "website",
     siteName: "Hyperscaled",
     title: "Hyperscaled — Scaled Trading on Hyperliquid",
     description:
-      "The most advanced decentralized prop trading infrastructure. 1-step challenge, 100% profit split, onchain USDC payouts, no KYC to start. Trade your way to $2.5M.",
+      "The most advanced decentralized prop trading infrastructure. 1-step challenge, 100% profit split, onchain USDC payouts, no KYC to start. Trade your way to $400K.",
     url: SITE_URL,
     images: [OG_IMAGE],
   },

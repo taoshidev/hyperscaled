@@ -125,12 +125,12 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
           </h2>
           <div className="mt-5 flex justify-center">
             <span className="inline-flex items-center px-3 py-1 rounded-full border border-teal-400/20 bg-teal-400/10 text-xs text-teal-400 font-medium">
-              90+ tradeable&nbsp;pairs
+              60+ tradable&nbsp;pairs
             </span>
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 md:gap-5 xl:gap-3">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-6 md:gap-5 xl:gap-3`}>
           {tiers.map((tier, i) => (
             <PricingCard key={tier.id} tier={tier} index={i} brandHref={brandHref} />
           ))}

@@ -148,7 +148,7 @@ function PricingCard({ tier, index }) {
 function PricingCards({ tiers }) {
   return (
     <section className="px-6 pb-20">
-      <div className="max-w-[1400px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 md:gap-5 xl:gap-3">
+      <div className={`max-w-[1400px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-6 md:gap-5 xl:gap-3`}>
         {tiers.map((tier, i) => (
           <PricingCard key={tier.id} tier={tier} index={i} />
         ))}

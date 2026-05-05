@@ -41,7 +41,7 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 xl:gap-3">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-4 xl:gap-3`}>
           {tiers.map((tier, i) => (
             <motion.div
               key={tier.id}
