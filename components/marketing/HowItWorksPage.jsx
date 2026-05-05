@@ -36,9 +36,11 @@ function PageHero() {
   const brand = useBrand()
   const brandHref = useBrandHref()
   const heroTitle =
-    brand.poweredBy && brand.id !== 'hyperscaled'
-      ? `Hyperliquid trading on ${brand.name.replace('Trading', '')} \n\n powered by Hyperscaled`
-      : 'Trade on Hyperliquid. Get scaled by the network.'
+    brand.id === 'beanstock'
+      ? `Trade on Hyperliquid. Get ${brand.accountType} by Beanstock.`
+      : brand.poweredBy && brand.id !== 'hyperscaled'
+        ? `Hyperliquid trading on ${brand.name.replace('Trading', '')} \n\n powered by Hyperscaled`
+        : `Trade on Hyperliquid. Get ${brand.accountType} by the network.`
 
   return (
     <section className="pt-32 pb-16 px-6">
@@ -118,7 +120,7 @@ function KeyDetails({ rows, inline }) {
 /* ───────────────────────────────────────────────
    Section 2 — Step-by-Step Flow (4 steps)
    ─────────────────────────────────────────────── */
-function getSteps(brandName) {
+function getSteps(brandName, brandId, accountType) {
   return [
     {
       number: '01',
@@ -160,7 +162,7 @@ function getSteps(brandName) {
       number: '04',
       icon: CurrencyDollar,
       title: 'Pass. Get Funded. Get Paid.',
-      body: 'Hit the 10% profit target with drawdown under 5% to immediately activate your scaled account. Keep 100% of profits with payouts delivered in USDC monthly. Scale to $400K with continued\u00a0performance.',
+      body: `Hit the 10% profit target with drawdown under 5% to immediately activate your ${accountType} account. Keep 100% of profits with payouts delivered in USDC monthly. Scale to $400K with continued\u00a0performance.`,
       details: [
         { label: 'Profit Target', value: '10%' },
         { label: 'Max Drawdown (Challenge)', value: '5% daily / 5% EOD trailing' },
@@ -273,7 +275,7 @@ function StepCard({ step, index }) {
 
 function StepByStepFlow() {
   const brand = useBrand()
-  const steps = getSteps(brand.name)
+  const steps = getSteps(brand.name, brand.id, brand.accountType)
   return (
     <section className="px-6 pb-20">
       <div className="max-w-[1100px] mx-auto flex flex-col gap-6">
@@ -416,6 +418,7 @@ function ChromeExtensionSection() {
    Scaling Path (below Step 4)
    ─────────────────────────────────────────────── */
 function ScalingSection() {
+  const brand = useBrand()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
@@ -432,7 +435,7 @@ function ScalingSection() {
             Scaling path: up to&nbsp;$400K
           </h2>
           <p className="mt-4 text-sm sm:text-base text-zinc-400 max-w-[56ch] mx-auto leading-relaxed" style={{ textWrap: 'balance' }}>
-            Consistently hit quarterly performance targets and your scaled account grows automatically with no additional&nbsp;fees.
+            Consistently hit quarterly performance targets and your {brand.accountType} account grows automatically with no additional&nbsp;fees.
           </p>
         </motion.div>
         <ScalingPathVisual />
@@ -658,7 +661,7 @@ function PayoutMechanics() {
           className="max-w-[700px] mx-auto rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-5 sm:p-6 text-center"
         >
           <p className="text-sm sm:text-base text-teal-400 font-medium leading-relaxed" style={{ textWrap: 'balance' }}>
-            100% of profits go to you. {brand.name} takes 0%, including on scaled accounts up to&nbsp;$400K.
+            100% of profits go to you. {brand.name} takes 0%, including on {brand.accountType} accounts up to&nbsp;$400K.
           </p>
         </motion.div>
       </div>

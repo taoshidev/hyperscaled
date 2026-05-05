@@ -2,6 +2,7 @@
 
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
+import { useBrand, brandifyText } from '@/lib/brand'
 import {
   CheckCircle,
   TrendUp,
@@ -124,6 +125,7 @@ const features = [
 ]
 
 export default function Features() {
+  const brand = useBrand()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -180,7 +182,7 @@ export default function Features() {
                   >
                     {feat.title}
                   </h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed [text-wrap:pretty]">{feat.body}</p>
+                  <p className="text-sm text-zinc-400 leading-relaxed [text-wrap:pretty]">{brandifyText(feat.body, brand)}</p>
                   {feat.extra}
                 </div>
               </motion.div>

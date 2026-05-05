@@ -5,7 +5,7 @@ import { JsonLd } from '@/components/shared/JsonLd'
 export const metadata = buildMetadata({
   title: 'Pricing — Beanstock Funded Accounts',
   description:
-    'One-time USDC fee. $5K to $100K scaled accounts. 100% profit split. No subscriptions, no hidden charges.',
+    'One-time USDC fee. $5K to $100K funded accounts. 100% profit split. No subscriptions, no hidden charges.',
   ogTitle: 'Beanstock Pricing — One Fee. One Challenge. Keep Everything You Earn.',
   ogDescription:
     'Start from $59. Choose $5K to $100K accounts. 100% profit split, monthly USDC payouts, and scaling up to $400K.',
@@ -26,7 +26,7 @@ export default async function BeanstockPricing() {
     "@context": "https://schema.org",
     "@type": "Product",
     name: `Beanstock ${tier.name} Funded Account`,
-    description: `${tier.accountSize} scaled trading account on Hyperliquid. 10% profit target, 5% max drawdown, ${tier.profitSplit} profit split.`,
+    description: `${tier.accountSize} funded trading account on Hyperliquid. 10% profit target, 5% max drawdown, ${tier.profitSplit} profit split.`,
     offers: {
       "@type": "Offer",
       price: String(tier.launchPrice),

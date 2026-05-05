@@ -7,8 +7,8 @@ import { unstable_cache } from "next/cache"
 export const metadata = buildMetadata({
   title: "Start Your Challenge",
   description:
-    "Choose your scaled account size and begin your one-step challenge on Hyperliquid. No recurring fees. 100% of performance rewards are yours.",
-  ogTitle: "Start Your Challenge — Beanstock Scaled Trading",
+    "Choose your funded account size and begin your one-step challenge on Hyperliquid. No recurring fees. 100% of performance rewards are yours.",
+  ogTitle: "Start Your Challenge — Beanstock Funded Trading",
   ogDescription:
     "Choose from $5K to $100K. One-time USDC fee. Pass the challenge. Keep 100% of your profits.",
   path: "/beanstock/register",

@@ -4,7 +4,7 @@ import { JsonLd } from '@/components/shared/JsonLd'
 import { FAQ_ITEMS } from '@/lib/constants'
 
 export const metadata = buildMetadata({
-  title: 'FAQ — Beanstock Scaled Trading Questions',
+  title: 'FAQ — Beanstock Funded Trading Questions',
   description:
     'Common questions about Beanstock — challenges, payouts, KYC, account scaling, and how the protocol works.',
   ogTitle: 'Beanstock FAQ — Everything You Need to Know',

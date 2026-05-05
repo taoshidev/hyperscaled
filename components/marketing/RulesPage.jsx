@@ -9,7 +9,7 @@ import {
   Warning,
 } from '@phosphor-icons/react'
 import RulesTable from '@/components/shared/RulesTable'
-import { EVAL_RULES, FUNDED_RULES, SCALING_PATH, BUYING_POWER_BY_SIZE, LEVERAGE_LIMITS, FEE_RULES, TRADABLE_PAIRS } from '@/lib/constants'
+import { EVAL_RULES, getFundedRules, SCALING_PATH, BUYING_POWER_BY_SIZE, LEVERAGE_LIMITS, FEE_RULES, TRADABLE_PAIRS } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
 
@@ -199,6 +199,7 @@ function EvalRulesSection() {
    Section 2b — Available Trading Pairs
    ─────────────────────────────────────────────── */
 function AvailablePairsSection() {
+  const brand = useBrand()
   const totalPairs = TRADABLE_PAIRS.reduce((sum, group) => sum + group.count, 0)
   return (
     <section id="pairs" className="px-6 pb-20 scroll-mt-[110px]">
@@ -207,7 +208,7 @@ function AvailablePairsSection() {
           Available Pairs
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed">
-          There are <span className="text-white font-medium">{totalPairs} tradable pairs</span> across crypto, commodities, indices, and stocks. Although you can trade any pair on Hyperliquid, only these {totalPairs} predefined pairs are tracked and counted toward your Hyperscaled trading&nbsp;performance.
+          There are <span className="text-white font-medium">{totalPairs} tradable pairs</span> across crypto, commodities, indices, and stocks. Although you can trade any pair on Hyperliquid, only these {totalPairs} predefined pairs are tracked and counted toward your {brand.accountType} trading&nbsp;performance.
         </p>
 
         <div className="mt-8 space-y-6">
@@ -389,6 +390,7 @@ function FeesSection() {
    Section 3 — Funded Account Rules
    ─────────────────────────────────────────────── */
 function FundedRulesSection() {
+  const brand = useBrand()
   return (
     <section id="scaled" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
@@ -396,10 +398,10 @@ function FundedRulesSection() {
           Funded Account Phase
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
-          Once you pass the challenge, your scaled account is activated immediately. These rules apply for the duration of your scaled&nbsp;trading.
+          Once you pass the challenge, your {brand.accountType} account is activated immediately. These rules apply for the duration of your {brand.accountType}&nbsp;trading.
         </p>
 
-        <RulesTable rules={FUNDED_RULES} />
+        <RulesTable rules={getFundedRules(brand.accountType, brand.name)} />
       </div>
     </section>
   )
@@ -409,13 +411,15 @@ function FundedRulesSection() {
    Section 4 — Scaling Rules
    ─────────────────────────────────────────────── */
 
-const DOES_DISQUALIFY = [
-  'Breaching the daily loss limit (5% during the challenge / 8% when scaled)',
-  'Breaching the EOD trailing loss limit (5% during the challenge / 8% when scaled)',
-  'Attempting to manipulate challenge performance (wash trading, coordinated cross-account hedging)',
-  'Martingale and martingale-like strategies (progressively increasing position size after losses)',
-  '30 consecutive days of inactivity (no trades placed)',
-]
+function getDisqualifyRules(accountType) {
+  return [
+    `Breaching the daily loss limit (5% during the challenge / 8% when ${accountType})`,
+    `Breaching the EOD trailing loss limit (5% during the challenge / 8% when ${accountType})`,
+    'Attempting to manipulate challenge performance (wash trading, coordinated cross-account hedging)',
+    'Martingale and martingale-like strategies (progressively increasing position size after losses)',
+    '30 consecutive days of inactivity (no trades placed)',
+  ]
+}
 
 const DOES_NOT_DISQUALIFY = [
   'Trading during news events',
@@ -427,6 +431,7 @@ const DOES_NOT_DISQUALIFY = [
 ]
 
 function ScalingRulesSection() {
+  const brand = useBrand()
   return (
     <section id="scaling" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
@@ -434,7 +439,7 @@ function ScalingRulesSection() {
           Account Scaling
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-10">
-          Consistent performance on your scaled account unlocks access to progressively larger account sizes, up to a maximum of $400K. Scaling is automatic and based on performance thresholds — no application required, no additional&nbsp;fees.
+          Consistent performance on your {brand.accountType} account unlocks access to progressively larger account sizes, up to a maximum of $400K. Scaling is automatic and based on performance thresholds — no application required, no additional&nbsp;fees.
         </p>
 
         {/* Qualifications callout boxes */}
@@ -546,6 +551,8 @@ function ScalingRulesSection() {
    Section 5 — Disqualification Rules
    ─────────────────────────────────────────────── */
 function DisqualificationSection() {
+  const brand = useBrand()
+  const disqualifyRules = getDisqualifyRules(brand.accountType)
   return (
     <section id="disqualification" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
@@ -553,7 +560,7 @@ function DisqualificationSection() {
           Disqualification
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
-          Not every risk leads to disqualification. Here is what does and does not end your challenge or scaled&nbsp;account.
+          Not every risk leads to disqualification. Here is what does and does not end your challenge or {brand.accountType}&nbsp;account.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -563,7 +570,7 @@ function DisqualificationSection() {
               What causes disqualification
             </h3>
             <ul className="space-y-4">
-              {DOES_DISQUALIFY.map((item) => (
+              {disqualifyRules.map((item) => (
                 <li key={item} className="flex items-start gap-3 text-sm text-zinc-400">
                   <XCircle size={20} weight="fill" className="text-red-400 shrink-0 mt-0.5" />
                   {item}
@@ -596,6 +603,7 @@ function DisqualificationSection() {
    Section 6 — KYC and Payout Eligibility
    ─────────────────────────────────────────────── */
 function KYCSection() {
+  const brand = useBrand()
   return (
     <section id="kyc" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
@@ -610,7 +618,7 @@ function KYCSection() {
             KYC is not required to register, trade, or complete the challenge. It is required only to receive a&nbsp;payout.
           </p>
           <p>
-            When your scaled account reaches payout eligibility at the end of a 30-day cycle, you will be prompted to complete a brief identity verification to unlock payouts. Payouts are then sent in USDC directly to your connected wallet. The entire payout flow is automated and verifiable&nbsp;onchain.
+            When your {brand.accountType} account reaches payout eligibility at the end of a 30-day cycle, you will be prompted to complete a brief identity verification to unlock payouts. Payouts are then sent in USDC directly to your connected wallet. The entire payout flow is automated and verifiable&nbsp;onchain.
           </p>
         </div>
       </div>

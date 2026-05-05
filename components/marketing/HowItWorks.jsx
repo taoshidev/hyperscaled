@@ -128,7 +128,7 @@ export default function HowItWorks({ tiers = [] }) {
       number: '03',
       icon: Trophy,
       title: 'Hit the Target. Get Paid.',
-      body: `Hit the 10% profit target to pass the ${brand.name} Challenge and activate your scaled account immediately. Payouts are delivered to your wallet every 30 days, and you keep 100% of everything you\u00a0earn.`,
+      body: `Hit the 10% profit target to pass the ${brand.name} Challenge and activate your ${brand.accountType} account immediately. Payouts are delivered to your wallet every 30 days, and you keep 100% of everything you\u00a0earn.`,
       mockup: <PayoutMockup />,
     },
   ]
@@ -154,7 +154,7 @@ export default function HowItWorks({ tiers = [] }) {
           </span>
           <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-2xl text-balance">
             Trade with Hyperliquid.{' '}
-            <span className="text-zinc-500">Earn a scaled trading&nbsp;account.</span>
+            <span className="text-zinc-500">Earn a {brand.accountType} trading&nbsp;account.</span>
           </h2>
         </motion.div>
 

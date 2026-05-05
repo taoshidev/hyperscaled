@@ -15,28 +15,31 @@ import { usePreservedQueryString, parseUtms, withPreservedQuery } from '@/lib/pr
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { CHROME_EXTENSION_URL } from '@/lib/constants'
 
-const STEPS = [
-  {
-    eyebrow: 'STEP 01',
-    title: 'Register & choose your size',
-    body: 'Choose your account size from $5K to $100K. Pay a one-time fee in USDC. No recurring charges, no subscriptions.',
-  },
-  {
-    eyebrow: 'STEP 02',
-    title: 'Trade on Hyperliquid',
-    body: 'Connect your Hyperliquid wallet and trade exactly how you trade today — same interface, same order book, same fills. Your funds never leave your wallet.',
-  },
-  {
-    eyebrow: 'STEP 03',
-    title: 'Hit the target, get paid',
-    body: 'Hit the 10% performance target with drawdown under 5% and your scaled account activates immediately. Rewards are paid monthly in USDC, onchain. You keep 100%.',
-  },
-]
+function getSteps(accountType) {
+  return [
+    {
+      eyebrow: 'STEP 01',
+      title: 'Register & choose your size',
+      body: 'Choose your account size from $5K to $100K. Pay a one-time fee in USDC. No recurring charges, no subscriptions.',
+    },
+    {
+      eyebrow: 'STEP 02',
+      title: 'Trade on Hyperliquid',
+      body: 'Connect your Hyperliquid wallet and trade exactly how you trade today — same interface, same order book, same fills. Your funds never leave your wallet.',
+    },
+    {
+      eyebrow: 'STEP 03',
+      title: 'Hit the target, get paid',
+      body: `Hit the 10% performance target with drawdown under 5% and your ${accountType} account activates immediately. Rewards are paid monthly in USDC, onchain. You keep 100%.`,
+    },
+  ]
+}
 
 export function BridgePage() {
   const qs = usePreservedQueryString()
   const brand = useBrand()
   const brandHref = useBrandHref()
+  const steps = getSteps(brand.accountType)
 
   const registerHref = withPreservedQuery(brandHref('/register'), qs)
   const homeHref = withPreservedQuery(brandHref('/'), qs)
@@ -165,7 +168,7 @@ export function BridgePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {STEPS.map((step) => (
+            {steps.map((step) => (
               <div
                 key={step.eyebrow}
                 className="relative bg-zinc-900/50 border border-white/[0.06] rounded-2xl p-6"

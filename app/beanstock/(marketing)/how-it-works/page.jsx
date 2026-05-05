@@ -3,7 +3,7 @@ import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
 
 export const metadata = buildMetadata({
-  title: 'How It Works — Beanstock Scaled Trading',
+  title: 'How It Works — Beanstock Funded Trading',
   description:
     'See exactly how Beanstock works. Connect your wallet, trade on Hyperliquid, pass the challenge, and keep 100% of your monthly USDC payouts.',
   ogTitle: 'How Beanstock Works — Trade on Hyperliquid, Get Funded, Keep 100%',
@@ -16,7 +16,7 @@ export const metadata = buildMetadata({
 const HOW_TO_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "HowTo",
-  name: "How to get a scaled trading account on Beanstock",
+  name: "How to get a funded trading account on Beanstock",
   description:
     "Connect your wallet, trade on Hyperliquid, pass the 1-step challenge, and keep 100% of your USDC payouts.",
   step: [

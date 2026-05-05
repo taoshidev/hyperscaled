@@ -19,6 +19,7 @@ const BRANDS = {
       telegram: 'https://t.me/hyperscaled_bot',
       support: 'mailto:support@hyperscaled.trade',
     },
+    accountType: 'scaled',
     showExtension: true,
     showBetaBadge: false,
     showLiquidCrystal: true,
@@ -42,6 +43,7 @@ const BRANDS = {
       telegram: null,
       support: 'mailto:support@bitcast.network',
     },
+    accountType: 'scaled',
     showExtension: false,
     showBetaBadge: false,
     showLiquidCrystal: false,
@@ -67,6 +69,7 @@ const BRANDS = {
       youtube: 'https://youtube.com/@lunarcrush',
       support: 'mailto:support@lunarcrush.com',
     },
+    accountType: 'scaled',
     showExtension: false,
     showBetaBadge: false,
     showLiquidCrystal: false,
@@ -81,7 +84,7 @@ const BRANDS = {
     name: 'Beanstock Trading',
     prefix: '/beanstock',
     logo: '/beanstock-logo.svg',
-    tagline: 'Scaled Trading on Hyperliquid',
+    tagline: 'Funded Trading on Hyperliquid',
     siteUrl: 'https://jollygreeninvestor.com',
     twitter: '@jollygreenmoney',
     socials: {
@@ -92,6 +95,7 @@ const BRANDS = {
       youtube: 'https://www.youtube.com/@getbeanstock',
       support: 'mailto:hello@getbeanstock.com',
     },
+    accountType: 'funded',
     showExtension: true,
     showBetaBadge: false,
     showLiquidCrystal: false,
@@ -124,6 +128,7 @@ const BRANDS = {
       telegram: 'https://t.me/hyperscaled_bot',
       support: 'mailto:support@vantatrading.io',
     },
+    accountType: 'scaled',
     showExtension: true,
     showBetaBadge: false,
     showLiquidCrystal: false,
@@ -157,4 +162,20 @@ export function useBrand() {
 export function useBrandHref() {
   const { prefix } = useContext(BrandContext)
   return useCallback((path) => `${prefix}${path}`, [prefix])
+}
+
+export function brandifyText(text, brand) {
+  if (!text || brand.accountType === 'scaled') return text
+  return text
+    .replace(/\bscaled account/g, `${brand.accountType} account`)
+    .replace(/\bscaled accounts/g, `${brand.accountType} accounts`)
+    .replace(/\bscaled trader/g, `${brand.accountType} trader`)
+    .replace(/\bscaled traders/g, `${brand.accountType} traders`)
+    .replace(/\bscaled trading/g, `${brand.accountType} trading`)
+    .replace(/\bscaled capital/g, `${brand.accountType} capital`)
+    .replace(/\baccounts scaled/g, `accounts ${brand.accountType}`)
+    .replace(/\bI'm scaled/g, `I'm ${brand.accountType}`)
+    .replace(/\bOnce scaled/g, `Once ${brand.accountType}`)
+    .replace(/\bwhen scaled/g, `when ${brand.accountType}`)
+    .replace(/\bHyperscaled/g, brand.name)
 }
