@@ -414,13 +414,14 @@ const DOES_DISQUALIFY = [
   'Breaching the EOD trailing loss limit (5% during the challenge / 8% when scaled)',
   'Attempting to manipulate challenge performance (wash trading, coordinated cross-account hedging)',
   'Martingale and martingale-like strategies (progressively increasing position size after losses)',
+  '30 consecutive days of inactivity (no trades placed)',
 ]
 
 const DOES_NOT_DISQUALIFY = [
   'Trading during news events',
   'Holding positions overnight',
   'Trading any perpetual available on Hyperliquid — only the 60 predefined pairs are tracked toward your performance',
-  'Taking time off — there is no minimum trading day requirement',
+  'Taking time off — there is no minimum trading frequency, but 30 days of inactivity results in elimination',
   'Using algorithmic or automated trading strategies',
   'Any drawdown within the defined limits',
 ]
