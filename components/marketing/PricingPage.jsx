@@ -36,7 +36,8 @@ function PricingHero() {
   const brand = useBrand()
   return (
     <section className={`pb-16 px-6 ${brand.parentSite ? 'pt-32' : 'pt-24'}`}>
-      <div className="max-w-[800px] mx-auto text-center">
+      <PromoBanner />
+      <div className="max-w-[800px] mx-auto text-center pt-8">
         <motion.h1
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -432,7 +433,6 @@ export default function PricingPage({ tiers = PRICING_TIERS }) {
   const resolvedTiers = brand.pricingTiers || tiers
   return (
     <>
-      <PromoBanner />
       <PricingHero />
       <PricingCards tiers={resolvedTiers} />
       <WhatsIncludedGrid />

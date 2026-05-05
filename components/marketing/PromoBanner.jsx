@@ -30,7 +30,7 @@ export default function PromoBanner() {
   if (dismissed || !timeLabel) return null
 
   return (
-    <div className="relative z-10 w-full bg-[#111316] border-b border-white/[0.06]">
+    <div className="relative z-10 w-full bg-zinc-900/80 border-b border-teal-400/10">
       <div className="flex items-center justify-center gap-3 sm:gap-4 px-4 sm:px-6 py-2.5 max-w-[1400px] mx-auto">
         {/* WSB logo */}
         <img
@@ -41,8 +41,8 @@ export default function PromoBanner() {
 
         {/* Deal info */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-400 whitespace-nowrap">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-400 whitespace-nowrap">
+            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 pulse-teal" />
             Flash deal · {timeLabel}
           </span>
           <span className="text-xs sm:text-sm text-zinc-300 truncate">
@@ -52,15 +52,12 @@ export default function PromoBanner() {
           </span>
         </div>
 
-        {/* Code badge + CTA + dismiss */}
+        {/* CTA + dismiss */}
         <div className="flex items-center gap-2 shrink-0">
-          <span className="hidden md:inline-flex items-center px-2.5 py-1 rounded-md border border-white/[0.12] bg-white/[0.04] text-xs font-mono font-semibold text-white tracking-wide">
-            WSB
-          </span>
           <Link
             href={brandHref('/register')}
             onClick={() => trackCtaClick({ label: 'WSB Flash Deal', location: 'promo_bar' })}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white text-black text-xs font-semibold hover:bg-zinc-200 transition-colors whitespace-nowrap"
+            className="shiny-cta px-3 py-1.5 text-xs whitespace-nowrap"
           >
             Claim offer →
           </Link>
