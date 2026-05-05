@@ -2,7 +2,74 @@
 
 ## Current status
 
-Registration Phase 6 complete — checkout UX polish: auto-fill wallet, selected payment border, full addresses on confirm, sidebar removed.
+Free $1K tier + builder-fee approval added to the registration flow (2026-04-23).
+
+## Free tier + Builder Fee in Registration (2026-04-23)
+
+### What changed
+- **DB (prod)**: inserted a new `entity_tiers` row for the Vanta miner — `account_size=1000`, `price_usdc=0.00`, `profit_split=100`, `is_active=true`. Had to `setval('entity_tiers_id_seq', MAX(id))` first because the sequence was at 16 while max id was 17 (later vanta 5K/10K rows were inserted outside the sequence).
+- **TIERS meta** in `lib/constants.js`: added a `{ id: "free", name: "Free", accountSize: 1000, fullPrice: 0, promoPrice: 0, ... }` entry ahead of the `nano` tier so `/api/miners/[slug]`'s `enrichTier` can resolve it.
+- **New util** `lib/hl-builder-fee.js`:
+  - `getCurrentBuilderFee(user)` — queries HL `/info` `maxBuilderFee` for `HYPERSCALED_BUILDER_ADDRESS`.
+  - `ensureBuilderFeeApproved({ address, chainId, switchChainAsync, feeRate = "0.05%" })` — returns `{ skipped: true }` when an approval already exists; otherwise switches to Arbitrum, signs `HyperliquidTransaction:ApproveBuilderFee`, posts to `/exchange`. Does NOT switch back — callers handle that.
+- **`components/registration/step-connect-pay.jsx`**:
+  - Derives `isFree = Number(price) === 0`.
+  - Order summary hides del/ins price row and renders "Free" as the total when free.
+  - Payment method selector (`eip712`/`base` cards) is hidden when `isFree`.
+  - Wallet connection block and payout wallet block appear when `isFree` regardless of paymentMethod.
+  - New `handleFreeSignup` runs: tolt → `runPreflight` → `ensureBuilderFeeApproved` → `POST /api/register` with `paymentMethod: "free"`.
+  - `handlePayEIP712` calls `ensureBuilderFeeApproved` after the chain switch to Arbitrum, before the usdSend signature. Reuses the Arbitrum session — no extra switching.
+  - `handlePayBase` calls `ensureBuilderFeeApproved` before the x402 probe; wraps the call in a try/finally that switches back to the previous chain so the user can sign the Base x402 payment.
+  - `eip712Step` adds a `"builderFee"` state rendered as "Preparing your account…".
+- **`app/api/register/route.js`**: added a `paymentMethod === "free"` branch that validates `price === 0`, sets `txHash = "free-${ts}-${hlAddress.slice(2,10)}"`, picks `effectivePayoutAddress = payoutAddress || hlAddress`, then falls through to the user-upsert / miner-API / registration-insert logic. Rejects `paymentMethod: "free"` on any tier where the price is not zero.
+
+### Key decisions
+- Builder fee runs on the connected (payer) wallet, not on `hlWallet`. For the common case those match; the existing `walletMatchesHL` warning covers the cross-wallet case and we don't block registration on it (keeps parity with the prior payment flow).
+- Skip-if-approved policy: we never overwrite an existing approval. A user who already set a different `maxFeeRate` (from `/builder`) keeps that rate.
+- Free tier `tierIndex` is 0 (smallest account_size sorts first). The backend already uses `activeTiers[tierIndex]` resolved server-side, so this is safe as long as the DB row count matches what the client fetched — which it does because both go through the same `/api/miners/[slug]` → `enrichTier` path.
+- Chose to synthesize a `txHash` for the free tier (`free-${ts}-${walletPrefix}`) rather than null because the `registrations_tx_hash_unique` index disallows duplicate hashes and the column is nullable in schema but every existing row has one.
+
+### Files added / modified
+- `lib/hl-builder-fee.js` (new)
+- `lib/constants.js` — TIERS meta + Free entry
+- `components/registration/step-connect-pay.jsx` — free-tier UI, builder-fee call sites, new handleFreeSignup
+- `app/api/register/route.js` — free payment method branch
+- `docs/BUILD_STATE.md` — registration flow table updated
+- `.claude/phase-notes.md` — this entry
+
+### Verified
+- `/api/miners/vanta` returns the free tier at index 0 with `promoPrice: 0`.
+- `/api/register/preflight` with `{ tierIndex: 0, accountSize: 1000 }` returns `{ ok: true, price: 0 }`.
+- `/register` and `/builder` render 200 after changes.
+- esbuild parse passes on all touched files.
+
+## Builder Code Page (2026-04-22)
+
+## Previous Builder Code Page (2026-04-22)
+
+### What changed
+- New route `/builder` with standalone layout wrapping `<Providers>` (wagmi + RainbowKit)
+- New client component `components/builder/builder-code-form.jsx`:
+  - Hero + explainer card describing builder codes
+  - Wallet connect via RainbowKit `<ConnectButton />`
+  - "Current approval" panel querying HL `/info` with `{ type: "maxBuilderFee", user, builder }`; skeleton loader, pulse-teal dot on active approval, refresh button
+  - Fee rate input pre-filled `0.05%` (half the 0.1% perp cap); validates format, blocks >1% (spot cap), warns >0.1% (perp cap)
+  - Sign button performs EIP-712 `HyperliquidTransaction:ApproveBuilderFee` signature (Arbitrum chain switch → signTypedData → POST `/exchange`), re-queries approval on success
+  - aria-live status line for screen-reader progress
+- New constant `HYPERSCALED_BUILDER_ADDRESS = "0x7939aF2C9889F59A96C3921B515300A9a70898BB"` in `lib/constants.js`
+
+### Files added / modified
+- `app/builder/layout.jsx` (new)
+- `app/builder/page.jsx` (new)
+- `components/builder/builder-code-form.jsx` (new)
+- `lib/constants.js` — added `HYPERSCALED_BUILDER_ADDRESS`
+
+### Verified
+- `curl http://localhost:4568/builder` returns 200 with correct metadata and rendered card structure
+- EIP-712 types match the Hyperliquid Python SDK's `sign_approve_builder_fee` (hyperliquidChain:string, maxFeeRate:string, builder:address, nonce:uint64)
+- Signing flow mirrors the existing `handlePayEIP712` in `components/registration/step-connect-pay.jsx`
+
+## Registration Phase 6 — Checkout UX Polish (2026-04-02)
 
 ## Registration Phase 6 — Checkout UX Polish (2026-04-02)
 

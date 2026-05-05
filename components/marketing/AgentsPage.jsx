@@ -530,14 +530,6 @@ function CTABanner() {
                   <ArrowRight size={15} weight="bold" />
                 </span>
               </a>
-              <a
-                href="https://docs.hyperscaled.trade"
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl text-sm text-zinc-300 border border-white/[0.08] hover:border-white/[0.18] hover:text-white transition-all"
-              >
-                Read the Docs <ArrowSquareOut size={14} />
-              </a>
             </div>
           </div>
         </div>

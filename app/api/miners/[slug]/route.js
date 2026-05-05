@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { getMinerBySlug, getTiersForMiner } from "@/lib/miners";
 import { TIERS as TIER_META } from "@/lib/constants";
-import { isDevTestWallet, DEV_TEST_PRICE } from "@/lib/dev-test";
+import { isAnyDevTestWallet, DEV_TEST_PRICE } from "@/lib/dev-test";
 
 function enrichTier(dbTier, index) {
   const meta = TIER_META.find((t) => t.accountSize === dbTier.accountSize);
@@ -22,7 +22,8 @@ export async function GET(request, { params }) {
     const { slug } = await params;
     const { searchParams } = new URL(request.url);
     const wallet = searchParams.get("wallet");
-    const devMode = isDevTestWallet(wallet);
+    const payer = searchParams.get("payer");
+    const devMode = isAnyDevTestWallet(wallet, payer);
 
     const miner = await getMinerBySlug(slug);
     if (!miner) {

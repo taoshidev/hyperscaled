@@ -3,6 +3,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { formatPrice, formatLeverage, formatReturn, formatUSD, pnlColor } from "@/lib/format";
 import { openPositionUnrealizedUsd } from "@/lib/position-utils";
+import { ShareButton } from "./share-button";
 
 function pairName(tradePair) {
   if (Array.isArray(tradePair)) return tradePair[1] || tradePair[0];
@@ -39,7 +40,8 @@ export function OpenPositions({ positions, accountSizeData }) {
                   <th className="pb-2 pr-4">Leverage</th>
                   <th className="pb-2 pr-4">Unrealized PnL</th>
                   <th className="pb-2 pr-4">Return</th>
-                  <th className="pb-2">Fees</th>
+                  <th className="pb-2 pr-4">Fees</th>
+                  <th className="pb-2 w-10"><span className="sr-only">Share</span></th>
                 </tr>
               </thead>
               <tbody>
@@ -82,8 +84,19 @@ export function OpenPositions({ positions, accountSizeData }) {
                       <td className={`py-2 pr-4 font-mono ${pnlColor((p.current_return || 1) - 1)}`}>
                         {formatReturn(p.current_return)}
                       </td>
-                      <td className="py-2 font-mono text-zinc-500">
+                      <td className="py-2 pr-4 font-mono text-zinc-500">
                         {p.fees != null ? `-${formatUSD(p.fees)}` : "--"}
+                      </td>
+                      <td className="py-2 text-right">
+                        <ShareButton
+                          trade={{
+                            ticker: pairName(p.trade_pair || p.pair).replace(/\/.*$/, ""),
+                            direction,
+                            returnValue: p.current_return || 1,
+                            entryPrice: p.average_entry_price ?? p.entry_price,
+                            markPrice: null,
+                          }}
+                        />
                       </td>
                     </tr>
                   );

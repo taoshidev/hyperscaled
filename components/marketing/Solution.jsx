@@ -30,8 +30,8 @@ const pillars = [
   },
   {
     icon: Globe,
-    title: 'Open to Everyone',
-    desc: 'Open to every trader in every country. No geographic exclusions.',
+    title: 'Trade From Anywhere',
+    desc: 'No broker, no institution, no intermediary required to get started.',
   },
   {
     icon: Fingerprint,
@@ -47,12 +47,12 @@ const compareRows = [
   { label: 'KYC Required',        hs: 'No',         ftmo: 'Full KYC' },
   { label: 'Profit Split',        hs: '100%',       ftmo: 'Up to 90%' },
   { label: 'Payout Verification', hs: 'Onchain',    ftmo: 'Centralized' },
-  { label: 'Max Account',         hs: '$2.5M',      ftmo: '$400K' },
+  { label: 'Max Account',         hs: '$400K',      ftmo: '$400K' },
   { label: 'News Trading',        hs: 'Allowed',    ftmo: 'Restricted' },
   { label: 'Weekend Trading',     hs: 'Allowed',    ftmo: 'Restricted' },
 ]
 
-const hsBest = new Set(['10%', '1-Step', 'Yes', 'No', '100%', 'Onchain', '$2.5M', 'Allowed'])
+const hsBest = new Set(['10%', '1-Step', 'Yes', 'No', '100%', 'Onchain', '$400K', 'Allowed'])
 
 export default function Solution() {
   const brand = useBrand()

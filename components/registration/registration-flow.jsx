@@ -12,6 +12,8 @@ import { RegistrationHelpProvider } from "./registration-help-context";
 import { RegistrationSidebar } from "./registration-sidebar";
 import { MobileHelpSheet } from "./mobile-help-sheet";
 import { useBrandHref } from "@/lib/brand";
+import { reportCritical } from "@/lib/errors";
+import { trackEvent, getRefSource } from "@/lib/analytics";
 
 const STEP_LABELS = ["Select Plan", "Connect & Pay", "Confirm", "Done"];
 const DEFAULT_MINER_SLUG = "vanta";
@@ -46,16 +48,24 @@ function getRecoveredRegistration() {
     if (!raw) return null;
     const result = JSON.parse(raw);
     if (!result.success || !result.txHash) {
+      console.info("[REGISTRATION] recovered state invalid — clearing", { hasSuccess: result.success, hasTxHash: Boolean(result.txHash) });
       localStorage.removeItem("hs_registration_result");
       return null;
     }
     if (result.completedAt && Date.now() - result.completedAt > 30 * 60 * 1000) {
+      console.info("[REGISTRATION] recovered state expired — clearing", { completedAt: result.completedAt });
       localStorage.removeItem("hs_registration_result");
       return null;
     }
+    console.info("[REGISTRATION] recovered registration from localStorage", {
+      txHash: result.txHash,
+      hlAddress: result.hlAddress,
+      registrationStatus: result.registrationStatus,
+    });
     localStorage.removeItem("hs_registration_result");
     return result;
-  } catch {
+  } catch (err) {
+    console.warn("[REGISTRATION] failed to parse recovered state", { error: err?.message });
     return null;
   }
 }
@@ -67,6 +77,7 @@ export function RegistrationFlow({
   logo = "/hyperscaled-logo.svg",
   logoAlt = "Hyperscaled",
   homeHref,
+  brandVariant = "hyperscaled",
 }) {
   const brandHref = useBrandHref();
   const resolvedHomeHref = homeHref ?? brandHref("/");
@@ -92,21 +103,51 @@ export function RegistrationFlow({
     const haveTiers = Array.isArray(minerTiers) && minerTiers.length > 0;
     if (haveTiers && paymentWallet) return;
 
+    console.info("[REGISTRATION] fetching miner tiers", { initialMinerSlug });
     fetch(`/api/miners/${initialMinerSlug}`)
       .then((r) => r.ok ? r.json() : Promise.reject(r.status))
       .then((data) => {
         const nextTiers = Array.isArray(data.tiers) ? data.tiers : [];
+        console.info("[REGISTRATION] miner tiers loaded", {
+          initialMinerSlug,
+          tiers: nextTiers.length,
+          usdcWallet: data.usdcWallet,
+        });
         setMinerTiers(nextTiers);
         setPaymentWallet(data.usdcWallet);
       })
       .catch((err) => {
-        console.warn("[RegistrationFlow] API unavailable, no tiers loaded:", err);
+        console.warn("[REGISTRATION] miner API unavailable — using empty tiers", { initialMinerSlug, err });
         setMinerTiers([]);
         setPaymentWallet(MOCK_WALLET);
+        // If this branch fires in prod, paymentWallet is 0x000…000 and any
+        // downstream payment would target the zero address. Must page on this.
+        reportCritical(
+          err instanceof Error ? err : new Error(`miner API fetch failed: ${err}`),
+          {
+            source: "RegistrationFlow",
+            metadata: {
+              step: "miner_api_fallback_to_mock_wallet",
+              minerSlug: initialMinerSlug,
+              status: typeof err === "number" ? err : undefined,
+            },
+          },
+        );
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: guard uses initial state only; deps would refetch in a loop
   }, [initialMinerSlug]);
 
+
+  // Funnel entry event. Skip when recovered — user already paid on a prior
+  // visit and is landing directly on the confirmation screen.
+  useEffect(() => {
+    if (recovered) return;
+    trackEvent("register_intent", {
+      ref_source: getRefSource(),
+      brand_variant: brandVariant,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once on mount
+  }, []);
 
   // B1: Browser refresh guard — only during active payment processing
   useEffect(() => {
@@ -165,9 +206,16 @@ export function RegistrationFlow({
                   minerSlug={initialMinerSlug}
                   paymentWallet={paymentWallet}
                   phase={currentStep === 2 ? "confirm" : "connect"}
-                  onContinueToConfirm={() => setCurrentStep(2)}
+                  brandVariant={brandVariant}
+                  onContinueToConfirm={() => { console.info("[REGISTRATION] advance: 1 -> 2 (confirm)"); setCurrentStep(2); }}
                   onPaymentProcessing={setPaymentProcessing}
                   onPaymentComplete={({ txHash: hash, hlAddress: addr, registrationStatus: status, paymentMethod: method }) => {
+                    console.info("[REGISTRATION] onPaymentComplete", {
+                      txHash: hash,
+                      hlAddress: addr,
+                      registrationStatus: status,
+                      paymentMethod: method,
+                    });
                     setPaymentProcessing(false);
                     setTxHash(hash);
                     setHlAddress(addr);
@@ -175,7 +223,7 @@ export function RegistrationFlow({
                     setPaymentMethod(method || null);
                     setCurrentStep(3);
                   }}
-                  onBack={currentStep === 2 ? () => setCurrentStep(1) : () => setCurrentStep(0)}
+                  onBack={currentStep === 2 ? () => { console.info("[REGISTRATION] back: 2 -> 1"); setCurrentStep(1); } : () => { console.info("[REGISTRATION] back: 1 -> 0"); setCurrentStep(0); }}
                 />
               </div>
 
@@ -231,7 +279,21 @@ export function RegistrationFlow({
                       Array.isArray(list) && list[idx] != null ? list[idx] : tierFromStep;
                     setSelectedTier(canonical);
                     setSelectedTierIndex(idx);
+                    console.info("[REGISTRATION] tier selected, advancing 0 -> 1", {
+                      tierIndex: idx,
+                      accountSize: canonical?.accountSize,
+                      name: canonical?.name,
+                    });
+                  } else {
+                    console.info("[REGISTRATION] advance: 0 -> 1 (no tier change)");
                   }
+                  const advancingTier = tierFromStep ? (minerTiers?.[selectedTierIndex] || tierFromStep) : selectedTier;
+                  trackEvent("register_tier_selected", {
+                    tier_name: advancingTier?.name,
+                    tier_price: advancingTier?.promoPrice ?? advancingTier?.fullPrice,
+                    ref_source: getRefSource(),
+                    brand_variant: brandVariant,
+                  });
                   setCurrentStep(1);
                 }}
               />

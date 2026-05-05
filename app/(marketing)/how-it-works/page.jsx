@@ -1,7 +1,7 @@
 import HowItWorksPage from '@/components/marketing/HowItWorksPage'
 import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
-import { getPricingTiers } from '@/lib/pricing'
+import { fetchDbPricingTiers } from '@/lib/pricing-db'
 
 export const metadata = buildMetadata({
   title: 'How It Works — Hyperscaled Scaled Trading',
@@ -48,7 +48,7 @@ const HOW_TO_SCHEMA = {
 }
 
 export default async function HowItWorks() {
-  const tiers = await getPricingTiers()
+  const tiers = await fetchDbPricingTiers()
   return (
     <>
       <JsonLd data={HOW_TO_SCHEMA} />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import {
   useAccount,
@@ -14,6 +14,7 @@ import {
   CheckCircle,
   ArrowLeft,
   ArrowRight,
+  ArrowSquareOut,
   Warning,
   Wallet,
   Info,
@@ -21,7 +22,8 @@ import {
   PencilSimple,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
-import { isValidHLAddress } from "@/lib/validation";
+import { isValidHLAddress, isValidEmail } from "@/lib/validation";
+import { trackEvent, getRefSource } from "@/lib/analytics";
 import {
   USDC_ADDRESS,
   USDC_DECIMALS,
@@ -31,9 +33,11 @@ import {
   HL_API_URL,
   HL_SIGNING_CHAIN_ID,
   HL_CHAIN_NAME,
+  HYPERLIQUID_SIGNUP_URL,
 } from "@/lib/constants";
 import { usdcAbi } from "@/lib/usdc-abi";
 import { formatAccountSize, truncateAddress } from "@/lib/format";
+import { ensureBuilderFeeApproved } from "@/lib/hl-builder-fee";
 import { useExtensionBridge } from "@/hooks/use-extension-bridge";
 import { useRegistrationHelp } from "./registration-help-context";
 import { ExactEvmScheme } from "@x402/evm/exact/client";
@@ -41,9 +45,47 @@ import {
   decodePaymentRequiredHeader,
   encodePaymentSignatureHeader,
 } from "@x402/core/http";
+import { reportCritical, reportError } from "@/lib/errors";
 
 function formatRulesSummary(details) {
-  return details.map((d) => `${d.value} ${d.label.toLowerCase()}`).join(" · ");
+  return details
+    .filter((d) => !(d.label === "Account Scaling" && d.value === "None"))
+    .map((d) => {
+      if (d.label === "Time Limit" && d.value === "None") return "No time limit";
+      return `${d.value} ${d.label.toLowerCase()}`;
+    })
+    .join(" · ");
+}
+
+// Runs the backend's duplicate + validity checks without moving money so the
+// HL/EIP-712 path can surface "already registered" / "invalid tier" errors
+// before the user signs a transfer they can't complete. Throws on failure.
+async function runPreflight(body) {
+  console.info("[REGISTRATION] preflight request", {
+    minerSlug: body.minerSlug,
+    hlAddress: body.hlAddress,
+    accountSize: body.accountSize,
+    tierIndex: body.tierIndex,
+    hlTransferSender: body.hlTransferSender,
+  });
+  let res;
+  try {
+    res = await fetch("/api/register/preflight", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    console.error("[REGISTRATION] preflight fetch failed", { error: err?.message });
+    throw new Error("Could not reach the registration server. Please try again.");
+  }
+  console.info("[REGISTRATION] preflight response", { status: res.status, ok: res.ok });
+  if (res.ok) return;
+  const data = await res.json().catch(() => ({}));
+  console.warn("[REGISTRATION] preflight rejected", { status: res.status, error: data.error });
+  throw new Error(
+    data.error || data.message || "Registration is not available right now.",
+  );
 }
 
 export function StepConnectAndPay({
@@ -56,6 +98,7 @@ export function StepConnectAndPay({
   onBack,
   onContinueToConfirm,
   phase = "connect",
+  brandVariant = "hyperscaled",
 }) {
   const { address, isConnected, chainId } = useAccount();
   const { switchChain, switchChainAsync } = useSwitchChain();
@@ -73,9 +116,11 @@ export function StepConnectAndPay({
   const [editingPayout, setEditingPayout] = useState(false);
   const [editPayoutValue, setEditPayoutValue] = useState("");
   const [editingHlWallet, setEditingHlWallet] = useState(true);
+  const [email, setEmail] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
   const [hlBalance, setHlBalance] = useState(null);
   const [hlBalanceLoading, setHlBalanceLoading] = useState(false);
-  const [eip712Step, setEip712Step] = useState(null); // "signing" | "submitting" | "verifying" | "provisioning"
+  const [eip712Step, setEip712Step] = useState(null); // "builderFee" | "signing" | "submitting" | "verifying" | "provisioning"
   const [devPrice, setDevPrice] = useState(null);
 
   const {
@@ -86,17 +131,50 @@ export function StepConnectAndPay({
 
   const hlWalletValid = isValidHLAddress(hlWallet);
   const showHlWalletError = hlWalletTouched && hlWallet.length > 0 && !hlWalletValid;
+  const emailValid = email.length === 0 || isValidEmail(email);
+  const emailReady = email.length > 0 && isValidEmail(email);
+  const showEmailError = emailTouched && email.length > 0 && !emailValid;
 
-  // Re-fetch tier pricing when HL wallet is entered (dev wallets get reduced price).
-  // Must use hlWallet (the HL trading address) because the backend checks hlAddress,
-  // which can differ from the connected Base/Arbitrum wallet.
+  // Funnel events — one-shot so we don't double-count on rerenders, toggling,
+  // or user going back and forward through steps.
+  const walletProvidedFiredRef = useRef(false);
+  const paymentMethodsFiredRef = useRef(new Set());
+
+  useEffect(() => {
+    if (!hlWalletValid || walletProvidedFiredRef.current) return;
+    walletProvidedFiredRef.current = true;
+    trackEvent("register_wallet_provided", {
+      wallet_method: address && hlWallet.toLowerCase() === address.toLowerCase() ? "connected" : "manual",
+      tier_name: selectedTier?.name,
+      ref_source: getRefSource(),
+      brand_variant: brandVariant,
+    });
+  }, [hlWalletValid, address, hlWallet, selectedTier, brandVariant]);
+
+  useEffect(() => {
+    if (!paymentMethod) return;
+    if (paymentMethodsFiredRef.current.has(paymentMethod)) return;
+    paymentMethodsFiredRef.current.add(paymentMethod);
+    trackEvent("register_payment_method_selected", {
+      payment_method: paymentMethod === "base" ? "wallet" : "hyperliquid",
+      tier_name: selectedTier?.name,
+      ref_source: getRefSource(),
+      brand_variant: brandVariant,
+    });
+  }, [paymentMethod, selectedTier, brandVariant]);
+
+  // Re-fetch tier pricing when HL wallet is entered (dev wallets get reduced
+  // price). Discount applies if either the HL trading wallet OR the connected
+  // paying wallet is in DEV_TEST_WALLETS.
   useEffect(() => {
     if (!hlWalletValid || !minerSlug) {
       setDevPrice(null);
       return;
     }
     const controller = new AbortController();
-    fetch(`/api/miners/${minerSlug}?wallet=${hlWallet}`, {
+    const params = new URLSearchParams({ wallet: hlWallet });
+    if (address) params.set("payer", address);
+    fetch(`/api/miners/${minerSlug}?${params.toString()}`, {
       signal: controller.signal,
     })
       .then((r) => (r.ok ? r.json() : null))
@@ -106,16 +184,27 @@ export function StepConnectAndPay({
           (t) => t.accountSize === selectedTier.accountSize,
         );
         if (match && match.promoPrice !== selectedTier.promoPrice) {
+          console.info("[REGISTRATION] dev-wallet price applied", {
+            hlWallet,
+            payer: address,
+            originalPromo: selectedTier.promoPrice,
+            devPromo: match.promoPrice,
+          });
           setDevPrice(match.promoPrice);
         } else {
           setDevPrice(null);
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (err?.name !== "AbortError") {
+          console.warn("[REGISTRATION] dev-price refetch failed", { error: err?.message });
+        }
+      });
     return () => controller.abort();
-  }, [hlWallet, hlWalletValid, minerSlug, selectedTier.accountSize, selectedTier.promoPrice]);
+  }, [hlWallet, hlWalletValid, minerSlug, address, selectedTier.accountSize, selectedTier.promoPrice]);
 
   const price = devPrice ?? selectedTier.promoPrice;
+  const isFree = Number(price) === 0;
 
   const resolvedHlAddress = hlWallet;
   const hlAddressReady = hlWallet.length > 0 && hlWalletValid;
@@ -182,10 +271,18 @@ export function StepConnectAndPay({
             : 0;
         const perpsWithdrawable =
           perps?.withdrawable != null ? parseFloat(perps.withdrawable) : 0;
-        setHlBalance(spotAvailable + perpsWithdrawable);
+        const total = spotAvailable + perpsWithdrawable;
+        console.info("[REGISTRATION] HL balance fetched", {
+          address,
+          spotAvailable,
+          perpsWithdrawable,
+          total,
+        });
+        setHlBalance(total);
         setHlBalanceLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.warn("[REGISTRATION] HL balance fetch failed", { address, error: err?.message });
         if (!cancelled) {
           setHlBalance(null);
           setHlBalanceLoading(false);
@@ -199,26 +296,75 @@ export function StepConnectAndPay({
 
   // ── Base chain (x402) payment handler ─────────────────────────────────────
   const handlePayBase = useCallback(async () => {
-    if (!walletClient) return;
+    if (!walletClient) {
+      console.warn("[REGISTRATION] handlePayBase called with no walletClient");
+      return;
+    }
+
+    console.info("[REGISTRATION] handlePayBase start", {
+      minerSlug,
+      hlAddress: resolvedHlAddress,
+      payoutAddress: resolvedPayoutAddress || address,
+      tierIndex,
+    });
 
     setPaymentState("processing");
     setErrorMessage("");
     onPaymentProcessing?.(true);
 
     try {
+      // Call tolt.signup() now so we have a customer_id before the server
+      // records the transaction. Guard against double-calls on retry.
+      let toltCustomerId = window.tolt_data?.customer_id || null;
+      if (!toltCustomerId && window.tolt) {
+        try {
+          const result = await window.tolt.signup(resolvedHlAddress);
+          toltCustomerId = result?.customer_id || window.tolt_data?.customer_id || null;
+        } catch { /* tolt unavailable */ }
+      }
+
       const body = {
         minerSlug,
         hlAddress: resolvedHlAddress,
         accountSize: selectedTier.accountSize,
         payoutAddress: resolvedPayoutAddress || address,
         tierIndex,
+        toltCustomerId,
+        email: emailReady ? email : undefined,
+        // Used by the backend to qualify the dev-wallet discount; the actual
+        // signer in the payment payload is the source of truth on retry.
+        hlTransferSender: address,
       };
 
+      // Block "already registered" and similar errors before requesting payment.
+      await runPreflight(body);
+
+      // Ensure the Hyperscaled builder fee is approved on the connected wallet
+      // before we sign the payment. This is silent for users who already have
+      // an approval on file; otherwise we switch to Arbitrum, prompt a
+      // signature, and switch back to Base before the x402 flow.
+      console.info("[REGISTRATION] Base: ensuring builder fee approval");
+      const prevChainIdForBuilder = chainId;
+      try {
+        const result = await ensureBuilderFeeApproved({
+          address,
+          chainId,
+          switchChainAsync,
+        });
+        console.info("[REGISTRATION] Base: builder fee approval", result);
+      } finally {
+        if (prevChainIdForBuilder && prevChainIdForBuilder !== HL_SIGNING_CHAIN_ID) {
+          await switchChainAsync({ chainId: prevChainIdForBuilder }).catch(() => {});
+        }
+      }
+
+      console.info("[REGISTRATION] Base: probing /api/register for 402");
       const probeRes = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+      console.info("[REGISTRATION] Base: probe response", { status: probeRes.status });
 
       if (probeRes.status === 409) {
         const data = await probeRes.json().catch(() => ({}));
@@ -227,14 +373,53 @@ export function StepConnectAndPay({
 
       if (probeRes.status !== 402) {
         const data = await probeRes.json().catch(() => ({}));
-        throw new Error(data.error || "Unexpected response from registration server.");
+        const err = new Error(data.error || "Unexpected response from registration server.");
+        reportError(err, {
+          source: "registration/pay-base",
+          userId: address,
+          metadata: {
+            step: "base_probe_unexpected",
+            httpStatus: probeRes.status,
+            serverError: data.error,
+            minerSlug,
+            hlAddress: resolvedHlAddress,
+            tierIndex,
+          },
+        });
+        throw err;
       }
 
       const paymentRequiredHeader = probeRes.headers.get("PAYMENT-REQUIRED");
-      if (!paymentRequiredHeader) throw new Error("No payment requirements received.");
+      if (!paymentRequiredHeader) {
+        const err = new Error("No payment requirements received.");
+        reportCritical(err, {
+          source: "registration/pay-base",
+          userId: address,
+          metadata: { step: "base_probe_header_missing", minerSlug, hlAddress: resolvedHlAddress },
+        });
+        throw err;
+      }
       const paymentRequired = decodePaymentRequiredHeader(paymentRequiredHeader);
       const requirements = paymentRequired.accepts?.[0];
-      if (!requirements) throw new Error("No valid payment requirement in response.");
+      if (!requirements) {
+        const err = new Error("No valid payment requirement in response.");
+        reportCritical(err, {
+          source: "registration/pay-base",
+          userId: address,
+          metadata: {
+            step: "base_probe_accepts_empty",
+            acceptsLength: paymentRequired.accepts?.length ?? 0,
+            minerSlug,
+            hlAddress: resolvedHlAddress,
+          },
+        });
+        throw err;
+      }
+      console.info("[REGISTRATION] Base: payment requirements decoded", {
+        amount: requirements.amount,
+        payTo: requirements.payTo,
+        network: requirements.network,
+      });
 
       const signer = {
         address: walletClient.account.address,
@@ -252,6 +437,7 @@ export function StepConnectAndPay({
         accepted: requirements,
       };
 
+      console.info("[REGISTRATION] Base: submitting signed payment to /api/register");
       const registerRes = await fetch("/api/register", {
         method: "POST",
         headers: {
@@ -260,15 +446,39 @@ export function StepConnectAndPay({
         },
         body: JSON.stringify(body),
       });
+      console.info("[REGISTRATION] Base: register response", { status: registerRes.status, ok: registerRes.ok });
 
       if (!registerRes.ok) {
         const data = await registerRes.json().catch(() => ({}));
-        throw new Error(
+        const err = new Error(
           data.error || data.message || "Registration failed. Please contact support.",
         );
+        // User's Base USDC payment went through (or at least got signed) but
+        // /api/register failed — money-losing state, must reach Sentry even if
+        // the server-side reportCritical was dropped.
+        reportCritical(err, {
+          source: "registration/pay-base",
+          userId: address,
+          metadata: {
+            step: "register_after_payment",
+            httpStatus: registerRes.status,
+            serverError: data.error,
+            serverMessage: data.message,
+            serverTxHash: data.txHash,
+            minerSlug,
+            hlAddress: resolvedHlAddress,
+            payoutAddress: resolvedPayoutAddress || address,
+            tierIndex,
+          },
+        });
+        throw err;
       }
 
       const result = await registerRes.json();
+      console.info("[REGISTRATION] Base: registration result", {
+        status: result.status,
+        txHash: result.txHash,
+      });
 
       setPaymentState("success");
       onPaymentProcessing?.(false);
@@ -282,6 +492,7 @@ export function StepConnectAndPay({
         });
       }, 1500);
     } catch (err) {
+      console.error("[REGISTRATION] Base payment failed", { error: err?.message });
       setPaymentState("error");
       onPaymentProcessing?.(false);
 
@@ -300,33 +511,82 @@ export function StepConnectAndPay({
     selectedTier,
     tierIndex,
     address,
+    chainId,
+    switchChainAsync,
     resolvedHlAddress,
     resolvedPayoutAddress,
+    email,
+    emailReady,
     onPaymentComplete,
     onPaymentProcessing,
   ]);
 
   // ── Hyperliquid EIP-712 usdSend payment handler ──────────────────────────
   const handlePayEIP712 = useCallback(async () => {
-    if (!walletClient) return;
+    if (!walletClient) {
+      console.warn("[REGISTRATION] handlePayEIP712 called with no walletClient");
+      return;
+    }
+
+    console.info("[REGISTRATION] handlePayEIP712 start", {
+      minerSlug,
+      hlAddress: resolvedHlAddress,
+      payoutAddress: resolvedPayoutAddress || address,
+      tierIndex,
+      price,
+      destinationWallet: paymentWallet,
+      signerAddress: address,
+      currentChainId: chainId,
+    });
 
     setPaymentState("processing");
-    setEip712Step("signing");
+    setEip712Step("builderFee");
     setErrorMessage("");
     onPaymentProcessing?.(true);
 
     try {
+      // Call tolt.signup() now so we have a customer_id before the server
+      // records the transaction. Guard against double-calls on retry.
+      let toltCustomerId = window.tolt_data?.customer_id || null;
+      if (!toltCustomerId && window.tolt) {
+        try {
+          const result = await window.tolt.signup(resolvedHlAddress);
+          toltCustomerId = result?.customer_id || window.tolt_data?.customer_id || null;
+        } catch { /* tolt unavailable */ }
+      }
+
+      // Step 0 — Preflight validation (duplicate check, tier/miner sanity).
+      // Runs before any signing/transfer so users never pay only to be told
+      // they can't register.
+      await runPreflight({
+        minerSlug,
+        hlAddress: resolvedHlAddress,
+        accountSize: selectedTier.accountSize,
+        payoutAddress: resolvedPayoutAddress || address,
+        tierIndex,
+        email: emailReady ? email : undefined,
+        hlTransferSender: address,
+      });
+
       const amount = String(price);
       const nonce = Date.now();
+      console.info("[REGISTRATION] EIP-712: preflight ok, amount+nonce prepared", { amount, nonce });
 
       // Step 1 — Switch to Arbitrum so the wallet's active chain matches
       // the EIP-712 domain chainId that Hyperliquid requires
-      setEip712Step("signing");
       const previousChainId = chainId;
       if (chainId !== HL_SIGNING_CHAIN_ID) {
+        console.info("[REGISTRATION] EIP-712: switching chain for signing", {
+          from: chainId,
+          to: HL_SIGNING_CHAIN_ID,
+        });
         try {
           await switchChainAsync({ chainId: HL_SIGNING_CHAIN_ID });
         } catch (switchErr) {
+          console.error("[REGISTRATION] EIP-712: chain switch failed", {
+            error: switchErr?.message,
+            code: switchErr?.code,
+          });
           const msg = switchErr?.message || "";
           if (
             msg.includes("not supported") ||
@@ -343,9 +603,26 @@ export function StepConnectAndPay({
         }
       }
 
+      // Step 1.5 — Ensure Hyperscaled builder fee is approved.
+      // Already on Arbitrum, so no extra chain switching. Silent skip when an
+      // approval already exists on this wallet.
+      console.info("[REGISTRATION] EIP-712: ensuring builder fee approval");
+      const builderFeeResult = await ensureBuilderFeeApproved({
+        address,
+        chainId: HL_SIGNING_CHAIN_ID,
+        switchChainAsync,
+      });
+      console.info("[REGISTRATION] EIP-712: builder fee approval", builderFeeResult);
+
       // Step 2 — Sign Hyperliquid sendAsset (USDC) via EIP-712
+      setEip712Step("signing");
       let signature;
       try {
+        console.info("[REGISTRATION] EIP-712: requesting typed-data signature", {
+          destination: paymentWallet,
+          amount,
+          nonce,
+        });
         // Re-fetch wallet client after chain switch (wagmi may return a new
         // client instance bound to the now-active chain)
         const { getWalletClient } = await import("wagmi/actions");
@@ -385,11 +662,13 @@ export function StepConnectAndPay({
             nonce,
           },
         });
+        console.info("[REGISTRATION] EIP-712: signature obtained", { length: signature?.length });
       } finally {
         // Step 3 — Switch back to Base regardless of signing outcome
         if (previousChainId && previousChainId !== HL_SIGNING_CHAIN_ID) {
-          switchChainAsync({ chainId: previousChainId }).catch(() => {
-            // Best-effort switch back; don't block the flow if the user rejects
+          console.info("[REGISTRATION] EIP-712: switching chain back", { to: previousChainId });
+          switchChainAsync({ chainId: previousChainId }).catch((err) => {
+            console.warn("[REGISTRATION] EIP-712: switch-back failed (non-fatal)", { error: err?.message });
           });
         }
       }
@@ -401,6 +680,11 @@ export function StepConnectAndPay({
 
       // Step 4 — Submit signed transfer to Hyperliquid exchange API
       setEip712Step("submitting");
+      console.info("[REGISTRATION] EIP-712: submitting to HL /exchange", {
+        destination: paymentWallet,
+        amount,
+        nonce,
+      });
       const exchangeRes = await fetch(`${HL_API_URL}/exchange`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -424,60 +708,147 @@ export function StepConnectAndPay({
 
       if (!exchangeRes.ok) {
         const data = await exchangeRes.json().catch(() => ({}));
-        throw new Error(data.error || data.message || "Hyperliquid transfer failed.");
+        console.error("[REGISTRATION] EIP-712: HL /exchange non-ok", { status: exchangeRes.status, data });
+        const err = new Error(data.error || data.message || "Hyperliquid transfer failed.");
+        reportCritical(err, {
+          source: "registration/pay-eip712",
+          userId: address,
+          metadata: {
+            step: "hl_exchange_http",
+            httpStatus: exchangeRes.status,
+            serverError: data.error,
+            serverMessage: data.message,
+            destinationWallet: paymentWallet,
+            amount,
+            nonce,
+            minerSlug,
+            hlAddress: resolvedHlAddress,
+          },
+        });
+        throw err;
       }
 
       const exchangeResult = await exchangeRes.json();
+      console.info("[REGISTRATION] EIP-712: HL /exchange response", {
+        status: exchangeResult.status,
+        response: exchangeResult.response,
+      });
 
       // HL exchange returns 200 even on failure — check the status field
       if (exchangeResult.status !== "ok") {
-        throw new Error(
+        const err = new Error(
           typeof exchangeResult.response === "string"
             ? exchangeResult.response
             : "Hyperliquid transfer failed.",
         );
+        reportCritical(err, {
+          source: "registration/pay-eip712",
+          userId: address,
+          metadata: {
+            step: "hl_exchange_status",
+            hlStatus: exchangeResult.status,
+            hlResponse: exchangeResult.response,
+            destinationWallet: paymentWallet,
+            amount,
+            nonce,
+            minerSlug,
+            hlAddress: resolvedHlAddress,
+          },
+        });
+        throw err;
       }
 
-      // Step 5 — Look up the transfer hash from HL info endpoint
+      // Step 5 — Look up the transfer hash from HL info endpoint.
+      // HL's non-funding ledger can lag the exchange API by several seconds.
+      // Poll up to ~60s and accept updates within a 10-minute window to match
+      // the backend's verification window.
       setEip712Step("verifying");
       let hlHash = "";
-      try {
-        const infoRes = await fetch(`${HL_API_URL}/info`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "userNonFundingLedgerUpdates",
-            user: address,
-          }),
-        });
-        if (infoRes.ok) {
-          const updates = await infoRes.json();
-          if (Array.isArray(updates)) {
-            // Find the most recent USDC send to the payment wallet
-            const match = updates.find((u) => {
-              const d = u.delta;
-              return (
-                d &&
-                d.type === "send" &&
-                d.token === "USDC" &&
-                (d.destination || "").toLowerCase() === paymentWallet.toLowerCase() &&
-                Math.abs(Number(d.amount || 0) - price) < 0.01 &&
-                Date.now() - (u.time || 0) < 2 * 60 * 1000
-              );
-            });
-            if (match) hlHash = match.hash || "";
+      const lookupStart = Date.now();
+      const LOOKUP_TIMEOUT_MS = 60 * 1000;
+      const LOOKUP_INTERVAL_MS = 3 * 1000;
+      const MATCH_WINDOW_MS = 10 * 60 * 1000;
+      let pollCount = 0;
+      console.info("[REGISTRATION] EIP-712: starting HL tx-hash lookup polling", {
+        timeoutMs: LOOKUP_TIMEOUT_MS,
+        intervalMs: LOOKUP_INTERVAL_MS,
+      });
+
+      while (!hlHash && Date.now() - lookupStart < LOOKUP_TIMEOUT_MS) {
+        pollCount += 1;
+        try {
+          const infoRes = await fetch(`${HL_API_URL}/info`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "userNonFundingLedgerUpdates",
+              user: address,
+              startTime: Date.now() - MATCH_WINDOW_MS,
+            }),
+          });
+          if (infoRes.ok) {
+            const updates = await infoRes.json();
+            if (Array.isArray(updates)) {
+              const match = updates.find((u) => {
+                const d = u.delta;
+                return (
+                  d &&
+                  d.type === "send" &&
+                  d.token === "USDC" &&
+                  (d.destination || "").toLowerCase() === paymentWallet.toLowerCase() &&
+                  Math.abs(Number(d.amount || 0) - price) < 0.01 &&
+                  Date.now() - (u.time || 0) < MATCH_WINDOW_MS
+                );
+              });
+              if (match) {
+                hlHash = match.hash || "";
+                console.info("[REGISTRATION] EIP-712: tx hash matched", {
+                  hlHash,
+                  pollCount,
+                  elapsedMs: Date.now() - lookupStart,
+                });
+                break;
+              }
+            }
           }
+        } catch (e) {
+          console.warn("[REGISTRATION] EIP-712: HL ledger lookup error", { pollCount, error: e.message });
         }
-      } catch (e) {
-        console.warn("Failed to look up HL transfer hash:", e.message);
+        await new Promise((r) => setTimeout(r, LOOKUP_INTERVAL_MS));
       }
 
       if (!hlHash) {
-        throw new Error("Transfer succeeded but could not retrieve transaction hash. Please contact support.");
+        console.error("[REGISTRATION] EIP-712: tx hash lookup timed out", {
+          pollCount,
+          elapsedMs: Date.now() - lookupStart,
+        });
+        // User's HL USDC transfer succeeded but we can't find the hash in 60s.
+        // Server never saw this — it's the only signal Sentry will get.
+        const err = new Error("Transfer succeeded but could not retrieve transaction hash. Please contact support.");
+        reportCritical(err, {
+          source: "registration/pay-eip712",
+          userId: address,
+          metadata: {
+            step: "tx_hash_lookup_timeout",
+            minerSlug,
+            hlAddress: resolvedHlAddress,
+            destinationWallet: paymentWallet,
+            amount,
+            nonce,
+            pollCount,
+            elapsedMs: Date.now() - lookupStart,
+          },
+        });
+        throw err;
       }
 
       // Step 6 — Register with our backend
       setEip712Step("provisioning");
+      console.info("[REGISTRATION] EIP-712: calling /api/register to provision", {
+        minerSlug,
+        hlAddress: resolvedHlAddress,
+        hlHash,
+      });
       const registerRes = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -487,20 +858,49 @@ export function StepConnectAndPay({
           accountSize: selectedTier.accountSize,
           payoutAddress: resolvedPayoutAddress || address,
           tierIndex,
+          toltCustomerId,
+          email: emailReady ? email : undefined,
           paymentMethod: "eip712",
           hlTransferHash: hlHash,
           hlTransferSender: address,
         }),
       });
+      console.info("[REGISTRATION] EIP-712: /api/register response", {
+        status: registerRes.status,
+        ok: registerRes.ok,
+      });
 
       if (!registerRes.ok) {
         const data = await registerRes.json().catch(() => ({}));
-        throw new Error(
+        const err = new Error(
           data.error || data.message || "Registration failed. Please contact support.",
         );
+        // HL transfer already settled — user has paid. Must reach Sentry even
+        // if the server-side reportCritical flush was dropped.
+        reportCritical(err, {
+          source: "registration/pay-eip712",
+          userId: address,
+          metadata: {
+            step: "register_after_payment",
+            httpStatus: registerRes.status,
+            serverError: data.error,
+            serverMessage: data.message,
+            serverTxHash: data.txHash,
+            hlTransferHash: hlHash,
+            minerSlug,
+            hlAddress: resolvedHlAddress,
+            payoutAddress: resolvedPayoutAddress || address,
+            tierIndex,
+          },
+        });
+        throw err;
       }
 
       const result = await registerRes.json();
+      console.info("[REGISTRATION] EIP-712: registration result", {
+        status: result.status,
+        txHash: result.txHash,
+      });
 
       setPaymentState("success");
       setEip712Step(null);
@@ -515,6 +915,7 @@ export function StepConnectAndPay({
         });
       }, 1500);
     } catch (err) {
+      console.error("[REGISTRATION] EIP-712 payment failed", { error: err?.message });
       setPaymentState("error");
       setEip712Step(null);
       onPaymentProcessing?.(false);
@@ -540,9 +941,154 @@ export function StepConnectAndPay({
     paymentWallet,
     resolvedHlAddress,
     resolvedPayoutAddress,
+    email,
+    emailReady,
     onPaymentComplete,
     onPaymentProcessing,
   ]);
+
+  // ── Free tier signup handler ──────────────────────────────────────────────
+  const handleFreeSignup = useCallback(async () => {
+    console.info("[REGISTRATION] handleFreeSignup start", {
+      minerSlug,
+      hlAddress: resolvedHlAddress,
+      payoutAddress: resolvedPayoutAddress || resolvedHlAddress,
+      tierIndex,
+      walletConnected: isConnected,
+    });
+
+    setPaymentState("processing");
+    setEip712Step(isConnected ? "builderFee" : "provisioning");
+    setErrorMessage("");
+    onPaymentProcessing?.(true);
+
+    try {
+      let toltCustomerId = window.tolt_data?.customer_id || null;
+      if (!toltCustomerId && window.tolt) {
+        try {
+          const result = await window.tolt.signup(resolvedHlAddress);
+          toltCustomerId = result?.customer_id || window.tolt_data?.customer_id || null;
+        } catch { /* tolt unavailable */ }
+      }
+
+      await runPreflight({
+        minerSlug,
+        hlAddress: resolvedHlAddress,
+        accountSize: selectedTier.accountSize,
+        payoutAddress: resolvedPayoutAddress || resolvedHlAddress,
+        tierIndex,
+        email: emailReady ? email : undefined,
+        ...(isConnected && address ? { hlTransferSender: address } : {}),
+      });
+
+      // Builder fee approval — only if wallet is connected.
+      if (isConnected && walletClient) {
+        const previousChainId = chainId;
+        const builderFeeResult = await ensureBuilderFeeApproved({
+          address,
+          chainId,
+          switchChainAsync,
+        });
+        console.info("[REGISTRATION] Free: builder fee approval", builderFeeResult);
+        if (previousChainId && previousChainId !== HL_SIGNING_CHAIN_ID) {
+          switchChainAsync({ chainId: previousChainId }).catch(() => {});
+        }
+      }
+
+      setEip712Step("provisioning");
+
+      const registerRes = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          minerSlug,
+          hlAddress: resolvedHlAddress,
+          accountSize: selectedTier.accountSize,
+          payoutAddress: resolvedPayoutAddress || resolvedHlAddress,
+          tierIndex,
+          toltCustomerId,
+          email: emailReady ? email : undefined,
+          paymentMethod: "free",
+          ...(isConnected && address ? { hlTransferSender: address } : {}),
+        }),
+      });
+
+      if (!registerRes.ok) {
+        const data = await registerRes.json().catch(() => ({}));
+        const err = new Error(
+          data.error || data.message || "Registration failed. Please contact support.",
+        );
+        reportCritical(err, {
+          source: "registration/free",
+          userId: address || resolvedHlAddress,
+          metadata: {
+            step: "register_free",
+            httpStatus: registerRes.status,
+            serverError: data.error,
+            serverMessage: data.message,
+            minerSlug,
+            hlAddress: resolvedHlAddress,
+            payoutAddress: resolvedPayoutAddress || resolvedHlAddress,
+            tierIndex,
+          },
+        });
+        throw err;
+      }
+
+      const result = await registerRes.json();
+      console.info("[REGISTRATION] Free: registration result", {
+        status: result.status,
+        txHash: result.txHash,
+      });
+
+      setPaymentState("success");
+      setEip712Step(null);
+      onPaymentProcessing?.(false);
+
+      setTimeout(() => {
+        onPaymentComplete({
+          txHash: result.txHash || "",
+          hlAddress: resolvedHlAddress,
+          registrationStatus: result.status,
+          paymentMethod: "free",
+        });
+      }, 1500);
+    } catch (err) {
+      console.error("[REGISTRATION] Free signup failed", { error: err?.message });
+      setPaymentState("error");
+      setEip712Step(null);
+      onPaymentProcessing?.(false);
+
+      if (
+        err.message?.includes("User rejected") ||
+        err.message?.includes("denied")
+      ) {
+        setErrorMessage("Signature rejected — you can try again when ready.");
+      } else {
+        setErrorMessage(err.message || "Signup failed — please try again.");
+      }
+    }
+  }, [
+    isConnected,
+    walletClient,
+    minerSlug,
+    selectedTier,
+    tierIndex,
+    address,
+    chainId,
+    switchChainAsync,
+    resolvedHlAddress,
+    resolvedPayoutAddress,
+    email,
+    emailReady,
+    onPaymentComplete,
+    onPaymentProcessing,
+  ]);
+
+  const canFreeSignup =
+    hlAddressReady &&
+    confirmed &&
+    paymentState !== "processing";
 
   const canPayBase =
     isConnected &&
@@ -584,10 +1130,12 @@ export function StepConnectAndPay({
   // ── Confirm phase: "Continue to review" readiness ──────────────────────────
   const canContinueToConfirm =
     hlAddressReady &&
-    paymentMethod &&
-    (paymentMethod === "base"
-      ? isConnected && isOnBase
-      : isConnected);
+    (isFree
+      ? true
+      : paymentMethod &&
+        (paymentMethod === "base"
+          ? isConnected && isOnBase
+          : isConnected));
 
   if (phase === "confirm") {
     return (
@@ -683,6 +1231,16 @@ export function StepConnectAndPay({
             </p>
           </div>
 
+          {emailReady && (
+            <>
+              <div className="border-t border-border" />
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">Email</p>
+                <p className="text-xs text-foreground break-all">{email}</p>
+              </div>
+            </>
+          )}
+
           <div className="border-t border-border" />
 
           {/* Plan summary */}
@@ -761,8 +1319,38 @@ export function StepConnectAndPay({
             </div>
           )}
 
+          {/* ── Free tier signup flow ── */}
+          {isFree && paymentState !== "success" && paymentState !== "error" && (
+            <div className="space-y-4">
+              {paymentState === "idle" && (
+                <Button
+                  onClick={handleFreeSignup}
+                  disabled={!canFreeSignup}
+                  aria-label={`Sign up for ${selectedTier.name} free account`}
+                  className="w-full h-11 text-sm font-semibold cursor-pointer bg-teal-400 text-zinc-950 hover:bg-teal-400/90 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {!confirmed
+                    ? "Confirm your details above to continue"
+                    : "Sign Up"}
+                </Button>
+              )}
+
+              {paymentState === "processing" && (
+                <div className="rounded-xl border border-border bg-zinc-900/50 p-5 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <span className="w-2.5 h-2.5 rounded-full bg-teal-400 pulse-teal shrink-0" />
+                    <p className="text-sm font-semibold text-foreground">
+                      {eip712Step === "builderFee" && "Preparing your account…"}
+                      {eip712Step === "provisioning" && "Provisioning account…"}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ── Base wallet payment flow ── */}
-          {paymentMethod === "base" && paymentState !== "success" && paymentState !== "error" && (
+          {!isFree && paymentMethod === "base" && paymentState !== "success" && paymentState !== "error" && (
             <div className="space-y-4">
               {formattedBalance != null && (
                 <p className="text-xs text-center text-muted-foreground">
@@ -773,7 +1361,16 @@ export function StepConnectAndPay({
                 </p>
               )}
             <Button
-              onClick={handlePayBase}
+              onClick={() => {
+                trackEvent("register_payment_submitted", {
+                  tier_name: selectedTier?.name,
+                  tier_price: price,
+                  payment_method: "wallet",
+                  ref_source: getRefSource(),
+                  brand_variant: brandVariant,
+                });
+                handlePayBase();
+              }}
               disabled={!canPayBase}
               aria-label={`Pay ${price} USDC for ${selectedTier.name} challenge`}
               className={`
@@ -801,7 +1398,7 @@ export function StepConnectAndPay({
           )}
 
           {/* ── Hyperliquid EIP-712 payment flow ── */}
-          {paymentMethod === "eip712" && paymentState !== "success" && paymentState !== "error" && (
+          {!isFree && paymentMethod === "eip712" && paymentState !== "success" && paymentState !== "error" && (
             <div className="space-y-4">
               {/* Wallet mismatch warning */}
               {hlAddressReady && !walletMatchesHL && paymentState === "idle" && (
@@ -843,7 +1440,16 @@ export function StepConnectAndPay({
                   </p>
 
                   <Button
-                    onClick={handlePayEIP712}
+                    onClick={() => {
+                      trackEvent("register_payment_submitted", {
+                        tier_name: selectedTier?.name,
+                        tier_price: price,
+                        payment_method: "hyperliquid",
+                        ref_source: getRefSource(),
+                        brand_variant: brandVariant,
+                      });
+                      handlePayEIP712();
+                    }}
                     disabled={!canPayEIP712}
                     aria-label={`Sign and transfer ${price} USDC via Hyperliquid for ${selectedTier.name} challenge`}
                     className="w-full h-11 text-sm font-semibold cursor-pointer bg-teal-400 text-zinc-950 hover:bg-teal-400/90 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -859,6 +1465,7 @@ export function StepConnectAndPay({
                   <div className="flex items-center gap-3">
                     <span className="w-2.5 h-2.5 rounded-full bg-teal-400 pulse-teal shrink-0" />
                     <p className="text-sm font-semibold text-foreground">
+                      {eip712Step === "builderFee" && "Preparing your account\u2026"}
                       {eip712Step === "signing" && "Signing transaction\u2026"}
                       {eip712Step === "submitting" && "Submitting to Hyperliquid L1\u2026"}
                       {eip712Step === "verifying" && "Verifying receipt\u2026"}
@@ -957,23 +1564,22 @@ export function StepConnectAndPay({
 
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Challenge fee</span>
-          <div className="flex items-baseline gap-2">
-            <del className="text-xs text-[oklch(0.65_0_0)]">
-              <span className="sr-only">Original price: </span>${selectedTier.fullPrice}
-            </del>
-            <ins className="no-underline">
-              <span className="sr-only">Sale price: </span>
-              <span className="text-teal-400 font-bold font-mono">${selectedTier.promoPrice}</span>
-            </ins>
-          </div>
+          <span className="text-teal-400 font-bold font-mono">${selectedTier.promoPrice}</span>
         </div>
 
-        <div className="border-t border-border" />
+        {!isFree && <div className="border-t border-border" />}
 
         <div className="flex items-center justify-between">
           <span className="font-bold">Total</span>
           <span className="text-xl font-bold font-mono text-teal-400">
-            ${price} <span className="text-sm font-semibold text-muted-foreground">USDC</span>
+            {isFree ? (
+              "Free"
+            ) : (
+              <>
+                ${price}{" "}
+                <span className="text-sm font-semibold text-muted-foreground">USDC</span>
+              </>
+            )}
           </span>
         </div>
 
@@ -1079,9 +1685,73 @@ export function StepConnectAndPay({
             </p>
           )}
         </div>
+        {!hlWalletValid && (
+          <a
+            href={HYPERLIQUID_SIGNUP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group block rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-4 mt-1 transition-[border-color,background-color] duration-200 hover:border-teal-400/40 hover:bg-teal-400/[0.07] outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-400/10">
+                <ArrowSquareOut size={20} weight="duotone" className="text-teal-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">
+                  New to Hyperliquid?
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Sign up and get <span className="text-teal-400 font-semibold">4% off fees</span> on your first $25M in volume
+                </p>
+              </div>
+              <span className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-teal-400/10 text-xs font-semibold text-teal-400 group-hover:bg-teal-400/20 transition-[background-color] duration-200">
+                Sign up
+                <ArrowSquareOut size={12} weight="bold" />
+              </span>
+            </div>
+            <span className="sr-only"> (opens in a new tab)</span>
+          </a>
+        )}
       </div>
 
-      {/* ─── 2. Payment Method Selector ─── */}
+      {/* ─── 2. Email ─── */}
+      <div className="w-full max-w-lg mt-4 space-y-1.5">
+        <label htmlFor="reg-email" className="text-xs font-medium text-muted-foreground">
+          Email address
+        </label>
+        <input
+          id="reg-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          onBlur={() => setEmailTouched(true)}
+          placeholder="you@example.com"
+          aria-label="Email address for registration updates"
+          aria-describedby="email-hint email-error"
+          aria-invalid={showEmailError ? "true" : undefined}
+          className={`
+            w-full rounded-xl border bg-card p-4 text-sm
+            placeholder:text-muted-foreground/50
+            outline-none
+            focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
+            transition-[border-color,box-shadow] duration-200
+            ${showEmailError ? "border-destructive" : "border-border hover:border-white/[0.15]"}
+          `}
+        />
+        <div id="email-error" role="alert" className="min-h-[1.25rem]">
+          {showEmailError && (
+            <p className="text-xs text-destructive">
+              Enter a valid email address
+            </p>
+          )}
+        </div>
+        <p id="email-hint" className="text-xs text-muted-foreground/60">
+          We&#8217;ll send registration confirmation and account updates here
+        </p>
+      </div>
+
+      {/* ─── 3. Payment Method Selector (hidden for free tier) ─── */}
+      {!isFree && (
       <div className="w-full max-w-lg mt-2 space-y-3">
         <p className="text-xs font-medium text-muted-foreground">
           Payment method
@@ -1176,9 +1846,10 @@ export function StepConnectAndPay({
           </p>
         )}
       </div>
+      )}
 
-      {/* ─── 3. Wallet Connection (for eip712/base) ─── */}
-      {paymentMethod && (paymentMethod === "eip712" || paymentMethod === "base") && !isConnected && (
+      {/* ─── 4. Wallet Connection (for eip712/base) ─── */}
+      {!isFree && paymentMethod && (paymentMethod === "eip712" || paymentMethod === "base") && !isConnected && (
         <div className="w-full max-w-lg mt-4 space-y-4 text-center">
           <p className="text-sm text-muted-foreground text-balance max-w-md mx-auto">
             {paymentMethod === "base"
@@ -1205,7 +1876,7 @@ export function StepConnectAndPay({
       )}
 
       {/* Wallet connected indicator */}
-      {paymentMethod && (paymentMethod === "eip712" || paymentMethod === "base") && isConnected && (
+      {!isFree && paymentMethod && (paymentMethod === "eip712" || paymentMethod === "base") && isConnected && (
         <div className="w-full max-w-lg mt-4">
           <div className="rounded-xl border border-border bg-zinc-900/50 px-5 py-3.5 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -1288,8 +1959,8 @@ export function StepConnectAndPay({
         </div>
       )}
 
-      {/* ─── 4. Payout Wallet (shown after payment method selected) ─── */}
-      {paymentMethod && hlAddressReady && (
+      {/* ─── 5. Payout Wallet (shown after payment method selected or for free tier) ─── */}
+      {(isFree || paymentMethod) && hlAddressReady && (
         <div className="w-full max-w-lg mt-4 space-y-1.5">
           <label htmlFor="payout-wallet" className="text-xs font-medium text-muted-foreground">
             Payout wallet <span className="text-muted-foreground/60">(where you receive payouts)</span>
@@ -1329,6 +2000,12 @@ export function StepConnectAndPay({
               setPayoutWallet(hlWallet);
               setPayoutPrefilled(true);
             }
+            trackEvent("register_review_reached", {
+              tier_name: selectedTier?.name,
+              payment_method: paymentMethod === "base" ? "wallet" : "hyperliquid",
+              ref_source: getRefSource(),
+              brand_variant: brandVariant,
+            });
             onContinueToConfirm?.();
           }}
           disabled={!canContinueToConfirm}

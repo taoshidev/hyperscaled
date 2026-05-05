@@ -1,6 +1,6 @@
 import { cookies } from "next/headers"
 import App from "@/components/marketing"
-import { getPricingTiers } from "@/lib/pricing"
+import { fetchDbPricingTiers } from "@/lib/pricing-db"
 import { buildMetadata } from "@/lib/metadata"
 
 export const dynamic = "force-dynamic"
@@ -20,6 +20,6 @@ export default async function VantaHomePage() {
   const cookieStore = await cookies()
   const entry = cookieStore.get("hs_entry")?.value
   const lockedMiner = entry && entry !== "home" ? entry : null
-  const tiers = await getPricingTiers()
+  const tiers = await fetchDbPricingTiers('vanta')
   return <App lockedMiner={lockedMiner} tiers={tiers} />
 }

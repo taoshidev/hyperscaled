@@ -128,7 +128,7 @@ export default function HowItWorks({ tiers = [] }) {
       number: '03',
       icon: Trophy,
       title: 'Hit the Target. Get Paid.',
-      body: `Hit the 10% profit target to pass the ${brand.name} Challenge and activate your scaled account immediately. Payouts are delivered to your wallet every 7 days, and you keep 100% of everything you\u00a0earn.`,
+      body: `Hit the 10% profit target to pass the ${brand.name} Challenge and activate your scaled account immediately. Payouts are delivered to your wallet every 30 days, and you keep 100% of everything you\u00a0earn.`,
       mockup: <PayoutMockup />,
     },
   ]

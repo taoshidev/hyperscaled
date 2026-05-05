@@ -53,7 +53,7 @@ const features = [
   {
     icon: TrendUp,
     title: 'Grow Your Account',
-    body: 'Hit a 5% quarterly return with a Sharpe ratio above 1 and your account will automatically grow with zero fees. $100K accounts can scale all the way to\u00a0$2.5M.',
+    body: 'Hit a 5% quarterly return with a Sharpe ratio above 1 and your account will automatically grow with zero fees. All accounts can scale up to\u00a0$400K.',
     span: 'md:col-span-5',
     large: false,
     extra: (

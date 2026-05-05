@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { users, registrations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { isValidEvmAddress, isValidEmail } from "@/lib/validation";
@@ -66,6 +66,7 @@ async function handleSyncRegistration(body) {
   const finalPayoutAddress = (payoutAddress || hlAddress).toLowerCase();
 
   try {
+    const db = await getDb();
     // --- Upsert user ---
     const [existingUser] = await db
       .select()
@@ -166,6 +167,7 @@ async function handleSyncKyc(body) {
   const normalizedWallet = wallet.toLowerCase();
 
   try {
+    const db = await getDb();
     const [existingUser] = await db
       .select()
       .from(users)

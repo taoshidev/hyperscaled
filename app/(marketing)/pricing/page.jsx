@@ -1,7 +1,7 @@
 import PricingPage from '@/components/marketing/PricingPage'
 import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
-import { getPricingTiers } from '@/lib/pricing'
+import { fetchDbPricingTiers } from '@/lib/pricing-db'
 
 export const metadata = buildMetadata({
   title: 'Pricing — Hyperscaled Scaled Trading Accounts',
@@ -15,8 +15,7 @@ export const metadata = buildMetadata({
 
 
 export default async function Pricing() {
-  const tiers = await getPricingTiers()
-
+  const tiers = await fetchDbPricingTiers()
   const productSchemas = tiers.map((tier) => ({
     "@context": "https://schema.org",
     "@type": "Product",
@@ -27,7 +26,7 @@ export default async function Pricing() {
       price: String(tier.launchPrice),
       priceCurrency: "USD",
       availability: "https://schema.org/InStock",
-      url: "https://hyperscaled.trade/register",
+      url: `${process.env.HYPERSCALED_BASE_URL || "https://hyperscaled.trade"}/register`,
     },
   }))
 

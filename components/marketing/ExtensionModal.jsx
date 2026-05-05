@@ -76,11 +76,6 @@ export default function ExtensionModal({ open, onClose, hideTelegram = false }) 
 
               {/* Steps */}
               <div className="px-6 py-5 flex flex-col gap-4">
-
-                {/* Testnet notice */}
-                <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl bg-amber-400/[0.07] border border-amber-400/20">
-                  <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-amber-400 ring-2 ring-amber-400/30 mt-1.5" />
-                </div>
                 {STEPS.map((step, i) => {
                   const Icon = step.icon
                   return (

@@ -1,7 +1,7 @@
 import HowItWorksPage from '@/components/marketing/HowItWorksPage'
 import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
-import { getPricingTiers } from '@/lib/pricing'
+import { fetchDbPricingTiers } from '@/lib/pricing-db'
 
 export const metadata = buildMetadata({
   title: 'How It Works — Vanta Trading Scaled Trading',
@@ -49,7 +49,7 @@ const HOW_TO_SCHEMA = {
 }
 
 export default async function VantaHowItWorks() {
-  const tiers = await getPricingTiers()
+  const tiers = await fetchDbPricingTiers('vanta')
   return (
     <>
       <JsonLd data={HOW_TO_SCHEMA} />

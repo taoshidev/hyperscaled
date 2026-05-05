@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { entityMiners, entityTiers } from "@/lib/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
@@ -39,6 +39,7 @@ export async function GET() {
 }
 
 export async function PATCH(request) {
+  const db = await getDb();
   let auth;
   try {
     auth = await verifyHotkeySignature(request);

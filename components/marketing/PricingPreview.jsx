@@ -5,10 +5,17 @@ import { motion, useInView } from 'framer-motion'
 import { ArrowRight, Star } from '@phosphor-icons/react'
 import { PRICING_TIERS } from '@/lib/constants'
 import { useBrand } from '@/lib/brand'
+import { trackCtaClick } from '@/lib/analytics'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
-const TIER_LABELS = { 'tier-1': 'Tier I', 'tier-2': 'Tier II', 'tier-3': 'Tier III', 'tier-4': 'Tier IV', 'tier-5': 'Tier V' }
+const TIER_LABELS = { 'free': 'Free', 'tier-1': 'Starter', 'tier-2': 'Tier I', 'tier-3': 'Tier II', 'tier-4': 'Tier III', 'tier-5': 'Tier IV' }
+
+function tierBadge(tier) {
+  if (tier.popular) return 'Most Popular'
+  if (tier.id === 'free') return 'Try for Free'
+  return null
+}
 
 export default function PricingPreview({ tiers = PRICING_TIERS }) {
   const brand = useBrand()
@@ -34,25 +41,25 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 xl:gap-3">
           {tiers.map((tier, i) => (
             <motion.div
               key={tier.id}
               initial={{ opacity: 0, y: 20 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ ...spring, delay: i * 0.08 }}
-              className={`relative flex flex-col items-center p-6 rounded-2xl border transition-colors ${
-                tier.popular
+              className={`relative flex flex-col items-center p-6 xl:p-4 rounded-2xl border transition-colors ${
+                tier.popular || tier.id === 'free'
                   ? 'shiny-border'
                   : 'border-white/[0.08] bg-[#09090b] hover:border-white/[0.12]'
               }`}
             >
-              {/* Most Popular badge */}
-              {tier.popular && (
+              {/* Badge — Most Popular or Try for Free */}
+              {tierBadge(tier) && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <span className="inline-flex items-center gap-1 bg-teal-400 text-[#09090b] text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full">
                     <Star size={12} weight="fill" />
-                    Most Popular
+                    {tierBadge(tier)}
                   </span>
                 </div>
               )}
@@ -83,11 +90,10 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
 
               {/* CTA */}
               <a
-                href="https://app.hyperscaled.trade"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/register"
+                onClick={() => trackCtaClick({ label: tier.cta, location: `pricing_preview:${tier.name || tier.accountSize || 'unknown'}` })}
                 className={`w-full flex items-center justify-center gap-1.5 min-h-12 rounded-xl text-sm font-semibold transition-colors ${
-                  tier.popular
+                  tier.popular || tier.id === 'free'
                     ? 'shiny-cta px-6 py-3'
                     : 'bg-white/[0.06] border border-white/[0.08] text-white hover:bg-white/[0.1]'
                 }`}
@@ -99,7 +105,6 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
           ))}
         </div>
 
-        {/* Launch pricing note — only shown when discount pricing is active */}
         {showLaunchNote && (
           <motion.p
             initial={{ opacity: 0 }}
