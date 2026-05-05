@@ -11,12 +11,12 @@ export default function PromoBanner() {
 
   return (
     <div className="relative z-10 w-full bg-white">
-      <div className="flex items-center justify-center gap-4 sm:gap-5 px-4 sm:px-6 py-2.5 max-w-[1400px] mx-auto">
+      <div className="flex items-center justify-center gap-4 sm:gap-5 px-4 sm:px-6 py-1.5 max-w-[1400px] mx-auto">
         {/* WSB logo */}
         <img
           src="/wsb-logo.svg"
           alt="WallStreetBets"
-          className="h-11 w-11 rounded-lg shrink-0 hidden sm:block"
+          className="h-14 w-14 rounded-lg shrink-0 hidden sm:block"
         />
 
         {/* Deal info */}
