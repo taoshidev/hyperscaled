@@ -120,7 +120,7 @@ function KeyDetails({ rows, inline }) {
 /* ───────────────────────────────────────────────
    Section 2 — Step-by-Step Flow (4 steps)
    ─────────────────────────────────────────────── */
-function getSteps(brandName) {
+function getSteps(brandName, brandId) {
   return [
     {
       number: '01',
@@ -162,7 +162,7 @@ function getSteps(brandName) {
       number: '04',
       icon: CurrencyDollar,
       title: 'Pass. Get Funded. Get Paid.',
-      body: `Hit the 10% profit target with drawdown under 5% to immediately activate your ${brand.id === 'beanstock' ? 'funded' : 'scaled'} account. Keep 100% of profits with payouts delivered in USDC monthly. Scale to $400K with continued\u00a0performance.`,
+      body: `Hit the 10% profit target with drawdown under 5% to immediately activate your ${brandId === 'beanstock' ? 'funded' : 'scaled'} account. Keep 100% of profits with payouts delivered in USDC monthly. Scale to $400K with continued\u00a0performance.`,
       details: [
         { label: 'Profit Target', value: '10%' },
         { label: 'Max Drawdown (Challenge)', value: '5% daily / 5% EOD trailing' },
@@ -275,7 +275,7 @@ function StepCard({ step, index }) {
 
 function StepByStepFlow() {
   const brand = useBrand()
-  const steps = getSteps(brand.name)
+  const steps = getSteps(brand.name, brand.id)
   return (
     <section className="px-6 pb-20">
       <div className="max-w-[1100px] mx-auto flex flex-col gap-6">
@@ -418,6 +418,7 @@ function ChromeExtensionSection() {
    Scaling Path (below Step 4)
    ─────────────────────────────────────────────── */
 function ScalingSection() {
+  const brand = useBrand()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
