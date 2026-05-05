@@ -138,10 +138,17 @@ export function RegistrationFlow({
   }, [initialMinerSlug]);
 
 
-  // Funnel entry event. Skip when recovered — user already paid on a prior
-  // visit and is landing directly on the confirmation screen.
+  // Funnel entry event. When recovered, fire a recovery event instead of
+  // register_intent so the conversion still appears in analytics.
   useEffect(() => {
-    if (recovered) return;
+    if (recovered) {
+      trackEvent("register_conversion_recovered", {
+        tier_name: recovered.tierName,
+        ref_source: getRefSource(),
+        brand_variant: brandVariant,
+      });
+      return;
+    }
     trackEvent("register_intent", {
       ref_source: getRefSource(),
       brand_variant: brandVariant,
@@ -307,6 +314,7 @@ export function RegistrationFlow({
                 txHash={txHash}
                 registrationStatus={registrationStatus}
                 paymentMethod={paymentMethod}
+                brandVariant={brandVariant}
               />
             )}
           </div>
