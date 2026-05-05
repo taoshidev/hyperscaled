@@ -162,7 +162,7 @@ function getSteps(brandName) {
       number: '04',
       icon: CurrencyDollar,
       title: 'Pass. Get Funded. Get Paid.',
-      body: 'Hit the 10% profit target with drawdown under 5% to immediately activate your scaled account. Keep 100% of profits with payouts delivered in USDC monthly. Scale to $400K with continued\u00a0performance.',
+      body: `Hit the 10% profit target with drawdown under 5% to immediately activate your ${brand.id === 'beanstock' ? 'funded' : 'scaled'} account. Keep 100% of profits with payouts delivered in USDC monthly. Scale to $400K with continued\u00a0performance.`,
       details: [
         { label: 'Profit Target', value: '10%' },
         { label: 'Max Drawdown (Challenge)', value: '5% daily / 5% EOD trailing' },
@@ -434,7 +434,7 @@ function ScalingSection() {
             Scaling path: up to&nbsp;$400K
           </h2>
           <p className="mt-4 text-sm sm:text-base text-zinc-400 max-w-[56ch] mx-auto leading-relaxed" style={{ textWrap: 'balance' }}>
-            Consistently hit quarterly performance targets and your scaled account grows automatically with no additional&nbsp;fees.
+            Consistently hit quarterly performance targets and your {brand.id === 'beanstock' ? 'funded' : 'scaled'} account grows automatically with no additional&nbsp;fees.
           </p>
         </motion.div>
         <ScalingPathVisual />
@@ -660,7 +660,7 @@ function PayoutMechanics() {
           className="max-w-[700px] mx-auto rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-5 sm:p-6 text-center"
         >
           <p className="text-sm sm:text-base text-teal-400 font-medium leading-relaxed" style={{ textWrap: 'balance' }}>
-            100% of profits go to you. {brand.name} takes 0%, including on scaled accounts up to&nbsp;$400K.
+            100% of profits go to you. {brand.name} takes 0%, including on {brand.id === 'beanstock' ? 'funded' : 'scaled'} accounts up to&nbsp;$400K.
           </p>
         </motion.div>
       </div>

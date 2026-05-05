@@ -81,7 +81,7 @@ const BRANDS = {
     name: 'Beanstock Trading',
     prefix: '/beanstock',
     logo: '/beanstock-logo.svg',
-    tagline: 'Scaled Trading on Hyperliquid',
+    tagline: 'Funded Trading on Hyperliquid',
     siteUrl: 'https://jollygreeninvestor.com',
     twitter: '@jollygreenmoney',
     socials: {
