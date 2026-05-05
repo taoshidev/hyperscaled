@@ -20,6 +20,7 @@ import { copyToClipboard } from "@/lib/utils";
 import { formatAccountSize, truncateAddress } from "@/lib/format";
 import { useBrandHref } from "@/lib/brand";
 import { useExtensionBridge } from "@/hooks/use-extension-bridge";
+import { trackEvent, getRefSource, getBrand } from "@/lib/analytics";
 
 function CopyButton({ text, label }) {
   const [copied, setCopied] = useState(false);
@@ -240,15 +241,30 @@ const itemVariants = {
 
 const POLL_INTERVAL_MS = 5000;
 
-export function StepConfirmation({ selectedTier, hlAddress, txHash, registrationStatus, paymentMethod }) {
+export function StepConfirmation({ selectedTier, hlAddress, txHash, registrationStatus, paymentMethod, brandVariant }) {
   const brandHref = useBrandHref();
   const isHLPayment = paymentMethod === "hyperliquid" || paymentMethod === "eip712";
   const explorerUrl = isHLPayment ? null : `${BASESCAN_URL}/tx/${txHash}`;
 
   const [status, setStatus] = useState(registrationStatus || "pending");
   const intervalRef = useRef(null);
+  const conversionFiredRef = useRef(false);
 
   const { extensionDetected } = useExtensionBridge();
+
+  // Fire register_conversion once when the account is confirmed active.
+  // This is the final funnel event — proves the user actually got their account.
+  useEffect(() => {
+    if (status !== "registered" || conversionFiredRef.current) return;
+    conversionFiredRef.current = true;
+    trackEvent("register_conversion", {
+      tier_name: selectedTier?.name,
+      tier_price: selectedTier?.promoPrice ?? selectedTier?.fullPrice,
+      payment_method: isHLPayment ? "hyperliquid" : "wallet",
+      ref_source: getRefSource(),
+      brand_variant: brandVariant || getBrand(),
+    });
+  }, [status, selectedTier, isHLPayment, brandVariant]);
 
   useEffect(() => {
     if (status !== "pending") return;
