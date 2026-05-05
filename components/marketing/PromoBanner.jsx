@@ -16,7 +16,7 @@ export default function PromoBanner() {
         <img
           src="/wsb-logo.svg"
           alt="WallStreetBets"
-          className="h-14 w-14 rounded-lg shrink-0 hidden sm:block"
+          className="h-20 w-20 -my-4 rounded-lg shrink-0 hidden sm:block"
         />
 
         {/* Deal info */}
