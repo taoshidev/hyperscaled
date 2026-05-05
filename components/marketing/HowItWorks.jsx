@@ -153,7 +153,7 @@ export default function HowItWorks({ tiers = [] }) {
             How It Works
           </span>
           <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-2xl text-balance">
-            Trade on Hyperliquid.{' '}
+            Trade with Hyperliquid.{' '}
             <span className="text-zinc-500">Earn a scaled trading&nbsp;account.</span>
           </h2>
         </motion.div>

@@ -5,7 +5,7 @@ import { motion, useInView } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight, Star } from '@phosphor-icons/react'
 import { PRICING_TIERS } from '@/lib/constants'
-import { useBrandHref } from '@/lib/brand'
+import { useBrand, useBrandHref } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
@@ -63,7 +63,15 @@ function PricingCard({ tier, index, brandHref }) {
         <ins className="text-3xl sm:text-4xl xl:text-3xl font-bold font-mono no-underline text-white">
           ${tier.launchPrice}
         </ins>
+        {tier.standardPrice && (
+          <del className="text-sm text-zinc-600 font-mono">${tier.standardPrice}</del>
+        )}
         <span className="text-xs text-zinc-500 font-medium">USDC</span>
+        <span className="sr-only">
+          {tier.standardPrice
+            ? `Launch price ${tier.launchPrice} USDC, was ${tier.standardPrice} USDC`
+            : `${tier.launchPrice} USDC`}
+        </span>
       </div>
 
       {/* Details */}
@@ -94,7 +102,9 @@ function PricingCard({ tier, index, brandHref }) {
 }
 
 export default function HomePricing({ tiers = PRICING_TIERS }) {
+  const brand = useBrand()
   const brandHref = useBrandHref()
+  tiers = brand.pricingTiers || tiers
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -115,12 +125,12 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
           </h2>
           <div className="mt-5 flex justify-center">
             <span className="inline-flex items-center px-3 py-1 rounded-full border border-teal-400/20 bg-teal-400/10 text-xs text-teal-400 font-medium">
-              90+ tradeable&nbsp;pairs
+              60+ tradable&nbsp;pairs
             </span>
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 md:gap-5 xl:gap-3">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-6 md:gap-5 xl:gap-3`}>
           {tiers.map((tier, i) => (
             <PricingCard key={tier.id} tier={tier} index={i} brandHref={brandHref} />
           ))}

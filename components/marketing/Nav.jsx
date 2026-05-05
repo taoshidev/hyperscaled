@@ -78,7 +78,9 @@ function MoreDropdown({ brandHref, brand }) {
             className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-white/[0.08] bg-[#0c0c0e]/95 backdrop-blur-xl shadow-[0_16px_48px_rgba(0,0,0,0.5)] overflow-hidden z-50"
           >
             <div className="py-1.5">
-              {DROPDOWN_LINKS.map((l) => (
+              {DROPDOWN_LINKS
+                .filter((l) => l.label !== 'Partners' || brand.showPartnersCTA)
+                .map((l) => (
                 <Link
                   key={l.label}
                   href={brandHref(l.href)}
@@ -210,7 +212,9 @@ export default function Nav({ excludeLinks = [] }) {
             className="md:hidden border-t border-white/[0.06] bg-[#09090b]/95 backdrop-blur-xl px-6 pb-6 pt-4"
           >
             <div className="flex flex-col gap-1">
-              {allLinks.map((l) => (
+              {allLinks
+                .filter((l) => l.label !== 'Partners' || brand.showPartnersCTA)
+                .map((l) => (
                 <Link
                   key={l.label}
                   href={brandHref(l.href)}

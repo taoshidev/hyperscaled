@@ -9,7 +9,7 @@ export const metadata = buildMetadata({
     'One-time USDC fee. $5K to $100K scaled accounts. 100% profit split. No subscriptions, no hidden charges.',
   ogTitle: 'Vanta Trading Pricing — One Fee. One Challenge. Keep Everything You Earn.',
   ogDescription:
-    'Start from $39. Choose $5K to $100K accounts. 100% profit split, monthly USDC payouts, and scaling up to $2.5M.',
+    'Start from $39. Choose $5K to $100K accounts. 100% profit split, monthly USDC payouts, and scaling up to $400K.',
   path: '/vanta/pricing',
   brand: 'vanta',
 })

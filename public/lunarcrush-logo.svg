@@ -1,0 +1,11 @@
+<svg width="172" height="28" viewBox="0 0 172 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Icon: concentric arcs (signal/moon motif) -->
+  <!-- Outer arc -->
+  <path d="M4 20 C4 11,10 5,18 5 C26 5,32 11,32 20" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <!-- Middle arc -->
+  <path d="M8 20 C8 13,12 8,18 8 C24 8,28 13,28 20" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <!-- Inner circle -->
+  <circle cx="18" cy="20" r="3.5" stroke="white" stroke-width="2" fill="none"/>
+  <!-- Wordmark -->
+  <text x="40" y="19.5" font-family="'Geist','Helvetica Neue',Arial,sans-serif" font-size="13.5" font-weight="700" fill="white" letter-spacing="0.01em">LunarCrush</text>
+</svg>

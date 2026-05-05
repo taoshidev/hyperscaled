@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { ArrowRight, Star } from '@phosphor-icons/react'
 import { PRICING_TIERS } from '@/lib/constants'
+import { useBrand } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
@@ -17,6 +18,9 @@ function tierBadge(tier) {
 }
 
 export default function PricingPreview({ tiers = PRICING_TIERS }) {
+  const brand = useBrand()
+  tiers = brand.pricingTiers || tiers
+  const showLaunchNote = tiers.some((t) => t.standardPrice)
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -37,7 +41,7 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 xl:gap-3">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-4 xl:gap-3`}>
           {tiers.map((tier, i) => (
             <motion.div
               key={tier.id}
@@ -73,7 +77,15 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
                 <ins className="text-3xl font-bold font-mono no-underline text-white">
                   ${tier.launchPrice}
                 </ins>
+                {tier.standardPrice && (
+                  <del className="text-sm text-zinc-600 font-mono">${tier.standardPrice}</del>
+                )}
                 <span className="text-xs text-zinc-500 font-medium">USDC</span>
+                <span className="sr-only">
+                  {tier.standardPrice
+                    ? `Launch price ${tier.launchPrice} USDC, was ${tier.standardPrice} USDC`
+                    : `${tier.launchPrice} USDC`}
+                </span>
               </div>
 
               {/* CTA */}
@@ -93,6 +105,16 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
           ))}
         </div>
 
+        {showLaunchNote && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={inView ? { opacity: 1 } : {}}
+            transition={{ ...spring, delay: 0.3 }}
+            className="text-center text-xs text-zinc-500 mt-6"
+          >
+            Launch pricing active. Limited-time&nbsp;pricing.
+          </motion.p>
+        )}
       </div>
     </section>
   )
