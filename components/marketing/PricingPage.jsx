@@ -18,6 +18,7 @@ import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
 import FAQAccordion from '@/components/shared/FAQAccordion'
+import PromoBanner from '@/components/marketing/PromoBanner'
 import { PRICING_TIERS, PRICING_FAQ, parseTierAccountSize } from '@/lib/constants'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
@@ -431,6 +432,7 @@ export default function PricingPage({ tiers = PRICING_TIERS }) {
   const resolvedTiers = brand.pricingTiers || tiers
   return (
     <>
+      <PromoBanner />
       <PricingHero />
       <PricingCards tiers={resolvedTiers} />
       <WhatsIncludedGrid />
