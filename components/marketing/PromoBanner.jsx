@@ -16,7 +16,7 @@ export default function PromoBanner() {
         className="flex items-center justify-center gap-3 px-6 py-2.5 hover:bg-teal-300 transition-colors"
       >
         <img
-          src={brand.logo}
+          src={brand.mark}
           alt={brand.name}
           className="h-5 w-auto brightness-0 invert"
         />
