@@ -9,7 +9,7 @@ import {
   Warning,
 } from '@phosphor-icons/react'
 import RulesTable from '@/components/shared/RulesTable'
-import { EVAL_RULES, FUNDED_RULES, SCALING_PATH, BUYING_POWER_BY_SIZE, LEVERAGE_LIMITS, FEE_RULES } from '@/lib/constants'
+import { EVAL_RULES, FUNDED_RULES, SCALING_PATH, BUYING_POWER_BY_SIZE, LEVERAGE_LIMITS, FEE_RULES, TRADABLE_PAIRS } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
 
@@ -199,6 +199,7 @@ function EvalRulesSection() {
    Section 2b — Available Trading Pairs
    ─────────────────────────────────────────────── */
 function AvailablePairsSection() {
+  const totalPairs = TRADABLE_PAIRS.reduce((sum, group) => sum + group.count, 0)
   return (
     <section id="pairs" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
@@ -206,8 +207,28 @@ function AvailablePairsSection() {
           Available Pairs
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed">
-          Tradeable pairs on the Hyperscaled challenge dynamically update. We allow all tokens on Hyperliquid with a 30-day mean daily volume in USD of at least 2 million&nbsp;dollars.
+          There are <span className="text-white font-medium">{totalPairs} tradable pairs</span> across crypto, commodities, indices, and stocks. Although you can trade any pair on Hyperliquid, only these {totalPairs} predefined pairs are tracked and counted toward your Hyperscaled trading&nbsp;performance.
         </p>
+
+        <div className="mt-8 space-y-6">
+          {TRADABLE_PAIRS.map((group) => (
+            <div key={group.category}>
+              <h3 className="text-xs text-zinc-500 tracking-widest uppercase font-medium mb-3">
+                {group.category} ({group.count})
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {group.pairs.map((pair) => (
+                  <span
+                    key={pair}
+                    className="text-xs font-mono text-zinc-300 bg-white/[0.04] border border-white/[0.06] rounded-md px-2.5 py-1.5"
+                  >
+                    {pair}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   )
@@ -229,7 +250,7 @@ function LeverageSection() {
         </p>
         <ul className="mt-4 space-y-2 text-sm text-zinc-400">
           <li>
-            <span className="text-white font-medium">Single Position Buying Power</span> — the maximum you can allocate to any one trade at a&nbsp;time.
+            <span className="text-white font-medium">Single Position Buying Power</span> — the maximum you can allocate to any trading pair at a&nbsp;time.
           </li>
           <li>
             <span className="text-white font-medium">Total Portfolio Buying Power</span> — the maximum combined exposure you can have across all open positions at&nbsp;once.
@@ -251,7 +272,7 @@ function LeverageSection() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/[0.06] bg-white/[0.02]">
-                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Current Account Size</th>
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Starting Account Size</th>
                 <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Challenge Leverage Tier</th>
                 <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Funded Leverage Tier</th>
               </tr>
@@ -302,8 +323,8 @@ function LeverageSection() {
             <thead>
               <tr className="border-b border-white/[0.06] bg-white/[0.02]">
                 <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Leverage Tier</th>
-                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Crypto — Single Position</th>
-                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Crypto — Portfolio</th>
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Single Position</th>
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Portfolio</th>
               </tr>
             </thead>
             <tbody>
@@ -392,13 +413,15 @@ const DOES_DISQUALIFY = [
   'Breaching the daily loss limit (5% during the challenge / 8% when scaled)',
   'Breaching the EOD trailing loss limit (5% during the challenge / 8% when scaled)',
   'Attempting to manipulate challenge performance (wash trading, coordinated cross-account hedging)',
+  'Martingale and martingale-like strategies (progressively increasing position size after losses)',
+  '30 consecutive days of inactivity (no trades placed)',
 ]
 
 const DOES_NOT_DISQUALIFY = [
   'Trading during news events',
   'Holding positions overnight',
-  'Trading any perpetual available on Hyperliquid',
-  'Taking time off — there is no minimum trading day requirement',
+  'Trading any perpetual available on Hyperliquid — only the 60 predefined pairs are tracked toward your performance',
+  'Taking time off — there is no minimum trading frequency, but 30 days of inactivity results in elimination',
   'Using algorithmic or automated trading strategies',
   'Any drawdown within the defined limits',
 ]
