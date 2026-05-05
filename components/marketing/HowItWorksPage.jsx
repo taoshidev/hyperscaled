@@ -36,9 +36,11 @@ function PageHero() {
   const brand = useBrand()
   const brandHref = useBrandHref()
   const heroTitle =
-    brand.poweredBy && brand.id !== 'hyperscaled'
-      ? `Hyperliquid trading on ${brand.name.replace('Trading', '')} \n\n powered by Hyperscaled`
-      : 'Trade on Hyperliquid. Get scaled by the network.'
+    brand.id === 'beanstock'
+      ? 'Trade on Hyperliquid. Get funded by Beanstock.'
+      : brand.poweredBy && brand.id !== 'hyperscaled'
+        ? `Hyperliquid trading on ${brand.name.replace('Trading', '')} \n\n powered by Hyperscaled`
+        : 'Trade on Hyperliquid. Get scaled by the network.'
 
   return (
     <section className="pt-32 pb-16 px-6">
