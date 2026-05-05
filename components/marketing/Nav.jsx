@@ -157,8 +157,8 @@ export default function Nav({ excludeLinks = [] }) {
         </Link>
 
         {/* Desktop nav — centered between logo and CTA */}
-        <nav className="hidden md:flex items-center justify-center flex-1 min-w-0 mx-4">
-          <div className="flex items-center gap-6 overflow-hidden">
+        <nav className="hidden md:flex items-center justify-center flex-1 min-w-0 mx-8">
+          <div className="flex items-center gap-10 overflow-hidden">
           {primaryLinks.map((l) => (
             <Link
               key={l.label}
