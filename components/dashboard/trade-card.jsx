@@ -2,6 +2,7 @@
 
 import { forwardRef } from "react";
 import { formatPrice } from "@/lib/format";
+import { useBrand } from "@/lib/brand";
 
 const ASSET_COLORS = {
   BTC: "#f7931a",
@@ -53,6 +54,7 @@ export const TradeCard = forwardRef(function TradeCard(
   { ticker, direction, returnValue, entryPrice, markPrice },
   ref
 ) {
+  const brand = useBrand();
   const isWin = returnValue >= 1;
   const pnlColor = isWin ? "#00C6A7" : "#ef4444";
   const assetColor = ASSET_COLORS[ticker] || "#00C6A7";
@@ -127,7 +129,7 @@ export const TradeCard = forwardRef(function TradeCard(
               letterSpacing: "-0.01em",
             }}
           >
-            Hyperscaled
+            {brand.name}
           </span>
         </div>
 
@@ -244,7 +246,7 @@ export const TradeCard = forwardRef(function TradeCard(
             fontWeight: 500,
           }}
         >
-          Hyperscaled.trade
+          {brand.siteUrl.replace('https://', '')}
         </span>
       </div>
 
