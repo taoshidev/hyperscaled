@@ -3,6 +3,7 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { toPng } from "html-to-image";
 import { DownloadSimple, ShareNetwork } from "@phosphor-icons/react";
+import { useBrand } from "@/lib/brand";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { TradeCard } from "./trade-card";
 
 export function ShareTradeDialog({ open, onOpenChange, trade }) {
+  const brand = useBrand();
   const cardRef = useRef(null);
   const containerRef = useRef(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -65,14 +67,14 @@ export function ShareTradeDialog({ open, onOpenChange, trade }) {
     if (!dataUrl) return;
     try {
       const blob = await (await fetch(dataUrl)).blob();
-      const file = new File([blob], "hyperscaled-trade.png", { type: "image/png" });
+      const file = new File([blob], `${brand.id}-trade.png`, { type: "image/png" });
       if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: `${trade.ticker} ${trade.direction} — Hyperscaled` });
+        await navigator.share({ files: [file], title: `${trade.ticker} ${trade.direction} — ${brand.name}` });
       }
     } catch (e) {
       if (e.name !== "AbortError") throw e;
     }
-  }, [generate, trade]);
+  }, [generate, trade, brand.id, brand.name]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

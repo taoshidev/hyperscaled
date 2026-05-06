@@ -371,6 +371,7 @@ function LeverageSection() {
    Section 2d — Spread, Fees & Slippage
    ─────────────────────────────────────────────── */
 function FeesSection() {
+  const brand = useBrand()
   return (
     <section id="fees" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
@@ -378,7 +379,7 @@ function FeesSection() {
           Spread, Fees & Slippage
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
-          The only trading cost charged by Hyperscaled is a flat transaction fee. Spread, slippage, and funding come directly from the underlying Hyperliquid&nbsp;orderbook.
+          The only trading cost charged by {brand.name} is a flat transaction fee. Spread, slippage, and funding come directly from the underlying Hyperliquid&nbsp;orderbook.
         </p>
         <RulesTable rules={FEE_RULES} />
       </div>

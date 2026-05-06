@@ -2,6 +2,7 @@ import FAQPage from '@/components/marketing/FAQPage'
 import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { FAQ_ITEMS } from '@/lib/constants'
+import { getBrandConfig, brandifyText } from '@/lib/brand-config'
 
 export const metadata = buildMetadata({
   title: 'FAQ — Beanstock Funded Trading Questions',
@@ -15,16 +16,17 @@ export const metadata = buildMetadata({
 })
 
 function buildFaqSchema() {
+  const brand = getBrandConfig('beanstock')
   const allItems = FAQ_ITEMS.flatMap((group) => group.items)
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     mainEntity: allItems.map((item) => ({
       "@type": "Question",
-      name: item.question,
+      name: brandifyText(item.question, brand),
       acceptedAnswer: {
         "@type": "Answer",
-        text: item.answer,
+        text: brandifyText(item.answer, brand),
       },
     })),
   }
