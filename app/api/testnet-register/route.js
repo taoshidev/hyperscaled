@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
 import * as Sentry from "@sentry/nextjs";
 import { getMinerBySlug, getTiersForMiner } from "@/lib/miners";
 import { isValidHLAddress, isValidEmail } from "@/lib/validation";
@@ -6,6 +7,7 @@ import { getDb } from "@/lib/db";
 import { users, registrations } from "@/lib/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
+import { parseErrorBody } from "@/lib/parse-error-body";
 
 const MINER_SLUG = "vanta";
 
@@ -22,7 +24,42 @@ function resolveMinerApiKey(miner) {
   return sanitizeApiKey(process.env[slugEnv]) || sanitizeApiKey(process.env.ENTITY_MINER_API_KEY) || null;
 }
 
+function constantTimeEqual(a, b) {
+  const aBuf = Buffer.from(String(a));
+  const bBuf = Buffer.from(String(b));
+  if (aBuf.length !== bBuf.length) return false;
+  try {
+    return timingSafeEqual(aBuf, bBuf);
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(request) {
+  // Hard gate: this route provisions free testnet registrations and must
+  // never be reachable in production. Keep it disabled by default — set
+  // ENABLE_TESTNET_REGISTER=true plus TESTNET_REGISTER_SECRET on the
+  // ops/staging environment that needs it.
+  if (process.env.ENABLE_TESTNET_REGISTER !== "true") {
+    return NextResponse.json({ error: "Not Found" }, { status: 404 });
+  }
+
+  const expectedSecret = process.env.TESTNET_REGISTER_SECRET;
+  if (!expectedSecret) {
+    Sentry.captureMessage(
+      "ENABLE_TESTNET_REGISTER=true but TESTNET_REGISTER_SECRET is unset — refusing requests",
+      { level: "error" },
+    );
+    return NextResponse.json({ error: "Not Found" }, { status: 404 });
+  }
+
+  const provided =
+    request.headers.get("x-testnet-secret") ||
+    (request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
+  if (!constantTimeEqual(provided, expectedSecret)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const db = await getDb();
   let body;
   try {
@@ -125,6 +162,7 @@ export async function POST(request) {
   // Call miner API to provision the HL subaccount
   let registered = false;
   let statusDetail = null;
+  let minerResponseBody = null;
 
   if (miner.apiUrl) {
     try {
@@ -145,15 +183,47 @@ export async function POST(request) {
 
       if (res.ok) {
         registered = true;
+        minerResponseBody = await res.json().catch((err) => {
+          console.warn("[testnet-register] miner API returned 200 with unparseable JSON body:", err?.message);
+          return null;
+        });
       } else {
         const errText = await res.text().catch(() => "");
+        // Match the primary register route — surface duplicates as 409 instead
+        // of silently inserting a second row.
+        if (res.status === 400 && errText.includes("already registered to subaccount")) {
+          console.warn("[testnet-register] miner reports address already registered — rejecting", { hlAddress });
+          return NextResponse.json(
+            { error: "This HL address is already registered with this miner." },
+            { status: 409 },
+          );
+        }
         console.error("[testnet-register] Miner API error:", res.status, errText);
-        statusDetail = { reason: "miner_api_error", apiStatus: res.status };
+        statusDetail = {
+          reason: "miner_api_error",
+          apiStatus: res.status,
+          error: parseErrorBody(errText),
+        };
       }
     } catch (err) {
       console.error("[testnet-register] Miner API unreachable:", err.message);
       statusDetail = { reason: "miner_api_unreachable", error: err.message };
     }
+  }
+
+  // Testnet is always free → no payment to preserve. Fail loudly instead of
+  // inserting a `pending` row that the UI would render as "Provisioning…".
+  if (!registered) {
+    console.warn("[testnet-register] miner call failed — rejecting", { hlAddress, statusDetail });
+    return NextResponse.json(
+      {
+        error: "Registration failed",
+        message:
+          "We couldn't provision your account with the miner. Please try again in a moment.",
+        detail: statusDetail,
+      },
+      { status: 502 },
+    );
   }
 
   // Upsert user record
@@ -192,11 +262,9 @@ export async function POST(request) {
       tierIndex,
       priceUsdc: "0.00",
       txHash: null,
-      status: registered ? "registered" : "pending",
-      statusDetail: {
-        paymentMethod: "testnet",
-        ...(statusDetail || {}),
-      },
+      status: "registered",
+      statusDetail: { paymentMethod: "testnet" },
+      metadata: minerResponseBody,
     });
   } catch (err) {
     Sentry.captureException(err, { tags: { route: "api/testnet-register", step: "registration_insert" } });
@@ -208,9 +276,7 @@ export async function POST(request) {
   }
 
   return NextResponse.json({
-    status: registered ? "registered" : "pending",
-    message: registered
-      ? "Your testnet account has been created."
-      : "Your registration is being processed.",
+    status: "registered",
+    message: "Your testnet account has been created.",
   });
 }

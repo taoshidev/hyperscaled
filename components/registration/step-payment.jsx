@@ -8,6 +8,7 @@ import {
   useWalletClient,
   usePublicClient,
   useSwitchChain,
+  useSignMessage,
 } from "wagmi";
 import { parseUnits, formatUnits } from "viem";
 import { x402Client, x402HTTPClient } from "@x402/core/client";
@@ -27,12 +28,14 @@ import { USDC_ADDRESS, USDC_DECIMALS, BASE_CHAIN_ID, BASE_NETWORK, CHAIN_LABEL }
 import { usdcAbi } from "@/lib/usdc-abi";
 import { Loader2, AlertTriangle } from "lucide-react";
 import { reportCritical, reportError } from "@/lib/errors";
+import { signRegistrationRequest } from "@/lib/sign-registration";
 
 export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, onComplete, onBack }) {
   const { address, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
+  const { signMessageAsync } = useSignMessage();
   const [error, setError] = useState(null);
   const [isPaying, setIsPaying] = useState(false);
   const [status, setStatus] = useState(null);
@@ -98,11 +101,36 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
         toltCustomerId,
       };
 
+      // Wallet-ownership signature for the HL address being registered.
+      // Required by the server on the SETTLE call; the unsigned probe
+      // call below skips the gate. We sign once (one MetaMask popup) and
+      // reuse the same `signedBody` bytes for both calls so the body
+      // hash bound to the signature matches the bytes the server reads
+      // on the settle. Mismatched wallets / unconnected wallets throw a
+      // user-facing message before MetaMask is ever invoked.
+      setStatus("Verifying wallet ownership...");
+      let ownershipHeaders;
+      let signedBody;
+      try {
+        const signed = await signRegistrationRequest({
+          path: "/api/register",
+          body: registrationData,
+          hlAddress,
+          connectedAddress: address,
+          signMessageAsync,
+        });
+        ownershipHeaders = signed.headers;
+        signedBody = signed.body;
+      } catch (err) {
+        console.warn("[REGISTRATION][StepPayment] ownership signature aborted", { error: err?.message });
+        throw err;
+      }
+
       console.info("[REGISTRATION][StepPayment] probing /api/register for 402", { affiliateUtm });
       const initialRes = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(registrationData),
+        body: signedBody,
       });
       console.info("[REGISTRATION][StepPayment] probe response", { status: initialRes.status });
 
@@ -153,8 +181,9 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
         headers: {
           "Content-Type": "application/json",
           ...paymentHeaders,
+          ...ownershipHeaders,
         },
-        body: JSON.stringify(registrationData),
+        body: signedBody,
       });
       console.info("[REGISTRATION][StepPayment] paid request response", {
         status: paidRes.status,
@@ -203,7 +232,7 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
         setError(err.message || "Payment failed");
       }
     }
-  }, [walletClient, publicClient, miner, tierIndex, hlAddress, email, address, tier, onComplete]);
+  }, [walletClient, publicClient, miner, tierIndex, hlAddress, email, address, tier, onComplete, signMessageAsync]);
 
   const formattedBalance = balance != null ? formatUnits(balance, USDC_DECIMALS) : null;
   const hasEnough = balance != null && balance >= parseUnits(String(price), USDC_DECIMALS);
@@ -215,17 +244,25 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
     setIsPaying(true);
     setStatus("Registering...");
     try {
+      const registrationData = {
+        minerSlug: miner.slug,
+        hlAddress,
+        accountSize: tier.accountSize,
+        payoutAddress: hlAddress,
+        email,
+        tierIndex,
+      };
+      const { headers, body } = await signRegistrationRequest({
+        path: "/api/register",
+        body: registrationData,
+        hlAddress,
+        connectedAddress: address,
+        signMessageAsync,
+      });
       const res = await fetch("/api/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          minerSlug: miner.slug,
-          hlAddress,
-          accountSize: tier.accountSize,
-          payoutAddress: hlAddress,
-          email,
-          tierIndex,
-        }),
+        headers: { "Content-Type": "application/json", ...headers },
+        body,
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Registration failed");
@@ -240,7 +277,7 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
       setIsPaying(false);
       setStatus(null);
     }
-  }, [miner, hlAddress, tier, email, tierIndex, onComplete]);
+  }, [miner, hlAddress, tier, email, tierIndex, onComplete, address, signMessageAsync]);
 
   return (
     <div className="space-y-6 max-w-md mx-auto">

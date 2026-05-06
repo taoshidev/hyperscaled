@@ -18,7 +18,7 @@ import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
 import FAQAccordion from '@/components/shared/FAQAccordion'
-import { PRICING_TIERS, PRICING_FAQ } from '@/lib/constants'
+import { PRICING_TIERS, PRICING_FAQ, parseTierAccountSize } from '@/lib/constants'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -127,9 +127,12 @@ function PricingCard({ tier, index }) {
         ))}
       </ul>
 
-      {/* CTA */}
       <Link
-        href={brandHref('/register')}
+        href={(() => {
+          const size = parseTierAccountSize(tier.accountSize)
+          const base = brandHref('/register')
+          return size ? `${base}?tier=${size}` : base
+        })()}
         onClick={() => trackCtaClick({ label: tier.cta, location: `pricing_page:${tier.name || tier.accountSize || 'unknown'}` })}
         className={`mt-8 xl:mt-4 flex items-center justify-center gap-1.5 min-h-12 xl:min-h-10 rounded-xl text-sm xl:text-xs font-semibold transition-colors ${
           tier.popular || tier.id === 'free'

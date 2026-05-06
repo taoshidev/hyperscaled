@@ -52,7 +52,11 @@ export function Dashboard() {
   useDashboardStream(
     activeAddress && dashboard.data && !useFundedDemo ? activeAddress : null,
   );
-  const payout = usePayoutData(dashboard.data?.subaccount_uuid ?? null, { useFundedDemo });
+  const payout = usePayoutData(
+    dashboard.data?.subaccount_uuid ?? null,
+    dashboard.data?.hl_address ?? null,
+    { useFundedDemo },
+  );
 
   const handleReset = () => {
     setUseConnectedWallet(false);

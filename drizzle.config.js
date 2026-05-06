@@ -1,17 +1,15 @@
 import { defineConfig } from "drizzle-kit";
 import { config } from "dotenv";
 
+import { buildDrizzleKitUrl } from "./lib/db/ssl.js";
+
 config({ path: ".env.local" });
 
 const rawConnectionString =
   process.env.DATABASE_URL ||
-  "postgresql://postgres:postgres@127.0.0.1:5439/postgres";
-const isRemote =
-  !rawConnectionString.includes("127.0.0.1") && !rawConnectionString.includes("localhost");
-const connectionString =
-  isRemote && !/[?&]sslmode=/.test(rawConnectionString)
-    ? `${rawConnectionString}${rawConnectionString.includes("?") ? "&" : "?"}sslmode=no-verify`
-    : rawConnectionString;
+  "postgresql://localhost:5432/hyperscaled";
+
+const connectionString = buildDrizzleKitUrl(rawConnectionString);
 
 export default defineConfig({
   schema: "./lib/db/schema.js",

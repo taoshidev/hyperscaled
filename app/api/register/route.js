@@ -16,6 +16,8 @@ import { facilitator as cdpFacilitator } from "@coinbase/x402";
 import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
 import { isAnyDevTestWallet, DEV_TEST_PRICE } from "@/lib/dev-test";
 import { trackConversion } from "@/lib/tolt";
+import { parseErrorBody } from "@/lib/parse-error-body";
+import { verifyWalletHeaders } from "@/lib/wallet-auth";
 
 const USE_TESTNET = process.env.USE_TESTNET === "true";
 
@@ -156,6 +158,62 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
   }
 
+  // Wallet-ownership gate. Required whenever this request is going to
+  // perform a real registration (i.e. anything that ends in a DB write).
+  // The unsigned x402 probe path (no payment-signature header AND no
+  // explicit free/hyperliquid/eip712 method) just returns the 402
+  // challenge with no side effects, so we skip the check there to avoid
+  // popping a wallet signature on every probe — the user will sign on
+  // the actual settle call below.
+  const isUnsignedX402Probe =
+    !hasPaymentSignature &&
+    paymentMethod !== "free" &&
+    paymentMethod !== "hyperliquid" &&
+    paymentMethod !== "eip712";
+
+  if (!isUnsignedX402Probe) {
+    let auth;
+    try {
+      auth = await verifyWalletHeaders({
+        headers: {
+          wallet: request.headers.get("x-wallet"),
+          signature: request.headers.get("x-signature"),
+          nonce: request.headers.get("x-nonce"),
+        },
+        path: "/api/register",
+        bodyText,
+      });
+    } catch (err) {
+      console.warn("[REGISTRATION] wallet ownership signature missing/invalid", {
+        reqId,
+        error: err.message,
+      });
+      return NextResponse.json(
+        { error: `Unauthorized: ${err.message}` },
+        { status: 401 },
+      );
+    }
+
+    if (auth.wallet.toLowerCase() !== hlAddress.toLowerCase()) {
+      console.warn("[REGISTRATION] signing wallet does not match hl_address", {
+        reqId,
+        signingWallet: auth.wallet,
+        hlAddress,
+      });
+      return NextResponse.json(
+        {
+          error:
+            "The signing wallet must match the registered HL address. Switch MetaMask to the wallet you want to register.",
+        },
+        { status: 403 },
+      );
+    }
+    console.info("[REGISTRATION] wallet ownership verified", {
+      reqId,
+      wallet: auth.wallet,
+    });
+  }
+
   const miner = await getMinerBySlug(minerSlug);
   if (!miner) {
     console.warn("[REGISTRATION] unknown miner", { reqId, minerSlug });
@@ -207,7 +265,12 @@ export async function POST(request) {
   // Reject duplicate registrations — don't let users pay twice for the same miner + HL address
   try {
     const [existing] = await db
-      .select({ id: registrations.id, status: registrations.status, createdAt: registrations.createdAt })
+      .select({
+        id: registrations.id,
+        status: registrations.status,
+        createdAt: registrations.createdAt,
+        priceUsdc: registrations.priceUsdc,
+      })
       .from(registrations)
       .where(
         and(
@@ -275,12 +338,53 @@ export async function POST(request) {
           );
         }
       } else {
-        // pending — payment already recorded, don't risk a double-charge
-        console.warn("[REGISTRATION] blocked — pending registration already exists", { reqId, hlAddress, minerSlug });
-        return NextResponse.json(
-          { error: "A registration for this HL address is already being processed. Please wait for it to complete." },
-          { status: 409 },
-        );
+        // Pending row. Paid → strict 409 (don't orphan the on-chain payment
+        // the cron is retrying). Free → if validator confirms no record, the
+        // row is stale and we sync it to `failed` to unblock the user.
+        const isPaid = Number(existing.priceUsdc) > 0;
+        if (isPaid) {
+          console.warn("[REGISTRATION] blocked — paid pending registration already exists", { reqId, hlAddress, minerSlug });
+          return NextResponse.json(
+            { error: "A registration for this HL address is already being processed. Please wait for it to complete." },
+            { status: 409 },
+          );
+        }
+        const validatorStatus = await checkValidatorStatus(hlAddress);
+        console.info("[REGISTRATION] validator status check (pending)", {
+          reqId,
+          hlAddress,
+          validatorStatus: validatorStatus.status,
+        });
+        if (!isConfirmedDeregistered(validatorStatus.status)) {
+          console.warn("[REGISTRATION] blocked — free pending row, validator not confirmed deregistered", {
+            reqId,
+            hlAddress,
+            minerSlug,
+            validatorStatus: validatorStatus.status,
+          });
+          return NextResponse.json(
+            { error: "A registration for this HL address is already being processed. Please wait for it to complete." },
+            { status: 409 },
+          );
+        }
+        await db
+          .update(registrations)
+          .set({
+            status: "failed",
+            statusDetail: {
+              reason: "stale_free_pending_synced",
+              validatorStatus: validatorStatus.status,
+              syncedAt: new Date().toISOString(),
+            },
+            updatedAt: new Date(),
+          })
+          .where(eq(registrations.id, existing.id));
+        console.info("[REGISTRATION] stale free pending row synced to failed — allowing retry", {
+          reqId,
+          hlAddress,
+          existingId: existing.id,
+        });
+        // Fall through — proceed with this registration attempt.
       }
     } else {
       console.info("[REGISTRATION] no existing registration — proceeding", { reqId });
@@ -780,14 +884,16 @@ export async function POST(request) {
     }
   }
 
-  // Upsert user record
+  // Key users by hl_address (stable trading wallet) so changing the payout
+  // wallet between challenges doesn't fork into a second user row and orphan
+  // KYC / affiliate attribution. Matches testnet-register and vanta-sync.
   let userId = null;
   let didAttributeAffiliate = false;
   try {
     const [existing] = await db
       .select()
       .from(users)
-      .where(eq(users.wallet, effectivePayoutAddress))
+      .where(eq(users.wallet, hlAddress))
       .limit(1);
 
     if (existing) {
@@ -811,7 +917,7 @@ export async function POST(request) {
       const [newUser] = await db
         .insert(users)
         .values({
-          wallet: effectivePayoutAddress,
+          wallet: hlAddress,
           email: email || null,
           utmCode: affiliateUtm || null,
           affiliateId: resolvedAffiliateId,
@@ -837,7 +943,7 @@ export async function POST(request) {
       metadata: {
         step: "user_upsert",
         reqId,
-        wallet: effectivePayoutAddress,
+        wallet: hlAddress,
         email,
         txHash,
         dbError: err?.message,
@@ -850,6 +956,9 @@ export async function POST(request) {
   // Call miner API
   let registered = false;
   let statusDetail = null;
+  // Persisted to `registrations.metadata` so dashboards can read subaccount
+  // info without a follow-up validator round-trip.
+  let minerResponseBody = null;
 
   if (process.env.SKIP_ENTITY_MINER_CALL === 'true') {
     console.info("[REGISTRATION] SKIP_ENTITY_MINER_CALL set — skipping miner API call", { reqId });
@@ -891,13 +1000,44 @@ export async function POST(request) {
       }
       if (res.ok) {
         registered = true;
+        minerResponseBody = await res.json().catch((err) => {
+          console.warn("[REGISTRATION] miner API returned 200 with unparseable JSON body", {
+            reqId,
+            error: err?.message,
+          });
+          return null;
+        });
       } else {
         const errText = await res.text().catch(() => "");
-        // The miner already has a subaccount for this address — treat as success since
-        // the account is active and the re-registration just hit the miner's duplicate guard.
+        // Miner-side duplicate guard. Normally caught earlier by the DB +
+        // validator checks before payment. Reaching it on a paid flow means
+        // we charged the user but can't register them — alert for refund.
         if (res.status === 400 && errText.includes("already registered to subaccount")) {
-          console.info("[REGISTRATION] miner reports address already registered — treating as success", { reqId, hlAddress });
-          registered = true;
+          console.warn("[REGISTRATION] miner reports address already registered — rejecting", {
+            reqId,
+            hlAddress,
+            paymentMethod,
+            paid: paymentMethod !== "free",
+          });
+          if (paymentMethod !== "free") {
+            await reportCritical(new Error("Paid registration rejected — subaccount already exists at miner"), {
+              source: "api/register",
+              metadata: {
+                step: "miner_duplicate_after_payment",
+                reqId,
+                minerSlug,
+                hlAddress,
+                txHash,
+                effectivePrice,
+                errText: errText.slice(0, 500),
+              },
+            });
+            await flushErrors();
+          }
+          return NextResponse.json(
+            { error: "This HL address is already registered with this miner." },
+            { status: 409 },
+          );
         } else {
           console.warn("[REGISTRATION] miner API returned error body", { reqId, apiStatus: res.status, errText: errText.slice(0, 500) });
           await reportError(new Error("Miner API error response"), {
@@ -912,7 +1052,7 @@ export async function POST(request) {
               baseUrl,
             },
           });
-          statusDetail = { reason: "miner_api_error", error: errText, apiStatus: res.status };
+          statusDetail = { reason: "miner_api_error", error: parseErrorBody(errText), apiStatus: res.status };
         }
       }
     } catch (err) {
@@ -933,6 +1073,26 @@ export async function POST(request) {
     console.info("[REGISTRATION] miner has no apiUrl — skipping miner API call", { reqId, minerSlug });
   }
 
+  // Free flow has no payment to preserve. Fail loudly instead of inserting a
+  // `pending` row the confirmation UI would render as "Provisioning…". Paid
+  // flows fall through and insert the row so the retry cron can pick it up.
+  if (paymentMethod === "free" && !registered) {
+    console.warn("[REGISTRATION] free registration miner call failed — rejecting", {
+      reqId,
+      hlAddress,
+      statusDetail,
+    });
+    return NextResponse.json(
+      {
+        error: "Registration failed",
+        message:
+          "We couldn't provision your account with the miner. Please try again in a moment.",
+        detail: statusDetail,
+      },
+      { status: 502 },
+    );
+  }
+
   // Insert registration record — this MUST succeed; the user already paid.
   // Retry with backoff so a transient DB blip doesn't strand the user on the
   // "contact support" message when their payment has already settled.
@@ -951,6 +1111,7 @@ export async function POST(request) {
       ...(devTest ? { devTest: true, originalPrice: price } : {}),
       ...(statusDetail || {}),
     },
+    metadata: minerResponseBody,
   };
 
   console.info("[REGISTRATION] inserting registration row", {

@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, List, X, DotsThree, ArrowSquareOut } from '@phos
 import { CHROME_EXTENSION_URL } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
+import NavStartChallengeCta from './NavStartChallengeCta'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -116,7 +117,10 @@ function MoreDropdown({ brandHref, brand }) {
   )
 }
 
-export default function Nav({ excludeLinks = [] }) {
+// `walletAware` swaps in a CTA variant that hides itself when the
+// connected wallet has an active registration. Only enable this on
+// layouts that mount `<Providers>` (the wallet-aware CTA uses wagmi).
+export default function Nav({ excludeLinks = [], walletAware = false }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const brand = useBrand()
   const brandHref = useBrandHref()
@@ -177,16 +181,20 @@ export default function Nav({ excludeLinks = [] }) {
         <div className="flex items-center gap-3 shrink-0 relative z-10">
           <MoreDropdown brandHref={brandHref} brand={brand} />
 
-          <Link
-            href={brandHref('/register')}
-            onClick={() => trackCtaClick({ label: 'Start Challenge', location: 'nav' })}
-            className="shiny-cta px-5 py-2"
-          >
-            <span className="flex items-center gap-1.5">
-              Start Challenge
-              <ArrowRight size={15} weight="bold" />
-            </span>
-          </Link>
+          {walletAware ? (
+            <NavStartChallengeCta />
+          ) : (
+            <Link
+              href={brandHref('/register')}
+              onClick={() => trackCtaClick({ label: 'Start Challenge', location: 'nav' })}
+              className="shiny-cta px-5 py-2"
+            >
+              <span className="flex items-center gap-1.5">
+                Start Challenge
+                <ArrowRight size={15} weight="bold" />
+              </span>
+            </Link>
+          )}
 
           {/* Hamburger — visible below md */}
           <button

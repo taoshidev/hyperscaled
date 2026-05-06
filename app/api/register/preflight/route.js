@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
 import { getMinerBySlug, getTiersForMiner } from "@/lib/miners";
 import { isValidHLAddress, isValidEvmAddress, isValidEmail } from "@/lib/validation";
 import { getDb } from "@/lib/db";
@@ -8,12 +9,44 @@ import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
 import { isAnyDevTestWallet, DEV_TEST_PRICE } from "@/lib/dev-test";
 import { reportError } from "@/lib/errors";
 
+function constantTimeEqual(a, b) {
+  const aBuf = Buffer.from(String(a));
+  const bBuf = Buffer.from(String(b));
+  if (aBuf.length !== bBuf.length) return false;
+  try {
+    return timingSafeEqual(aBuf, bBuf);
+  } catch {
+    return false;
+  }
+}
+
 // POST /api/register/preflight
 // Runs every check that /api/register runs before payment, so callers on the
 // HL/EIP-712 path can block users *before* they sign a transfer they can't
 // complete. The x402 path already gets this implicitly via the initial 402
 // probe, but using the same endpoint there is harmless.
+//
+// Optional shared-secret guard: when ENABLE_PREFLIGHT_AUTH=true, requests
+// must present `x-preflight-secret` (or a Bearer token) matching
+// PREFLIGHT_SECRET. The first-party UI sends this via a server action so
+// the secret never reaches the browser. Off by default in dev.
 export async function POST(request) {
+  if (process.env.ENABLE_PREFLIGHT_AUTH === "true") {
+    const expected = process.env.PREFLIGHT_SECRET;
+    if (!expected) {
+      return NextResponse.json(
+        { error: "Preflight is misconfigured" },
+        { status: 503 },
+      );
+    }
+    const provided =
+      request.headers.get("x-preflight-secret") ||
+      (request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
+    if (!constantTimeEqual(provided, expected)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+
   const db = await getDb();
   const reqId = Math.random().toString(36).slice(2, 10);
   console.info("[REGISTRATION] POST /api/register/preflight received", { reqId });
@@ -98,7 +131,11 @@ export async function POST(request) {
   // Duplicate check — same logic as /api/register, including validator sync
   try {
     const [existing] = await db
-      .select({ id: registrations.id, status: registrations.status })
+      .select({
+        id: registrations.id,
+        status: registrations.status,
+        priceUsdc: registrations.priceUsdc,
+      })
       .from(registrations)
       .where(
         and(
@@ -132,14 +169,46 @@ export async function POST(request) {
         // Confirmed de-registered — /api/register will sync the DB row on the
         // real submission. Preflight just signals "ok to proceed".
       } else {
-        console.warn("[REGISTRATION][preflight] blocked — pending registration exists", { reqId, hlAddress });
-        return NextResponse.json(
-          {
-            error:
-              "A registration for this HL address is already being processed. Please wait for it to complete.",
-          },
-          { status: 409 },
-        );
+        // Pending row. Paid → strict 409 (don't orphan the on-chain payment
+        // the cron is retrying). Free → if validator confirms no record, the
+        // row is stale; signal OK so /api/register can sync it to `failed`.
+        const isPaid = Number(existing.priceUsdc) > 0;
+        if (isPaid) {
+          console.warn("[REGISTRATION][preflight] blocked — paid pending registration exists", { reqId, hlAddress });
+          return NextResponse.json(
+            {
+              error:
+                "A registration for this HL address is already being processed. Please wait for it to complete.",
+            },
+            { status: 409 },
+          );
+        }
+        const validatorStatus = await checkValidatorStatus(hlAddress);
+        console.info("[REGISTRATION][preflight] validator status check (pending)", {
+          reqId,
+          hlAddress,
+          validatorStatus: validatorStatus.status,
+        });
+        if (!isConfirmedDeregistered(validatorStatus.status)) {
+          console.warn("[REGISTRATION][preflight] blocked — free pending row, validator not confirmed deregistered", {
+            reqId,
+            hlAddress,
+            validatorStatus: validatorStatus.status,
+          });
+          return NextResponse.json(
+            {
+              error:
+                "A registration for this HL address is already being processed. Please wait for it to complete.",
+            },
+            { status: 409 },
+          );
+        }
+        console.info("[REGISTRATION][preflight] free pending row is stale — allowing retry", {
+          reqId,
+          hlAddress,
+          existingId: existing.id,
+        });
+        // Fall through — preflight allows; /api/register will mark this row failed.
       }
     }
   } catch (err) {
