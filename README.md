@@ -47,7 +47,7 @@ miner gateway directly.
 # 1. Configure environment
 cp env.example .env.local
 # Fill in at least DATABASE_URL, VALIDATOR_API_URL, VALIDATOR_API_KEY,
-# NEXT_PUBLIC_HYPERSCALED_USDC_WALLET — see Environment section.
+# HYPERSCALED_USDC_WALLET — see Environment section.
 
 # 2. Install
 pnpm install
@@ -84,7 +84,7 @@ non-obvious ones — read `env.example` for the rest.
 | `HYPERSCALED_BASE_URL`                                        | yes          | Public origin of this app. Dev: `http://localhost:4568`.                                                                  |
 | `DEFAULT_MINER_SLUG`                                          | yes          | Slug used when registration UX falls back to "no miner picked yet" — currently `vanta`.                                   |
 | `USE_TESTNET`                                                 | yes          | `true` toggles Hyperliquid testnet endpoints / chain IDs across the app.                                                  |
-| `NEXT_PUBLIC_HYPERSCALED_USDC_WALLET`                         | yes          | Receiving wallet for USDC registration payments. Public — exposed to the UI and written into `entity_miners.usdc_wallet` for the Vanta row by the seed. |
+| `HYPERSCALED_USDC_WALLET`                                     | yes (seed)   | Receiving wallet for USDC registration payments. Read only by `lib/db/seed.mjs` and written into `entity_miners.usdc_wallet` for the Vanta row. The UI fetches the wallet at runtime from `/api/miners/<slug>` — this value is never bundled to the client. |
 | `NEXT_PUBLIC_HYPERSCALED_BUILDER_ADDRESS`                     | no           | Hyperliquid builder code address. When unset, `approveBuilderFee` is skipped.                                             |
 | `DEV_TEST_WALLETS`                                            | no           | Comma-separated allowlist of EVM addresses that pay $0.01 instead of full price. **Never set in production.**             |
 | `SKIP_ENTITY_MINER_CALL`                                      | no           | Skips the post-registration call to the miner gateway's `create-hl-subaccount`. Useful when running without a real miner. |
