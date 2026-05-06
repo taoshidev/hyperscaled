@@ -99,8 +99,6 @@ non-obvious ones — read `env.example` for the rest.
 | `SLACK_ERROR_WEBHOOK_URL`                                     | no           | Receives non-warning server errors (filtered in `lib/errors.js`).                                                         |
 | `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` / `SENTRY_AUTH_TOKEN` | no           | Sentry server, browser, and source-map upload.                                                                            |
 | `GCP_SERVICE_ACCOUNT_B64` + `CLOUD_SQL_INSTANCE_CONNECTION_NAME` + `DB_USER`/`DB_PASSWORD`/`DB_NAME` | prod-only | Cloud SQL Connector path (used when `DATABASE_URL` is not provided). |
-| `DATABASE_CA_CERT` _or_ `DATABASE_CA_CERT_PATH`               | prod-only    | PEM contents (or filesystem path) of the Postgres CA. Required when connecting over TLS.                                  |
-| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`         | prod-only    | Distributed rate limiter for `lib/rate-limit.js`. Falls back to in-process when unset.                                    |
 | `VANTA_API_URL` _or_ `PTN_API_URL`                            | seed         | Vanta entity-miner backend URL. If unset, defaults to testnet/mainnet pods. Override when pointing at a local pod.        |
 | `VANTA_API_KEY` _or_ `PTN_API_KEY`                            | seed         | Auth key for the Vanta entity-miner backend (written to the `vanta` row's `api_key`). **Distinct from `VALIDATOR_API_KEY`.** Required when `SKIP_ENTITY_MINER_CALL=false`. |
 | `VANTA_ENTITY_HOTKEY` _or_ `PTN_ENTITY_HOTKEY`                | seed         | SS58 hotkey of the Vanta entity miner on the active network. Set per-environment. Same value as `vanta-ui`'s `PTN_ENTITY_HOTKEY`. |
@@ -142,10 +140,10 @@ app/                          Next.js 15 App Router
 components/                   UI by domain (marketing, dashboard, registration, …)
 hooks/                        React Query + SSE streaming hooks
 lib/
-  db/                         Drizzle schema, client, seed, SSL helpers
+  db/                         Drizzle schema, client, seed
   wallet-auth.js              EIP-191 signature verification + body-hash binding
   nonce-store.js              Postgres-backed replay protection
-  rate-limit.js               Edge-friendly limiter (Upstash if configured)
+  rate-limit.js               In-process per-IP/wallet limiter
   validator.js                Validator API client (with fetch timeout)
   parse-error-body.js         JSON-or-text parser for upstream error bodies
   validation.js               Address + payload validators
@@ -177,9 +175,9 @@ Migrations live in [`drizzle/`](drizzle/) and are applied with `drizzle-kit`.
 
 In production (Cloud SQL), connections go through
 `@google-cloud/cloud-sql-connector` using `GCP_SERVICE_ACCOUNT_B64` +
-`CLOUD_SQL_INSTANCE_CONNECTION_NAME`. For other Postgres hosts, supply
-`DATABASE_CA_CERT` (PEM) or `DATABASE_CA_CERT_PATH` so TLS is properly
-verified — see [`lib/db/index.js`](lib/db/index.js).
+`CLOUD_SQL_INSTANCE_CONNECTION_NAME` — the connector handles channel
+encryption internally, so no client-side CA bundle is needed.
+See [`lib/db/index.js`](lib/db/index.js).
 
 ## API surface
 
