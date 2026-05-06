@@ -6,8 +6,8 @@ const ORGANIZATION_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "Beanstock",
-  url: "https://beanstockinvestor.com",
-  logo: "https://beanstockinvestor.com/beanstock-logo.svg",
+  url: "https://beanstocktrading.com",
+  logo: "https://beanstocktrading.com/beanstock-logo.svg",
   description:
     "Decentralized prop trading network built on Hyperliquid. 1-step challenge, 100% profit split, onchain USDC payouts.",
   sameAs: [
@@ -20,7 +20,7 @@ const WEBSITE_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   name: "Beanstock",
-  url: "https://beanstockinvestor.com",
+  url: "https://beanstocktrading.com",
 }
 
 export default function BeanstockMarketingLayout({ children }) {

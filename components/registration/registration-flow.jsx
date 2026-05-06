@@ -92,10 +92,15 @@ export function RegistrationFlow({
   logo = "/hyperscaled-logo.svg",
   logoAlt = "Hyperscaled",
   homeHref,
+  logoHref,
   brandVariant = "hyperscaled",
 }) {
   const brandHref = useBrandHref();
-  const resolvedHomeHref = homeHref ?? brandHref("/");
+  // Exit button always returns to the brand's in-app home so users stay in
+  // the funnel context. Logo can optionally point to an external brand site
+  // (e.g. white-label partner's marketing domain) via `logoHref`.
+  const resolvedExitHref = homeHref ?? brandHref("/");
+  const resolvedLogoHref = logoHref ?? resolvedExitHref;
   const searchParams = useSearchParams();
 
   const [recovered] = useState(getRecoveredRegistration);
@@ -259,14 +264,14 @@ export function RegistrationFlow({
     <main className="min-h-[100dvh] flex flex-col">
       {/* D2: Minimal nav bar */}
       <nav className="flex items-center justify-between py-4 px-6 w-full max-w-5xl mx-auto">
-        <Link href={resolvedHomeHref} className="outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg">
+        <Link href={resolvedLogoHref} className="outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg">
           <img
             src={logo}
             alt={logoAlt}
             className="h-7 w-auto"
           />
         </Link>
-        <Link href={resolvedHomeHref}>
+        <Link href={resolvedExitHref}>
           <Button
             variant="outline"
             className="text-sm h-11 border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 cursor-pointer"

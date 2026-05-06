@@ -34,7 +34,7 @@ function tierBadge(tier) {
 function PricingHero() {
   const brand = useBrand()
   return (
-    <section className={`pb-16 px-6 ${brand.parentSite ? 'pt-32' : 'pt-16'}`}>
+    <section className={`pb-16 px-6 ${brand.parentSite ? 'pt-32' : 'pt-24'}`}>
       <div className="max-w-[800px] mx-auto text-center">
         <motion.h1
           initial={{ opacity: 0, y: 16 }}

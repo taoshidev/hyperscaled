@@ -6,7 +6,9 @@ export default function VantaDashboardLayout({ children }) {
     <Providers>
       <div className="bg-black text-white font-sans min-h-[100dvh]">
         <Nav walletAware />
-        <main className="pt-16">{children}</main>
+        {/* pt-24 = parent-site bar (h-8) + nav header (h-16). Hyperscaled
+            has no parent bar so its layout uses pt-16. */}
+        <main className="pt-24">{children}</main>
       </div>
     </Providers>
   )
