@@ -98,7 +98,11 @@ export async function POST(request) {
   // Duplicate check — same logic as /api/register, including validator sync
   try {
     const [existing] = await db
-      .select({ id: registrations.id, status: registrations.status })
+      .select({
+        id: registrations.id,
+        status: registrations.status,
+        priceUsdc: registrations.priceUsdc,
+      })
       .from(registrations)
       .where(
         and(
@@ -132,14 +136,46 @@ export async function POST(request) {
         // Confirmed de-registered — /api/register will sync the DB row on the
         // real submission. Preflight just signals "ok to proceed".
       } else {
-        console.warn("[REGISTRATION][preflight] blocked — pending registration exists", { reqId, hlAddress });
-        return NextResponse.json(
-          {
-            error:
-              "A registration for this HL address is already being processed. Please wait for it to complete.",
-          },
-          { status: 409 },
-        );
+        // Pending row. Paid → strict 409 (don't orphan the on-chain payment
+        // the cron is retrying). Free → if validator confirms no record, the
+        // row is stale; signal OK so /api/register can sync it to `failed`.
+        const isPaid = Number(existing.priceUsdc) > 0;
+        if (isPaid) {
+          console.warn("[REGISTRATION][preflight] blocked — paid pending registration exists", { reqId, hlAddress });
+          return NextResponse.json(
+            {
+              error:
+                "A registration for this HL address is already being processed. Please wait for it to complete.",
+            },
+            { status: 409 },
+          );
+        }
+        const validatorStatus = await checkValidatorStatus(hlAddress);
+        console.info("[REGISTRATION][preflight] validator status check (pending)", {
+          reqId,
+          hlAddress,
+          validatorStatus: validatorStatus.status,
+        });
+        if (!isConfirmedDeregistered(validatorStatus.status)) {
+          console.warn("[REGISTRATION][preflight] blocked — free pending row, validator not confirmed deregistered", {
+            reqId,
+            hlAddress,
+            validatorStatus: validatorStatus.status,
+          });
+          return NextResponse.json(
+            {
+              error:
+                "A registration for this HL address is already being processed. Please wait for it to complete.",
+            },
+            { status: 409 },
+          );
+        }
+        console.info("[REGISTRATION][preflight] free pending row is stale — allowing retry", {
+          reqId,
+          hlAddress,
+          existingId: existing.id,
+        });
+        // Fall through — preflight allows; /api/register will mark this row failed.
       }
     }
   } catch (err) {

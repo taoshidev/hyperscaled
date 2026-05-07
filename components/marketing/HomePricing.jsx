@@ -4,7 +4,7 @@ import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight, Star } from '@phosphor-icons/react'
-import { PRICING_TIERS } from '@/lib/constants'
+import { PRICING_TIERS, parseTierAccountSize } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
 
@@ -84,9 +84,12 @@ function PricingCard({ tier, index, brandHref }) {
         ))}
       </ul>
 
-      {/* CTA */}
       <Link
-        href={brandHref('/register')}
+        href={(() => {
+          const size = parseTierAccountSize(tier.accountSize)
+          const base = brandHref('/register')
+          return size ? `${base}?tier=${size}` : base
+        })()}
         onClick={() => trackCtaClick({ label: tier.cta, location: `home_pricing:${tier.name || tier.accountSize || 'unknown'}` })}
         className={`mt-8 xl:mt-4 flex items-center justify-center gap-1.5 min-h-12 xl:min-h-10 rounded-xl text-sm xl:text-xs font-semibold transition-colors ${
           tier.popular || tier.id === 'free'

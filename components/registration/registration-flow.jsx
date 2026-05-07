@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Providers } from "@/app/providers";
 import { Button } from "@/components/ui/button";
 import { Stepper } from "./stepper";
@@ -38,6 +39,20 @@ function findTierIndexInList(list, tier) {
   if (!list?.length || !tier) return 0;
   const i = list.findIndex((t) => tiersMatch(tier, t));
   return i >= 0 ? i : 0;
+}
+
+// Resolve a `?tier=<accountSize>` deep-link against a loaded tier list.
+// Returns `{ tier, index }` on a hit, `null` otherwise.
+function resolveTierParam(rawTierParam, tiers) {
+  if (!rawTierParam) return null;
+  const requestedSize = Number(rawTierParam);
+  if (!Number.isFinite(requestedSize) || requestedSize <= 0) return null;
+  if (!Array.isArray(tiers) || tiers.length === 0) return null;
+  const index = tiers.findIndex(
+    (t) => normalizeAccountSize(t.accountSize) === requestedSize,
+  );
+  if (index < 0) return null;
+  return { tier: tiers[index], index };
 }
 
 function getRecoveredRegistration() {
@@ -77,18 +92,45 @@ export function RegistrationFlow({
   logo = "/hyperscaled-logo.svg",
   logoAlt = "Hyperscaled",
   homeHref,
+  logoHref,
   brandVariant = "hyperscaled",
 }) {
   const brandHref = useBrandHref();
-  const resolvedHomeHref = homeHref ?? brandHref("/");
+  // Exit button always returns to the brand's in-app home so users stay in
+  // the funnel context. Logo can optionally point to an external brand site
+  // (e.g. white-label partner's marketing domain) via `logoHref`.
+  const resolvedExitHref = homeHref ?? brandHref("/");
+  const resolvedLogoHref = logoHref ?? resolvedExitHref;
+  const searchParams = useSearchParams();
+
   const [recovered] = useState(getRecoveredRegistration);
-  const [currentStep, setCurrentStep] = useState(recovered ? 3 : 0);
-  const [selectedTier, setSelectedTier] = useState(recovered ? {
-    name: recovered.tierName || "Challenge",
-    accountSize: recovered.accountSize || 0,
-    details: [],
-  } : null);
-  const [selectedTierIndex, setSelectedTierIndex] = useState(null);
+  // Read `?tier` once at mount; re-reading would yank the user forward
+  // if they hit "Back" and stripped the param.
+  const initialTierParamRef = useRef(searchParams?.get("tier") ?? null);
+  // When SSR provides tiers we resolve the deep-link synchronously and
+  // seed currentStep=1 below — that avoids a flash of step 0. The
+  // effect further down is the fallback for the rare case where SSR
+  // failed to load tiers and the client refetches.
+  const initialPreselect = useRef(
+    recovered ? null : resolveTierParam(initialTierParamRef.current, initialMinerTiers),
+  ).current;
+  const tierPreselectAppliedRef = useRef(initialPreselect != null);
+
+  const [currentStep, setCurrentStep] = useState(
+    recovered ? 3 : initialPreselect ? 1 : 0,
+  );
+  const [selectedTier, setSelectedTier] = useState(
+    recovered
+      ? {
+          name: recovered.tierName || "Challenge",
+          accountSize: recovered.accountSize || 0,
+          details: [],
+        }
+      : (initialPreselect?.tier ?? null),
+  );
+  const [selectedTierIndex, setSelectedTierIndex] = useState(
+    initialPreselect?.index ?? null,
+  );
   const [txHash, setTxHash] = useState(recovered?.txHash ?? null);
   const [hlAddress, setHlAddress] = useState(recovered?.hlAddress ?? null);
   const [registrationStatus, setRegistrationStatus] = useState(recovered?.registrationStatus ?? null);
@@ -153,8 +195,52 @@ export function RegistrationFlow({
       ref_source: getRefSource(),
       brand_variant: brandVariant,
     });
+    if (initialPreselect) {
+      trackEvent("register_tier_selected", {
+        tier_name: initialPreselect.tier?.name,
+        tier_price:
+          initialPreselect.tier?.promoPrice ?? initialPreselect.tier?.fullPrice,
+        ref_source: getRefSource(),
+        brand_variant: brandVariant,
+        preselected: true,
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once on mount
   }, []);
+
+  // Async fallback: apply the deep-link after the client-side tier
+  // refetch (when SSR didn't provide tiers). The synchronous initializer
+  // above handles the common case.
+  useEffect(() => {
+    if (tierPreselectAppliedRef.current) return;
+    if (recovered) return;
+    const match = resolveTierParam(initialTierParamRef.current, minerTiers);
+    if (!match) {
+      if (
+        initialTierParamRef.current &&
+        Array.isArray(minerTiers) &&
+        minerTiers.length > 0
+      ) {
+        console.warn("[REGISTRATION] ?tier param did not match any miner tier", {
+          requested: initialTierParamRef.current,
+          availableSizes: minerTiers.map((t) => t.accountSize),
+        });
+        tierPreselectAppliedRef.current = true;
+      }
+      return;
+    }
+    setSelectedTier(match.tier);
+    setSelectedTierIndex(match.index);
+    setCurrentStep(1);
+    trackEvent("register_tier_selected", {
+      tier_name: match.tier?.name,
+      tier_price: match.tier?.promoPrice ?? match.tier?.fullPrice,
+      ref_source: getRefSource(),
+      brand_variant: brandVariant,
+      preselected: true,
+    });
+    tierPreselectAppliedRef.current = true;
+  }, [minerTiers, recovered, brandVariant]);
 
   // B1: Browser refresh guard — only during active payment processing
   useEffect(() => {
@@ -178,14 +264,18 @@ export function RegistrationFlow({
     <main className="min-h-[100dvh] flex flex-col">
       {/* D2: Minimal nav bar */}
       <nav className="flex items-center justify-between py-4 px-6 w-full max-w-5xl mx-auto">
-        <Link href={resolvedHomeHref} className="outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg">
+        <Link
+          href={resolvedLogoHref}
+          data-testid="register-logo-link"
+          className="outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg"
+        >
           <img
             src={logo}
             alt={logoAlt}
             className="h-7 w-auto"
           />
         </Link>
-        <Link href={resolvedHomeHref}>
+        <Link href={resolvedExitHref} data-testid="register-exit-link">
           <Button
             variant="outline"
             className="text-sm h-11 border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 cursor-pointer"

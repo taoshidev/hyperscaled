@@ -62,7 +62,8 @@ export default async function BitcastRegisterPage() {
       initialPaymentWallet={initialPaymentWallet}
       logo="/bitcast-logo.svg"
       logoAlt="Bitcast"
-      homeHref="https://bitcast.network"
+      logoHref="https://bitcast.network"
+      brandVariant="bitcast"
     />
   )
 }

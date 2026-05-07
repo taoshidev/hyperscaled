@@ -12,8 +12,7 @@ import {
   ArrowSquareOut,
   ArrowRight,
 } from '@phosphor-icons/react'
-import Nav from './Nav'
-import Footer from './Footer'
+import { useBrand, brandifyText } from '@/lib/brand'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 const containerVariants = {
@@ -42,8 +41,9 @@ function CodeBlock({ lines }) {
 // ─── Section A: Hero ──────────────────────────────────────────────────────
 
 function HeroSection() {
+  const brand = useBrand()
   return (
-    <section className="min-h-[60dvh] flex items-center pt-16 px-6 py-20">
+    <section className={`min-h-[60dvh] flex items-center px-6 py-20 ${brand.parentSite ? 'pt-32' : 'pt-24'}`}>
       <div className="max-w-[1400px] mx-auto w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Text */}
@@ -68,7 +68,7 @@ function HeroSection() {
 
             <p className="text-lg text-zinc-400 leading-relaxed max-w-[48ch] mb-8 [text-wrap:pretty]">
               LangChain, CrewAI, plain Python, or OpenClaw — no adapters, no rewrites.
-              Hyperscaled works with whatever runtime your agent already runs on.
+              {brand.name} works with whatever runtime your agent already runs on.
             </p>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -170,6 +170,7 @@ function ValueStrip() {
 // ─── Section C: Integration Paths ────────────────────────────────────────
 
 function IntegrationPaths() {
+  const brand = useBrand()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -218,7 +219,7 @@ function IntegrationPaths() {
               </div>
               <h3 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-2">OpenClaw Skill</h3>
               <p className="text-sm text-zinc-400 leading-relaxed max-w-[40ch]">
-                The fastest path. One command installs Hyperscaled into OpenClaw, exposing every
+                The fastest path. One command installs {brand.name} into OpenClaw, exposing every
                 action as a structured tool call with validated outputs.
               </p>
               <CodeBlock lines={[
@@ -450,6 +451,7 @@ const whyFeatures = [
 ]
 
 function WhyAgentsSection() {
+  const brand = useBrand()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -493,7 +495,7 @@ function WhyAgentsSection() {
                     <Icon size={20} className="text-teal-400" />
                   </div>
                   <h3 className="text-base md:text-lg font-bold tracking-tight text-white mb-2">{feat.title}</h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed">{feat.body}</p>
+                  <p className="text-sm text-zinc-400 leading-relaxed">{brandifyText(feat.body, brand)}</p>
                   {feat.extra}
                 </div>
               </motion.div>
@@ -542,16 +544,12 @@ function CTABanner() {
 
 export default function AgentsPage() {
   return (
-    <div className="bg-[#09090b] text-white font-sans">
-      <Nav />
-      <main>
-        <HeroSection />
-        <ValueStrip />
-        <IntegrationPaths />
-        <WhyAgentsSection />
-        <CTABanner />
-      </main>
-      <Footer />
-    </div>
+    <>
+      <HeroSection />
+      <ValueStrip />
+      <IntegrationPaths />
+      <WhyAgentsSection />
+      <CTABanner />
+    </>
   )
 }

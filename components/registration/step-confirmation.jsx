@@ -78,6 +78,7 @@ function MockupProgressBar({ label, value, max, color, bgColor, detail }) {
 }
 
 function ExtensionMockup() {
+  const brand = useBrand();
   return (
     <div
       aria-hidden="true"
@@ -89,7 +90,7 @@ function ExtensionMockup() {
           {/* Header bar */}
           <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
             <span className="text-base text-white">
-              Hyper<span className="font-bold">scaled</span>
+              {brand.name}
             </span>
             <div className="flex items-center gap-2">
               <span className="text-xs font-mono text-zinc-500">0x0c86…ddfA</span>
@@ -159,7 +160,7 @@ function ExtensionMockup() {
           <div>
             <div className="flex items-center justify-between">
               <span className="text-xs uppercase tracking-widest text-zinc-500">
-                Open Hyperscaled Positions
+                Open {brand.name} Positions
               </span>
               <span className="text-xs text-zinc-500">View on HL →</span>
             </div>
@@ -194,7 +195,7 @@ function ExtensionMockup() {
           <div className="rounded-md border border-white/[0.06] bg-white/[0.02] px-4 py-4 flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-white">View Full Analytics</p>
-              <p className="text-xs text-white/40">Hyperscaled Dashboard</p>
+              <p className="text-xs text-white/40">{brand.name} Dashboard</p>
             </div>
             <CaretRight size={14} className="text-white/40" />
           </div>
@@ -301,6 +302,7 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
 
   return (
     <motion.div
+      data-testid="registration-confirmation"
       variants={containerVariants}
       initial="hidden"
       animate="visible"

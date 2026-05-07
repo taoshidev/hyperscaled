@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { registrations, entityMiners } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { reportError, reportCritical, reportWarning } from "@/lib/errors";
+import { parseErrorBody } from "@/lib/parse-error-body";
 
 function timingSafeEqual(a, b) {
   const bufA = Buffer.from(a);
@@ -149,15 +150,60 @@ export async function POST(request) {
       );
 
       if (res.ok) {
+        const minerResponseBody = await res.json().catch((err) => {
+          console.warn("[REGISTRATION][retry] miner API returned 200 with unparseable JSON body", {
+            reqId,
+            regId: reg.id,
+            error: err?.message,
+          });
+          return null;
+        });
         await db
           .update(registrations)
-          .set({ status: "registered", statusDetail: null, updatedAt: new Date() })
+          .set({
+            status: "registered",
+            statusDetail: null,
+            metadata: minerResponseBody,
+            updatedAt: new Date(),
+          })
           .where(eq(registrations.id, reg.id));
         console.info("[REGISTRATION][retry] marked registered", { reqId, regId: reg.id });
         results.push({ id: reg.id, status: "registered" });
       } else {
         const errText = await res.text().catch(() => "");
-        const detail = { reason: "miner_api_error", error: errText, apiStatus: res.status };
+        // Miner-side duplicate guard. Don't silently re-attribute a
+        // pre-existing subaccount to this row's user/payment — terminate
+        // the retry loop and surface to admin for refund/investigation.
+        if (res.status === 400 && errText.includes("already registered to subaccount")) {
+          const detail = {
+            reason: "already_registered_at_miner",
+            apiStatus: res.status,
+            error: parseErrorBody(errText),
+          };
+          await db
+            .update(registrations)
+            .set({ status: "failed", statusDetail: detail, updatedAt: new Date() })
+            .where(eq(registrations.id, reg.id));
+          console.warn("[REGISTRATION][retry] miner reports address already registered — marking failed for admin review", {
+            reqId,
+            regId: reg.id,
+            hlAddress: reg.hlAddress,
+          });
+          reportError(new Error("retry_already_registered_at_miner"), {
+            source: "api/register/retry",
+            metadata: {
+              step: "already_registered_at_miner",
+              reqId,
+              regId: reg.id,
+              minerHotkey: reg.minerHotkey,
+              hlAddress: reg.hlAddress,
+              errText: errText.slice(0, 500),
+            },
+          });
+          results.push({ id: reg.id, status: "failed", reason: "already_registered_at_miner" });
+          continue;
+        }
+        const detail = { reason: "miner_api_error", error: parseErrorBody(errText), apiStatus: res.status };
         await db
           .update(registrations)
           .set({ statusDetail: detail, updatedAt: new Date() })
