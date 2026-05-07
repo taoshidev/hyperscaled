@@ -85,7 +85,7 @@ function ExtensionMockup() {
       className="origin-top-left"
       style={{ transform: "scale(0.82)", width: "calc(100% / 0.82)" }}
     >
-      <div className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] overflow-hidden shadow-[0_36px_72px_rgba(0,0,0,0.5),0_0_54px_rgba(0,198,167,0.06)]">
+      <div className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] overflow-hidden" style={{ boxShadow: '0 36px 72px rgba(0,0,0,0.5), 0 0 54px rgba(var(--brand-glow),0.06)' }}>
         <div className="p-5 space-y-4">
           {/* Header bar */}
           <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">

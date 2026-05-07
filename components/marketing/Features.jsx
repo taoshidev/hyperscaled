@@ -167,7 +167,7 @@ export default function Features() {
                 <div
                   className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                   style={{
-                    background: 'radial-gradient(circle at 15% 15%, rgba(0,198,167,0.07), transparent 60%)',
+                    background: 'radial-gradient(circle at 15% 15%, rgba(var(--brand-glow),0.07), transparent 60%)',
                   }}
                 />
 

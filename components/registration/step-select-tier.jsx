@@ -171,7 +171,7 @@ export function StepSelectTier({
                   {/* Hover glow — persistent when selected */}
                   <div
                     className={`absolute inset-0 rounded-2xl pointer-events-none transition-opacity ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
-                    style={{ background: "radial-gradient(circle at 20% 20%, rgba(0,198,167,0.06), transparent 60%)" }}
+                    style={{ background: "radial-gradient(circle at 20% 20%, rgba(var(--brand-glow),0.06), transparent 60%)" }}
                   />
 
                   {/* Popular badge */}
@@ -270,7 +270,8 @@ export function StepSelectTier({
             type="button"
             data-testid="select-tier-continue"
             onClick={() => onContinue?.(tiers[selectedIndex], selectedIndex)}
-            className="shiny-cta h-11 px-8 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background ring-2 ring-teal-400/45 shadow-[0_0_28px_rgba(0,198,167,0.28)]"
+            className="shiny-cta h-11 px-8 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background ring-2 ring-teal-400/45"
+            style={{ boxShadow: '0 0 28px rgba(var(--brand-glow),0.28)' }}
           >
             <span className="inline-flex items-center gap-1.5 text-sm font-semibold">
               Continue

@@ -140,7 +140,7 @@ function StepSelectSize({ tiers, selectedTier, onSelect, onContinue }) {
                       "absolute inset-0 rounded-2xl pointer-events-none transition-opacity",
                       isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100",
                     )}
-                    style={{ background: "radial-gradient(circle at 20% 20%, rgba(0,198,167,0.06), transparent 60%)" }}
+                    style={{ background: "radial-gradient(circle at 20% 20%, rgba(var(--brand-glow),0.06), transparent 60%)" }}
                   />
 
                   {isPopular && (
