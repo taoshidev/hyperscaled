@@ -5,7 +5,6 @@ on:
     branches:
       - development
       - main
-      - mw--migrations-actions # TEMP: remove before merging to main
   workflow_dispatch:
     inputs:
       target:
@@ -25,13 +24,6 @@ jobs:
     name: Migrate & Seed
     runs-on: ubuntu-latest
 
-    # GitHub Environment selects the scoped secret set.
-    # main → production, development (or anything else) → development.
-    # Configure environments at: Settings → Environments → development / production
-    # Each environment must define:
-    #   SERVICE_ACCOUNT_KEY_FILE
-    #   CLOUDSQL_INSTANCE_CONNECTION_URL
-    #   DATABASE_MIGRATION_URL
     environment: ${{ (github.ref == 'refs/heads/main' || github.event.inputs.target == 'production') && 'production' || 'development' }}
 
     steps:
@@ -77,12 +69,11 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_MIGRATION_URL }}
         run: pnpm run db:migrate
 
-      # TODO: Seeding behavior is in flux — another dev is reworking this.
-      # Open questions for that rework:
-      #   - Should seeding run automatically on deploy at all? (preference: no, especially for prod)
-      #   - VANTA_API_KEY is read by lib/db/seed.mjs but is not currently exposed here;
-      #     wire it (or a replacement) in once the seeding strategy is finalized.
       - name: Run seeding
         env:
           DATABASE_URL: ${{ secrets.DATABASE_MIGRATION_URL }}
+          USE_TESTNET: ${{ vars.USE_TESTNET }}
+          HYPERSCALED_USDC_WALLET: ${{ secrets.HYPERSCALED_USDC_WALLET }}
+          VANTA_ENTITY_HOTKEY: ${{ secrets.VANTA_ENTITY_HOTKEY }}
+          VANTA_API_KEY: ${{ secrets.VANTA_API_KEY }}
         run: pnpm run db:seed
