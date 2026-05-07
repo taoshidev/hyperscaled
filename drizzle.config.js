@@ -1,17 +1,18 @@
 import { defineConfig } from "drizzle-kit";
-import { config } from "dotenv";
+import { loadEnvConfig } from "@next/env";
+import { cwd } from "node:process";
 
-config({ path: ".env.local" });
+loadEnvConfig(cwd());
 
-const connectionString =
-  process.env.DATABASE_URL ||
-  "postgresql://localhost:5432/hyperscaled";
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL environment variable is required.");
+}
 
 export default defineConfig({
   schema: "./lib/db/schema.js",
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {
-    url: connectionString,
+    url: process.env.DATABASE_URL,
   },
 });
