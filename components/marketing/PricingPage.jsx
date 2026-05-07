@@ -259,7 +259,7 @@ function EvalProgressWidget() {
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06]">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-teal-400 shrink-0" style={{ boxShadow: '0 0 6px rgba(0,198,167,0.7)' }} />
+          <span className="w-2 h-2 rounded-full bg-teal-400 shrink-0" style={{ boxShadow: '0 0 6px rgba(var(--brand-glow),0.7)' }} />
           <span className="text-sm font-semibold text-white">Challenge Progress</span>
         </div>
         <span className="text-xs text-zinc-500 font-mono">$100K Account</span>

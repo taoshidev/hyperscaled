@@ -207,7 +207,7 @@ function IntegrationPaths() {
           >
             <div
               className="absolute inset-0 rounded-2xl pointer-events-none opacity-60"
-              style={{ background: 'radial-gradient(circle at 10% 10%, rgba(0,198,167,0.06), transparent 60%)' }}
+              style={{ background: 'radial-gradient(circle at 10% 10%, rgba(var(--brand-glow),0.06), transparent 60%)' }}
             />
             {/* Recommended badge */}
             <div className="absolute top-4 right-4 px-2.5 py-1 rounded-full bg-teal-400/10 border border-teal-400/20 text-[10px] text-teal-400 font-medium">
@@ -254,7 +254,7 @@ function IntegrationPaths() {
           >
             <div
               className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-              style={{ background: 'radial-gradient(circle at 15% 15%, rgba(0,198,167,0.07), transparent 60%)' }}
+              style={{ background: 'radial-gradient(circle at 15% 15%, rgba(var(--brand-glow),0.07), transparent 60%)' }}
             />
             <div className="relative">
               <div className="w-10 h-10 rounded-xl bg-teal-400/8 border border-teal-400/20 flex items-center justify-center mb-4 group-hover:bg-teal-400/15 transition-colors">
@@ -285,7 +285,7 @@ function IntegrationPaths() {
           >
             <div
               className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-              style={{ background: 'radial-gradient(circle at 15% 15%, rgba(0,198,167,0.07), transparent 60%)' }}
+              style={{ background: 'radial-gradient(circle at 15% 15%, rgba(var(--brand-glow),0.07), transparent 60%)' }}
             />
             <div className="relative">
               <div className="w-10 h-10 rounded-xl bg-teal-400/8 border border-teal-400/20 flex items-center justify-center mb-4 group-hover:bg-teal-400/15 transition-colors">
@@ -312,7 +312,7 @@ function IntegrationPaths() {
           >
             <div
               className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-              style={{ background: 'radial-gradient(circle at 15% 15%, rgba(0,198,167,0.07), transparent 60%)' }}
+              style={{ background: 'radial-gradient(circle at 15% 15%, rgba(var(--brand-glow),0.07), transparent 60%)' }}
             />
             <div className="relative">
               <div className="w-10 h-10 rounded-xl bg-teal-400/8 border border-teal-400/20 flex items-center justify-center mb-4 group-hover:bg-teal-400/15 transition-colors">
@@ -488,7 +488,7 @@ function WhyAgentsSection() {
               >
                 <div
                   className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  style={{ background: 'radial-gradient(circle at 15% 15%, rgba(0,198,167,0.07), transparent 60%)' }}
+                  style={{ background: 'radial-gradient(circle at 15% 15%, rgba(var(--brand-glow),0.07), transparent 60%)' }}
                 />
                 <div className="relative">
                   <div className="w-10 h-10 rounded-xl bg-teal-400/8 border border-teal-400/20 flex items-center justify-center mb-4 group-hover:bg-teal-400/15 transition-colors">
@@ -516,7 +516,7 @@ function CTABanner() {
         <div className="relative rounded-2xl border border-teal-400/20 bg-zinc-900/50 p-12 md:p-16 text-center overflow-hidden">
           <div
             className="absolute inset-0 rounded-2xl pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(0,198,167,0.08), transparent 60%)' }}
+            style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(var(--brand-glow),0.08), transparent 60%)' }}
           />
           <div className="relative">
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4 text-balance">

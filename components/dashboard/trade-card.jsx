@@ -55,17 +55,19 @@ export const TradeCard = forwardRef(function TradeCard(
   ref
 ) {
   const brand = useBrand();
+  const accent = brand.accentColor || '#00C6A7';
+  const accentRgb = brand.accentRgb || '0, 198, 167';
   const isWin = returnValue >= 1;
-  const pnlColor = isWin ? "#00C6A7" : "#ef4444";
-  const assetColor = ASSET_COLORS[ticker] || "#00C6A7";
+  const pnlColor = isWin ? accent : "#ef4444";
+  const assetColor = ASSET_COLORS[ticker] || accent;
   const derivedMark = markPrice || entryPrice * returnValue;
   const dirBadgeBg = direction === "LONG"
-    ? "rgba(0,198,167,0.15)"
+    ? `rgba(${accentRgb},0.15)`
     : direction === "SHORT"
       ? "rgba(239,68,68,0.15)"
       : "rgba(161,161,170,0.15)";
   const dirBadgeColor = direction === "LONG"
-    ? "#00C6A7"
+    ? accent
     : direction === "SHORT"
       ? "#ef4444"
       : "#a1a1aa";
@@ -93,7 +95,7 @@ export const TradeCard = forwardRef(function TradeCard(
             right: c.right,
             width: c.w,
             height: c.h,
-            background: "#00C6A7",
+            background: accent,
             borderRadius: c.round ? "50%" : 1,
             opacity: c.opacity,
             transform: `rotate(${c.rotate}deg)`,
