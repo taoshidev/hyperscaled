@@ -56,6 +56,7 @@ jobs:
         uses: 'google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed' # v2
         with:
           credentials_json: ${{ secrets.SERVICE_ACCOUNT_KEY_FILE }}
+          export_environment_variables: 'false'
 
       - name: Download Cloud SQL Auth Proxy
         if: steps.cache-sql-proxy.outputs.cache-hit != 'true'
