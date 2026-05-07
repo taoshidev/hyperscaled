@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 process.env.STUB_GATEWAY = "false";
-process.env.ENABLE_PREFLIGHT_AUTH = "false";
 
 const getMinerBySlugMock = vi.fn();
 const getTiersForMinerMock = vi.fn();

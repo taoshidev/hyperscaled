@@ -41,6 +41,7 @@ export default function NavStartChallengeCta() {
   return (
     <Link
       href={brandHref("/register")}
+      data-testid="nav-start-challenge-cta"
       onClick={() => trackCtaClick({ label: "Start Challenge", location: "nav" })}
       className="shiny-cta px-5 py-2"
     >

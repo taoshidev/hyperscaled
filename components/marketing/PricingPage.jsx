@@ -71,12 +71,17 @@ function PricingCard({ tier, index }) {
     { label: 'Scaling', value: tier.scalingPath },
   ]
 
+  const numericAccountSize = parseTierAccountSize(tier.accountSize);
+
   return (
     <motion.div
       ref={ref}
       initial={{ opacity: 0, y: 24 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ ...spring, delay: index * 0.1 }}
+      data-testid="pricing-tier-card"
+      data-tier-id={tier.id}
+      data-tier-account-size={numericAccountSize ? String(numericAccountSize) : ""}
       className={`relative flex flex-col rounded-2xl p-6 sm:p-8 xl:p-4 ${
         tier.popular || tier.id === 'free'
           ? 'shiny-border'
@@ -103,7 +108,10 @@ function PricingCard({ tier, index }) {
 
       {/* Pricing */}
       <div className="mt-4 flex items-baseline gap-2">
-        <ins className="text-3xl sm:text-4xl xl:text-3xl font-bold font-mono no-underline text-white">
+        <ins
+          data-testid="pricing-tier-launch-price"
+          className="text-3xl sm:text-4xl xl:text-3xl font-bold font-mono no-underline text-white"
+        >
           ${tier.launchPrice}
         </ins>
         {tier.standardPrice && (
@@ -129,10 +137,10 @@ function PricingCard({ tier, index }) {
 
       <Link
         href={(() => {
-          const size = parseTierAccountSize(tier.accountSize)
           const base = brandHref('/register')
-          return size ? `${base}?tier=${size}` : base
+          return numericAccountSize ? `${base}?tier=${numericAccountSize}` : base
         })()}
+        data-testid="pricing-tier-cta"
         onClick={() => trackCtaClick({ label: tier.cta, location: `pricing_page:${tier.name || tier.accountSize || 'unknown'}` })}
         className={`mt-8 xl:mt-4 flex items-center justify-center gap-1.5 min-h-12 xl:min-h-10 rounded-xl text-sm xl:text-xs font-semibold transition-colors ${
           tier.popular || tier.id === 'free'

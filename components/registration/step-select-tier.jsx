@@ -143,6 +143,9 @@ export function StepSelectTier({
                   }}
                   type="button"
                   role="radio"
+                  data-testid="tier-card"
+                  data-tier-name={tier.name}
+                  data-tier-account-size={String(tier.accountSize)}
                   aria-checked={isSelected}
                   aria-label={`${tier.name} — ${formatShortName(tier.accountSize)} ${brand.accountType} account — ${formatPrice(tier.promoPrice)}`}
                   tabIndex={isSelected || (selectedIndex < 0 && i === 0) ? 0 : -1}
@@ -197,7 +200,10 @@ export function StepSelectTier({
                   <div className="flex items-baseline gap-2 mt-3 mb-5 xl:mb-4">
                     <ins className="no-underline">
                       <span className="sr-only">Price: </span>
-                      <span className="text-3xl xl:text-2xl font-bold font-mono text-white">
+                      <span
+                        data-testid="tier-promo-price"
+                        className="text-3xl xl:text-2xl font-bold font-mono text-white"
+                      >
                         {formatPrice(tier.promoPrice)}
                       </span>
                     </ins>
@@ -227,6 +233,7 @@ export function StepSelectTier({
                     <div
                       role="button"
                       tabIndex={0}
+                      data-testid="tier-card-continue"
                       onClick={(e) => {
                         e.stopPropagation();
                         onContinue?.(tiers[i], i);
@@ -261,6 +268,7 @@ export function StepSelectTier({
         {hasSelection ? (
           <button
             type="button"
+            data-testid="select-tier-continue"
             onClick={() => onContinue?.(tiers[selectedIndex], selectedIndex)}
             className="shiny-cta h-11 px-8 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background ring-2 ring-teal-400/45 shadow-[0_0_28px_rgba(0,198,167,0.28)]"
           >

@@ -1323,6 +1323,7 @@ export function StepConnectAndPay({
           <label className="flex items-start gap-3 cursor-pointer group">
             <input
               type="checkbox"
+              data-testid="confirm-details"
               checked={confirmed}
               onChange={(e) => setConfirmed(e.target.checked)}
               className="
@@ -1387,6 +1388,7 @@ export function StepConnectAndPay({
             <div className="space-y-4">
               {paymentState === "idle" && (
                 <Button
+                  data-testid="free-signup"
                   onClick={handleFreeSignup}
                   disabled={!canFreeSignup}
                   aria-label={`Sign up for ${selectedTier.name} free account`}
@@ -1654,6 +1656,7 @@ export function StepConnectAndPay({
             </div>
             <button
               type="button"
+              data-testid="hl-wallet-change"
               onClick={() => {
                 setEditingHlWallet(true);
                 setHlWallet("");
@@ -1741,7 +1744,10 @@ export function StepConnectAndPay({
         {/* Surface the wallet/HL-address mismatch the moment it happens
             so the user can fix it before filling out the rest of the form. */}
         {hlAddressReady && isConnected && !walletMatchesHL && (
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/[0.06] p-3.5 mt-2 flex items-start gap-2.5">
+          <div
+            data-testid="wallet-ownership-mismatch-banner"
+            className="rounded-xl border border-amber-500/30 bg-amber-500/[0.06] p-3.5 mt-2 flex items-start gap-2.5"
+          >
             <Warning size={16} weight="fill" className="text-amber-400 shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0 space-y-1.5">
               <p className="text-sm font-medium text-foreground">
@@ -2092,6 +2098,7 @@ export function StepConnectAndPay({
       {/* ─── Continue to Review ─── */}
       <div className="w-full max-w-lg mt-6">
         <Button
+          data-testid="continue-to-review"
           onClick={() => {
             if (!payoutPrefilled && hlAddressReady) {
               setPayoutWallet(hlWallet);

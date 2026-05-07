@@ -92,7 +92,6 @@ non-obvious ones — read `env.example` for the rest.
 | `CRON_SECRET`                                                 | yes (prod)   | Bearer secret for `GET /api/sync-registrations` (Vercel cron).                                                            |
 | `RETRY_SECRET`                                                | yes (prod)   | Bearer secret for `POST /api/register/retry`.                                                                             |
 | `VANTA_SYNC_API_KEY`                                          | yes (prod)   | Bearer secret for `POST /api/vanta-sync`.                                                                                 |
-| `PREFLIGHT_SECRET` + `ENABLE_PREFLIGHT_AUTH`                  | optional     | Gate `POST /api/register/preflight` behind a shared secret. Off by default in dev.                                        |
 | `TESTNET_REGISTER_SECRET` + `ENABLE_TESTNET_REGISTER`         | staging only | Gate `POST /api/testnet-register`. Defaults to `404`. Never enable in production.                                         |
 | `SUMSUB_APP_TOKEN`/`SECRET_KEY`/`WEBHOOK_SECRET`/`LEVEL_NAME` | yes (KYC)    | Sumsub API and webhook HMAC.                                                                                              |
 | `TOLT_API_KEY`                                                | no           | Server-side Tolt conversion.                                                                                              |
@@ -113,6 +112,10 @@ non-obvious ones — read `env.example` for the rest.
 | `pnpm lint`        | ESLint (flat config, React + hooks)                  |
 | `pnpm test`        | Vitest unit suite                                    |
 | `pnpm test:watch`  | Vitest in watch mode                                 |
+| `pnpm e2e`         | Playwright end-to-end suite (see [E2E tests](#e2e-tests)) |
+| `pnpm e2e:ui`      | Playwright UI mode (interactive runner)              |
+| `pnpm e2e:debug`   | Playwright inspector / step debugger                 |
+| `pnpm e2e:install` | Install the Playwright Chromium browser (one-time)   |
 | `pnpm db:push`     | Apply Drizzle schema to `DATABASE_URL`               |
 | `pnpm db:generate` | Generate a new SQL migration from `lib/db/schema.js` |
 | `pnpm db:migrate`  | Run pending migrations                               |
@@ -194,7 +197,7 @@ Brief inventory; full request/response shapes live in
 | GET    | `/api/dashboard/events`    | public                                     |
 | POST   | `/api/dashboard/payout`    | EVM signed (wallet-bound)                  |
 | POST   | `/api/register`            | x402 / HL transfer proof                   |
-| POST   | `/api/register/preflight`  | optional `PREFLIGHT_SECRET`                |
+| POST   | `/api/register/preflight`  | public                                     |
 | POST   | `/api/register/retry`      | bearer `RETRY_SECRET`                      |
 | POST   | `/api/testnet-register`    | env-gated (off by default)                 |
 | GET    | `/api/registration-status` | public                                     |
@@ -206,6 +209,26 @@ Brief inventory; full request/response shapes live in
 | GET    | `/api/status`              | public                                     |
 | GET    | `/api/hl-equity`           | public                                     |
 | GET    | `/api/verify-hl-payment`   | rate-limited                               |
+
+## E2E tests
+
+Playwright suite covering the registration wizard, tenant brand routes, and
+dashboard chrome. The runner spawns its own Next dev server on `:4569` (next
+to your dev `:4568`), boots it with the wagmi `mock` connector, and reads
+`entity_tiers` straight from your local Postgres. External services
+(validator, miner gateway) are short-circuited via env so the suite has no
+outbound network dependencies.
+
+```bash
+pnpm e2e:install     # one-time: downloads bundled Chromium
+pnpm e2e             # headless, full suite (~2 min cold, ~30s warm)
+pnpm e2e:ui          # interactive runner
+```
+
+Full setup, env vars, scenario coverage, and troubleshooting live in
+[`tests/e2e/README.md`](tests/e2e/README.md). E2E-only escape hatches
+(`E2E_BYPASS_WALLET_AUTH`, `E2E_VALIDATOR_FALLBACK_STATUS`,
+`NEXT_PUBLIC_E2E_MOCK_WALLET`) are hard-blocked when `NODE_ENV=production`.
 
 ## Project policies
 

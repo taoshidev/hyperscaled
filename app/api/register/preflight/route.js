@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { timingSafeEqual } from "crypto";
 import { getMinerBySlug, getTiersForMiner } from "@/lib/miners";
 import { isValidHLAddress, isValidEvmAddress, isValidEmail } from "@/lib/validation";
 import { getDb } from "@/lib/db";
@@ -9,44 +8,12 @@ import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
 import { isAnyDevTestWallet, DEV_TEST_PRICE } from "@/lib/dev-test";
 import { reportError } from "@/lib/errors";
 
-function constantTimeEqual(a, b) {
-  const aBuf = Buffer.from(String(a));
-  const bBuf = Buffer.from(String(b));
-  if (aBuf.length !== bBuf.length) return false;
-  try {
-    return timingSafeEqual(aBuf, bBuf);
-  } catch {
-    return false;
-  }
-}
-
 // POST /api/register/preflight
 // Runs every check that /api/register runs before payment, so callers on the
 // HL/EIP-712 path can block users *before* they sign a transfer they can't
 // complete. The x402 path already gets this implicitly via the initial 402
 // probe, but using the same endpoint there is harmless.
-//
-// Optional shared-secret guard: when ENABLE_PREFLIGHT_AUTH=true, requests
-// must present `x-preflight-secret` (or a Bearer token) matching
-// PREFLIGHT_SECRET. The first-party UI sends this via a server action so
-// the secret never reaches the browser. Off by default in dev.
 export async function POST(request) {
-  if (process.env.ENABLE_PREFLIGHT_AUTH === "true") {
-    const expected = process.env.PREFLIGHT_SECRET;
-    if (!expected) {
-      return NextResponse.json(
-        { error: "Preflight is misconfigured" },
-        { status: 503 },
-      );
-    }
-    const provided =
-      request.headers.get("x-preflight-secret") ||
-      (request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
-    if (!constantTimeEqual(provided, expected)) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-  }
-
   const db = await getDb();
   const reqId = Math.random().toString(36).slice(2, 10);
   console.info("[REGISTRATION] POST /api/register/preflight received", { reqId });
