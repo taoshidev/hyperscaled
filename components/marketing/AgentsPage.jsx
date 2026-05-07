@@ -12,9 +12,7 @@ import {
   ArrowSquareOut,
   ArrowRight,
 } from '@phosphor-icons/react'
-import Nav from './Nav'
 import { useBrand, brandifyText } from '@/lib/brand'
-import Footer from './Footer'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 const containerVariants = {
@@ -45,7 +43,7 @@ function CodeBlock({ lines }) {
 function HeroSection() {
   const brand = useBrand()
   return (
-    <section className="min-h-[60dvh] flex items-center pt-16 px-6 py-20">
+    <section className={`min-h-[60dvh] flex items-center px-6 py-20 ${brand.parentSite ? 'pt-32' : 'pt-24'}`}>
       <div className="max-w-[1400px] mx-auto w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Text */}
@@ -546,16 +544,12 @@ function CTABanner() {
 
 export default function AgentsPage() {
   return (
-    <div className="bg-[#09090b] text-white font-sans">
-      <Nav />
-      <main>
-        <HeroSection />
-        <ValueStrip />
-        <IntegrationPaths />
-        <WhyAgentsSection />
-        <CTABanner />
-      </main>
-      <Footer />
-    </div>
+    <>
+      <HeroSection />
+      <ValueStrip />
+      <IntegrationPaths />
+      <WhyAgentsSection />
+      <CTABanner />
+    </>
   )
 }

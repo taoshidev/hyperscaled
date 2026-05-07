@@ -2,15 +2,27 @@
   "name": "hyperscaled_site",
   "private": true,
   "version": "0.0.0",
+  "packageManager": "pnpm@10.33.2",
+  "engines": {
+    "node": ">=20.12"
+  },
   "scripts": {
     "dev": "next dev -p 4568",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "test": "vitest run --config vitest.config.js",
+    "test:watch": "vitest --config vitest.config.js",
+    "e2e": "pnpm exec playwright test",
+    "e2e:ui": "pnpm exec playwright test --ui",
+    "e2e:debug": "pnpm exec playwright test --debug",
+    "e2e:headless": "pnpm exec playwright test --headed",
+    "e2e:install": "pnpm exec playwright install --with-deps chromium",
+    "e2e:report": "pnpm exec playwright show-report",
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:seed": "npx tsx lib/db/seed.js",
+    "db:seed": "node --env-file-if-exists=.env.local lib/db/seed.mjs",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
@@ -50,6 +62,7 @@
   },
   "devDependencies": {
     "@eslint/js": "9.39.3",
+    "@playwright/test": "^1.59.1",
     "@types/pg": "8.18.0",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
@@ -57,6 +70,20 @@
     "eslint": "9.39.3",
     "eslint-plugin-react": "7.37.5",
     "eslint-plugin-react-hooks": "7.0.1",
-    "globals": "16.5.0"
+    "globals": "16.5.0",
+    "tsx": "4.20.6",
+    "vitest": "2.1.9"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@sentry/cli",
+      "@next/swc-darwin-arm64",
+      "@next/swc-darwin-x64",
+      "@next/swc-linux-x64-gnu",
+      "@next/swc-linux-arm64-gnu",
+      "esbuild",
+      "keccak",
+      "sharp"
+    ]
   }
 }

@@ -62,7 +62,8 @@ export default async function LunarCrushRegisterPage() {
       initialPaymentWallet={initialPaymentWallet}
       logo="/lunarcrush-logo.svg"
       logoAlt="LunarCrush"
-      homeHref="https://lunarcrush.com"
+      logoHref="https://lunarcrush.com"
+      brandVariant="lunarcrush"
     />
   )
 }

@@ -3,7 +3,7 @@
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { ArrowRight, Star } from '@phosphor-icons/react'
-import { PRICING_TIERS } from '@/lib/constants'
+import { PRICING_TIERS, parseTierAccountSize } from '@/lib/constants'
 import { useBrand } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
 
@@ -88,9 +88,11 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
                 </span>
               </div>
 
-              {/* CTA */}
               <a
-                href="/register"
+                href={(() => {
+                  const size = parseTierAccountSize(tier.accountSize)
+                  return size ? `/register?tier=${size}` : '/register'
+                })()}
                 onClick={() => trackCtaClick({ label: tier.cta, location: `pricing_preview:${tier.name || tier.accountSize || 'unknown'}` })}
                 className={`w-full flex items-center justify-center gap-1.5 min-h-12 rounded-xl text-sm font-semibold transition-colors ${
                   tier.popular || tier.id === 'free'

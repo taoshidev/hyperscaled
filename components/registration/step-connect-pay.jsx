@@ -8,6 +8,7 @@ import {
   useWalletClient,
   useSwitchChain,
   useDisconnect,
+  useSignMessage,
 } from "wagmi";
 import { parseUnits, formatUnits } from "viem";
 import {
@@ -46,6 +47,7 @@ import {
   encodePaymentSignatureHeader,
 } from "@x402/core/http";
 import { reportCritical, reportError } from "@/lib/errors";
+import { signRegistrationRequest } from "@/lib/sign-registration";
 
 function formatRulesSummary(details) {
   return details
@@ -104,6 +106,7 @@ export function StepConnectAndPay({
   const { switchChain, switchChainAsync } = useSwitchChain();
   const { disconnectAsync } = useDisconnect();
   const { data: walletClient } = useWalletClient();
+  const { signMessageAsync } = useSignMessage();
 
   const [paymentState, setPaymentState] = useState("idle");
   const [errorMessage, setErrorMessage] = useState("");
@@ -358,11 +361,33 @@ export function StepConnectAndPay({
         }
       }
 
+      // Wallet-ownership signature for the HL address. One MetaMask
+      // popup; the server skips the gate on the unsigned probe below
+      // (no side effects), and we re-use the same `signedBody` bytes
+      // for both the probe and the settle so the body hash bound to
+      // the signature matches what the server reads on settle.
+      let ownershipHeaders;
+      let signedBody;
+      try {
+        const signed = await signRegistrationRequest({
+          path: "/api/register",
+          body,
+          hlAddress: resolvedHlAddress,
+          connectedAddress: address,
+          signMessageAsync,
+        });
+        ownershipHeaders = signed.headers;
+        signedBody = signed.body;
+      } catch (err) {
+        console.warn("[REGISTRATION] Base: ownership signature aborted", { error: err?.message });
+        throw err;
+      }
+
       console.info("[REGISTRATION] Base: probing /api/register for 402");
       const probeRes = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: signedBody,
       });
       console.info("[REGISTRATION] Base: probe response", { status: probeRes.status });
 
@@ -443,8 +468,9 @@ export function StepConnectAndPay({
         headers: {
           "Content-Type": "application/json",
           "payment-signature": encodePaymentSignatureHeader(fullPayload),
+          ...ownershipHeaders,
         },
-        body: JSON.stringify(body),
+        body: signedBody,
       });
       console.info("[REGISTRATION] Base: register response", { status: registerRes.status, ok: registerRes.ok });
 
@@ -849,21 +875,30 @@ export function StepConnectAndPay({
         hlAddress: resolvedHlAddress,
         hlHash,
       });
+      const registerBody = {
+        minerSlug,
+        hlAddress: resolvedHlAddress,
+        accountSize: selectedTier.accountSize,
+        payoutAddress: resolvedPayoutAddress || address,
+        tierIndex,
+        toltCustomerId,
+        email: emailReady ? email : undefined,
+        paymentMethod: "eip712",
+        hlTransferHash: hlHash,
+        hlTransferSender: address,
+      };
+      const { headers: eip712OwnershipHeaders, body: eip712SignedBody } =
+        await signRegistrationRequest({
+          path: "/api/register",
+          body: registerBody,
+          hlAddress: resolvedHlAddress,
+          connectedAddress: address,
+          signMessageAsync,
+        });
       const registerRes = await fetch("/api/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          minerSlug,
-          hlAddress: resolvedHlAddress,
-          accountSize: selectedTier.accountSize,
-          payoutAddress: resolvedPayoutAddress || address,
-          tierIndex,
-          toltCustomerId,
-          email: emailReady ? email : undefined,
-          paymentMethod: "eip712",
-          hlTransferHash: hlHash,
-          hlTransferSender: address,
-        }),
+        headers: { "Content-Type": "application/json", ...eip712OwnershipHeaders },
+        body: eip712SignedBody,
       });
       console.info("[REGISTRATION] EIP-712: /api/register response", {
         status: registerRes.status,
@@ -997,20 +1032,29 @@ export function StepConnectAndPay({
 
       setEip712Step("provisioning");
 
+      const freeRegisterBody = {
+        minerSlug,
+        hlAddress: resolvedHlAddress,
+        accountSize: selectedTier.accountSize,
+        payoutAddress: resolvedPayoutAddress || resolvedHlAddress,
+        tierIndex,
+        toltCustomerId,
+        email: emailReady ? email : undefined,
+        paymentMethod: "free",
+        ...(isConnected && address ? { hlTransferSender: address } : {}),
+      };
+      const { headers: freeOwnershipHeaders, body: freeSignedBody } =
+        await signRegistrationRequest({
+          path: "/api/register",
+          body: freeRegisterBody,
+          hlAddress: resolvedHlAddress,
+          connectedAddress: address,
+          signMessageAsync,
+        });
       const registerRes = await fetch("/api/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          minerSlug,
-          hlAddress: resolvedHlAddress,
-          accountSize: selectedTier.accountSize,
-          payoutAddress: resolvedPayoutAddress || resolvedHlAddress,
-          tierIndex,
-          toltCustomerId,
-          email: emailReady ? email : undefined,
-          paymentMethod: "free",
-          ...(isConnected && address ? { hlTransferSender: address } : {}),
-        }),
+        headers: { "Content-Type": "application/json", ...freeOwnershipHeaders },
+        body: freeSignedBody,
       });
 
       if (!registerRes.ok) {
@@ -1085,8 +1129,20 @@ export function StepConnectAndPay({
     onPaymentProcessing,
   ]);
 
+  // The registration request is signed by the connected wallet to prove
+  // ownership of the typed HL address (see /api/register's gate). Block
+  // every path until they match.
+  const ownershipReady = hlAddressReady && isConnected && walletMatchesHL;
+  const ownershipMismatchMsg =
+    hlAddressReady && isConnected && !walletMatchesHL
+      ? `Switch MetaMask to ${truncateAddress(hlWallet)} (or click "Use connected" to register your current wallet)`
+      : hlAddressReady && !isConnected
+        ? "Connect the wallet whose HL address you're registering"
+        : null;
+
   const canFreeSignup =
     hlAddressReady &&
+    ownershipReady &&
     confirmed &&
     paymentState !== "processing";
 
@@ -1095,6 +1151,7 @@ export function StepConnectAndPay({
     isOnBase &&
     hasEnough &&
     hlAddressReady &&
+    ownershipReady &&
     confirmed &&
     !!paymentWallet &&
     paymentState !== "processing";
@@ -1103,33 +1160,39 @@ export function StepConnectAndPay({
     isConnected &&
     hlHasEnough &&
     hlAddressReady &&
+    ownershipReady &&
     confirmed &&
     !!paymentWallet &&
     paymentState !== "processing";
 
   const missingFieldBase = !hlAddressReady
     ? "Enter your Hyperliquid wallet address to continue"
-    : !confirmed
-      ? "Confirm your details above to continue"
-      : !hasEnough
-        ? "Insufficient USDC balance"
-        : null;
+    : ownershipMismatchMsg
+      ? ownershipMismatchMsg
+      : !confirmed
+        ? "Confirm your details above to continue"
+        : !hasEnough
+          ? "Insufficient USDC balance"
+          : null;
 
   const missingFieldEIP712 = !hlAddressReady
     ? "Enter your Hyperliquid wallet address to continue"
-    : !confirmed
-      ? "Confirm your details above to continue"
-      : hlBalanceLoading
-        ? "Checking Hyperliquid balance..."
-        : !hlHasEnough
-          ? hlBalance != null
-            ? "Insufficient USDC on Hyperliquid"
-            : "Could not fetch Hyperliquid balance"
-          : null;
+    : ownershipMismatchMsg
+      ? ownershipMismatchMsg
+      : !confirmed
+        ? "Confirm your details above to continue"
+        : hlBalanceLoading
+          ? "Checking Hyperliquid balance..."
+          : !hlHasEnough
+            ? hlBalance != null
+              ? "Insufficient USDC on Hyperliquid"
+              : "Could not fetch Hyperliquid balance"
+            : null;
 
   // ── Confirm phase: "Continue to review" readiness ──────────────────────────
   const canContinueToConfirm =
     hlAddressReady &&
+    ownershipReady &&
     (isFree
       ? true
       : paymentMethod &&
@@ -1260,6 +1323,7 @@ export function StepConnectAndPay({
           <label className="flex items-start gap-3 cursor-pointer group">
             <input
               type="checkbox"
+              data-testid="confirm-details"
               checked={confirmed}
               onChange={(e) => setConfirmed(e.target.checked)}
               className="
@@ -1324,6 +1388,7 @@ export function StepConnectAndPay({
             <div className="space-y-4">
               {paymentState === "idle" && (
                 <Button
+                  data-testid="free-signup"
                   onClick={handleFreeSignup}
                   disabled={!canFreeSignup}
                   aria-label={`Sign up for ${selectedTier.name} free account`}
@@ -1400,17 +1465,6 @@ export function StepConnectAndPay({
           {/* ── Hyperliquid EIP-712 payment flow ── */}
           {!isFree && paymentMethod === "eip712" && paymentState !== "success" && paymentState !== "error" && (
             <div className="space-y-4">
-              {/* Wallet mismatch warning */}
-              {hlAddressReady && !walletMatchesHL && paymentState === "idle" && (
-                <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 flex items-start gap-2.5">
-                  <Warning size={16} weight="fill" className="text-amber-400 shrink-0 mt-0.5" />
-                  <p className="text-sm text-muted-foreground">
-                    Connected wallet does not match your Hyperliquid trading address. The transfer will be signed by{" "}
-                    <span className="font-mono text-foreground">{truncateAddress(address)}</span>.
-                  </p>
-                </div>
-              )}
-
               {paymentState === "idle" && (
                 <>
                   {/* HL balance */}
@@ -1602,6 +1656,7 @@ export function StepConnectAndPay({
             </div>
             <button
               type="button"
+              data-testid="hl-wallet-change"
               onClick={() => {
                 setEditingHlWallet(true);
                 setHlWallet("");
@@ -1685,6 +1740,54 @@ export function StepConnectAndPay({
             </p>
           )}
         </div>
+
+        {/* Surface the wallet/HL-address mismatch the moment it happens
+            so the user can fix it before filling out the rest of the form. */}
+        {hlAddressReady && isConnected && !walletMatchesHL && (
+          <div
+            data-testid="wallet-ownership-mismatch-banner"
+            className="rounded-xl border border-amber-500/30 bg-amber-500/[0.06] p-3.5 mt-2 flex items-start gap-2.5"
+          >
+            <Warning size={16} weight="fill" className="text-amber-400 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <p className="text-sm font-medium text-foreground">
+                Wallet doesn&apos;t match
+              </p>
+              <p className="text-xs text-muted-foreground">
+                You&apos;re registering{" "}
+                <span className="font-mono text-foreground">{truncateAddress(hlWallet)}</span>
+                {" "}but MetaMask is connected as{" "}
+                <span className="font-mono text-foreground">{truncateAddress(address)}</span>.
+                We need a signature from the HL address itself to prove ownership.
+              </p>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHlWallet(address);
+                    setHlWalletTouched(true);
+                    setEditingHlWallet(false);
+                    setConfirmed(false);
+                  }}
+                  className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                >
+                  Use {truncateAddress(address)} instead
+                </button>
+                <ConnectButton.Custom>
+                  {({ openAccountModal }) => (
+                    <button
+                      type="button"
+                      onClick={openAccountModal}
+                      className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:border-white/[0.15] transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+                    >
+                      Switch wallet in MetaMask
+                    </button>
+                  )}
+                </ConnectButton.Custom>
+              </div>
+            </div>
+          </div>
+        )}
         {!hlWalletValid && (
           <a
             href={HYPERLIQUID_SIGNUP_URL}
@@ -1995,6 +2098,7 @@ export function StepConnectAndPay({
       {/* ─── Continue to Review ─── */}
       <div className="w-full max-w-lg mt-6">
         <Button
+          data-testid="continue-to-review"
           onClick={() => {
             if (!payoutPrefilled && hlAddressReady) {
               setPayoutWallet(hlWallet);

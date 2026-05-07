@@ -73,7 +73,8 @@ export default async function BeanstockRegisterPage() {
       initialPaymentWallet={initialPaymentWallet}
       logo="/beanstock-logo.svg"
       logoAlt="Beanstock"
-      homeHref="https://beanstockinvestor.com"
+      logoHref="https://beanstocktrading.com"
+      brandVariant="beanstock"
     />
   )
 }

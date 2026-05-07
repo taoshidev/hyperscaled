@@ -302,6 +302,7 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
 
   return (
     <motion.div
+      data-testid="registration-confirmation"
       variants={containerVariants}
       initial="hidden"
       animate="visible"

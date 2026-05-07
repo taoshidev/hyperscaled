@@ -2,13 +2,11 @@
 
 import { useState, useCallback } from "react";
 import { ShieldCheck, ShieldAlert, Clock, Shield } from "lucide-react";
-import { Warning } from "@phosphor-icons/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useKycStatus, useKycToken } from "@/hooks/use-kyc";
 import { useQueryClient } from "@tanstack/react-query";
 import SumsubWebSdk from "@sumsub/websdk-react";
-import { truncateAddress } from "@/lib/format";
 
 export function KycVerification({ hlAddress, connectedWallet }) {
   const { data: kyc, isLoading } = useKycStatus(hlAddress);
@@ -54,13 +52,16 @@ export function KycVerification({ hlAddress, connectedWallet }) {
 
   if (isLoading || !kyc) return null;
 
-  // Check if the connected wallet is authorized to KYC for this HL address
-  // Allowed: the HL address itself, the payment wallet, or the payout address
+  // Client-side hint for showing the "Start Verification" button. The
+  // authoritative check happens server-side in /api/kyc/token, which
+  // also accepts any wallet authorized for this HL address via Sumsub.
+  // We don't fetch the authorized list here (it's not in the public
+  // KYC status response), so the button is visible only when the
+  // connected wallet IS the HL address. Multi-wallet-authorized users
+  // can still complete KYC by connecting the HL wallet, or by hitting
+  // /api/kyc/token directly.
   const connLower = connectedWallet?.toLowerCase();
-  const isAuthorized =
-    connLower &&
-    (connLower === hlAddress?.toLowerCase() ||
-      (kyc.authorizedWallets || []).includes(connLower));
+  const isAuthorized = !!connLower && connLower === hlAddress?.toLowerCase();
 
   // Already showing SDK widget
   if (showSdk && sdkToken) {
@@ -104,24 +105,10 @@ export function KycVerification({ hlAddress, connectedWallet }) {
     );
   }
 
-  // For any actionable KYC state, require wallet authorization
+  // Non-owners viewing a dashboard only see the public-status badges
+  // (`approved` above, `pending` below). Actionable states render nothing.
   if (!isAuthorized && status !== "pending") {
-    return (
-      <Card className="border-amber-500/30 bg-amber-500/5">
-        <CardContent className="p-4 flex items-center gap-3">
-          <Warning size={20} weight="duotone" className="text-amber-500 shrink-0" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-amber-500">
-              Wallet Mismatch
-            </p>
-            <p className="text-xs text-muted-foreground">
-              To verify identity for this address, connect the wallet that registered this account
-              {hlAddress ? ` or ${truncateAddress(hlAddress)} directly` : ""}.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return null;
   }
 
   if (status === "rejected") {
