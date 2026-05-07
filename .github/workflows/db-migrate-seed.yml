@@ -5,6 +5,7 @@ on:
     branches:
       - development
       - main
+      - mw--migrations-actions # TEMP: remove before merging to main
   workflow_dispatch:
     inputs:
       target:
