@@ -76,4 +76,8 @@ jobs:
           HYPERSCALED_USDC_WALLET: ${{ secrets.HYPERSCALED_USDC_WALLET }}
           VANTA_ENTITY_HOTKEY: ${{ secrets.VANTA_ENTITY_HOTKEY }}
           VANTA_API_KEY: ${{ secrets.VANTA_API_KEY }}
+          JOLLY_GREEN_USDC_WALLET: ${{ secrets.JOLLY_GREEN_USDC_WALLET }}
+          JOLLY_GREEN_HOTKEY: ${{ secrets.JOLLY_GREEN_HOTKEY }}
+          JOLLY_GREEN_API_URL: ${{ secrets.JOLLY_GREEN_API_URL }}
+          JOLLY_GREEN_API_KEY: ${{ secrets.JOLLY_GREEN_API_KEY }}
         run: pnpm run db:seed
