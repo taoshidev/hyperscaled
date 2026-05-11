@@ -268,9 +268,9 @@ export function StepSelectTier({
 
       {/* WSB Flash Deal pill */}
       <div className="flex justify-center mt-6">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-teal-400/20 bg-teal-400/8">
-          <img src="/wsb-logo.svg" alt="" className="h-5 w-5 rounded-sm" />
-          <span className="text-sm font-semibold text-teal-400 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
+        <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
+          <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
+          <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
         </div>
       </div>
 

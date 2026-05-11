@@ -20,7 +20,6 @@ function tierBadge(tier) {
 export default function PricingPreview({ tiers = PRICING_TIERS }) {
   const brand = useBrand()
   tiers = brand.pricingTiers || tiers
-  const showLaunchNote = tiers.some((t) => t.standardPrice)
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -65,7 +64,7 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
               )}
 
               {/* Tier label */}
-              <div className="text-xs font-semibold text-zinc-500 tracking-widest uppercase mb-1 mt-1">
+              <div className={`text-xs font-semibold text-zinc-500 tracking-widest uppercase mb-1 ${tierBadge(tier) ? 'mt-4' : 'mt-1'}`}>
                 {TIER_LABELS[tier.id]}
               </div>
 
@@ -114,22 +113,12 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
           transition={{ ...spring, delay: 0.25 }}
           className="flex justify-center mt-6"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-teal-400/20 bg-teal-400/8">
-            <img src="/wsb-logo.svg" alt="" className="h-5 w-5 rounded-sm" />
-            <span className="text-sm font-semibold text-teal-400 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
+          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
+            <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
+            <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
           </div>
         </motion.div>
 
-        {showLaunchNote && (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={inView ? { opacity: 1 } : {}}
-            transition={{ ...spring, delay: 0.3 }}
-            className="text-center text-xs text-zinc-500 mt-4"
-          >
-            Launch pricing active. Limited-time&nbsp;pricing.
-          </motion.p>
-        )}
       </div>
     </section>
   )
