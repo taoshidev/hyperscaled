@@ -4,33 +4,11 @@ import Link from 'next/link'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
 
-/* ── Hyperscaled: teal $1k challenge bar ── */
-function HyperscaledBanner({ brandHref, mark }) {
-  return (
-    <div className="relative z-10 bg-teal-400 w-full">
-      <Link
-        href={brandHref('/register')}
-        onClick={() => trackCtaClick({ label: 'Promo Banner', location: 'promo_bar' })}
-        className="flex items-center justify-center gap-3 px-6 py-2.5 hover:bg-teal-300 transition-colors"
-      >
-        <img
-          src={mark}
-          alt="Hyperscaled"
-          className="h-5 w-auto brightness-0 invert"
-        />
-        <span className="text-xs sm:text-sm font-medium text-black text-center">
-          Free $1k challenge accounts are live — only 1,000 are available.{' '}
-          <span className="underline underline-offset-2 font-semibold">
-            Claim yours →
-          </span>
-        </span>
-      </Link>
-    </div>
-  )
-}
+export default function PromoBanner() {
+  const brand = useBrand()
+  const brandHref = useBrandHref()
+  const brandName = brand.id === 'vanta' ? 'Vanta' : 'Hyperscaled'
 
-/* ── Vanta: WSB flash deal bar ── */
-function WsbBanner({ brandHref }) {
   return (
     <div className="relative z-10 w-full bg-white">
       <div className="flex items-center justify-center gap-4 sm:gap-5 px-4 sm:px-6 py-1.5 max-w-[1400px] mx-auto">
@@ -46,7 +24,7 @@ function WsbBanner({ brandHref }) {
             Flash deal · Ends May 19
           </span>
           <span className="text-xs sm:text-sm font-medium text-zinc-800 truncate tracking-tight">
-            WallStreetBets x Hyperscaled — 50% off all challenges
+            WallStreetBets x {brandName} — 50% off all challenges
           </span>
         </div>
 
@@ -55,20 +33,9 @@ function WsbBanner({ brandHref }) {
           onClick={() => trackCtaClick({ label: 'WSB Flash Deal', location: 'promo_bar' })}
           className="inline-flex items-center gap-1 px-4 py-1.5 rounded-lg bg-teal-400 text-black text-xs font-semibold hover:bg-teal-300 transition-colors whitespace-nowrap shrink-0 tracking-tight"
         >
-          Limited-time offer →
+          Claim offer →
         </Link>
       </div>
     </div>
   )
-}
-
-export default function PromoBanner() {
-  const brand = useBrand()
-  const brandHref = useBrandHref()
-
-  if (brand.id === 'vanta') {
-    return <WsbBanner brandHref={brandHref} />
-  }
-
-  return <HyperscaledBanner brandHref={brandHref} mark={brand.mark} />
 }
