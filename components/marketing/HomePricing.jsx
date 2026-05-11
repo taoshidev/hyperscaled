@@ -139,18 +139,20 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
           ))}
         </div>
 
-        {/* WSB Flash Deal pill */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={inView ? { opacity: 1 } : {}}
-          transition={{ ...spring, delay: 0.25 }}
-          className="flex justify-center mt-6"
-        >
-          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
-            <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
-            <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
-          </div>
-        </motion.div>
+        {/* WSB Flash Deal pill — Hyperscaled & Vanta only */}
+        {(brand.id === 'hyperscaled' || brand.id === 'vanta') && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={inView ? { opacity: 1 } : {}}
+            transition={{ ...spring, delay: 0.25 }}
+            className="flex justify-center mt-6"
+          >
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
+              <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
+              <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
+            </div>
+          </motion.div>
+        )}
 
         {/* Universal rules */}
         <motion.p

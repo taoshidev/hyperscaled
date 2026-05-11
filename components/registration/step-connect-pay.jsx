@@ -132,7 +132,9 @@ export function StepConnectAndPay({
 
   const { handleHelpFocus, handleHelpBlur } = useRegistrationHelp();
 
-  const isHubspotBrand = brandVariant === "hyperscaled" || brandVariant === "vanta";
+  const hsPortalId = process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID || "";
+  const hsFormId = process.env.NEXT_PUBLIC_HUBSPOT_FORM_ID || "";
+  const isHubspotBrand = (brandVariant === "hyperscaled" || brandVariant === "vanta") && hsPortalId && hsFormId;
   const hubspotFormReadyRef = useRef(false);
   const hubspotFormContainerRef = useRef(null);
 
@@ -151,8 +153,8 @@ export function StepConnectAndPay({
       container.innerHTML = "";
 
       window.hbspt.forms.create({
-        portalId: "45009699",
-        formId: "945b5d9c-3356-4673-a669-d1cacd444c5d",
+        portalId: hsPortalId,
+        formId: hsFormId,
         region: "na1",
         target: "#hubspot-email-form",
         onFormReady: ($form) => {
@@ -2189,7 +2191,7 @@ export function StepConnectAndPay({
             }
             // Submit email to HubSpot via Forms API (fire-and-forget)
             if (isHubspotBrand && email && isValidEmail(email)) {
-              fetch("https://api.hsforms.com/submissions/v3/integration/submit/45009699/945b5d9c-3356-4673-a669-d1cacd444c5d", {
+              fetch(`https://api.hsforms.com/submissions/v3/integration/submit/${hsPortalId}/${hsFormId}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

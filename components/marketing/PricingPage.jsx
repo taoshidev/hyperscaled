@@ -158,7 +158,7 @@ function PricingCard({ tier, index }) {
 }
 
 /* ── Pricing Cards Grid ── */
-function PricingCards({ tiers }) {
+function PricingCards({ tiers, brandId }) {
   return (
     <section className="px-6 pb-20">
       <div className={`max-w-[1400px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-6 md:gap-5 xl:gap-3`}>
@@ -166,13 +166,15 @@ function PricingCards({ tiers }) {
           <PricingCard key={tier.id} tier={tier} index={i} />
         ))}
       </div>
-      {/* WSB Flash Deal pill */}
-      <div className="flex justify-center mt-6">
-        <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
-          <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
-          <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
+      {/* WSB Flash Deal pill — Hyperscaled & Vanta only */}
+      {(brandId === 'hyperscaled' || brandId === 'vanta') && (
+        <div className="flex justify-center mt-6">
+          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
+            <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
+            <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
+          </div>
         </div>
-      </div>
+      )}
       <p className="text-center text-sm text-zinc-500 mt-4 max-w-[60ch] mx-auto" style={{ textWrap: 'balance' }}>
         All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time&nbsp;limit
       </p>
@@ -441,7 +443,7 @@ export default function PricingPage({ tiers = PRICING_TIERS }) {
   return (
     <>
       <PricingHero />
-      <PricingCards tiers={resolvedTiers} />
+      <PricingCards tiers={resolvedTiers} brandId={brand.id} />
       <WhatsIncludedGrid />
       <ModelSection />
       <ScalingSection />

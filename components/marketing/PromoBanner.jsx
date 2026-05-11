@@ -7,6 +7,10 @@ import { trackCtaClick } from '@/lib/analytics'
 export default function PromoBanner() {
   const brand = useBrand()
   const brandHref = useBrandHref()
+
+  // Only show WSB promo on Hyperscaled and Vanta brands
+  if (brand.id !== 'hyperscaled' && brand.id !== 'vanta') return null
+
   const brandName = brand.id === 'vanta' ? 'Vanta' : 'Hyperscaled'
 
   return (
