@@ -14,7 +14,7 @@ const TIER_LABELS = { 'free': 'Free', 'tier-1': 'Starter', 'tier-2': 'Tier I', '
 
 function tierBadge(tier) {
   if (tier.popular) return 'Most Popular'
-  if (tier.id === 'free') return 'Try for Free'
+  if (tier.id === 'free') return 'Only 1,000 Available'
   return null
 }
 
@@ -139,12 +139,25 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
           ))}
         </div>
 
+        {/* WSB Flash Deal pill */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ ...spring, delay: 0.25 }}
+          className="flex justify-center mt-6"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-teal-400/20 bg-teal-400/8">
+            <img src="/wsb-logo.svg" alt="" className="h-5 w-5 rounded-sm" />
+            <span className="text-sm font-semibold text-teal-400 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
+          </div>
+        </motion.div>
+
         {/* Universal rules */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ ...spring, delay: 0.3 }}
-          className="text-center text-sm text-zinc-500 mt-8 max-w-[60ch] mx-auto"
+          className="text-center text-sm text-zinc-500 mt-4 max-w-[60ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
           All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time&nbsp;limit

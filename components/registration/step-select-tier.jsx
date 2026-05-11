@@ -207,6 +207,9 @@ export function StepSelectTier({
                         {formatPrice(tier.promoPrice)}
                       </span>
                     </ins>
+                    {tier.fullPrice > 0 && tier.fullPrice !== tier.promoPrice && (
+                      <del className="text-sm text-zinc-600 font-mono">{formatPrice(tier.fullPrice)}</del>
+                    )}
                     <span className="text-xs text-zinc-500 font-medium">USDC</span>
                   </div>
 
@@ -261,6 +264,14 @@ export function StepSelectTier({
                 </button>
               );
             })}
+      </div>
+
+      {/* WSB Flash Deal pill */}
+      <div className="flex justify-center mt-6">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-teal-400/20 bg-teal-400/8">
+          <img src="/wsb-logo.svg" alt="" className="h-5 w-5 rounded-sm" />
+          <span className="text-sm font-semibold text-teal-400 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
+        </div>
       </div>
 
       {/* Continue button */}
