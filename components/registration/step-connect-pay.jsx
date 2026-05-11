@@ -132,6 +132,79 @@ export function StepConnectAndPay({
 
   const { handleHelpFocus, handleHelpBlur } = useRegistrationHelp();
 
+  const isHubspotBrand = brandVariant === "hyperscaled" || brandVariant === "vanta";
+  const hubspotFormReadyRef = useRef(false);
+  const hubspotFormContainerRef = useRef(null);
+
+  // ── Load and create HubSpot email form for HS/Vanta brands ──────────────
+  useEffect(() => {
+    if (!isHubspotBrand) return;
+
+    let cancelled = false;
+
+    const createForm = () => {
+      if (cancelled || hubspotFormReadyRef.current) return;
+      const container = document.getElementById("hubspot-email-form");
+      if (!container || !window.hbspt) return;
+
+      // Clear any previous form instance
+      container.innerHTML = "";
+
+      window.hbspt.forms.create({
+        portalId: "45009699",
+        formId: "945b5d9c-3356-4673-a669-d1cacd444c5d",
+        region: "na1",
+        target: "#hubspot-email-form",
+        onFormReady: ($form) => {
+          if (cancelled) return;
+          hubspotFormReadyRef.current = true;
+
+          // Find the email input and sync with React state
+          const input = $form?.[0]?.querySelector('input[type="email"], input[name="email"]')
+            || container.querySelector('input[type="email"], input[name="email"]');
+
+          if (input) {
+            // Set placeholder to match our design
+            input.placeholder = "you@example.com";
+
+            // Pre-fill if email already in state (e.g. back-navigation)
+            if (email) input.value = email;
+
+            input.addEventListener("input", (e) => {
+              setEmail(e.target.value);
+            });
+            input.addEventListener("blur", () => {
+              setEmailTouched(true);
+            });
+          }
+        },
+      });
+    };
+
+    // If HubSpot script already loaded, create immediately
+    if (window.hbspt) {
+      createForm();
+      return () => { cancelled = true; };
+    }
+
+    // Check if script tag already exists (another instance loaded it)
+    const existingScript = document.querySelector('script[src*="hsforms.net"]');
+    if (existingScript) {
+      existingScript.addEventListener("load", createForm);
+      return () => { cancelled = true; };
+    }
+
+    // Load HubSpot forms script
+    const script = document.createElement("script");
+    script.src = "//js.hsforms.net/forms/embed/v2.js";
+    script.charset = "utf-8";
+    script.async = true;
+    script.onload = createForm;
+    document.head.appendChild(script);
+
+    return () => { cancelled = true; };
+  }, [isHubspotBrand]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const hlWalletValid = isValidHLAddress(hlWallet);
   const showHlWalletError = hlWalletTouched && hlWallet.length > 0 && !hlWalletValid;
   const emailValid = email.length === 0 || isValidEmail(email);
@@ -1819,28 +1892,38 @@ export function StepConnectAndPay({
 
       {/* ─── 2. Email ─── */}
       <div className="w-full max-w-lg mt-4 space-y-1.5">
-        <label htmlFor="reg-email" className="text-xs font-medium text-muted-foreground">
+        <label htmlFor={isHubspotBrand ? undefined : "reg-email"} className="text-xs font-medium text-muted-foreground">
           Email address
         </label>
-        <input
-          id="reg-email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          onBlur={() => setEmailTouched(true)}
-          placeholder="you@example.com"
-          aria-label="Email address for registration updates"
-          aria-describedby="email-hint email-error"
-          aria-invalid={showEmailError ? "true" : undefined}
-          className={`
-            w-full rounded-xl border bg-card p-4 text-sm
-            placeholder:text-muted-foreground/50
-            outline-none
-            focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
-            transition-[border-color,box-shadow] duration-200
-            ${showEmailError ? "border-destructive" : "border-border hover:border-white/[0.15]"}
-          `}
-        />
+
+        {isHubspotBrand ? (
+          <div
+            id="hubspot-email-form"
+            ref={hubspotFormContainerRef}
+            className="hubspot-email-wrapper"
+          />
+        ) : (
+          <input
+            id="reg-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onBlur={() => setEmailTouched(true)}
+            placeholder="you@example.com"
+            aria-label="Email address for registration updates"
+            aria-describedby="email-hint email-error"
+            aria-invalid={showEmailError ? "true" : undefined}
+            className={`
+              w-full rounded-xl border bg-card p-4 text-sm
+              placeholder:text-muted-foreground/50
+              outline-none
+              focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
+              transition-[border-color,box-shadow] duration-200
+              ${showEmailError ? "border-destructive" : "border-border hover:border-white/[0.15]"}
+            `}
+          />
+        )}
+
         <div id="email-error" role="alert" className="min-h-[1.25rem]">
           {showEmailError && (
             <p className="text-xs text-destructive">
@@ -2103,6 +2186,13 @@ export function StepConnectAndPay({
             if (!payoutPrefilled && hlAddressReady) {
               setPayoutWallet(hlWallet);
               setPayoutPrefilled(true);
+            }
+            // Submit HubSpot form to create/update contact
+            if (isHubspotBrand && hubspotFormContainerRef.current) {
+              const hsForm = hubspotFormContainerRef.current.querySelector("form");
+              if (hsForm) {
+                try { hsForm.requestSubmit(); } catch { /* silent */ }
+              }
             }
             trackEvent("register_review_reached", {
               tier_name: selectedTier?.name,
