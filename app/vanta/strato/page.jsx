@@ -14,7 +14,7 @@ export default function VantaStratoReferralPage() {
       refSource="strato"
       pageTitle="Vanta Strato Referral"
       pagePath="/vanta/strato"
-      delayMs={800}
+      delayMs={500}
     />
   );
 }
