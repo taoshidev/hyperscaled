@@ -2187,12 +2187,19 @@ export function StepConnectAndPay({
               setPayoutWallet(hlWallet);
               setPayoutPrefilled(true);
             }
-            // Submit HubSpot form to create/update contact
-            if (isHubspotBrand && hubspotFormContainerRef.current) {
-              const hsForm = hubspotFormContainerRef.current.querySelector("form");
-              if (hsForm) {
-                try { hsForm.requestSubmit(); } catch { /* silent */ }
-              }
+            // Submit email to HubSpot via Forms API (fire-and-forget)
+            if (isHubspotBrand && email && isValidEmail(email)) {
+              fetch("https://api.hsforms.com/submissions/v3/integration/submit/45009699/945b5d9c-3356-4673-a669-d1cacd444c5d", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  fields: [{ name: "email", value: email }],
+                  context: {
+                    pageUri: window.location.href,
+                    pageName: document.title,
+                  },
+                }),
+              }).catch(() => { /* non-blocking */ });
             }
             trackEvent("register_review_reached", {
               tier_name: selectedTier?.name,
