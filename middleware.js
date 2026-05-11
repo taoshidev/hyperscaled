@@ -144,7 +144,7 @@ export function middleware(request) {
   }
 
   const affiliateSlugMatch = pathname.match(/^\/([^/]+)\/?$/);
-  if (affiliateSlugMatch && AFFILIATE_SLUG_ROUTES.has(affiliateSlugMatch[1])) {
+  if (affiliateSlugMatch && AFFILIATE_SLUG_ROUTES.has(affiliateSlugMatch[1]) && !VANTA_HOSTNAMES.has(hostname) && !BEANSTOCK_HOSTNAMES.has(hostname)) {
     const slug = affiliateSlugMatch[1];
     const url = request.nextUrl.clone();
     url.pathname = "/";
