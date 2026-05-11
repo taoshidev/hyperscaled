@@ -13,7 +13,8 @@ export default function VantaWsbReferralPage() {
     <ReferralRedirect
       refSource="wsb"
       pageTitle="Vanta WSB Referral"
-      pagePath="/wsb"
+      pagePath="/vanta/wsb"
+      delayMs={800}
     />
   );
 }

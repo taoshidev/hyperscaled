@@ -13,7 +13,8 @@ export default function VantaStratoReferralPage() {
     <ReferralRedirect
       refSource="strato"
       pageTitle="Vanta Strato Referral"
-      pagePath="/strato"
+      pagePath="/vanta/strato"
+      delayMs={800}
     />
   );
 }
