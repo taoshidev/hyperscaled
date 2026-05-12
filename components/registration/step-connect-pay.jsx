@@ -649,6 +649,7 @@ export function StepConnectAndPay({
     emailReady,
     onPaymentComplete,
     onPaymentProcessing,
+    signMessageAsync,
   ]);
 
   // ── Hyperliquid EIP-712 usdSend payment handler ──────────────────────────
@@ -1084,6 +1085,7 @@ export function StepConnectAndPay({
     emailReady,
     onPaymentComplete,
     onPaymentProcessing,
+    signMessageAsync,
   ]);
 
   // ── Free tier signup handler ──────────────────────────────────────────────
@@ -1231,6 +1233,7 @@ export function StepConnectAndPay({
     emailReady,
     onPaymentComplete,
     onPaymentProcessing,
+    signMessageAsync,
   ]);
 
   // The registration request is signed by the connected wallet to prove
