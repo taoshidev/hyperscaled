@@ -753,3 +753,87 @@ textarea:active {
 [data-brand="beanstock"] ::-webkit-scrollbar-track {
   background: #000000;
 }
+
+/* ── HubSpot embedded email form overrides ── */
+.hubspot-email-wrapper .hs-form {
+  margin: 0;
+  padding: 0;
+}
+
+.hubspot-email-wrapper .hs-form fieldset {
+  max-width: 100% !important;
+  margin: 0;
+  padding: 0;
+}
+
+.hubspot-email-wrapper .hs-form-field {
+  margin: 0 !important;
+}
+
+/* Hide HubSpot's own label — we provide ours */
+.hubspot-email-wrapper .hs-form-field > label {
+  display: none !important;
+}
+
+/* Style the input to match site design */
+.hubspot-email-wrapper .hs-input {
+  width: 100% !important;
+  border-radius: 0.75rem !important;
+  border: 1px solid var(--border) !important;
+  background: var(--card) !important;
+  padding: 1rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  font-family: var(--font-sans) !important;
+  color: var(--foreground) !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: border-color 200ms, box-shadow 200ms !important;
+}
+
+.hubspot-email-wrapper .hs-input::placeholder {
+  color: oklch(0.72 0 0 / 50%) !important;
+}
+
+.hubspot-email-wrapper .hs-input:hover {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.hubspot-email-wrapper .hs-input:focus,
+.hubspot-email-wrapper .hs-input:focus-visible {
+  background: oklch(0.15 0 0) !important;
+  border-color: transparent !important;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--color-teal-400) !important;
+}
+
+.hubspot-email-wrapper .hs-input:-webkit-autofill,
+.hubspot-email-wrapper .hs-input:-webkit-autofill:hover,
+.hubspot-email-wrapper .hs-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 50px oklch(0.12 0 0) inset !important;
+  -webkit-text-fill-color: oklch(0.985 0 0) !important;
+  caret-color: oklch(0.985 0 0);
+}
+
+/* Hide submit button — form is submitted programmatically */
+.hubspot-email-wrapper .hs-submit {
+  display: none !important;
+}
+
+/* Hide HubSpot validation errors — we show our own */
+.hubspot-email-wrapper .hs-error-msgs {
+  display: none !important;
+}
+
+.hubspot-email-wrapper .hs-form .input {
+  margin-right: 0 !important;
+}
+
+/* Hide any HubSpot legal/GDPR consent text */
+.hubspot-email-wrapper .legal-consent-container {
+  display: none !important;
+}
+
+/* Hide submitted message */
+.hubspot-email-wrapper .submitted-message {
+  display: none !important;
+}

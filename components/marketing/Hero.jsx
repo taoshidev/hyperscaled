@@ -36,8 +36,8 @@ export default function Hero() {
       {brand.showLiquidCrystal && <LiquidCrystalBg className="pointer-events-none" />}
       <div className="absolute inset-0 bg-zinc-950/60 pointer-events-none" />
 
-      {/* Promo banner — scrolls with hero (hyperscaled only) */}
-      {brand.id === 'hyperscaled' && <PromoBanner />}
+      {/* Promo banner — scrolls with hero */}
+      <PromoBanner />
 
       <div className="relative max-w-[1400px] mx-auto px-6 w-full py-20 flex-1 flex items-center">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-20 items-center">
@@ -51,10 +51,14 @@ export default function Hero() {
           >
             {/* Eyebrow */}
             <motion.div variants={itemVariants} className="mb-6">
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-teal-400/20 bg-teal-400/8 text-xs text-teal-400 font-medium">
+              <Link
+                href={brandHref('/register')}
+                onClick={() => trackCtaClick({ label: 'Free $1k Eyebrow', location: 'hero_eyebrow' })}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-teal-400/20 bg-teal-400/8 text-xs text-teal-400 font-medium hover:bg-teal-400/12 transition-colors"
+              >
                 <span className="w-1.5 h-1.5 rounded-full bg-teal-400 pulse-teal" />
-                {brand.heroEyebrow}
-              </span>
+                Free $1k challenge accounts are live — only 1,000 available
+              </Link>
             </motion.div>
 
             {/* Headline */}

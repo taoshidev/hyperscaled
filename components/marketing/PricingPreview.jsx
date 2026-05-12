@@ -13,14 +13,13 @@ const TIER_LABELS = { 'free': 'Free', 'tier-1': 'Starter', 'tier-2': 'Tier I', '
 
 function tierBadge(tier) {
   if (tier.popular) return 'Most Popular'
-  if (tier.id === 'free') return 'Try for Free'
+  if (tier.id === 'free') return 'Only 1,000 Available'
   return null
 }
 
 export default function PricingPreview({ tiers = PRICING_TIERS }) {
   const brand = useBrand()
   tiers = brand.pricingTiers || tiers
-  const showLaunchNote = tiers.some((t) => t.standardPrice)
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -65,7 +64,7 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
               )}
 
               {/* Tier label */}
-              <div className="text-xs font-semibold text-zinc-500 tracking-widest uppercase mb-1 mt-1">
+              <div className={`text-xs font-semibold text-zinc-500 tracking-widest uppercase mb-1 ${tierBadge(tier) ? 'mt-4' : 'mt-1'}`}>
                 {TIER_LABELS[tier.id]}
               </div>
 
@@ -107,16 +106,21 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
           ))}
         </div>
 
-        {showLaunchNote && (
-          <motion.p
+        {/* WSB Flash Deal pill — Hyperscaled & Vanta only */}
+        {(brand.id === 'hyperscaled' || brand.id === 'vanta') && (
+          <motion.div
             initial={{ opacity: 0 }}
             animate={inView ? { opacity: 1 } : {}}
-            transition={{ ...spring, delay: 0.3 }}
-            className="text-center text-xs text-zinc-500 mt-6"
+            transition={{ ...spring, delay: 0.25 }}
+            className="flex justify-center mt-6"
           >
-            Launch pricing active. Limited-time&nbsp;pricing.
-          </motion.p>
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
+              <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
+              <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
+            </div>
+          </motion.div>
         )}
+
       </div>
     </section>
   )

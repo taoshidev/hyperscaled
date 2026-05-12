@@ -14,7 +14,7 @@ const TIER_LABELS = { 'free': 'Free', 'tier-1': 'Starter', 'tier-2': 'Tier I', '
 
 function tierBadge(tier) {
   if (tier.popular) return 'Most Popular'
-  if (tier.id === 'free') return 'Try for Free'
+  if (tier.id === 'free') return 'Only 1,000 Available'
   return null
 }
 
@@ -51,7 +51,7 @@ function PricingCard({ tier, index, brandHref }) {
       )}
 
       {/* Tier label */}
-      <div className="text-xs font-semibold text-zinc-500 tracking-widest uppercase mt-2 mb-1">
+      <div className={`text-xs font-semibold text-zinc-500 tracking-widest uppercase mb-1 ${tierBadge(tier) ? 'mt-4' : 'mt-2'}`}>
         {TIER_LABELS[tier.id]}
       </div>
 
@@ -139,12 +139,27 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
           ))}
         </div>
 
+        {/* WSB Flash Deal pill — Hyperscaled & Vanta only */}
+        {(brand.id === 'hyperscaled' || brand.id === 'vanta') && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={inView ? { opacity: 1 } : {}}
+            transition={{ ...spring, delay: 0.25 }}
+            className="flex justify-center mt-6"
+          >
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
+              <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
+              <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
+            </div>
+          </motion.div>
+        )}
+
         {/* Universal rules */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ ...spring, delay: 0.3 }}
-          className="text-center text-sm text-zinc-500 mt-8 max-w-[60ch] mx-auto"
+          className="text-center text-sm text-zinc-500 mt-4 max-w-[60ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
           All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time&nbsp;limit

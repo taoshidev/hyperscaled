@@ -18,6 +18,7 @@ import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
 import FAQAccordion from '@/components/shared/FAQAccordion'
+import PromoBanner from '@/components/marketing/PromoBanner'
 import { PRICING_TIERS, PRICING_FAQ, parseTierAccountSize } from '@/lib/constants'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
@@ -26,7 +27,7 @@ const TIER_LABELS = { 'free': 'Free', 'tier-1': 'Starter', 'tier-2': 'Tier I', '
 
 function tierBadge(tier) {
   if (tier.popular) return 'Most Popular'
-  if (tier.id === 'free') return 'Try for Free'
+  if (tier.id === 'free') return 'Only 1,000 Available'
   return null
 }
 
@@ -35,7 +36,8 @@ function PricingHero() {
   const brand = useBrand()
   return (
     <section className={`pb-16 px-6 ${brand.parentSite ? 'pt-32' : 'pt-24'}`}>
-      <div className="max-w-[800px] mx-auto text-center">
+      <PromoBanner />
+      <div className="max-w-[800px] mx-auto text-center pt-8">
         <motion.h1
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -99,7 +101,7 @@ function PricingCard({ tier, index }) {
       )}
 
       {/* Tier label */}
-      <div className="text-xs font-semibold text-zinc-500 tracking-widest uppercase mt-2 mb-1">
+      <div className={`text-xs font-semibold text-zinc-500 tracking-widest uppercase mb-1 ${tierBadge(tier) ? 'mt-4' : 'mt-2'}`}>
         {TIER_LABELS[tier.id]}
       </div>
 
@@ -156,7 +158,7 @@ function PricingCard({ tier, index }) {
 }
 
 /* ── Pricing Cards Grid ── */
-function PricingCards({ tiers }) {
+function PricingCards({ tiers, brandId }) {
   return (
     <section className="px-6 pb-20">
       <div className={`max-w-[1400px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-6 md:gap-5 xl:gap-3`}>
@@ -164,7 +166,16 @@ function PricingCards({ tiers }) {
           <PricingCard key={tier.id} tier={tier} index={i} />
         ))}
       </div>
-      <p className="text-center text-sm text-zinc-500 mt-8 max-w-[60ch] mx-auto" style={{ textWrap: 'balance' }}>
+      {/* WSB Flash Deal pill — Hyperscaled & Vanta only */}
+      {(brandId === 'hyperscaled' || brandId === 'vanta') && (
+        <div className="flex justify-center mt-6">
+          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
+            <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
+            <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
+          </div>
+        </div>
+      )}
+      <p className="text-center text-sm text-zinc-500 mt-4 max-w-[60ch] mx-auto" style={{ textWrap: 'balance' }}>
         All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time&nbsp;limit
       </p>
     </section>
@@ -432,7 +443,7 @@ export default function PricingPage({ tiers = PRICING_TIERS }) {
   return (
     <>
       <PricingHero />
-      <PricingCards tiers={resolvedTiers} />
+      <PricingCards tiers={resolvedTiers} brandId={brand.id} />
       <WhatsIncludedGrid />
       <ModelSection />
       <ScalingSection />
