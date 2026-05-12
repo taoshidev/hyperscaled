@@ -6,10 +6,10 @@ import { buildMetadata } from "@/lib/metadata"
 export const dynamic = "force-dynamic"
 
 export const metadata = buildMetadata({
-  title: "Bitcast — Scaled Trading on Hyperliquid",
-  description: "Trade on Hyperliquid. Get a scaled account. Keep 100% of your profits. 1-step challenge. Monthly USDC payouts. Scale to $400K.",
-  ogTitle: "Bitcast — Scaled Trading on Hyperliquid",
-  ogDescription: "The most advanced decentralized prop trading infrastructure. 1-step challenge, 100% profit split, onchain USDC payouts.",
+  title: "HyperFunded — Scaled Perp Trading on Hyperliquid",
+  description: "Trade perps on Hyperliquid. Get a scaled account. Keep 100% of eligible rewards. One-step challenge, USDC payouts, and scale up to $2.5M.",
+  ogTitle: "HyperFunded — Scaled Perp Trading on Hyperliquid",
+  ogDescription: "Trade perps on Hyperliquid with scaled capital. One-step challenge, 100% profit split, onchain USDC rewards, scale to $2.5M.",
   path: "/bitcast",
   brand: "bitcast",
 })

@@ -101,7 +101,7 @@ export default function Hero() {
 
             {/* Inline stats */}
             <motion.div variants={itemVariants} className="flex flex-wrap gap-x-8 gap-y-3">
-              {HERO_STATS.map((stat) => (
+              {(brand.heroStats || HERO_STATS).map((stat) => (
                 <div key={stat.label} className="flex items-baseline gap-2">
                   <span className="text-lg font-bold tracking-tight text-white">{stat.value}</span>
                   <span className="text-sm text-zinc-500">{stat.label}</span>
