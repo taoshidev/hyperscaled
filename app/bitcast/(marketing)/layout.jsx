@@ -7,7 +7,7 @@ const ORGANIZATION_SCHEMA = {
   "@type": "Organization",
   name: "HyperFunded",
   url: "https://hyperfunded.co",
-  description: "Scaled perp trading on Hyperliquid. One-step challenge, 100% profit split, onchain USDC rewards, and scale up to $2.5M.",
+  description: "Scaled perp trading on Hyperliquid. One-step challenge, 100% profit split, onchain USDC rewards, and scale up to $400K.",
   sameAs: ["https://x.com/hyperfunded_co"],
 }
 

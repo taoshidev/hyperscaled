@@ -39,7 +39,7 @@ function PageHero() {
     brand.id === 'beanstock'
       ? `Trade on Hyperliquid. Get ${brand.accountType} by Beanstock.`
       : brand.poweredBy && brand.id !== 'hyperscaled'
-        ? `Hyperliquid trading on ${brand.name.replace('Trading', '')} \n\n powered by Hyperscaled`
+        ? `Trade on Hyperliquid. Get ${brand.accountType} by ${brand.name.replace(' Trading', '')}.`
         : `Trade on Hyperliquid. Get ${brand.accountType} by the network.`
 
   return (
