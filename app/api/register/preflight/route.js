@@ -7,6 +7,7 @@ import { eq, and, inArray } from "drizzle-orm";
 import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
 import { isAnyDevTestWallet, DEV_TEST_PRICE } from "@/lib/dev-test";
 import { reportError } from "@/lib/errors";
+import { checkRegistrationCap } from "@/lib/registration-capacity";
 
 // POST /api/register/preflight
 // Runs every check that /api/register runs before payment, so callers on the
@@ -52,7 +53,15 @@ export async function POST(request) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  if (email && !isValidEmail(email)) {
+  if (!email) {
+    console.warn("[REGISTRATION][preflight] missing email", { reqId });
+    return NextResponse.json(
+      { error: "Email address is required", code: "EMAIL_REQUIRED" },
+      { status: 400 },
+    );
+  }
+
+  if (!isValidEmail(email)) {
     console.warn("[REGISTRATION][preflight] invalid email", { reqId });
     return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
   }
@@ -92,6 +101,22 @@ export async function POST(request) {
     return NextResponse.json(
       { error: "Account size does not match selected tier" },
       { status: 400 },
+    );
+  }
+
+  // Phased onboarding caps. Use the resolved DB price — never trust client
+  // input — so a paid tier can't sneak through the free bucket. Existing
+  // rows for this hl_address don't bypass the cap; the duplicate check
+  // below still runs to surface "already registered" before the user pays.
+  const capRejection = await checkRegistrationCap(tier.priceUsdc);
+  if (capRejection) {
+    console.warn("[REGISTRATION][preflight] blocked — registration cap reached", {
+      reqId,
+      code: capRejection.code,
+    });
+    return NextResponse.json(
+      { error: capRejection.error, code: capRejection.code },
+      { status: 403 },
     );
   }
 

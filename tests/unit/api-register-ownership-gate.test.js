@@ -143,6 +143,7 @@ describe("POST /api/register — wallet ownership gate", () => {
           accountSize: 1000,
           tierIndex: 0,
           paymentMethod: "free",
+          email: "user@example.com",
         },
       }),
     );
@@ -162,6 +163,7 @@ describe("POST /api/register — wallet ownership gate", () => {
           accountSize: 1000,
           tierIndex: 0,
           paymentMethod: "free",
+          email: "user@example.com",
         },
         headers: {
           "x-wallet": HL_ADDRESS,
@@ -185,6 +187,7 @@ describe("POST /api/register — wallet ownership gate", () => {
           accountSize: 1000,
           tierIndex: 0,
           paymentMethod: "free",
+          email: "user@example.com",
         },
         headers: {
           "x-wallet": OTHER_WALLET,
@@ -208,6 +211,7 @@ describe("POST /api/register — wallet ownership gate", () => {
           accountSize: 1000,
           tierIndex: 0,
           paymentMethod: "free",
+          email: "user@example.com",
         },
         headers: {
           "x-wallet": HL_ADDRESS,
@@ -237,6 +241,7 @@ describe("POST /api/register — wallet ownership gate", () => {
           accountSize: 1000,
           tierIndex: 0,
           paymentMethod: "free",
+          email: "user@example.com",
         },
         headers: {
           "x-wallet": HL_ADDRESS.toUpperCase(),
@@ -259,6 +264,7 @@ describe("POST /api/register — wallet ownership gate", () => {
           hlAddress: HL_ADDRESS,
           accountSize: 1000,
           tierIndex: 0,
+          email: "user@example.com",
           // paymentMethod intentionally omitted → x402 path
         },
       }),
@@ -277,6 +283,7 @@ describe("POST /api/register — message binding", () => {
       accountSize: 1000,
       tierIndex: 0,
       paymentMethod: "free",
+      email: "user@example.com",
     };
     const bodyText = JSON.stringify(bodyObj);
 

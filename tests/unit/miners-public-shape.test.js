@@ -56,7 +56,7 @@ const sampleRow = (overrides) => ({
   color: "#3b82f6",
   payoutCadenceDays: 7,
   accountSize: 25000,
-  priceUsdc: "239.00",
+  priceUsdc: "119.00",
   profitSplit: 100,
   ...overrides,
 });

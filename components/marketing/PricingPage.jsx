@@ -20,6 +20,9 @@ import { trackCtaClick } from '@/lib/analytics'
 import FAQAccordion from '@/components/shared/FAQAccordion'
 import PromoBanner from '@/components/marketing/PromoBanner'
 import { PRICING_TIERS, PRICING_FAQ, parseTierAccountSize } from '@/lib/constants'
+import { useRegistrationCapacity } from '@/hooks/use-registration-capacity'
+import { isFreeTierForRegistration } from '@/lib/registration-tier-helpers'
+import { RegistrationCapacityWaitlist } from '@/components/marketing/RegistrationCapacityWaitlist'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -32,12 +35,16 @@ function tierBadge(tier) {
 }
 
 /* ── Page Hero ── */
-function PricingHero() {
+function PricingHero({ showPromoBar }) {
   const brand = useBrand()
+  const topPad = showPromoBar
+    ? "pt-8"
+    : brand.parentSite
+      ? "pt-32"
+      : "pt-24"
   return (
-    <section className={`pb-16 px-6 ${brand.parentSite ? 'pt-32' : 'pt-24'}`}>
-      <PromoBanner />
-      <div className="max-w-[800px] mx-auto text-center pt-8">
+    <section className={`pb-16 px-6 ${topPad}`}>
+      <div className="max-w-[800px] mx-auto text-center">
         <motion.h1
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -62,10 +69,12 @@ function PricingHero() {
 }
 
 /* ── Single Pricing Card ── */
-function PricingCard({ tier, index }) {
+function PricingCard({ tier, index, freeAtCapacity, paidAtCapacity }) {
   const brandHref = useBrandHref()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
+  const free = isFreeTierForRegistration(tier)
+  const soldOut = (free && freeAtCapacity) || (!free && paidAtCapacity)
 
   const details = [
     { label: 'Profit Target', value: tier.profitTargetAmount },
@@ -84,7 +93,7 @@ function PricingCard({ tier, index }) {
       data-testid="pricing-tier-card"
       data-tier-id={tier.id}
       data-tier-account-size={numericAccountSize ? String(numericAccountSize) : ""}
-      className={`relative flex flex-col rounded-2xl p-6 sm:p-8 xl:p-4 ${
+      className={`relative flex h-full min-h-0 flex-col rounded-2xl p-6 sm:p-8 xl:p-4 ${
         tier.popular || tier.id === 'free'
           ? 'shiny-border'
           : 'border border-white/[0.08] bg-[#09090b]'
@@ -101,7 +110,7 @@ function PricingCard({ tier, index }) {
       )}
 
       {/* Tier label */}
-      <div className={`text-xs font-semibold text-zinc-500 tracking-widest uppercase mb-1 ${tierBadge(tier) ? 'mt-4' : 'mt-2'}`}>
+      <div className="text-xs font-semibold text-zinc-500 tracking-widest uppercase mb-1 mt-4">
         {TIER_LABELS[tier.id]}
       </div>
 
@@ -116,19 +125,19 @@ function PricingCard({ tier, index }) {
         >
           ${tier.launchPrice}
         </ins>
-        {tier.standardPrice && (
+        {tier.standardPrice > tier.launchPrice && (
           <del className="text-sm text-zinc-600 font-mono">${tier.standardPrice}</del>
         )}
         <span className="text-xs text-zinc-500 font-medium">USDC</span>
         <span className="sr-only">
-          {tier.standardPrice
+          {tier.standardPrice > tier.launchPrice
             ? `Launch price ${tier.launchPrice} USDC, was ${tier.standardPrice} USDC`
             : `${tier.launchPrice} USDC`}
         </span>
       </div>
 
       {/* Details */}
-      <ul className="mt-6 xl:mt-4 space-y-3 xl:space-y-2 flex-1">
+      <ul className="mt-6 xl:mt-4 mb-6 xl:mb-5 flex-1 min-h-0 space-y-3 xl:space-y-2">
         {details.map((d) => (
           <li key={d.label} className="flex items-start justify-between gap-4 xl:gap-2 text-sm xl:text-xs">
             <span className="text-zinc-500">{d.label}</span>
@@ -137,6 +146,11 @@ function PricingCard({ tier, index }) {
         ))}
       </ul>
 
+      {soldOut ? (
+        <span className="mt-auto flex items-center justify-center gap-1.5 min-h-12 xl:min-h-10 rounded-xl text-xs sm:text-sm font-semibold tabular-nums whitespace-nowrap cursor-not-allowed opacity-60 bg-white/[0.04] border border-white/[0.08] text-zinc-400 px-3 py-3 xl:px-2 xl:py-2">
+          {free ? "Limit reached" : "Sold out — join waitlist"}
+        </span>
+      ) : (
       <Link
         href={(() => {
           const base = brandHref('/register')
@@ -144,7 +158,7 @@ function PricingCard({ tier, index }) {
         })()}
         data-testid="pricing-tier-cta"
         onClick={() => trackCtaClick({ label: tier.cta, location: `pricing_page:${tier.name || tier.accountSize || 'unknown'}` })}
-        className={`mt-8 xl:mt-4 flex items-center justify-center gap-1.5 min-h-12 xl:min-h-10 rounded-xl text-sm xl:text-xs font-semibold transition-colors ${
+        className={`mt-auto flex items-center justify-center gap-1.5 min-h-12 xl:min-h-10 rounded-xl text-sm xl:text-xs font-semibold transition-colors ${
           tier.popular || tier.id === 'free'
             ? 'shiny-cta px-6 py-3 xl:px-3 xl:py-2'
             : 'bg-white/[0.06] border border-white/[0.08] text-white hover:bg-white/[0.1]'
@@ -153,28 +167,43 @@ function PricingCard({ tier, index }) {
         {tier.cta}
         <ArrowRight size={14} weight="bold" />
       </Link>
+      )}
     </motion.div>
   )
 }
 
 /* ── Pricing Cards Grid ── */
 function PricingCards({ tiers, brandId }) {
+  const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity()
   return (
     <section className="px-6 pb-20">
-      <div className={`max-w-[1400px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-6 md:gap-5 xl:gap-3`}>
-        {tiers.map((tier, i) => (
-          <PricingCard key={tier.id} tier={tier} index={i} />
-        ))}
-      </div>
-      {/* WSB Flash Deal pill — Hyperscaled & Vanta only */}
-      {(brandId === 'hyperscaled' || brandId === 'vanta') && (
-        <div className="flex justify-center mt-6">
-          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
-            <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
-            <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
-          </div>
+      <div className="max-w-[1400px] mx-auto w-full flex flex-col gap-8">
+        <div
+          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-6 md:gap-5 xl:gap-3 items-stretch`}
+        >
+          {tiers.map((tier, i) => (
+            <PricingCard
+              key={tier.id}
+              tier={tier}
+              index={i}
+              freeAtCapacity={freeAtCapacity}
+              paidAtCapacity={paidAtCapacity}
+            />
+          ))}
         </div>
-      )}
+        <RegistrationCapacityWaitlist
+          paidAtCapacity={paidAtCapacity}
+          className="mt-0"
+        />
+        {(brandId === 'hyperscaled' || brandId === 'vanta') && (
+          <div className="flex justify-center">
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
+              <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
+              <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
+            </div>
+          </div>
+        )}
+      </div>
       <p className="text-center text-sm text-zinc-500 mt-4 max-w-[60ch] mx-auto" style={{ textWrap: 'balance' }}>
         All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time&nbsp;limit
       </p>
@@ -440,9 +469,15 @@ function PricingFAQSection() {
 export default function PricingPage({ tiers = PRICING_TIERS }) {
   const brand = useBrand()
   const resolvedTiers = brand.pricingTiers || tiers
+  const showWsbPromo = brand.id === 'hyperscaled' || brand.id === 'vanta'
   return (
     <>
-      <PricingHero />
+      {showWsbPromo && (
+        <div className={brand.parentSite ? 'mt-24' : 'mt-16'}>
+          <PromoBanner />
+        </div>
+      )}
+      <PricingHero showPromoBar={showWsbPromo} />
       <PricingCards tiers={resolvedTiers} brandId={brand.id} />
       <WhatsIncludedGrid />
       <ModelSection />

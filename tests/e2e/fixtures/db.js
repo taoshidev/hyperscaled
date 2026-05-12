@@ -100,7 +100,7 @@ export async function seedRegistration({
   status = "registered",
   accountSize = 25000,
   tierIndex = 0,
-  priceUsdc = "239.00",
+  priceUsdc = "119.00",
   txHash = null,
   payoutAddress = null,
   metadata = null,
