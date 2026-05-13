@@ -755,6 +755,67 @@ textarea:active {
 }
 
 /* ── HubSpot embedded email form overrides ── */
+
+/* Skeleton shape while HubSpot's script + form HTML load. The wrapper
+   matches the styled `.hs-input` dimensions so layout doesn't shift,
+   and a subtle shimmer signals "loading" without distracting the user.
+   When React adds `--ready`, the wrapper fades back to transparent and
+   the form's own border / background take over. */
+.hubspot-email-wrapper {
+  position: relative;
+  min-height: 3.5rem;
+  border-radius: 0.75rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  transition: background-color 220ms ease-out, border-color 220ms ease-out;
+}
+
+.hubspot-email-wrapper:not(.hubspot-email-wrapper--ready)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.025) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: hubspot-skeleton-shimmer 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.hubspot-email-wrapper--ready {
+  background: transparent;
+  border-color: transparent;
+}
+
+/* Crossfade the form HTML in once HubSpot's onFormReady fires. */
+.hubspot-email-wrapper > * {
+  opacity: 0;
+  transition: opacity 200ms ease-out;
+}
+
+.hubspot-email-wrapper--ready > * {
+  opacity: 1;
+}
+
+@keyframes hubspot-skeleton-shimmer {
+  0% { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Honor the user's reduced-motion preference. */
+@media (prefers-reduced-motion: reduce) {
+  .hubspot-email-wrapper,
+  .hubspot-email-wrapper > *,
+  .hubspot-email-wrapper:not(.hubspot-email-wrapper--ready)::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
 .hubspot-email-wrapper .hs-form {
   margin: 0;
   padding: 0;
@@ -806,6 +867,13 @@ textarea:active {
   box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--color-teal-400) !important;
 }
 
+/* Required-field error state — applied by the React side when the user has
+   touched the field and left it empty / invalid. */
+.hubspot-email-wrapper--error .hs-input,
+.hubspot-email-wrapper--error .hs-input:hover {
+  border-color: var(--destructive) !important;
+}
+
 .hubspot-email-wrapper .hs-input:-webkit-autofill,
 .hubspot-email-wrapper .hs-input:-webkit-autofill:hover,
 .hubspot-email-wrapper .hs-input:-webkit-autofill:focus {
@@ -836,4 +904,106 @@ textarea:active {
 /* Hide submitted message */
 .hubspot-email-wrapper .submitted-message {
   display: none !important;
+}
+
+/* HubSpot waitlist embed */
+.hyperscaled-waitlist-form {
+  color-scheme: dark;
+}
+
+.hyperscaled-waitlist-form .hs-form,
+.hyperscaled-waitlist-form .hs-form fieldset {
+  margin: 0;
+  padding: 0;
+  max-width: 100% !important;
+}
+
+.hyperscaled-waitlist-form .hs-form-field {
+  margin: 0 !important;
+}
+
+.hyperscaled-waitlist-form .hs-form-field > label {
+  display: none !important;
+}
+
+.hyperscaled-waitlist-form .hs-input {
+  width: 100% !important;
+  border-radius: 0.75rem !important;
+  border: 1px solid var(--border) !important;
+  background: var(--card) !important;
+  background-color: var(--card) !important;
+  padding: 0.625rem 0.875rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  font-family: var(--font-sans) !important;
+  color: var(--foreground) !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: border-color 200ms, box-shadow 200ms, background-color 200ms !important;
+  -webkit-background-clip: padding-box !important;
+}
+
+.hyperscaled-waitlist-form .hs-input::placeholder {
+  color: oklch(0.72 0 0 / 50%) !important;
+}
+
+.hyperscaled-waitlist-form .hs-input:hover {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.hyperscaled-waitlist-form .hs-input:focus,
+.hyperscaled-waitlist-form .hs-input:focus-visible {
+  background: var(--card) !important;
+  background-color: var(--card) !important;
+  border-color: transparent !important;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--color-teal-400) !important;
+}
+
+.hyperscaled-waitlist-form .hs-input:-webkit-autofill,
+.hyperscaled-waitlist-form .hs-input:-webkit-autofill:hover,
+.hyperscaled-waitlist-form .hs-input:-webkit-autofill:focus,
+.hyperscaled-waitlist-form .hs-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 50px oklch(0.12 0 0) inset !important;
+  box-shadow: 0 0 0 50px oklch(0.12 0 0) inset !important;
+  -webkit-text-fill-color: oklch(0.985 0 0) !important;
+  caret-color: oklch(0.985 0 0);
+  border: 1px solid var(--border) !important;
+  border-radius: 0.75rem !important;
+  transition: background-color 99999s ease-out !important;
+}
+
+.hyperscaled-waitlist-form .hs-button {
+  margin-top: 0.5rem !important;
+  width: 100% !important;
+  border-radius: 0.625rem !important;
+  border: none !important;
+  background: var(--color-teal-400) !important;
+  color: oklch(0.15 0 0) !important;
+  padding: 0.625rem 1rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  font-family: var(--font-sans) !important;
+  cursor: pointer !important;
+  transition: opacity 150ms !important;
+}
+
+.hyperscaled-waitlist-form .hs-button:hover {
+  opacity: 0.92 !important;
+}
+
+.hyperscaled-waitlist-form .hs-error-msgs {
+  margin-top: 0.25rem !important;
+  padding: 0 !important;
+  list-style: none !important;
+  font-size: 0.75rem !important;
+  color: oklch(0.7 0.18 22) !important;
+}
+
+.hyperscaled-waitlist-form .legal-consent-container {
+  display: none !important;
+}
+
+.hyperscaled-waitlist-form .submitted-message {
+  font-size: 0.875rem !important;
+  color: var(--color-teal-400) !important;
 }

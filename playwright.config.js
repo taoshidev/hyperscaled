@@ -47,7 +47,9 @@ export default defineConfig({
     screenshot: "only-on-failure",
     video: "retain-on-failure",
     actionTimeout: 10_000,
-    navigationTimeout: 30_000,
+    // First cold compile of heavy routes (/dashboard, /register) under
+    // `next dev` regularly exceeds 30s when fonts + GA load as well.
+    navigationTimeout: 60_000,
   },
   projects: [
     {
@@ -61,7 +63,11 @@ export default defineConfig({
         command: `pnpm next dev -p ${PORT}`,
         url: BASE_URL,
         timeout: 240_000,
-        reuseExistingServer: !process.env.CI,
+        // If this is true locally, Playwright may attach to an already-running
+        // `next dev` on E2E_PORT that was started *without* the env below
+        // (caps, mock wallet, validator fallbacks). Only opt into reuse when
+        // you intentionally started the server with matching env.
+        reuseExistingServer: process.env.E2E_REUSE_DEV_SERVER === "1",
         // Stream the dev-server output to the terminal locally so the
         // user can see compile progress (first run takes ~30-60s for
         // the registration route). In CI we keep it piped because the
@@ -100,6 +106,10 @@ export default defineConfig({
           E2E_VALIDATOR_FALLBACK_STATUS: "not_found",
           // Hard-disable the testnet free-money endpoint defensively.
           ENABLE_TESTNET_REGISTER: "false",
+          // Override any host `.env.local` caps so /api/register/capacity does
+          // not disable the free tier or swap pricing CTAs for "sold out" UI.
+          REGISTRATION_FREE_MAX: "",
+          REGISTRATION_PAID_MAX: "",
         },
       },
 });

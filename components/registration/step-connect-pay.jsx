@@ -137,12 +137,31 @@ export function StepConnectAndPay({
   const isHubspotBrand = (brandVariant === "hyperscaled" || brandVariant === "vanta") && hsPortalId && hsFormId;
   const hubspotFormReadyRef = useRef(false);
   const hubspotFormContainerRef = useRef(null);
+  // Drives the fade-in / skeleton state for the embedded form so the user
+  // doesn't see a momentary blank-then-pop when arriving at step 2.
+  const [hubspotFormReady, setHubspotFormReady] = useState(false);
 
   // ── Load and create HubSpot email form for HS/Vanta brands ──────────────
+  // The component stays mounted across step 1 ↔ step 2 (its parent only
+  // toggles `phase`), but the `<div id="hubspot-email-form">` container is
+  // unmounted while we're on the confirm phase and re-created when the user
+  // navigates back. Re-run the effect on every transition into the connect
+  // phase so the embedded form is rebuilt into the fresh container.
   useEffect(() => {
-    if (!isHubspotBrand) return;
+    if (!isHubspotBrand || phase !== "connect") return;
 
     let cancelled = false;
+    hubspotFormReadyRef.current = false;
+    setHubspotFormReady(false);
+
+    // Safety net — if HubSpot's `onFormReady` doesn't fire within 5s
+    // (network blocked, ad-blocker, third-party hiccup, …) reveal whatever
+    // is in the container so the user isn't stuck on a permanent skeleton.
+    const fallbackTimer = setTimeout(() => {
+      if (!cancelled && !hubspotFormReadyRef.current) {
+        setHubspotFormReady(true);
+      }
+    }, 5000);
 
     const createForm = () => {
       if (cancelled || hubspotFormReadyRef.current) return;
@@ -166,6 +185,7 @@ export function StepConnectAndPay({
             || container.querySelector('input[type="email"], input[name="email"]');
 
           if (input) {
+            input.setAttribute("data-testid", "reg-email");
             // Set placeholder to match our design
             input.placeholder = "you@example.com";
 
@@ -179,39 +199,48 @@ export function StepConnectAndPay({
               setEmailTouched(true);
             });
           }
+
+          // Defer the fade-in by one frame so the styled input is fully laid
+          // out before we transition `opacity: 0 → 1`. Without this the user
+          // can briefly see HubSpot's default unstyled markup.
+          requestAnimationFrame(() => {
+            if (!cancelled) setHubspotFormReady(true);
+          });
         },
       });
     };
 
-    // If HubSpot script already loaded, create immediately
     if (window.hbspt) {
+      // Script already loaded — create synchronously.
       createForm();
-      return () => { cancelled = true; };
+    } else {
+      const existingScript = document.querySelector('script[src*="hsforms.net"]');
+      if (existingScript) {
+        existingScript.addEventListener("load", createForm);
+      } else {
+        const script = document.createElement("script");
+        script.src = "//js.hsforms.net/forms/embed/v2.js";
+        script.charset = "utf-8";
+        script.async = true;
+        script.onload = createForm;
+        document.head.appendChild(script);
+      }
     }
 
-    // Check if script tag already exists (another instance loaded it)
-    const existingScript = document.querySelector('script[src*="hsforms.net"]');
-    if (existingScript) {
-      existingScript.addEventListener("load", createForm);
-      return () => { cancelled = true; };
-    }
-
-    // Load HubSpot forms script
-    const script = document.createElement("script");
-    script.src = "//js.hsforms.net/forms/embed/v2.js";
-    script.charset = "utf-8";
-    script.async = true;
-    script.onload = createForm;
-    document.head.appendChild(script);
-
-    return () => { cancelled = true; };
-  }, [isHubspotBrand]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => {
+      cancelled = true;
+      clearTimeout(fallbackTimer);
+    };
+  }, [isHubspotBrand, phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const hlWalletValid = isValidHLAddress(hlWallet);
   const showHlWalletError = hlWalletTouched && hlWallet.length > 0 && !hlWalletValid;
   const emailValid = email.length === 0 || isValidEmail(email);
   const emailReady = email.length > 0 && isValidEmail(email);
-  const showEmailError = emailTouched && email.length > 0 && !emailValid;
+  // Email is collected on every brand (HubSpot widget for Vanta/Hyperscaled,
+  // a plain input elsewhere) and required to advance to the review step.
+  const showEmailError =
+    emailTouched && (email.length === 0 || !emailValid);
 
   // Funnel events — one-shot so we don't double-count on rerenders, toggling,
   // or user going back and forward through steps.
@@ -620,6 +649,7 @@ export function StepConnectAndPay({
     emailReady,
     onPaymentComplete,
     onPaymentProcessing,
+    signMessageAsync,
   ]);
 
   // ── Hyperliquid EIP-712 usdSend payment handler ──────────────────────────
@@ -1055,6 +1085,7 @@ export function StepConnectAndPay({
     emailReady,
     onPaymentComplete,
     onPaymentProcessing,
+    signMessageAsync,
   ]);
 
   // ── Free tier signup handler ──────────────────────────────────────────────
@@ -1202,6 +1233,7 @@ export function StepConnectAndPay({
     emailReady,
     onPaymentComplete,
     onPaymentProcessing,
+    signMessageAsync,
   ]);
 
   // The registration request is signed by the connected wallet to prove
@@ -1268,6 +1300,7 @@ export function StepConnectAndPay({
   const canContinueToConfirm =
     hlAddressReady &&
     ownershipReady &&
+    emailReady &&
     (isFree
       ? true
       : paymentMethod &&
@@ -1895,26 +1928,34 @@ export function StepConnectAndPay({
       {/* ─── 2. Email ─── */}
       <div className="w-full max-w-lg mt-4 space-y-1.5">
         <label htmlFor={isHubspotBrand ? undefined : "reg-email"} className="text-xs font-medium text-muted-foreground">
-          Email address
+          Email address <span className="text-destructive">*</span>
         </label>
 
         {isHubspotBrand ? (
           <div
             id="hubspot-email-form"
             ref={hubspotFormContainerRef}
-            className="hubspot-email-wrapper"
+            className={`hubspot-email-wrapper ${
+              hubspotFormReady ? "hubspot-email-wrapper--ready" : ""
+            } ${showEmailError ? "hubspot-email-wrapper--error" : ""}`}
+            aria-invalid={showEmailError ? "true" : undefined}
+            aria-describedby="email-hint email-error"
+            aria-busy={!hubspotFormReady ? "true" : undefined}
           />
         ) : (
           <input
             id="reg-email"
+            data-testid="reg-email"
             type="email"
             value={email}
+            required
             onChange={(e) => setEmail(e.target.value)}
             onBlur={() => setEmailTouched(true)}
             placeholder="you@example.com"
             aria-label="Email address for registration updates"
             aria-describedby="email-hint email-error"
             aria-invalid={showEmailError ? "true" : undefined}
+            aria-required="true"
             className={`
               w-full rounded-xl border bg-card p-4 text-sm
               placeholder:text-muted-foreground/50
@@ -1929,7 +1970,9 @@ export function StepConnectAndPay({
         <div id="email-error" role="alert" className="min-h-[1.25rem]">
           {showEmailError && (
             <p className="text-xs text-destructive">
-              Enter a valid email address
+              {email.length === 0
+                ? "Email address is required"
+                : "Enter a valid email address"}
             </p>
           )}
         </div>
@@ -2223,6 +2266,18 @@ export function StepConnectAndPay({
             <ArrowRight size={14} weight="bold" />
           </span>
         </Button>
+
+        {/* Disabled-button hint: tell the user what's missing when the only
+            remaining blocker is the email (the field-level error covers the
+            "touched but invalid" case; this covers "never touched"). */}
+        {hlAddressReady &&
+          ownershipReady &&
+          !emailReady &&
+          !showEmailError && (
+            <p className="text-xs text-muted-foreground/70 text-center mt-2">
+              Email address is required to continue
+            </p>
+          )}
       </div>
 
       {/* Back to plan selection */}

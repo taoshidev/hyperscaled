@@ -118,6 +118,7 @@ function freeBody() {
     accountSize: 1000,
     tierIndex: 0,
     paymentMethod: "free",
+    email: "user@example.com",
   };
 }
 
@@ -265,5 +266,34 @@ describe("POST /api/register — successful free registration captures miner met
     const row = registrationInsert[0];
     expect(row.status).toBe("registered");
     expect(row.metadata).toEqual(minerPayload);
+  });
+});
+
+describe("POST /api/register — email required", () => {
+  it("rejects with 400 + EMAIL_REQUIRED when email is missing", async () => {
+    const body = { ...freeBody() };
+    delete body.email;
+
+    const res = await POST(
+      makeRequest({ body, headers: signedHeaders() }),
+    );
+
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.code).toBe("EMAIL_REQUIRED");
+    expect(json.error).toMatch(/email/i);
+  });
+
+  it("rejects with 400 when email is malformed", async () => {
+    const res = await POST(
+      makeRequest({
+        body: { ...freeBody(), email: "not-an-email" },
+        headers: signedHeaders(),
+      }),
+    );
+
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toMatch(/invalid email/i);
   });
 });

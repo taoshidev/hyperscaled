@@ -18,6 +18,7 @@ import { isAnyDevTestWallet, DEV_TEST_PRICE } from "@/lib/dev-test";
 import { trackConversion } from "@/lib/tolt";
 import { parseErrorBody } from "@/lib/parse-error-body";
 import { verifyWalletHeaders } from "@/lib/wallet-auth";
+import { checkRegistrationCap } from "@/lib/registration-capacity";
 
 const USE_TESTNET = process.env.USE_TESTNET === "true";
 
@@ -153,7 +154,15 @@ export async function POST(request) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  if (email && !isValidEmail(email)) {
+  if (!email) {
+    console.warn("[REGISTRATION] missing email", { reqId });
+    return NextResponse.json(
+      { error: "Email address is required", code: "EMAIL_REQUIRED" },
+      { status: 400 },
+    );
+  }
+
+  if (!isValidEmail(email)) {
     console.warn("[REGISTRATION] invalid email", { reqId });
     return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
   }
@@ -260,6 +269,23 @@ export async function POST(request) {
       tierAccountSize: tier.accountSize,
     });
     return NextResponse.json({ error: "Account size does not match selected tier" }, { status: 400 });
+  }
+
+  // Phased onboarding caps. Re-check here even though /preflight already
+  // does — preflight is advisory, this is the only gate that protects
+  // /api/register against direct callers and against capacity moving
+  // between the preflight call and the payment settlement.
+  const capRejection = await checkRegistrationCap(tier.priceUsdc);
+  if (capRejection) {
+    console.warn("[REGISTRATION] blocked — registration cap reached", {
+      reqId,
+      code: capRejection.code,
+      paymentMethod,
+    });
+    return NextResponse.json(
+      { error: capRejection.error, code: capRejection.code },
+      { status: 403 },
+    );
   }
 
   // Reject duplicate registrations — don't let users pay twice for the same miner + HL address

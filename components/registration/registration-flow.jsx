@@ -15,6 +15,8 @@ import { MobileHelpSheet } from "./mobile-help-sheet";
 import { useBrandHref } from "@/lib/brand";
 import { reportCritical } from "@/lib/errors";
 import { trackEvent, getRefSource } from "@/lib/analytics";
+import { useRegistrationCapacity } from "@/hooks/use-registration-capacity";
+import { tierBlockedForCaps } from "@/lib/registration-tier-helpers";
 
 const STEP_LABELS = ["Select Plan", "Connect & Pay", "Confirm", "Done"];
 const DEFAULT_MINER_SLUG = "vanta";
@@ -102,6 +104,12 @@ export function RegistrationFlow({
   const resolvedExitHref = homeHref ?? brandHref("/");
   const resolvedLogoHref = logoHref ?? resolvedExitHref;
   const searchParams = useSearchParams();
+  const {
+    capacity,
+    freeAtCapacity,
+    paidAtCapacity,
+    registrationFullyClosed,
+  } = useRegistrationCapacity();
 
   const [recovered] = useState(getRecoveredRegistration);
   // Read `?tier` once at mount; re-reading would yank the user forward
@@ -231,16 +239,52 @@ export function RegistrationFlow({
     }
     setSelectedTier(match.tier);
     setSelectedTierIndex(match.index);
-    setCurrentStep(1);
-    trackEvent("register_tier_selected", {
-      tier_name: match.tier?.name,
-      tier_price: match.tier?.promoPrice ?? match.tier?.fullPrice,
-      ref_source: getRefSource(),
-      brand_variant: brandVariant,
-      preselected: true,
-    });
+    const blocked =
+      capacity != null &&
+      tierBlockedForCaps(match.tier, freeAtCapacity, paidAtCapacity);
+    setCurrentStep(blocked ? 0 : 1);
+    if (!blocked) {
+      trackEvent("register_tier_selected", {
+        tier_name: match.tier?.name,
+        tier_price: match.tier?.promoPrice ?? match.tier?.fullPrice,
+        ref_source: getRefSource(),
+        brand_variant: brandVariant,
+        preselected: true,
+      });
+    } else {
+      console.info("[REGISTRATION] ?tier blocked by capacity — staying on step 0", {
+        accountSize: match.tier?.accountSize,
+        freeAtCapacity,
+        paidAtCapacity,
+      });
+    }
     tierPreselectAppliedRef.current = true;
-  }, [minerTiers, recovered, brandVariant]);
+  }, [minerTiers, recovered, brandVariant, capacity, freeAtCapacity, paidAtCapacity]);
+
+  // When both registration buckets are full, never leave users on Connect/Pay.
+  useEffect(() => {
+    if (!registrationFullyClosed || recovered) return;
+    if (currentStep === 1 || currentStep === 2) {
+      setCurrentStep(0);
+    }
+  }, [registrationFullyClosed, recovered, currentStep]);
+
+  // If capacity loads after we already advanced (e.g. SSR preselect → step 1),
+  // snap back when the selected tier is no longer startable.
+  useEffect(() => {
+    if (!capacity || recovered) return;
+    if (currentStep !== 1 && currentStep !== 2) return;
+    const tier = selectedTier;
+    if (!tier || !tierBlockedForCaps(tier, freeAtCapacity, paidAtCapacity)) {
+      return;
+    }
+    console.info("[REGISTRATION] capacity blocks selected tier — returning to step 0", {
+      accountSize: tier.accountSize,
+      freeAtCapacity,
+      paidAtCapacity,
+    });
+    setCurrentStep(0);
+  }, [capacity, recovered, currentStep, selectedTier, freeAtCapacity, paidAtCapacity]);
 
   // B1: Browser refresh guard — only during active payment processing
   useEffect(() => {
@@ -261,9 +305,9 @@ export function RegistrationFlow({
   const isConnectOrConfirm = currentStep === 1 || currentStep === 2;
 
   return (
-    <main className="min-h-[100dvh] flex flex-col">
+    <main className="min-h-dvh flex flex-col bg-background text-foreground">
       {/* D2: Minimal nav bar */}
-      <nav className="flex items-center justify-between py-4 px-6 w-full max-w-5xl mx-auto">
+      <nav className="shrink-0 flex items-center justify-between py-4 px-6 w-full max-w-5xl mx-auto">
         <Link
           href={resolvedLogoHref}
           data-testid="register-logo-link"
@@ -287,10 +331,11 @@ export function RegistrationFlow({
 
       {/* Flow content */}
       {isConnectOrConfirm ? (
-        /* Steps 1–2: Two-column layout with help sidebar */
+        <div className="flex-1 flex flex-col min-h-0 w-full">
+        {/* Steps 1–2: Two-column layout with help sidebar */}
         <Providers>
           <RegistrationHelpProvider>
-            <div className="flex-1 flex flex-col lg:flex-row lg:justify-center lg:items-start gap-0 lg:gap-8 pt-6 pb-20 px-4 lg:px-8">
+            <div className="flex-1 flex flex-col min-h-0 lg:flex-row lg:justify-center lg:items-start gap-0 lg:gap-8 pt-6 pb-20 px-4 lg:px-8 w-full">
               {/* Form column */}
               <div className="w-full lg:max-w-[640px] lg:shrink-0">
                 <Stepper
@@ -330,10 +375,11 @@ export function RegistrationFlow({
             <MobileHelpSheet />
           </RegistrationHelpProvider>
         </Providers>
+        </div>
       ) : (
         /* Steps 0 and 3: Single-column centered layout */
-        <div className="flex-1 flex flex-col items-center justify-start pt-6 pb-20 px-4">
-          <div className={`w-full ${currentStep === 3 ? "max-w-5xl" : currentStep === 0 ? "max-w-7xl" : "max-w-3xl"}`}>
+        <div className="flex-1 flex flex-col items-center w-full min-h-0 pt-6 pb-20 px-4 bg-background">
+          <div className={`w-full flex-1 flex flex-col ${currentStep === 3 ? "max-w-5xl" : currentStep === 0 ? "max-w-7xl" : "max-w-3xl"}`}>
             {currentStep === 3 ? (
               <div className="mb-10 flex justify-center">
                 <p className="text-sm font-medium text-teal-400">
@@ -347,7 +393,6 @@ export function RegistrationFlow({
               />
             )}
 
-            {/* Step 0: Tier selection */}
             {currentStep === 0 && (
               <StepSelectTier
                 tiers={minerTiers}
@@ -366,13 +411,14 @@ export function RegistrationFlow({
                   setSelectedTierIndex(idx);
                 }}
                 onContinue={(tierFromStep, indexFromStep) => {
+                  let canonical = selectedTier;
                   if (tierFromStep) {
                     const list = minerTiers;
                     const idx =
                       Number.isInteger(indexFromStep) && indexFromStep >= 0
                         ? indexFromStep
                         : findTierIndexInList(list, tierFromStep);
-                    const canonical =
+                    canonical =
                       Array.isArray(list) && list[idx] != null ? list[idx] : tierFromStep;
                     setSelectedTier(canonical);
                     setSelectedTierIndex(idx);
@@ -384,10 +430,17 @@ export function RegistrationFlow({
                   } else {
                     console.info("[REGISTRATION] advance: 0 -> 1 (no tier change)");
                   }
-                  const advancingTier = tierFromStep ? (minerTiers?.[selectedTierIndex] || tierFromStep) : selectedTier;
+
+                  if (!canonical || tierBlockedForCaps(canonical, freeAtCapacity, paidAtCapacity)) {
+                    if (canonical) {
+                      console.warn("[REGISTRATION] blocked continue — tier at capacity");
+                    }
+                    return;
+                  }
+
                   trackEvent("register_tier_selected", {
-                    tier_name: advancingTier?.name,
-                    tier_price: advancingTier?.promoPrice ?? advancingTier?.fullPrice,
+                    tier_name: canonical?.name,
+                    tier_price: canonical?.promoPrice ?? canonical?.fullPrice,
                     ref_source: getRefSource(),
                     brand_variant: brandVariant,
                   });

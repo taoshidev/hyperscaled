@@ -63,7 +63,7 @@ test.describe("Dashboard nav (mocked wallet)", () => {
       });
     });
 
-    await page.goto("/dashboard");
+    await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
     // The dashboard layout passes `walletAware` to `<Nav />`, which
     // renders `<NavStartChallengeCta />` with the data-testid.
     await expect(
@@ -95,7 +95,7 @@ test.describe("Dashboard nav (mocked wallet)", () => {
       });
     });
 
-    await page.reload();
+    await page.reload({ waitUntil: "domcontentloaded" });
     await expect(
       page.locator('[data-testid="nav-start-challenge-cta"]'),
     ).toHaveCount(0, { timeout: 15_000 });
