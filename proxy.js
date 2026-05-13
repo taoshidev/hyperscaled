@@ -94,7 +94,8 @@ function applyTrackingCookies(response, { entryCookie, affiliateCookie, toltRefC
   }
 }
 
-export function middleware(request) {
+/** Next.js 16: edge/network-boundary handler (replaces deprecated `middleware`). */
+export function proxy(request) {
   const { pathname, searchParams } = request.nextUrl;
   const hostname = getHostname(request);
   const entryCookie = request.cookies.get("hs_entry")?.value;
