@@ -5,6 +5,9 @@ export const metadata = {
     default: 'HyperFunded — Scaled Perp Trading on Hyperliquid',
     template: '%s',
   },
+  icons: {
+    icon: [{ url: '/hyperfunded-favicon.png', type: 'image/png' }],
+  },
 }
 
 export default function BitcastLayout({ children }) {
