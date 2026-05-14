@@ -325,6 +325,7 @@ const EXTENSION_FEATURES = [
 ]
 
 function ChromeExtensionSection() {
+  const brand = useBrand()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
@@ -357,17 +358,24 @@ function ChromeExtensionSection() {
           transition={{ ...spring, delay: 0.08 }}
           className="mt-6 mb-10 flex justify-center"
         >
-          <a
-            href="https://github.com/taoshidev/hyperscaled_extension"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.02] hover:border-teal-400/30 hover:bg-teal-400/[0.04] px-4 py-2 text-xs sm:text-sm text-zinc-300 transition-colors"
-          >
-            <GithubLogo size={16} weight="fill" className="text-teal-400" />
-            <span>Fully open source —</span>
-            <span className="font-mono text-teal-400">taoshidev/hyperscaled_extension</span>
-            <ArrowRight size={13} weight="bold" className="text-zinc-500" />
-          </a>
+          {brand.id === 'hyperscaled' || brand.id === 'vanta' ? (
+            <a
+              href="https://github.com/taoshidev/hyperscaled_extension"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.02] hover:border-teal-400/30 hover:bg-teal-400/[0.04] px-4 py-2 text-xs sm:text-sm text-zinc-300 transition-colors"
+            >
+              <GithubLogo size={16} weight="fill" className="text-teal-400" />
+              <span>Fully open source —</span>
+              <span className="font-mono text-teal-400">taoshidev/hyperscaled_extension</span>
+              <ArrowRight size={13} weight="bold" className="text-zinc-500" />
+            </a>
+          ) : (
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.02] px-4 py-2 text-xs sm:text-sm text-zinc-300">
+              <GithubLogo size={16} weight="fill" className="text-teal-400" />
+              <span>Fully open source</span>
+            </span>
+          )}
         </motion.div>
 
         {/* Feature grid */}
