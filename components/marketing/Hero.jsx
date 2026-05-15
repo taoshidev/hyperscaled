@@ -5,6 +5,9 @@ import Link from 'next/link'
 import { ArrowRight, TrendUp, ArrowsClockwise } from '@phosphor-icons/react'
 import { HERO_STATS } from '@/lib/constants'
 import LiquidCrystalBg from './LiquidCrystalBg'
+import dynamic from 'next/dynamic'
+
+const BeamsBg = dynamic(() => import('./BeamsBg'), { ssr: false })
 import PromoBanner from './PromoBanner'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
@@ -32,8 +35,12 @@ export default function Hero() {
 
   return (
     <section className={`relative min-h-[100dvh] flex flex-col overflow-hidden ${brand.parentSite ? 'pt-24' : 'pt-16'}`}>
-      {/* Liquid crystal shader background */}
-      {brand.showLiquidCrystal && <LiquidCrystalBg className="pointer-events-none" />}
+      {/* Animated shader background */}
+      {brand.showLiquidCrystal && brand.heroBeams
+        ? <BeamsBg className="pointer-events-none" />
+        : brand.showLiquidCrystal
+          ? <LiquidCrystalBg className="pointer-events-none" />
+          : null}
       <div className="absolute inset-0 bg-zinc-950/60 pointer-events-none" />
 
       {/* Promo banner — scrolls with hero */}
