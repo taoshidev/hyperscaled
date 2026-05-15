@@ -3,10 +3,22 @@
 /* eslint-disable react/no-unknown-property */
 import { forwardRef, useImperativeHandle, useEffect, useRef, useMemo } from 'react'
 import * as THREE from 'three'
-import { Canvas, useFrame } from '@react-three/fiber'
-import { PerspectiveCamera } from '@react-three/drei'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { MathUtils } from 'three'
 const { degToRad } = MathUtils
+
+function Camera({ position, fov }) {
+  const { set, size } = useThree()
+  const cam = useRef()
+  useEffect(() => {
+    if (cam.current) {
+      cam.current.aspect = size.width / size.height
+      cam.current.updateProjectionMatrix()
+      set({ camera: cam.current })
+    }
+  }, [set, size])
+  return <perspectiveCamera ref={cam} position={position} fov={fov} />
+}
 
 function extendMaterial(BaseMaterial, cfg) {
   const physical = THREE.ShaderLib.physical
@@ -250,7 +262,7 @@ function Beams({
       </group>
       <ambientLight intensity={1} />
       <color attach="background" args={['#000000']} />
-      <PerspectiveCamera makeDefault position={[0, 0, 20]} fov={30} />
+      <Camera position={[0, 0, 20]} fov={30} />
     </Canvas>
   )
 }
