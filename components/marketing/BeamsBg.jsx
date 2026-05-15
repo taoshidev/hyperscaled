@@ -1,285 +1,193 @@
 'use client'
 
-/* eslint-disable react/no-unknown-property */
-import { forwardRef, useImperativeHandle, useEffect, useRef, useMemo } from 'react'
-import * as THREE from 'three'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { MathUtils } from 'three'
-const { degToRad } = MathUtils
+import { useRef, useEffect, useState } from 'react'
 
-function Camera({ position, fov }) {
-  const { set, size } = useThree()
-  const cam = useRef()
-  useEffect(() => {
-    if (cam.current) {
-      cam.current.aspect = size.width / size.height
-      cam.current.updateProjectionMatrix()
-      set({ camera: cam.current })
-    }
-  }, [set, size])
-  return <perspectiveCamera ref={cam} position={position} fov={fov} />
+/*
+ * Animated beam rays — pure WebGL2 shader, zero external deps.
+ * Replicates the react-bits Beams look: vertical light pillars
+ * with perlin noise displacement and a teal glow.
+ */
+
+const fragmentShader = `#version 300 es
+precision highp float;
+uniform float u_time;
+uniform vec2 u_resolution;
+out vec4 fragColor;
+
+// --- noise functions ---
+float hash(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
 }
-
-function extendMaterial(BaseMaterial, cfg) {
-  const physical = THREE.ShaderLib.physical
-  const { vertexShader: baseVert, fragmentShader: baseFrag, uniforms: baseUniforms } = physical
-  const baseDefines = physical.defines ?? {}
-  const uniforms = THREE.UniformsUtils.clone(baseUniforms)
-  const defaults = new BaseMaterial(cfg.material || {})
-  if (defaults.color) uniforms.diffuse.value = defaults.color
-  if ('roughness' in defaults) uniforms.roughness.value = defaults.roughness
-  if ('metalness' in defaults) uniforms.metalness.value = defaults.metalness
-  if ('envMap' in defaults) uniforms.envMap.value = defaults.envMap
-  if ('envMapIntensity' in defaults) uniforms.envMapIntensity.value = defaults.envMapIntensity
-  Object.entries(cfg.uniforms ?? {}).forEach(([key, u]) => {
-    uniforms[key] = u !== null && typeof u === 'object' && 'value' in u ? u : { value: u }
-  })
-  let vert = `${cfg.header}\n${cfg.vertexHeader ?? ''}\n${baseVert}`
-  let frag = `${cfg.header}\n${cfg.fragmentHeader ?? ''}\n${baseFrag}`
-  for (const [inc, code] of Object.entries(cfg.vertex ?? {})) {
-    vert = vert.replace(inc, `${inc}\n${code}`)
+float noise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  float a = hash(i);
+  float b = hash(i + vec2(1.0, 0.0));
+  float c = hash(i + vec2(0.0, 1.0));
+  float d = hash(i + vec2(1.0, 1.0));
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+float fbm(vec2 p) {
+  float v = 0.0;
+  float a = 0.5;
+  for (int i = 0; i < 5; i++) {
+    v += a * noise(p);
+    p *= 2.0;
+    a *= 0.5;
   }
-  for (const [inc, code] of Object.entries(cfg.fragment ?? {})) {
-    frag = frag.replace(inc, `${inc}\n${code}`)
+  return v;
+}
+
+void main() {
+  vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+  float aspect = u_resolution.x / u_resolution.y;
+  vec2 st = vec2(uv.x * aspect, uv.y);
+
+  float t = u_time * 0.4;
+
+  // beam color — HyperFunded mint teal #97FCE4
+  vec3 beamColor = vec3(0.592, 0.988, 0.894);
+
+  float totalLight = 0.0;
+
+  // 15 beams spread across the viewport
+  for (int i = 0; i < 15; i++) {
+    float fi = float(i);
+    // beam x-center with slow drift
+    float cx = (fi + 0.5) / 15.0 * aspect;
+    cx += sin(t * 0.3 + fi * 1.7) * 0.04;
+
+    // noise-based displacement per beam
+    float n = fbm(vec2(fi * 3.7, t * 0.5 + uv.y * 1.75)) * 0.12;
+    cx += n;
+
+    // beam width varies per beam
+    float bw = 0.008 + 0.004 * sin(fi * 2.3 + 1.0);
+
+    // distance from beam center
+    float d = abs(st.x - cx);
+
+    // soft beam falloff — sharp core + wide glow
+    float beam = bw / (d + bw);
+    beam = pow(beam, 3.0);
+
+    // vertical fade: stronger in center, fades at top/bottom
+    float yFade = smoothstep(0.0, 0.3, uv.y) * smoothstep(1.0, 0.7, uv.y);
+    beam *= yFade;
+
+    // flicker/shimmer
+    float shimmer = 0.7 + 0.3 * sin(t * 2.0 + fi * 4.1 + uv.y * 8.0);
+    beam *= shimmer;
+
+    totalLight += beam;
   }
-  return new THREE.ShaderMaterial({
-    defines: { ...baseDefines },
-    uniforms,
-    vertexShader: vert,
-    fragmentShader: frag,
-    lights: true,
-    fog: !!cfg.material?.fog,
-  })
-}
 
-const hexToNormalizedRGB = (hex) => {
-  const clean = hex.replace('#', '')
-  return [
-    parseInt(clean.substring(0, 2), 16) / 255,
-    parseInt(clean.substring(2, 4), 16) / 255,
-    parseInt(clean.substring(4, 6), 16) / 255,
-  ]
-}
+  totalLight = clamp(totalLight, 0.0, 1.0);
 
-const noise = `
-float random (in vec2 st) {
-    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
-}
-float noise (in vec2 st) {
-    vec2 i = floor(st);
-    vec2 f = fract(st);
-    float a = random(i);
-    float b = random(i + vec2(1.0, 0.0));
-    float c = random(i + vec2(0.0, 1.0));
-    float d = random(i + vec2(1.0, 1.0));
-    vec2 u = f * f * (3.0 - 2.0 * f);
-    return mix(a, b, u.x) + (c - a)* u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
-}
-vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
-vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
-vec3 fade(vec3 t) {return t*t*t*(t*(t*6.0-15.0)+10.0);}
-float cnoise(vec3 P){
-  vec3 Pi0 = floor(P); vec3 Pi1 = Pi0 + vec3(1.0);
-  Pi0 = mod(Pi0, 289.0); Pi1 = mod(Pi1, 289.0);
-  vec3 Pf0 = fract(P); vec3 Pf1 = Pf0 - vec3(1.0);
-  vec4 ix = vec4(Pi0.x, Pi1.x, Pi0.x, Pi1.x);
-  vec4 iy = vec4(Pi0.yy, Pi1.yy);
-  vec4 iz0 = Pi0.zzzz; vec4 iz1 = Pi1.zzzz;
-  vec4 ixy = permute(permute(ix) + iy);
-  vec4 ixy0 = permute(ixy + iz0); vec4 ixy1 = permute(ixy + iz1);
-  vec4 gx0 = ixy0 / 7.0; vec4 gy0 = fract(floor(gx0) / 7.0) - 0.5; gx0 = fract(gx0);
-  vec4 gz0 = vec4(0.5) - abs(gx0) - abs(gy0);
-  vec4 sz0 = step(gz0, vec4(0.0));
-  gx0 -= sz0 * (step(0.0, gx0) - 0.5); gy0 -= sz0 * (step(0.0, gy0) - 0.5);
-  vec4 gx1 = ixy1 / 7.0; vec4 gy1 = fract(floor(gx1) / 7.0) - 0.5; gx1 = fract(gx1);
-  vec4 gz1 = vec4(0.5) - abs(gx1) - abs(gy1);
-  vec4 sz1 = step(gz1, vec4(0.0));
-  gx1 -= sz1 * (step(0.0, gx1) - 0.5); gy1 -= sz1 * (step(0.0, gy1) - 0.5);
-  vec3 g000 = vec3(gx0.x,gy0.x,gz0.x); vec3 g100 = vec3(gx0.y,gy0.y,gz0.y);
-  vec3 g010 = vec3(gx0.z,gy0.z,gz0.z); vec3 g110 = vec3(gx0.w,gy0.w,gz0.w);
-  vec3 g001 = vec3(gx1.x,gy1.x,gz1.x); vec3 g101 = vec3(gx1.y,gy1.y,gz1.y);
-  vec3 g011 = vec3(gx1.z,gy1.z,gz1.z); vec3 g111 = vec3(gx1.w,gy1.w,gz1.w);
-  vec4 norm0 = taylorInvSqrt(vec4(dot(g000,g000),dot(g010,g010),dot(g100,g100),dot(g110,g110)));
-  g000 *= norm0.x; g010 *= norm0.y; g100 *= norm0.z; g110 *= norm0.w;
-  vec4 norm1 = taylorInvSqrt(vec4(dot(g001,g001),dot(g011,g011),dot(g101,g101),dot(g111,g111)));
-  g001 *= norm1.x; g011 *= norm1.y; g101 *= norm1.z; g111 *= norm1.w;
-  float n000 = dot(g000, Pf0); float n100 = dot(g100, vec3(Pf1.x,Pf0.yz));
-  float n010 = dot(g010, vec3(Pf0.x,Pf1.y,Pf0.z)); float n110 = dot(g110, vec3(Pf1.xy,Pf0.z));
-  float n001 = dot(g001, vec3(Pf0.xy,Pf1.z)); float n101 = dot(g101, vec3(Pf1.x,Pf0.y,Pf1.z));
-  float n011 = dot(g011, vec3(Pf0.x,Pf1.yz)); float n111 = dot(g111, Pf1);
-  vec3 fade_xyz = fade(Pf0);
-  vec4 n_z = mix(vec4(n000,n100,n010,n110),vec4(n001,n101,n011,n111),fade_xyz.z);
-  vec2 n_yz = mix(n_z.xy,n_z.zw,fade_xyz.y);
-  float n_xyz = mix(n_yz.x,n_yz.y,fade_xyz.x);
-  return 2.2 * n_xyz;
+  // slight noise grain
+  float grain = hash(gl_FragCoord.xy + fract(u_time)) * 0.03;
+
+  vec3 col = beamColor * totalLight * 0.45;
+  col -= grain;
+  col = max(col, vec3(0.0));
+
+  fragColor = vec4(col, 1.0);
 }
 `
 
-function createStackedPlanesBufferGeometry(n, width, height, spacing, heightSegments) {
-  const geometry = new THREE.BufferGeometry()
-  const numVertices = n * (heightSegments + 1) * 2
-  const numFaces = n * heightSegments * 2
-  const positions = new Float32Array(numVertices * 3)
-  const indices = new Uint32Array(numFaces * 3)
-  const uvs = new Float32Array(numVertices * 2)
-  let vertexOffset = 0
-  let indexOffset = 0
-  let uvOffset = 0
-  const totalWidth = n * width + (n - 1) * spacing
-  const xOffsetBase = -totalWidth / 2
-  for (let i = 0; i < n; i++) {
-    const xOffset = xOffsetBase + i * (width + spacing)
-    const uvXOffset = Math.random() * 300
-    const uvYOffset = Math.random() * 300
-    for (let j = 0; j <= heightSegments; j++) {
-      const y = height * (j / heightSegments - 0.5)
-      positions.set([xOffset, y, 0, xOffset + width, y, 0], vertexOffset * 3)
-      const uvY = j / heightSegments
-      uvs.set([uvXOffset, uvY + uvYOffset, uvXOffset + 1, uvY + uvYOffset], uvOffset)
-      if (j < heightSegments) {
-        const a = vertexOffset, b = vertexOffset + 1, c = vertexOffset + 2, d = vertexOffset + 3
-        indices.set([a, b, c, c, b, d], indexOffset)
-        indexOffset += 6
-      }
-      vertexOffset += 2
-      uvOffset += 4
-    }
-  }
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-  geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2))
-  geometry.setIndex(new THREE.BufferAttribute(indices, 1))
-  geometry.computeVertexNormals()
-  return geometry
-}
-
-const MergedPlanes = forwardRef(({ material, width, count, height }, ref) => {
-  const mesh = useRef(null)
-  useImperativeHandle(ref, () => mesh.current)
-  const geometry = useMemo(
-    () => createStackedPlanesBufferGeometry(count, width, height, 0, 100),
-    [count, width, height],
-  )
-  useFrame((_, delta) => {
-    mesh.current.material.uniforms.time.value += 0.1 * delta
-  })
-  return <mesh ref={mesh} geometry={geometry} material={material} />
-})
-MergedPlanes.displayName = 'MergedPlanes'
-
-const PlaneNoise = forwardRef((props, ref) => (
-  <MergedPlanes ref={ref} material={props.material} width={props.width} count={props.count} height={props.height} />
-))
-PlaneNoise.displayName = 'PlaneNoise'
-
-const DirLight = ({ position, color }) => {
-  const dir = useRef(null)
-  useEffect(() => {
-    if (!dir.current) return
-    const cam = dir.current.shadow.camera
-    if (!cam) return
-    cam.top = 24
-    cam.bottom = -24
-    cam.left = -24
-    cam.right = 24
-    cam.far = 64
-    dir.current.shadow.bias = -0.004
-  }, [])
-  return <directionalLight ref={dir} color={color} intensity={1} position={position} />
-}
-
-function Beams({
-  beamWidth = 5,
-  beamHeight = 12,
-  beamNumber = 15,
-  lightColor = '#97fce4',
-  speed = 2,
-  noiseIntensity = 1.75,
-  scale = 0.15,
-  rotation = 0,
-}) {
-  const meshRef = useRef(null)
-  const beamMaterial = useMemo(
-    () =>
-      extendMaterial(THREE.MeshStandardMaterial, {
-        header: `
-  varying vec3 vEye;
-  varying float vNoise;
-  varying vec2 vUv;
-  varying vec3 vPosition;
-  uniform float time;
-  uniform float uSpeed;
-  uniform float uNoiseIntensity;
-  uniform float uScale;
-  ${noise}`,
-        vertexHeader: `
-  float getPos(vec3 pos) {
-    vec3 noisePos = vec3(pos.x * 0., pos.y - uv.y, pos.z + time * uSpeed * 3.) * uScale;
-    return cnoise(noisePos);
-  }
-  vec3 getCurrentPos(vec3 pos) {
-    vec3 newpos = pos;
-    newpos.z += getPos(pos);
-    return newpos;
-  }
-  vec3 getNormal(vec3 pos) {
-    vec3 curpos = getCurrentPos(pos);
-    vec3 nextposX = getCurrentPos(pos + vec3(0.01, 0.0, 0.0));
-    vec3 nextposZ = getCurrentPos(pos + vec3(0.0, -0.01, 0.0));
-    vec3 tangentX = normalize(nextposX - curpos);
-    vec3 tangentZ = normalize(nextposZ - curpos);
-    return normalize(cross(tangentZ, tangentX));
-  }`,
-        fragmentHeader: '',
-        vertex: {
-          '#include <begin_vertex>': 'transformed.z += getPos(transformed.xyz);',
-          '#include <beginnormal_vertex>': 'objectNormal = getNormal(position.xyz);',
-        },
-        fragment: {
-          '#include <dithering_fragment>': `
-    float randomNoise = noise(gl_FragCoord.xy);
-    gl_FragColor.rgb -= randomNoise / 15. * uNoiseIntensity;`,
-        },
-        material: { fog: true },
-        uniforms: {
-          diffuse: new THREE.Color(...hexToNormalizedRGB('#000000')),
-          time: { shared: true, mixed: true, linked: true, value: 0 },
-          roughness: 0.3,
-          metalness: 0.3,
-          uSpeed: { shared: true, mixed: true, linked: true, value: speed },
-          envMapIntensity: 10,
-          uNoiseIntensity: noiseIntensity,
-          uScale: scale,
-        },
-      }),
-    [speed, noiseIntensity, scale],
-  )
-
-  return (
-    <Canvas dpr={[1, 2]} frameloop="always" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-      <group rotation={[0, 0, degToRad(rotation)]}>
-        <PlaneNoise ref={meshRef} material={beamMaterial} count={beamNumber} width={beamWidth} height={beamHeight} />
-        <DirLight color={lightColor} position={[0, 3, 10]} />
-      </group>
-      <ambientLight intensity={1} />
-      <color attach="background" args={['#000000']} />
-      <Camera position={[0, 0, 20]} fov={30} />
-    </Canvas>
-  )
-}
+const vertexShader = `#version 300 es
+in vec2 position;
+void main() {
+  gl_Position = vec4(position, 0.0, 1.0);
+}`
 
 export default function BeamsBg({ className = '' }) {
+  const canvasRef = useRef(null)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const gl = canvas.getContext('webgl2')
+    if (!gl) {
+      setError('WebGL2 not supported')
+      return
+    }
+
+    const compile = (type, src) => {
+      const s = gl.createShader(type)
+      gl.shaderSource(s, src)
+      gl.compileShader(s)
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        console.error(gl.getShaderInfoLog(s))
+        gl.deleteShader(s)
+        return null
+      }
+      return s
+    }
+
+    const vs = compile(gl.VERTEX_SHADER, vertexShader)
+    const fs = compile(gl.FRAGMENT_SHADER, fragmentShader)
+    if (!vs || !fs) return
+
+    const prog = gl.createProgram()
+    gl.attachShader(prog, vs)
+    gl.attachShader(prog, fs)
+    gl.linkProgram(prog)
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+      console.error(gl.getProgramInfoLog(prog))
+      return
+    }
+
+    const quadVerts = new Float32Array([-1, 1, -1, -1, 1, 1, 1, -1])
+    const buf = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+    gl.bufferData(gl.ARRAY_BUFFER, quadVerts, gl.STATIC_DRAW)
+    const posLoc = gl.getAttribLocation(prog, 'position')
+    gl.enableVertexAttribArray(posLoc)
+    gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0)
+
+    const uRes = gl.getUniformLocation(prog, 'u_resolution')
+    const uTime = gl.getUniformLocation(prog, 'u_time')
+
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1
+      canvas.width = canvas.clientWidth * dpr
+      canvas.height = canvas.clientHeight * dpr
+    }
+    window.addEventListener('resize', resize)
+    resize()
+
+    let rafId
+    const animate = (t) => {
+      const w = canvas.width
+      const h = canvas.height
+      gl.viewport(0, 0, w, h)
+      gl.clear(gl.COLOR_BUFFER_BIT)
+      gl.useProgram(prog)
+      gl.uniform2f(uRes, w, h)
+      gl.uniform1f(uTime, t * 0.001)
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+      rafId = requestAnimationFrame(animate)
+    }
+    rafId = requestAnimationFrame(animate)
+
+    return () => {
+      window.removeEventListener('resize', resize)
+      cancelAnimationFrame(rafId)
+    }
+  }, [])
+
   return (
-    <div className={`absolute inset-0 overflow-hidden ${className}`} style={{ zIndex: 0 }}>
-      <Beams
-        beamWidth={5}
-        beamHeight={12}
-        beamNumber={15}
-        lightColor="#97fce4"
-        speed={2}
-        noiseIntensity={1.75}
-        scale={0.15}
-        rotation={0}
-      />
+    <div className={`absolute inset-0 overflow-hidden ${className}`}>
+      <canvas ref={canvasRef} className="block w-full h-full" />
+      {error && (
+        <div className="absolute inset-0 bg-zinc-950 flex items-center justify-center text-white font-mono text-sm">
+          {error}
+        </div>
+      )}
     </div>
   )
 }
