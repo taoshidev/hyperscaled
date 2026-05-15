@@ -5,7 +5,8 @@ import { forwardRef, useImperativeHandle, useEffect, useRef, useMemo } from 'rea
 import * as THREE from 'three'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { PerspectiveCamera } from '@react-three/drei'
-import { degToRad } from 'three/src/math/MathUtils.js'
+import { MathUtils } from 'three'
+const { degToRad } = MathUtils
 
 function extendMaterial(BaseMaterial, cfg) {
   const physical = THREE.ShaderLib.physical
