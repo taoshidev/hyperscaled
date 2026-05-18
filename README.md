@@ -156,7 +156,7 @@ lib/
 docs/                         ARCHITECTURE.md, PHASES.md, decisions/, …
 drizzle/                      Generated SQL + meta (do not edit by hand)
 tests/                        Vitest unit suite + setup
-middleware.js                 Hostname rewrites, affiliate cookies (NOT auth)
+proxy.js                      Hostname rewrites, affiliate cookies (NOT auth); Next.js 16 edge proxy
 sentry.*.config.js            Server / edge / client Sentry init
 vercel.json                   Cron schedule for /api/sync-registrations
 ```
