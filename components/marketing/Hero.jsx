@@ -41,7 +41,7 @@ export default function Hero() {
         : brand.showLiquidCrystal
           ? <LiquidCrystalBg className="pointer-events-none" />
           : null}
-      <div className="absolute inset-0 bg-zinc-950/60 pointer-events-none" />
+      <div className={`absolute inset-0 pointer-events-none ${brand.heroBeams ? 'bg-zinc-950/30' : 'bg-zinc-950/60'}`} />
 
       {/* Promo banner — scrolls with hero */}
       <PromoBanner />
