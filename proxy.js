@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 const VANTA_HOSTNAMES = new Set(["hs.vantatrading.io"]);
 const BEANSTOCK_HOSTNAMES = new Set(["www.beanstocktrading.com", "beanstocktrading.com"]);
+const HYPERFUNDED_HOSTNAMES = new Set(["www.hyperfunded.co", "hyperfunded.co"]);
 const INTERNAL_PATH_PREFIXES = ["/_next", "/api", "/monitoring"];
 const AFFILIATE_SLUG_ROUTES = new Set(["strato"]);
 
@@ -35,6 +36,18 @@ function shouldRewriteToBeanstock(hostname, pathname) {
   return !INTERNAL_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
+function shouldRewriteToHyperfunded(hostname, pathname) {
+  if (!HYPERFUNDED_HOSTNAMES.has(hostname)) {
+    return false;
+  }
+
+  if (pathname === "/bitcast" || pathname.startsWith("/bitcast/")) {
+    return false;
+  }
+
+  return !INTERNAL_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
 function getNormalizedVantaPath(pathname) {
   if (pathname === "/vanta") {
     return "/";
@@ -54,6 +67,18 @@ function getNormalizedBeanstockPath(pathname) {
 
   if (pathname.startsWith("/beanstock/")) {
     return pathname.replace(/^\/beanstock/, "") || "/";
+  }
+
+  return null;
+}
+
+function getNormalizedHyperfundedPath(pathname) {
+  if (pathname === "/bitcast") {
+    return "/";
+  }
+
+  if (pathname.startsWith("/bitcast/")) {
+    return pathname.replace(/^\/bitcast/, "") || "/";
   }
 
   return null;
@@ -104,6 +129,7 @@ export function proxy(request) {
   const minerMatch = pathname.match(/^\/miner\/([^/]+)/);
   const normalizedVantaPath = getNormalizedVantaPath(pathname);
   const normalizedBeanstockPath = getNormalizedBeanstockPath(pathname);
+  const normalizedHyperfundedPath = getNormalizedHyperfundedPath(pathname);
 
   if (VANTA_HOSTNAMES.has(hostname) && normalizedVantaPath) {
     const url = request.nextUrl.clone();
@@ -135,6 +161,21 @@ export function proxy(request) {
     return response;
   }
 
+  if (HYPERFUNDED_HOSTNAMES.has(hostname) && normalizedHyperfundedPath) {
+    const url = request.nextUrl.clone();
+    url.pathname = normalizedHyperfundedPath;
+    const response = NextResponse.redirect(url);
+    applyTrackingCookies(response, {
+      entryCookie,
+      affiliateCookie,
+      toltRefCookie,
+      minerMatch,
+      pathname: normalizedHyperfundedPath,
+      searchParams,
+    });
+    return response;
+  }
+
   if (entryCookie && entryCookie !== "home" && minerMatch) {
     const slug = minerMatch[1];
     if (slug !== entryCookie) {
@@ -145,7 +186,7 @@ export function proxy(request) {
   }
 
   const affiliateSlugMatch = pathname.match(/^\/([^/]+)\/?$/);
-  if (affiliateSlugMatch && AFFILIATE_SLUG_ROUTES.has(affiliateSlugMatch[1]) && !VANTA_HOSTNAMES.has(hostname) && !BEANSTOCK_HOSTNAMES.has(hostname)) {
+  if (affiliateSlugMatch && AFFILIATE_SLUG_ROUTES.has(affiliateSlugMatch[1]) && !VANTA_HOSTNAMES.has(hostname) && !BEANSTOCK_HOSTNAMES.has(hostname) && !HYPERFUNDED_HOSTNAMES.has(hostname)) {
     const slug = affiliateSlugMatch[1];
     const url = request.nextUrl.clone();
     url.pathname = "/";
@@ -174,6 +215,10 @@ export function proxy(request) {
   } else if (shouldRewriteToBeanstock(hostname, pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = `/beanstock${pathname}`;
+    response = NextResponse.rewrite(url);
+  } else if (shouldRewriteToHyperfunded(hostname, pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/bitcast${pathname}`;
     response = NextResponse.rewrite(url);
   } else {
     response = NextResponse.next();
