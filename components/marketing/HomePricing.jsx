@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowRight, Star } from '@phosphor-icons/react'
 import { PRICING_TIERS, parseTierAccountSize } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
+import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
 import { useRegistrationCapacity } from '@/hooks/use-registration-capacity'
 import { isFreeTierForRegistration } from '@/lib/registration-tier-helpers'
@@ -21,7 +22,7 @@ function tierBadge(tier) {
   return null
 }
 
-function PricingCard({ tier, index, brandHref, freeAtCapacity, paidAtCapacity }) {
+function PricingCard({ tier, index, brandHref, withQS, freeAtCapacity, paidAtCapacity }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
   const free = isFreeTierForRegistration(tier)
@@ -98,7 +99,7 @@ function PricingCard({ tier, index, brandHref, freeAtCapacity, paidAtCapacity })
         href={(() => {
           const size = parseTierAccountSize(tier.accountSize)
           const base = brandHref('/register')
-          return size ? `${base}?tier=${size}` : base
+          return withQS(size ? `${base}?tier=${size}` : base)
         })()}
         onClick={() => trackCtaClick({ label: tier.cta, location: `home_pricing:${tier.name || tier.accountSize || 'unknown'}` })}
         className={`mt-auto flex items-center justify-center gap-1.5 min-h-12 xl:min-h-10 rounded-xl text-sm xl:text-xs font-semibold transition-colors ${
@@ -118,6 +119,7 @@ function PricingCard({ tier, index, brandHref, freeAtCapacity, paidAtCapacity })
 export default function HomePricing({ tiers = PRICING_TIERS }) {
   const brand = useBrand()
   const brandHref = useBrandHref()
+  const withQS = useWithPreservedQuery()
   const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity()
   tiers = brand.pricingTiers || tiers
   const ref = useRef(null)
@@ -152,6 +154,7 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
               tier={tier}
               index={i}
               brandHref={brandHref}
+              withQS={withQS}
               freeAtCapacity={freeAtCapacity}
               paidAtCapacity={paidAtCapacity}
             />

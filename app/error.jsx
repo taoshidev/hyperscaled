@@ -32,7 +32,7 @@ export default function ErrorBoundary({ error, reset }) {
           </p>
         </div>
 
-        {error?.message && (
+        {process.env.NODE_ENV === "development" && error?.message && (
           <div className="rounded-lg border border-border bg-card px-4 py-3 text-left">
             <p className="text-xs font-mono text-muted-foreground break-words">
               {sanitize(error.message)}

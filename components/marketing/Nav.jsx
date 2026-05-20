@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowLeft, ArrowRight, List, X, DotsThree, ArrowSquareOut } from '@phosphor-icons/react'
 import { CHROME_EXTENSION_URL } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
+import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
 import NavStartChallengeCta from './NavStartChallengeCta'
 
@@ -124,6 +125,7 @@ export default function Nav({ excludeLinks = [], walletAware = false }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const brand = useBrand()
   const brandHref = useBrandHref()
+  const withQS = useWithPreservedQuery()
 
   const primaryLinks = excludeLinks.length
     ? PRIMARY_LINKS.filter((l) => !excludeLinks.includes(l.label))
@@ -185,7 +187,7 @@ export default function Nav({ excludeLinks = [], walletAware = false }) {
             <NavStartChallengeCta />
           ) : (
             <Link
-              href={brandHref('/register')}
+              href={withQS(brandHref('/register'))}
               onClick={() => trackCtaClick({ label: 'Start Challenge', location: 'nav' })}
               className="shiny-cta px-5 py-2"
             >
