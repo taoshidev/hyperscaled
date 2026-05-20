@@ -4,11 +4,14 @@ import { isValidHLAddress, isValidEmail } from "@/lib/validation";
 import { getDb } from "@/lib/db";
 import { evaluateRegistrationPricing } from "@/lib/registration-pricing";
 import { checkRateLimit, getTrustedClientId } from "@/lib/rate-limit";
+import { reportWarning } from "@/lib/errors";
 
 const PLACEHOLDER_HL_FOR_PRICING = "0x0000000000000000000000000000000000000000";
 
-const VALIDATE_COUPON_LIMIT = 30;
+const VALIDATE_COUPON_LIMIT = 6;
 const VALIDATE_COUPON_WINDOW_MS = 60_000;
+
+const UNIFORM_COUPON_REJECTION = "This code is not valid for this checkout.";
 
 export async function POST(request) {
   const trustedIp = getTrustedClientId(request);
@@ -124,11 +127,23 @@ export async function POST(request) {
     );
 
     if (!pricing.ok) {
+      if (rawCouponArg) {
+        reportWarning("validate-coupon eligibility rejected", {
+          source: "api/register/validate-coupon",
+          metadata: {
+            reason: pricing.error,
+            tierSlug: `${miner.slug}:${tier.accountSize}`,
+            codeLen: rawCouponArg.length,
+            codePrefix: rawCouponArg.slice(0, 2),
+            trustedIp,
+          },
+        });
+      }
       return NextResponse.json(
         {
           ok: false,
           valid: false,
-          error: pricing.error,
+          error: rawCouponArg ? UNIFORM_COUPON_REJECTION : pricing.error,
         },
         { status: 400 },
       );

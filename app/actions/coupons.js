@@ -11,6 +11,7 @@ import {
   count,
   sql,
   ilike,
+  notExists,
 } from "drizzle-orm";
 
 import { getDb } from "@/lib/db/index.js";
@@ -27,6 +28,8 @@ import { parseAdminSort } from "@/lib/admin/command-center-sort.js";
 const DEFAULT_COUPONS_PAGE_SIZE = 20;
 const MAX_COUPONS_PAGE_SIZE = 100;
 const MAX_COUPON_CSV_EXPORT = 10_000;
+
+const MAX_DELETE_UNREDEEMED_PER_CALL = 5_000;
 
 const COUPON_LIST_SORT_COLUMNS = [
   "code",
@@ -449,26 +452,67 @@ export async function invalidateAllCoupons() {
   }
 }
 
-export async function deleteUnredeemedCoupons() {
+function unredeemedCouponPredicate() {
+  return notExists(
+    sql`select 1 from ${couponRedemptions} where ${couponRedemptions.couponId} = ${coupons.id}`,
+  );
+}
+
+export async function deleteUnredeemedCoupons(options = {}) {
   await requireCommandCenterStaff();
   const db = await getDb();
+  const dryRun = options.dryRun === true;
+
   try {
-    const all = await db.select({ id: coupons.id }).from(coupons);
-    const withRedemptions = await db
-      .select({ couponId: couponRedemptions.couponId })
-      .from(couponRedemptions);
-    const redeemedIds = new Set(withRedemptions.map((r) => r.couponId));
-    const toDelete = all.filter((c) => !redeemedIds.has(c.id));
-    if (toDelete.length === 0) {
-      return { success: true, deletedCount: 0 };
+    const [cntRow] = await db
+      .select({ c: count() })
+      .from(coupons)
+      .where(unredeemedCouponPredicate());
+    const candidateCount = Number(cntRow?.c ?? 0);
+
+    if (dryRun) {
+      return {
+        success: true,
+        dryRun: true,
+        candidateCount,
+        maxPerCall: MAX_DELETE_UNREDEEMED_PER_CALL,
+      };
     }
-    await db.delete(coupons).where(
-      inArray(
-        coupons.id,
-        toDelete.map((c) => c.id)
-      )
+
+    if (candidateCount === 0) {
+      return {
+        success: true,
+        deletedCount: 0,
+        candidateCount: 0,
+        remainingCandidateCount: 0,
+        maxPerCall: MAX_DELETE_UNREDEEMED_PER_CALL,
+      };
+    }
+
+    const candidateIdsSubquery = db
+      .select({ id: coupons.id })
+      .from(coupons)
+      .where(unredeemedCouponPredicate())
+      .limit(MAX_DELETE_UNREDEEMED_PER_CALL);
+
+    const deleted = await db
+      .delete(coupons)
+      .where(inArray(coupons.id, candidateIdsSubquery))
+      .returning({ id: coupons.id });
+
+    const deletedCount = deleted.length;
+    const remainingCandidateCount = Math.max(
+      0,
+      candidateCount - deletedCount,
     );
-    return { success: true, deletedCount: toDelete.length };
+
+    return {
+      success: true,
+      deletedCount,
+      candidateCount,
+      remainingCandidateCount,
+      maxPerCall: MAX_DELETE_UNREDEEMED_PER_CALL,
+    };
   } catch (e) {
     console.error("deleteUnredeemedCoupons:", e);
     return { success: false, error: e?.message ?? "Failed to delete." };

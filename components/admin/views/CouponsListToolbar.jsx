@@ -60,12 +60,34 @@ export function CouponsListToolbar({ tab }) {
   };
 
   const handleDeleteUnredeemed = async () => {
-    if (!confirm("Delete all coupons that have never been used?")) return;
     setBusy(true);
     try {
+      const preview = await deleteUnredeemedCoupons({ dryRun: true });
+      if (!preview.success) {
+        alert(preview.error ?? "Could not count unredeemed coupons.");
+        return;
+      }
+      const candidateCount = preview.candidateCount ?? 0;
+      if (candidateCount === 0) {
+        alert("There are no unredeemed coupons to delete.");
+        return;
+      }
+      const cap = preview.maxPerCall ?? candidateCount;
+      const willDelete = Math.min(candidateCount, cap);
+      const overflow = candidateCount - willDelete;
+      const message =
+        overflow > 0
+          ? `Delete ${willDelete} of ${candidateCount} unredeemed coupons? (Per-call cap is ${cap}; ${overflow} will remain — run again to clean them up.)`
+          : `Delete ${candidateCount} unredeemed coupon(s)?`;
+      if (!confirm(message)) return;
+
       const result = await deleteUnredeemedCoupons();
       if (result.success) {
-        alert(`Deleted ${result.deletedCount ?? 0} unredeemed coupon(s).`);
+        const deleted = result.deletedCount ?? 0;
+        const remaining = result.remainingCandidateCount ?? 0;
+        const followup =
+          remaining > 0 ? ` (${remaining} more remain — run again to continue.)` : "";
+        alert(`Deleted ${deleted} unredeemed coupon(s).${followup}`);
         router.refresh();
       } else {
         alert(result.error ?? "Failed to delete.");

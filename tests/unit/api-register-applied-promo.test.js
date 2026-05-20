@@ -135,10 +135,23 @@ vi.mock("next/headers", () => ({
 
 // ── Pricing mock: bypass the coupon DB lookups so we can drive couponMeta ─
 const pricingMock = vi.fn();
+const reserveCouponMock = vi
+  .fn()
+  .mockResolvedValue({ ok: true, redemptionId: "redemption-uuid-1" });
+const finalizeCouponMock = vi.fn().mockResolvedValue({ ok: true });
+const releaseCouponMock = vi.fn().mockResolvedValue({ ok: true });
 vi.mock("@/lib/registration-pricing", () => ({
   evaluateRegistrationPricing: (...args) => pricingMock(...args),
   applyCouponToAmount: vi.fn(),
-  recordRegistrationCouponRedemption: vi.fn().mockResolvedValue({ ok: true }),
+  reserveCouponRedemption: (...args) => reserveCouponMock(...args),
+  finalizeCouponRedemption: (...args) => finalizeCouponMock(...args),
+  releaseCouponRedemption: (...args) => releaseCouponMock(...args),
+  COUPON_RESERVATION_ERRORS: {
+    ALREADY_REDEEMED: "ALREADY_REDEEMED",
+    LIMIT_REACHED: "LIMIT_REACHED",
+    NOT_FOUND: "NOT_FOUND",
+    DB_ERROR: "DB_ERROR",
+  },
 }));
 
 // ── DB mock: route SELECTs by table identity, capture INSERT payloads ────
@@ -286,6 +299,16 @@ function pricingEvalWithoutCoupon() {
 beforeEach(() => {
   insertCalls.length = 0;
 
+  reserveCouponMock.mockClear();
+  reserveCouponMock.mockResolvedValue({
+    ok: true,
+    redemptionId: "redemption-uuid-1",
+  });
+  finalizeCouponMock.mockClear();
+  finalizeCouponMock.mockResolvedValue({ ok: true });
+  releaseCouponMock.mockClear();
+  releaseCouponMock.mockResolvedValue({ ok: true });
+
   verifyHeadersMock.mockReset();
   verifyHeadersMock.mockResolvedValue({ wallet: HL_ADDRESS });
 
@@ -372,7 +395,8 @@ describe("POST /api/register — attribution rows record the applied coupon code
     expect(registrationRows[0].values.affiliateId).toBe(42);
     expect(registrationRows[0].values.entityMinerHotkey).toBe("hk-vanta");
     // Conversion ledger amount reflects the discounted (free) price.
-    expect(registrationRows[0].values.amountUsdc).toBe("0");
+    // Stored as a 2-decimal USDC string (atomic-unit boundary helper).
+    expect(registrationRows[0].values.amountUsdc).toBe("0.00");
   });
 
   it("records null promoCode (NOT the cookie's `?promo=` string) when no coupon was applied", async () => {

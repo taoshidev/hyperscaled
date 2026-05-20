@@ -9,6 +9,7 @@ import {
 import { getMinerBySlug, getTiersForMiner, TIERS } from "@/lib/miners";
 import { isValidHLAddress, isValidEvmAddress, isValidEmail } from "@/lib/validation";
 import { USDC_ADDRESS, USDC_DECIMALS, USDC_EIP712_NAME, USDC_EIP712_VERSION, BASE_NETWORK, FACILITATOR_URL, BASESCAN_URL } from "@/lib/constants";
+import { toUsdcAtomicString, toUsdcDecimalString } from "@/lib/usdc-amount";
 import { getDb } from "@/lib/db";
 import {
   users,
@@ -36,7 +37,10 @@ import { checkRegistrationCap } from "@/lib/registration-capacity";
 import {
   evaluateRegistrationPricing,
   applyCouponToAmount,
-  recordRegistrationCouponRedemption,
+  reserveCouponRedemption,
+  finalizeCouponRedemption,
+  releaseCouponRedemption,
+  COUPON_RESERVATION_ERRORS,
 } from "@/lib/registration-pricing";
 
 const USE_TESTNET = process.env.USE_TESTNET === "true";
@@ -86,12 +90,14 @@ function buildPaymentRequirements(miner, tier, requestUrl, overridePrice) {
 
   const extra = { name: USDC_EIP712_NAME, version: USDC_EIP712_VERSION };
 
+  const atomicAmount = toUsdcAtomicString(price);
+
   return {
     requirements: {
       scheme: "exact",
       network: BASE_NETWORK,
       asset: USDC_ADDRESS,
-      amount: String(price * 10 ** USDC_DECIMALS),
+      amount: atomicAmount,
       payTo: minerWallet,
       maxTimeoutSeconds: 300,
       extra,
@@ -103,7 +109,7 @@ function buildPaymentRequirements(miner, tier, requestUrl, overridePrice) {
           scheme: "exact",
           network: BASE_NETWORK,
           asset: USDC_ADDRESS,
-          amount: String(price * 10 ** USDC_DECIMALS),
+          amount: atomicAmount,
           payTo: minerWallet,
           maxTimeoutSeconds: 300,
           extra,
@@ -168,6 +174,97 @@ async function resolveAttributionFromCookie(db) {
     clickId: decoded.clickId,
     firstTouchAt: new Date(decoded.firstTouchAt * 1000),
   };
+}
+
+async function resolveAffiliateIdForUtm(db, { affiliateUtm, reqId }) {
+  if (!affiliateUtm) return null;
+  try {
+    const [aff] = await db
+      .select({ id: affiliates.id })
+      .from(affiliates)
+      .where(and(eq(affiliates.slug, affiliateUtm), eq(affiliates.isActive, true)))
+      .limit(1);
+    const resolvedAffiliateId = aff ? aff.id : null;
+    console.info("[REGISTRATION] affiliate lookup", { reqId, affiliateUtm, resolvedAffiliateId });
+    return resolvedAffiliateId;
+  } catch (err) {
+    await reportError(err, {
+      source: "api/register",
+      metadata: { step: "affiliate_lookup", reqId, affiliateUtm },
+    });
+    return null;
+  }
+}
+
+async function upsertRegistrationUser(
+  db,
+  { hlAddress, email, affiliateUtm, resolvedAffiliateId, reqId },
+) {
+  let userId = null;
+  let didAttributeAffiliate = false;
+  try {
+    const [existing] = await db
+      .select()
+      .from(users)
+      .where(eq(users.wallet, hlAddress))
+      .limit(1);
+
+    if (existing) {
+      userId = existing.id;
+      const updates = {};
+      if (email && email !== existing.email) updates.email = email;
+      if (affiliateUtm && !existing.utmCode) updates.utmCode = affiliateUtm;
+      if (resolvedAffiliateId && !existing.affiliateId) {
+        updates.affiliateId = resolvedAffiliateId;
+        didAttributeAffiliate = true;
+      }
+      if (Object.keys(updates).length > 0) {
+        await db.update(users).set({ ...updates, updatedAt: new Date() }).where(eq(users.id, existing.id));
+      }
+      console.info("[REGISTRATION] user upsert — existing", {
+        reqId,
+        userId,
+        updatedFields: Object.keys(updates),
+      });
+    } else {
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          wallet: hlAddress,
+          email: email || null,
+          utmCode: affiliateUtm || null,
+          affiliateId: resolvedAffiliateId,
+        })
+        .returning({ id: users.id });
+      userId = newUser.id;
+      if (resolvedAffiliateId) didAttributeAffiliate = true;
+      console.info("[REGISTRATION] user upsert — inserted new", { reqId, userId });
+    }
+
+    if (didAttributeAffiliate && resolvedAffiliateId) {
+      await db
+        .update(affiliates)
+        .set({
+          useCount: sql`${affiliates.useCount} + 1`,
+          updatedAt: new Date(),
+        })
+        .where(eq(affiliates.id, resolvedAffiliateId));
+    }
+  } catch (err) {
+    await reportCritical(err, {
+      source: "api/register",
+      metadata: {
+        step: "user_upsert",
+        reqId,
+        wallet: hlAddress,
+        email,
+        dbError: err?.message,
+      },
+    });
+    await flushErrors();
+  }
+
+  return { userId, didAttributeAffiliate };
 }
 
 export async function POST(request) {
@@ -551,6 +648,121 @@ export async function POST(request) {
     return NextResponse.json({ error: "Miner wallet not configured" }, { status: 500 });
   }
 
+  const resolvedAffiliateId = await resolveAffiliateIdForUtm(db, {
+    affiliateUtm,
+    reqId,
+  });
+  const { userId } = await upsertRegistrationUser(db, {
+    hlAddress,
+    email,
+    affiliateUtm,
+    resolvedAffiliateId,
+    reqId,
+  });
+
+  let couponReservationId = null;
+
+  async function reserveCouponSlotIfNeeded() {
+    if (!couponMeta?.couponId) return null;
+    if (couponReservationId) return null;
+
+    if (!Number.isFinite(userId)) {
+      await reportCritical(
+        new Error("Coupon applied but userId could not be resolved"),
+        {
+          source: "api/register",
+          metadata: {
+            step: "coupon_reserve_no_user",
+            reqId,
+            hlAddress,
+            couponId: couponMeta.couponId,
+          },
+        },
+      );
+      await flushErrors();
+      return NextResponse.json(
+        { error: "Could not reserve coupon — please retry." },
+        { status: 500 },
+      );
+    }
+
+    const reservation = await reserveCouponRedemption(db, {
+      couponId: couponMeta.couponId,
+      userId,
+    });
+    if (!reservation.ok) {
+      const status =
+        reservation.code === COUPON_RESERVATION_ERRORS.ALREADY_REDEEMED ||
+        reservation.code === COUPON_RESERVATION_ERRORS.LIMIT_REACHED
+          ? 409
+          : 500;
+      console.warn("[REGISTRATION] coupon reservation refused", {
+        reqId,
+        code: reservation.code,
+        couponId: couponMeta.couponId,
+        userId,
+      });
+      if (status === 500) {
+        await reportCritical(
+          new Error(reservation.error || "Coupon reservation failed"),
+          {
+            source: "api/register",
+            metadata: {
+              step: "coupon_reserve",
+              reqId,
+              code: reservation.code,
+              couponId: couponMeta.couponId,
+              userId,
+            },
+          },
+        );
+        await flushErrors();
+      }
+      return NextResponse.json(
+        { error: reservation.error || "Coupon could not be reserved." },
+        { status },
+      );
+    }
+    couponReservationId = reservation.redemptionId;
+    console.info("[REGISTRATION] coupon redemption reserved", {
+      reqId,
+      couponId: couponMeta.couponId,
+      userId,
+      redemptionId: couponReservationId,
+    });
+    return null;
+  }
+
+  async function releaseReservationIfHeld(reason) {
+    if (!couponReservationId) return;
+    const released = await releaseCouponRedemption(db, {
+      redemptionId: couponReservationId,
+    });
+    if (!released.ok) {
+      await reportCritical(
+        new Error(`Coupon reservation release failed: ${released.error}`),
+        {
+          source: "api/register",
+          metadata: {
+            step: "coupon_release",
+            reqId,
+            reason,
+            redemptionId: couponReservationId,
+            couponId: couponMeta?.couponId,
+            userId,
+          },
+        },
+      );
+    } else {
+      console.info("[REGISTRATION] coupon reservation released", {
+        reqId,
+        reason,
+        redemptionId: couponReservationId,
+      });
+    }
+    couponReservationId = null;
+  }
+
   let txHash;
   let effectivePayoutAddress;
   let settleResult = null;
@@ -571,6 +783,8 @@ export async function POST(request) {
         { status: 400 },
       );
     }
+    const reserveResp = await reserveCouponSlotIfNeeded();
+    if (reserveResp) return reserveResp;
     txHash = `free-${Date.now()}-${hlAddress.slice(2, 10).toLowerCase()}`;
     effectivePayoutAddress = payoutAddress || hlAddress;
     console.info("[REGISTRATION] free path — skipping payment verification", {
@@ -632,6 +846,11 @@ export async function POST(request) {
         source: "api/register",
         metadata: { step: "tx_hash_duplicate_check", reqId, hlTransferHash, hlAddress, minerSlug },
       });
+    }
+
+    {
+      const reserveResp = await reserveCouponSlotIfNeeded();
+      if (reserveResp) return reserveResp;
     }
 
     // Verify the transfer on Hyperliquid — exact hash match only, no sender-based fallback
@@ -771,6 +990,7 @@ export async function POST(request) {
           actual: transferAmount,
           devTest: trueDevTest,
         });
+        await releaseReservationIfHeld("hl_amount_underpaid");
         return NextResponse.json(
           { error: "Transfer amount does not match the expected price." },
           { status: 400 },
@@ -784,6 +1004,7 @@ export async function POST(request) {
           txHash: matchedUpdate.hash,
           transferTime: matchedUpdate.time,
         });
+        await releaseReservationIfHeld("hl_transfer_too_old");
         return NextResponse.json(
           { error: "Transfer is too old. Please make a new transfer." },
           { status: 400 },
@@ -821,6 +1042,7 @@ export async function POST(request) {
         },
       });
       await flushErrors();
+      await releaseReservationIfHeld("hl_transfer_unverified");
       return NextResponse.json(
         { error: "Could not verify Hyperliquid transfer. Ensure you sent the correct amount from your registered wallet." },
         { status: 400 },
@@ -881,6 +1103,11 @@ export async function POST(request) {
       x402Version: paymentPayload?.x402Version,
     });
 
+    {
+      const reserveResp = await reserveCouponSlotIfNeeded();
+      if (reserveResp) return reserveResp;
+    }
+
     // Recompute the discount against the actual signer (truth source). If the
     // client lied about the payer to get cheaper requirements, the rebuilt
     // requirements will charge full price and the signed payload will fail
@@ -931,6 +1158,7 @@ export async function POST(request) {
         },
       });
       await flushErrors();
+      await releaseReservationIfHeld("x402_verify_threw");
       return NextResponse.json(
         { error: friendlyMsg },
         { status: isAuthFailure ? 503 : 502 },
@@ -951,6 +1179,7 @@ export async function POST(request) {
         },
       });
       await flushErrors();
+      await releaseReservationIfHeld("x402_verify_invalid");
       const encoded = encodePaymentRequiredHeader(paymentRequired);
       return new Response(
         JSON.stringify({ ...paymentRequired, error: verifyResult?.invalidReason || "Payment verification failed" }),
@@ -986,6 +1215,7 @@ export async function POST(request) {
         },
       });
       await flushErrors();
+      await releaseReservationIfHeld("x402_settle_threw");
       return NextResponse.json(
         {
           error: "Payment settlement failed",
@@ -1009,6 +1239,7 @@ export async function POST(request) {
         },
       });
       await flushErrors();
+      await releaseReservationIfHeld("x402_settle_not_success");
       return NextResponse.json(
         {
           error: "Payment settlement was not successful",
@@ -1028,94 +1259,6 @@ export async function POST(request) {
     txHash,
     effectivePayoutAddress,
   });
-
-  // Resolve affiliate (if any) before upserting user
-  let resolvedAffiliateId = null;
-  if (affiliateUtm) {
-    try {
-      const [aff] = await db
-        .select({ id: affiliates.id })
-        .from(affiliates)
-        .where(and(eq(affiliates.slug, affiliateUtm), eq(affiliates.isActive, true)))
-        .limit(1);
-      if (aff) resolvedAffiliateId = aff.id;
-      console.info("[REGISTRATION] affiliate lookup", { reqId, affiliateUtm, resolvedAffiliateId });
-    } catch (err) {
-      await reportError(err, {
-        source: "api/register",
-        metadata: { step: "affiliate_lookup", reqId, affiliateUtm },
-      });
-    }
-  }
-
-  // Key users by hl_address (stable trading wallet) so changing the payout
-  // wallet between challenges doesn't fork into a second user row and orphan
-  // KYC / affiliate attribution. Matches testnet-register and vanta-sync.
-  let userId = null;
-  let didAttributeAffiliate = false;
-  try {
-    const [existing] = await db
-      .select()
-      .from(users)
-      .where(eq(users.wallet, hlAddress))
-      .limit(1);
-
-    if (existing) {
-      userId = existing.id;
-      const updates = {};
-      if (email && email !== existing.email) updates.email = email;
-      if (affiliateUtm && !existing.utmCode) updates.utmCode = affiliateUtm;
-      if (resolvedAffiliateId && !existing.affiliateId) {
-        updates.affiliateId = resolvedAffiliateId;
-        didAttributeAffiliate = true;
-      }
-      if (Object.keys(updates).length > 0) {
-        await db.update(users).set({ ...updates, updatedAt: new Date() }).where(eq(users.id, existing.id));
-      }
-      console.info("[REGISTRATION] user upsert — existing", {
-        reqId,
-        userId,
-        updatedFields: Object.keys(updates),
-      });
-    } else {
-      const [newUser] = await db
-        .insert(users)
-        .values({
-          wallet: hlAddress,
-          email: email || null,
-          utmCode: affiliateUtm || null,
-          affiliateId: resolvedAffiliateId,
-        })
-        .returning({ id: users.id });
-      userId = newUser.id;
-      if (resolvedAffiliateId) didAttributeAffiliate = true;
-      console.info("[REGISTRATION] user upsert — inserted new", { reqId, userId });
-    }
-
-    if (didAttributeAffiliate && resolvedAffiliateId) {
-      await db
-        .update(affiliates)
-        .set({
-          useCount: sql`${affiliates.useCount} + 1`,
-          updatedAt: new Date(),
-        })
-        .where(eq(affiliates.id, resolvedAffiliateId));
-    }
-  } catch (err) {
-    await reportCritical(err, {
-      source: "api/register",
-      metadata: {
-        step: "user_upsert",
-        reqId,
-        wallet: hlAddress,
-        email,
-        txHash,
-        dbError: err?.message,
-      },
-    });
-    await flushErrors();
-    // Continue — registration insert can still work with userId = null
-  }
 
   const appliedPromoCode = couponMeta?.code ?? null;
   let attributionRowId = null;
@@ -1251,6 +1394,15 @@ export async function POST(request) {
               },
             });
             await flushErrors();
+            if (couponReservationId) {
+              await finalizeCouponRedemption(db, {
+                redemptionId: couponReservationId,
+                paymentIntentId: typeof txHash === "string" ? txHash : null,
+              });
+              couponReservationId = null;
+            }
+          } else {
+            await releaseReservationIfHeld("free_miner_duplicate");
           }
           return NextResponse.json(
             { error: "This HL address is already registered with this miner." },
@@ -1300,6 +1452,7 @@ export async function POST(request) {
       hlAddress,
       statusDetail,
     });
+    await releaseReservationIfHeld("free_miner_call_failed");
     return NextResponse.json(
       {
         error: "Registration failed",
@@ -1322,7 +1475,7 @@ export async function POST(request) {
     accountSize,
     payoutAddress: effectivePayoutAddress,
     tierIndex,
-    priceUsdc: String(effectivePrice),
+    priceUsdc: toUsdcDecimalString(effectivePrice),
     txHash,
     status: registered ? "registered" : "pending",
     statusDetail: {
@@ -1389,7 +1542,7 @@ export async function POST(request) {
           affiliateId: attribution?.affiliateId ?? null,
           entityMinerHotkey: attribution?.entityMinerHotkey ?? null,
           promoCode: appliedPromoCode,
-          amountUsdc: String(effectivePrice),
+          amountUsdc: toUsdcDecimalString(effectivePrice),
         })
         .onConflictDoNothing({
           target: registrationAttributions.registrationId,
@@ -1407,24 +1560,35 @@ export async function POST(request) {
     }
   }
 
-  if (!insertErr && registrationId != null && userId != null && couponMeta?.couponId) {
-    const redemption = await recordRegistrationCouponRedemption(db, {
-      couponId: couponMeta.couponId,
-      userId,
+  if (couponReservationId) {
+    const finalize = await finalizeCouponRedemption(db, {
+      redemptionId: couponReservationId,
       paymentIntentId: typeof txHash === "string" ? txHash : null,
     });
-    if (!redemption.ok) {
-      await reportError(new Error(redemption.error || "Coupon redemption failed"), {
-        source: "api/register",
-        severity: SEVERITY.WARNING,
-        metadata: {
-          step: "coupon_redemption_after_insert",
-          reqId,
-          registrationId,
-          userId,
-          couponId: couponMeta.couponId,
-          txHash,
+    if (!finalize.ok) {
+      await reportError(
+        new Error(finalize.error || "Coupon redemption finalize failed"),
+        {
+          source: "api/register",
+          severity: SEVERITY.WARNING,
+          metadata: {
+            step: "coupon_redemption_finalize",
+            reqId,
+            registrationId,
+            userId,
+            couponId: couponMeta?.couponId,
+            redemptionId: couponReservationId,
+            txHash,
+          },
         },
+      );
+    } else {
+      couponReservationId = null;
+      console.info("[REGISTRATION] coupon redemption finalized", {
+        reqId,
+        registrationId,
+        couponId: couponMeta?.couponId,
+        txHash,
       });
     }
   }
