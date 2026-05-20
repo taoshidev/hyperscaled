@@ -9,8 +9,9 @@ import {
   Warning,
 } from '@phosphor-icons/react'
 import RulesTable from '@/components/shared/RulesTable'
-import { EVAL_RULES, getFundedRules, SCALING_PATH, BUYING_POWER_BY_SIZE, LEVERAGE_LIMITS, FEE_RULES, TRADABLE_PAIRS } from '@/lib/constants'
+import { EVAL_RULES, getFundedRules, SCALING_PATH, BUYING_POWER_BY_SIZE, WEIGHT_LIMITS, FEE_RULES, TRADABLE_PAIRS } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
+import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
 
 /* ───────────────────────────────────────────────
@@ -19,11 +20,13 @@ import { trackCtaClick } from '@/lib/analytics'
 const TOC_SECTIONS = [
   { id: 'challenge', label: 'Challenge' },
   { id: 'pairs', label: 'Available Pairs' },
-  { id: 'leverage', label: 'Leverage' },
+  { id: 'weight-tracking', label: 'Weight Tracking' },
+  { id: 'tracking', label: 'Tracking' },
   { id: 'fees', label: 'Fees' },
   { id: 'scaled', label: 'Funded Account' },
   { id: 'scaling', label: 'Scaling' },
   { id: 'disqualification', label: 'Disqualification' },
+  { id: 'best-practices', label: 'Best Practices' },
   { id: 'kyc', label: 'KYC & Payouts' },
   { id: 'protocol', label: 'Protocol' },
 ]
@@ -236,36 +239,39 @@ function AvailablePairsSection() {
 }
 
 /* ───────────────────────────────────────────────
-   Section 2c — Leverage & Buying Power
+   Section 2c — Weight Tracking & Limits
    ─────────────────────────────────────────────── */
-function LeverageSection() {
+function WeightTrackingSection() {
   const brand = useBrand()
   return (
-    <section id="leverage" className="px-6 pb-20 scroll-mt-[110px]">
+    <section id="weight-tracking" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
-          Leverage & Buying Power
+          Weight Tracking & Limits
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed">
-          {brand.name} expresses leverage as <span className="text-white font-medium">buying power</span> rather than traditional leverage ratios. The limits below define how much of your account balance you can deploy — per single position, and across your entire portfolio at&nbsp;once.
+          {brand.name} mirrors a trader's Hyperliquid positions by replicating each position's target portfolio weight. HL trades are never blocked or modified — {brand.name} only adjusts what it copies on its own&nbsp;side.
+        </p>
+        <p className="mt-3 text-sm sm:text-base text-zinc-400 leading-relaxed">
+          {brand.name} enforces two independent weight limits when&nbsp;tracking:
         </p>
         <ul className="mt-4 space-y-2 text-sm text-zinc-400">
           <li>
-            <span className="text-white font-medium">Single Position Buying Power</span> — the maximum you can allocate to any trading pair at a&nbsp;time.
+            <span className="text-white font-medium">Per-pair limit</span> — max exposure to a single trade pair. When HL exposure is above the limit, the copied position is capped at the limit; subsequent HL changes in that pair are only mirrored once HL exposure crosses back below the&nbsp;limit.
           </li>
           <li>
-            <span className="text-white font-medium">Total Portfolio Buying Power</span> — the maximum combined exposure you can have across all open positions at&nbsp;once.
+            <span className="text-white font-medium">Portfolio limit</span> — max aggregate exposure across all tracked positions. When the portfolio is at the limit, any further increase is clipped to remaining portfolio headroom, or skipped if no headroom exists. Headroom frees up when an existing position is&nbsp;reduced.
           </li>
         </ul>
         <div className="mt-5 rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-4">
           <p className="text-sm text-teal-300">
-            All limits are enforced automatically by the&nbsp;platform.
+            All limits are enforced automatically by the platform. HL is the source of truth — {brand.name} mirrors HL as closely as its limits allow, and resumes tracking as soon as weight exposure re-enters the allowed&nbsp;range.
           </p>
         </div>
 
-        {/* Buying power by account size */}
+        {/* Weight tiers by account size */}
         <h3 className="mt-10 mb-4 text-xs text-zinc-500 tracking-widest uppercase font-medium">
-          Buying Power by Account Size
+          Weight Tiers by Account Size
         </h3>
 
         {/* Desktop */}
@@ -274,8 +280,8 @@ function LeverageSection() {
             <thead>
               <tr className="border-b border-white/[0.06] bg-white/[0.02]">
                 <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Starting Account Size</th>
-                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Challenge Leverage Tier</th>
-                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Funded Leverage Tier</th>
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Challenge Weight Tier</th>
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Funded Weight Tier</th>
               </tr>
             </thead>
             <tbody>
@@ -313,9 +319,9 @@ function LeverageSection() {
           ))}
         </div>
 
-        {/* Leverage limits */}
+        {/* Weight limits by tier */}
         <h3 className="mt-10 mb-4 text-xs text-zinc-500 tracking-widest uppercase font-medium">
-          Leverage Limits by Tier
+          Weight Limits by Tier
         </h3>
 
         {/* Desktop */}
@@ -323,19 +329,19 @@ function LeverageSection() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/[0.06] bg-white/[0.02]">
-                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Leverage Tier</th>
-                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Single Position</th>
-                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Portfolio</th>
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Weight Tier</th>
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Per-Pair Limit</th>
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Portfolio Limit</th>
               </tr>
             </thead>
             <tbody>
-              {LEVERAGE_LIMITS.map((row, i) => (
+              {WEIGHT_LIMITS.map((row, i) => (
                 <tr
                   key={row.tier}
-                  className={i < LEVERAGE_LIMITS.length - 1 ? 'border-b border-white/[0.04]' : ''}
+                  className={i < WEIGHT_LIMITS.length - 1 ? 'border-b border-white/[0.04]' : ''}
                 >
                   <td className="px-4 py-3 text-white font-medium whitespace-nowrap">{row.tier}</td>
-                  <td className="px-4 py-3 text-zinc-400 font-mono">{row.positional}</td>
+                  <td className="px-4 py-3 text-zinc-400 font-mono">{row.perPair}</td>
                   <td className="px-4 py-3 text-zinc-400 font-mono">{row.portfolio}</td>
                 </tr>
               ))}
@@ -345,18 +351,18 @@ function LeverageSection() {
 
         {/* Mobile */}
         <div className="md:hidden space-y-3">
-          {LEVERAGE_LIMITS.map((row) => (
+          {WEIGHT_LIMITS.map((row) => (
             <div
               key={row.tier}
               className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-4"
             >
               <div className="text-white font-medium text-sm mb-2">{row.tier}</div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-zinc-500">Single position</span>
-                <span className="text-zinc-200 font-mono">{row.positional}</span>
+                <span className="text-zinc-500">Per-pair limit</span>
+                <span className="text-zinc-200 font-mono">{row.perPair}</span>
               </div>
               <div className="flex items-center justify-between text-sm mt-1">
-                <span className="text-zinc-500">Portfolio</span>
+                <span className="text-zinc-500">Portfolio limit</span>
                 <span className="text-zinc-200 font-mono">{row.portfolio}</span>
               </div>
             </div>
@@ -368,7 +374,52 @@ function LeverageSection() {
 }
 
 /* ───────────────────────────────────────────────
-   Section 2d — Spread, Fees & Slippage
+   Section 2d — Tracking Methodology
+   ─────────────────────────────────────────────── */
+function TrackingMethodologySection() {
+  const brand = useBrand()
+  return (
+    <section id="tracking" className="px-6 pb-20 scroll-mt-[110px]">
+      <div className="max-w-[900px] mx-auto">
+        <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
+          Tracking Methodology
+        </span>
+
+        {/* Order Fills */}
+        <h3 className="mt-6 mb-3 text-sm font-semibold text-white">Order Fills</h3>
+        <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
+          {brand.name} tracks trade executions, not pending orders. Open limit orders do not appear in your {brand.name} account until they fill on Hyperliquid. Once a fill&nbsp;occurs:
+        </p>
+        <ul className="mt-3 space-y-2 text-sm text-zinc-400">
+          <li>
+            <span className="text-white font-medium">Market orders</span> — mirrored at a price simulated from Hyperliquid's live L2 orderbook, walking the book to compute the average fill price for the {brand.name} order size. This reflects realistic execution under current liquidity and may differ from your actual Hyperliquid fill&nbsp;price.
+          </li>
+          <li>
+            <span className="text-white font-medium">Limit orders</span> — mirrored at the original limit price, with zero slippage (subject to change in future&nbsp;versions).
+          </li>
+        </ul>
+
+        {/* Weight Definition */}
+        <h3 className="mt-8 mb-3 text-sm font-semibold text-white">Weight Definition</h3>
+        <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
+          Each position's weight is its <span className="text-white font-medium">notional value</span> (not margin) expressed as a percentage of your total HL account value — including perpetual account equity (margin + unrealized PnL) and available spot&nbsp;balance.
+        </p>
+        <p className="mt-3 text-sm sm:text-base text-zinc-400 leading-relaxed">
+          Weighting by notional ensures {brand.name} replicates your portfolio-level returns, not just your trading actions. For a given notional, the leverage or margin used on Hyperliquid has no effect on what {brand.name} mirrors. {brand.name} places no restrictions on your Hyperliquid trading, including leverage and margin mode choice. Note that higher leverage still increases liquidation risk on Hyperliquid itself. If a position is liquidated on Hyperliquid, it is also closed in your {brand.name}&nbsp;account.
+        </p>
+
+        {/* 5-Second Cooldown */}
+        <h3 className="mt-8 mb-3 text-sm font-semibold text-white">5-Second Cooldown</h3>
+        <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
+          Your {brand.name} account mirrors each Hyperliquid fill immediately, subject to a <span className="text-white font-medium">5-second cooldown</span> between consecutive updates. If multiple fills occur within 5 seconds, only the first is mirrored immediately; once the cooldown expires, {brand.name} reads your latest cumulative HL position and applies a single update reflecting the net result — regardless of how many fills happened in&nbsp;between.
+        </p>
+      </div>
+    </section>
+  )
+}
+
+/* ───────────────────────────────────────────────
+   Section 2e — Spread, Fees & Slippage
    ─────────────────────────────────────────────── */
 function FeesSection() {
   const brand = useBrand()
@@ -379,7 +430,7 @@ function FeesSection() {
           Spread, Fees & Slippage
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
-          The only trading cost charged by {brand.name} is a flat transaction fee. Spread, slippage, and funding come directly from the underlying Hyperliquid&nbsp;orderbook.
+          The following costs are applied to your {brand.name} account, consistent with real trading on&nbsp;Hyperliquid.
         </p>
         <RulesTable rules={FEE_RULES} />
       </div>
@@ -601,6 +652,57 @@ function DisqualificationSection() {
 }
 
 /* ───────────────────────────────────────────────
+   Section 5b — Best Practices
+   ─────────────────────────────────────────────── */
+
+const BEST_PRACTICES = [
+  {
+    title: 'Depositing or withdrawing from your HL account while positions are open',
+    body: 'Position weights are calculated as a percentage of your total HL account value. Changing this value while positions are open shifts the weight of every open position, which can trigger unintended mirrored trades or produce incorrect position sizes. We recommend flattening or closing all tracked positions before adjusting your HL balance.',
+  },
+  {
+    title: 'Mixing Hyperscaled tracking with unrelated HL trading activity',
+    body: 'Hyperscaled only tracks a curated set of liquid perpetuals. Activity outside this set still affects your total HL account value and therefore distorts the weights Hyperscaled sees for tracked pairs. To isolate Hyperscaled from this noise, we strongly recommend using a dedicated wallet or a separate HL subaccount exclusively for Hyperscaled tracking.',
+  },
+  {
+    title: 'High-frequency trading on Hyperliquid',
+    body: 'Hyperscaled enforces a 5-second cooldown between updates, and there is inherent latency across HL fill execution, orderbook data updates, and on-chain processing. As a result, HFT-style activity on Hyperliquid is unlikely to be accurately reflected in Hyperscaled. Fills will be consolidated or missed entirely, and your Hyperscaled performance is likely to diverge significantly from your Hyperliquid results.',
+  },
+]
+
+function BestPracticesSection() {
+  const brand = useBrand()
+  return (
+    <section id="best-practices" className="px-6 pb-20 scroll-mt-[110px]">
+      <div className="max-w-[900px] mx-auto">
+        <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
+          Best Practices
+        </span>
+        <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
+          The following behaviors are not blocked or restricted by {brand.name}, but each may significantly degrade your {brand.name} performance. We strongly recommend avoiding&nbsp;them.
+        </p>
+        <div className="space-y-4">
+          {BEST_PRACTICES.map((item) => (
+            <div
+              key={item.title}
+              className="rounded-xl border border-amber-400/20 bg-amber-400/[0.03] p-5"
+            >
+              <div className="flex items-start gap-3">
+                <Warning size={20} weight="fill" className="text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-semibold text-amber-300 mb-2">{item.title}</h4>
+                  <p className="text-sm text-zinc-400 leading-relaxed">{item.body}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ───────────────────────────────────────────────
    Section 6 — KYC and Payout Eligibility
    ─────────────────────────────────────────────── */
 function KYCSection() {
@@ -633,6 +735,7 @@ function KYCSection() {
 function ProtocolSection() {
   const brand = useBrand()
   const brandHref = useBrandHref()
+  const withQS = useWithPreservedQuery()
   return (
     <section id="protocol" className="px-6 pb-24 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
@@ -650,7 +753,7 @@ function ProtocolSection() {
 
         <div className="mt-8">
           <Link
-            href={brandHref('/register')}
+            href={withQS(brandHref('/register'))}
             onClick={() => trackCtaClick({ label: 'Start Your Challenge', location: 'rules_bottom' })}
             className="text-sm text-teal-400 hover:text-teal-300 transition-colors inline-flex items-center gap-1.5"
           >
@@ -676,11 +779,13 @@ export default function RulesPage() {
       <div data-toc-content>
         <EvalRulesSection />
         <AvailablePairsSection />
-        <LeverageSection />
+        <WeightTrackingSection />
+        <TrackingMethodologySection />
         <FeesSection />
         <FundedRulesSection />
         <ScalingRulesSection />
         <DisqualificationSection />
+        <BestPracticesSection />
         <KYCSection />
         <ProtocolSection />
       </div>

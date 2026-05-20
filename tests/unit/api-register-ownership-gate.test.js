@@ -31,6 +31,15 @@ vi.mock("@/lib/miners", () => ({
 
 const dbInsertMock = vi.fn().mockResolvedValue(undefined);
 const dbSelectMock = vi.fn();
+// Promise-like that also exposes .returning() / .onConflictDoNothing() so the
+// real route — which now chains those methods for registration_id capture
+// and first-touch attribution upserts — can be exercised by these tests.
+function makeInsertChain(insertResult) {
+  const chain = Promise.resolve(insertResult);
+  chain.returning = () => Promise.resolve([{ id: 1 }]);
+  chain.onConflictDoNothing = () => makeInsertChain(insertResult);
+  return chain;
+}
 vi.mock("@/lib/db", () => ({
   getDb: async () => ({
     select: () => ({
@@ -38,16 +47,40 @@ vi.mock("@/lib/db", () => ({
         where: () => ({
           limit: () => dbSelectMock(),
         }),
+        leftJoin: () => ({
+          where: () => ({ limit: () => dbSelectMock() }),
+        }),
       }),
     }),
-    insert: () => ({ values: (...args) => dbInsertMock(...args) }),
+    insert: () => ({
+      values: (...args) => makeInsertChain(dbInsertMock(...args)),
+    }),
     update: () => ({ set: () => ({ where: () => Promise.resolve() }) }),
   }),
 }));
 vi.mock("@/lib/db/schema", () => ({
-  users: {},
-  registrations: {},
-  affiliates: {},
+  users: { id: "users.id" },
+  registrations: { id: "registrations.id" },
+  affiliates: { id: "affiliates.id", useCount: "affiliates.useCount" },
+  entityMiners: { hotkey: "entity_miners.hotkey", slug: "entity_miners.slug" },
+  entityTiers: {
+    maxFreeRegistrations: "max_free_registrations",
+    hotkey: "hotkey",
+    accountSize: "account_size",
+    isActive: "is_active",
+    priceUsdc: "price_usdc",
+  },
+  referralAttributions: {
+    id: "referral_attributions.id",
+    userId: "referral_attributions.user_id",
+  },
+  registrationAttributions: {
+    id: "registration_attributions.id",
+    registrationId: "registration_attributions.registration_id",
+  },
+}));
+vi.mock("next/headers", () => ({
+  cookies: async () => ({ get: () => undefined }),
 }));
 
 vi.mock("@/lib/validator", () => ({
@@ -143,6 +176,7 @@ describe("POST /api/register — wallet ownership gate", () => {
           accountSize: 1000,
           tierIndex: 0,
           paymentMethod: "free",
+          email: "user@example.com",
         },
       }),
     );
@@ -162,6 +196,7 @@ describe("POST /api/register — wallet ownership gate", () => {
           accountSize: 1000,
           tierIndex: 0,
           paymentMethod: "free",
+          email: "user@example.com",
         },
         headers: {
           "x-wallet": HL_ADDRESS,
@@ -185,6 +220,7 @@ describe("POST /api/register — wallet ownership gate", () => {
           accountSize: 1000,
           tierIndex: 0,
           paymentMethod: "free",
+          email: "user@example.com",
         },
         headers: {
           "x-wallet": OTHER_WALLET,
@@ -208,6 +244,7 @@ describe("POST /api/register — wallet ownership gate", () => {
           accountSize: 1000,
           tierIndex: 0,
           paymentMethod: "free",
+          email: "user@example.com",
         },
         headers: {
           "x-wallet": HL_ADDRESS,
@@ -237,6 +274,7 @@ describe("POST /api/register — wallet ownership gate", () => {
           accountSize: 1000,
           tierIndex: 0,
           paymentMethod: "free",
+          email: "user@example.com",
         },
         headers: {
           "x-wallet": HL_ADDRESS.toUpperCase(),
@@ -259,6 +297,7 @@ describe("POST /api/register — wallet ownership gate", () => {
           hlAddress: HL_ADDRESS,
           accountSize: 1000,
           tierIndex: 0,
+          email: "user@example.com",
           // paymentMethod intentionally omitted → x402 path
         },
       }),
@@ -277,6 +316,7 @@ describe("POST /api/register — message binding", () => {
       accountSize: 1000,
       tierIndex: 0,
       paymentMethod: "free",
+      email: "user@example.com",
     };
     const bodyText = JSON.stringify(bodyObj);
 

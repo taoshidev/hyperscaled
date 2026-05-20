@@ -25,3 +25,7 @@ npm-debug.log*
 playwright-report/
 test-results/
 .playwright-cache/
+
+# Claude Code worktrees
+.claude/worktrees/
+.claire/

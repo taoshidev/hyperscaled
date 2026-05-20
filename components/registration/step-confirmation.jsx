@@ -243,6 +243,10 @@ const itemVariants = {
 const POLL_INTERVAL_MS = 5000;
 
 export function StepConfirmation({ selectedTier, hlAddress, txHash, registrationStatus, paymentMethod, brandVariant }) {
+  const dashboardHref = (path) => {
+    const base = path;
+    return hlAddress ? `${base}?addr=${encodeURIComponent(hlAddress)}` : base;
+  };
   const brand = useBrand();
   const brandHref = useBrandHref();
   const isHLPayment = paymentMethod === "hyperliquid" || paymentMethod === "eip712";
@@ -342,7 +346,7 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
                 </p>
               </div>
               <Link
-                href={brandHref("/dashboard")}
+                href={brandHref(dashboardHref("/dashboard"))}
                 className="shiny-cta h-11 w-full max-w-sm flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <span className="inline-flex items-center gap-2 text-sm font-semibold">
@@ -457,7 +461,7 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
         {/* Dashboard link — secondary, below receipt */}
         {!extensionDetected && (
           <Link
-            href={brandHref("/dashboard")}
+            href={brandHref(dashboardHref("/dashboard"))}
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-[color] duration-200 min-h-11 mt-4"
           >
             Go to Dashboard

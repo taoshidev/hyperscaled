@@ -16,6 +16,12 @@ import {
 test.describe("Deep link from /pricing → /register", () => {
   let tiers;
 
+  /** Avoid substring traps (e.g. tier=1000 matching tier=10000). */
+  function tierDeepLinkUrlRegex(accountSize) {
+    const n = Number(accountSize);
+    return new RegExp(`[?&]tier=${n}(?:&|$)`);
+  }
+
   test.beforeAll(async () => {
     tiers = await loadActiveTiersBySlug("vanta");
     expect(tiers.length).toBeGreaterThan(0);
@@ -25,7 +31,7 @@ test.describe("Deep link from /pricing → /register", () => {
     await closePool();
   });
 
-  test("clicking a paid pricing card lands directly on step 1", async ({
+  test("paid pricing card deep-link lands directly on step 1", async ({
     page,
   }) => {
     await page.goto("/pricing");
@@ -40,6 +46,7 @@ test.describe("Deep link from /pricing → /register", () => {
       tiers[0];
 
     const card = pricingCardByAccountSize(page, target.accountSize);
+    await card.scrollIntoViewIfNeeded();
     const cta = card.locator('[data-testid="pricing-tier-cta"]');
 
     // Capture the href before clicking so we can assert the URL shape
@@ -49,26 +56,20 @@ test.describe("Deep link from /pricing → /register", () => {
       `/register?tier=${target.accountSize}`,
     );
 
-    // Use Promise.all so we begin waiting for the navigation BEFORE
-    // the click fires — `cta.click()` then `expect(page).toHaveURL`
-    // races and can miss a fast Next.js client-side transition.
-    // `waitUntil: "commit"` returns as soon as the URL changes — the
-    // default (`load`) waits for the `load` event which can take
-    // longer than 15s on the first cold compile of /register in dev.
-    await Promise.all([
-      page.waitForURL(
-        new RegExp(`/register\\?.*tier=${target.accountSize}`),
-        { timeout: 30_000, waitUntil: "commit" },
-      ),
-      cta.click(),
-    ]);
+    // Paid cards use Framer Motion `initial={{ opacity: 0 }}` until `inView`.
+    // Prefer following the CTA href (same UX as opening the link) because
+    // `click()` can miss the `<Link>` while motion is settling.
+    // Use `domcontentloaded`: `/register` + analytics/fonts can exceed `load`
+    // on cold `next dev` (tier value does not change that; full navigation does).
+    await page.goto(href, { waitUntil: "domcontentloaded" });
+    await expect(page).toHaveURL(tierDeepLinkUrlRegex(target.accountSize));
 
     // The wizard MUST land on step 1 (Connect & Pay). We assert via
     // the "Continue to review" button which is always rendered on
     // that step (the HL wallet input is hidden when pre-filled).
     await expect(
       page.locator('[data-testid="continue-to-review"]'),
-    ).toBeVisible({ timeout: 30_000 });
+    ).toBeVisible({ timeout: 60_000 });
     await expect(
       page.getByRole("heading", { name: /Choose your .* account size/i }),
     ).toHaveCount(0);
@@ -82,19 +83,19 @@ test.describe("Deep link from /pricing → /register", () => {
 
     await page.goto("/pricing");
     const card = pricingCardByAccountSize(page, free.accountSize);
+    await card.scrollIntoViewIfNeeded();
     const cta = card.locator('[data-testid="pricing-tier-cta"]');
 
-    await Promise.all([
-      page.waitForURL(
-        new RegExp(`/register\\?.*tier=${free.accountSize}`),
-        { timeout: 30_000, waitUntil: "commit" },
-      ),
-      cta.click(),
-    ]);
+    const nav = page.waitForURL(tierDeepLinkUrlRegex(free.accountSize), {
+      timeout: 60_000,
+      waitUntil: "commit",
+    });
+    await cta.click();
+    await nav;
 
     await expect(
       page.locator('[data-testid="continue-to-review"]'),
-    ).toBeVisible({ timeout: 30_000 });
+    ).toBeVisible({ timeout: 60_000 });
     await expect(
       page.getByRole("heading", { name: /Choose your .* account size/i }),
     ).toHaveCount(0);

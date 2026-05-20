@@ -5,8 +5,12 @@ import Link from 'next/link'
 import { ArrowRight, TrendUp, ArrowsClockwise } from '@phosphor-icons/react'
 import { HERO_STATS } from '@/lib/constants'
 import LiquidCrystalBg from './LiquidCrystalBg'
+import dynamic from 'next/dynamic'
+
+const BeamsBg = dynamic(() => import('./BeamsBg'), { ssr: false })
 import PromoBanner from './PromoBanner'
 import { useBrand, useBrandHref } from '@/lib/brand'
+import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
@@ -29,15 +33,20 @@ const cardVariants = {
 export default function Hero() {
   const brand = useBrand()
   const brandHref = useBrandHref()
+  const withQS = useWithPreservedQuery()
 
   return (
     <section className={`relative min-h-[100dvh] flex flex-col overflow-hidden ${brand.parentSite ? 'pt-24' : 'pt-16'}`}>
-      {/* Liquid crystal shader background */}
-      {brand.showLiquidCrystal && <LiquidCrystalBg className="pointer-events-none" />}
-      <div className="absolute inset-0 bg-zinc-950/60 pointer-events-none" />
+      {/* Animated shader background */}
+      {brand.showLiquidCrystal && brand.heroBeams
+        ? <BeamsBg className="pointer-events-none" />
+        : brand.showLiquidCrystal
+          ? <LiquidCrystalBg className="pointer-events-none" />
+          : null}
+      <div className={`absolute inset-0 pointer-events-none ${brand.heroBeams ? 'bg-zinc-950/30' : 'bg-zinc-950/60'}`} />
 
-      {/* Promo banner — scrolls with hero (hyperscaled only) */}
-      {brand.id === 'hyperscaled' && <PromoBanner />}
+      {/* Promo banner — scrolls with hero */}
+      <PromoBanner />
 
       <div className="relative max-w-[1400px] mx-auto px-6 w-full py-20 flex-1 flex items-center">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-20 items-center">
@@ -51,10 +60,14 @@ export default function Hero() {
           >
             {/* Eyebrow */}
             <motion.div variants={itemVariants} className="mb-6">
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-teal-400/20 bg-teal-400/8 text-xs text-teal-400 font-medium">
+              <Link
+                href={withQS(brandHref('/register'))}
+                onClick={() => trackCtaClick({ label: 'Free $1k Eyebrow', location: 'hero_eyebrow' })}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-teal-400/20 bg-teal-400/8 text-xs text-teal-400 font-medium hover:bg-teal-400/12 transition-colors"
+              >
                 <span className="w-1.5 h-1.5 rounded-full bg-teal-400 pulse-teal" />
-                {brand.heroEyebrow}
-              </span>
+                Free $1k challenge accounts are live — only 1,000 available
+              </Link>
             </motion.div>
 
             {/* Headline */}
@@ -77,7 +90,7 @@ export default function Hero() {
             {/* CTA buttons */}
             <motion.div variants={itemVariants} className="flex flex-col items-center sm:items-start sm:flex-row gap-3 mb-10">
               <Link
-                href={brandHref('/register')}
+                href={withQS(brandHref('/register'))}
                 onClick={() => trackCtaClick({ label: 'Start Your Challenge', location: 'hero' })}
                 className="shiny-cta px-6 py-3 min-h-12 whitespace-nowrap text-center"
               >
@@ -97,7 +110,7 @@ export default function Hero() {
 
             {/* Inline stats */}
             <motion.div variants={itemVariants} className="flex flex-wrap gap-x-8 gap-y-3">
-              {HERO_STATS.map((stat) => (
+              {(brand.heroStats || HERO_STATS).map((stat) => (
                 <div key={stat.label} className="flex items-baseline gap-2">
                   <span className="text-lg font-bold tracking-tight text-white">{stat.value}</span>
                   <span className="text-sm text-zinc-500">{stat.label}</span>

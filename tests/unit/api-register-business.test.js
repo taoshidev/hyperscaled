@@ -41,6 +41,15 @@ vi.mock("@/lib/miners", () => ({
 
 const dbInsertMock = vi.fn().mockResolvedValue(undefined);
 const dbSelectMock = vi.fn();
+// Promise-like that also exposes .returning() / .onConflictDoNothing() so the
+// real route — which now chains those methods for registration_id capture
+// and first-touch attribution upserts — can be exercised by these tests.
+function makeInsertChain(insertResult) {
+  const chain = Promise.resolve(insertResult);
+  chain.returning = () => Promise.resolve([{ id: 1 }]);
+  chain.onConflictDoNothing = () => makeInsertChain(insertResult);
+  return chain;
+}
 vi.mock("@/lib/db", () => ({
   getDb: async () => ({
     select: () => ({
@@ -48,16 +57,40 @@ vi.mock("@/lib/db", () => ({
         where: () => ({
           limit: () => dbSelectMock(),
         }),
+        leftJoin: () => ({
+          where: () => ({ limit: () => dbSelectMock() }),
+        }),
       }),
     }),
-    insert: () => ({ values: (...args) => dbInsertMock(...args) }),
+    insert: () => ({
+      values: (...args) => makeInsertChain(dbInsertMock(...args)),
+    }),
     update: () => ({ set: () => ({ where: () => Promise.resolve() }) }),
   }),
 }));
 vi.mock("@/lib/db/schema", () => ({
-  users: {},
-  registrations: {},
-  affiliates: {},
+  users: { id: "users.id" },
+  registrations: { id: "registrations.id" },
+  affiliates: { id: "affiliates.id", useCount: "affiliates.useCount" },
+  entityMiners: { hotkey: "entity_miners.hotkey", slug: "entity_miners.slug" },
+  entityTiers: {
+    maxFreeRegistrations: "max_free_registrations",
+    hotkey: "hotkey",
+    accountSize: "account_size",
+    isActive: "is_active",
+    priceUsdc: "price_usdc",
+  },
+  referralAttributions: {
+    id: "referral_attributions.id",
+    userId: "referral_attributions.user_id",
+  },
+  registrationAttributions: {
+    id: "registration_attributions.id",
+    registrationId: "registration_attributions.registration_id",
+  },
+}));
+vi.mock("next/headers", () => ({
+  cookies: async () => ({ get: () => undefined }),
 }));
 
 vi.mock("@/lib/validator", () => ({
@@ -118,6 +151,7 @@ function freeBody() {
     accountSize: 1000,
     tierIndex: 0,
     paymentMethod: "free",
+    email: "user@example.com",
   };
 }
 
@@ -265,5 +299,34 @@ describe("POST /api/register — successful free registration captures miner met
     const row = registrationInsert[0];
     expect(row.status).toBe("registered");
     expect(row.metadata).toEqual(minerPayload);
+  });
+});
+
+describe("POST /api/register — email required", () => {
+  it("rejects with 400 + EMAIL_REQUIRED when email is missing", async () => {
+    const body = { ...freeBody() };
+    delete body.email;
+
+    const res = await POST(
+      makeRequest({ body, headers: signedHeaders() }),
+    );
+
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.code).toBe("EMAIL_REQUIRED");
+    expect(json.error).toMatch(/email/i);
+  });
+
+  it("rejects with 400 when email is malformed", async () => {
+    const res = await POST(
+      makeRequest({
+        body: { ...freeBody(), email: "not-an-email" },
+        headers: signedHeaders(),
+      }),
+    );
+
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toMatch(/invalid email/i);
   });
 });

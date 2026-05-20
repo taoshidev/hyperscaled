@@ -100,7 +100,7 @@ export async function seedRegistration({
   status = "registered",
   accountSize = 25000,
   tierIndex = 0,
-  priceUsdc = "239.00",
+  priceUsdc = "119.00",
   txHash = null,
   payoutAddress = null,
   metadata = null,
@@ -152,6 +152,70 @@ export async function seedRegistration({
     ],
   );
   return rows[0].id;
+}
+
+/**
+ * Insert (or replace) a coupon row keyed by `code`. Used by E2E specs that
+ * need a deterministic coupon to apply at checkout — e.g. verifying the
+ * order summary stays stable across email edits when a 100% off promo is
+ * already valid. Returns the coupon row's id.
+ */
+export async function upsertCoupon({
+  code,
+  discountType = "percent",
+  discountValue = "100",
+  useType = "multi_use",
+  maxUses = null,
+  validUntil = null,
+  allowedEmails = null,
+  allowedTierIds = null,
+}) {
+  const pool = getPool();
+  // Delete any prior row with the same code so the test starts fresh —
+  // including any redemptions that would block reuse.
+  const { rows: existing } = await pool.query(
+    `SELECT id FROM coupons WHERE code = $1`,
+    [code],
+  );
+  for (const row of existing) {
+    await pool.query(`DELETE FROM coupon_redemptions WHERE coupon_id = $1`, [
+      row.id,
+    ]);
+    await pool.query(`DELETE FROM coupons WHERE id = $1`, [row.id]);
+  }
+  const { rows } = await pool.query(
+    `INSERT INTO coupons (
+       code, discount_type, discount_value, use_type, max_uses,
+       valid_until, allowed_emails, allowed_tier_ids
+     )
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+     RETURNING id`,
+    [
+      code,
+      discountType,
+      String(discountValue),
+      useType,
+      maxUses,
+      validUntil,
+      allowedEmails == null ? null : JSON.stringify(allowedEmails),
+      allowedTierIds == null ? null : JSON.stringify(allowedTierIds),
+    ],
+  );
+  return rows[0].id;
+}
+
+export async function deleteCouponByCode(code) {
+  const pool = getPool();
+  const { rows } = await pool.query(
+    `SELECT id FROM coupons WHERE code = $1`,
+    [code],
+  );
+  for (const row of rows) {
+    await pool.query(`DELETE FROM coupon_redemptions WHERE coupon_id = $1`, [
+      row.id,
+    ]);
+    await pool.query(`DELETE FROM coupons WHERE id = $1`, [row.id]);
+  }
 }
 
 export async function getLatestRegistrationFor(hlAddress) {

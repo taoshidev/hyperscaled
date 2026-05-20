@@ -64,7 +64,9 @@ test.describe("Duplicate registration guard", () => {
     // `{ error: "..." }` and the UI surfaces it verbatim), so match
     // on intent.
     await expect(
-      page.getByText(/already.*registered|active.*registration|HL address.*registered/i),
+      page
+        .getByRole("main")
+        .getByText(/already.*registered|active.*registration|HL address.*registered/i),
     ).toBeVisible({ timeout: 30_000 });
   });
 });

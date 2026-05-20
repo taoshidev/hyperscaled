@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { ConnectButton, useConnectModal } from "@rainbow-me/rainbowkit";
 import {
   useAccount,
+  useConnect,
   useReadContract,
   useWalletClient,
   useSwitchChain,
@@ -48,6 +49,18 @@ import {
 } from "@x402/core/http";
 import { reportCritical, reportError } from "@/lib/errors";
 import { signRegistrationRequest } from "@/lib/sign-registration";
+import { connectPreferredAccount } from "@/lib/connect-preferred-account";
+import {
+  persistConnectDraft,
+  readConnectDraft,
+} from "@/lib/registration-connect-draft";
+import { withReloadSuppressed } from "@/lib/suppress-reload";
+import {
+  buildBaseRegisterBody,
+  bundleSignedFor,
+  bundleStillCovers,
+  couponCodeHeader,
+} from "@/lib/registration-base-body";
 
 function formatRulesSummary(details) {
   return details
@@ -59,22 +72,21 @@ function formatRulesSummary(details) {
     .join(" · ");
 }
 
-// Runs the backend's duplicate + validity checks without moving money so the
-// HL/EIP-712 path can surface "already registered" / "invalid tier" errors
-// before the user signs a transfer they can't complete. Throws on failure.
-async function runPreflight(body) {
+async function runPreflight(body, couponCode) {
+  const couponHeader = couponCodeHeader(couponCode);
   console.info("[REGISTRATION] preflight request", {
     minerSlug: body.minerSlug,
     hlAddress: body.hlAddress,
     accountSize: body.accountSize,
     tierIndex: body.tierIndex,
     hlTransferSender: body.hlTransferSender,
+    couponCode: couponHeader["x-coupon-code"],
   });
   let res;
   try {
     res = await fetch("/api/register/preflight", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...couponHeader },
       body: JSON.stringify(body),
     });
   } catch (err) {
@@ -90,6 +102,40 @@ async function runPreflight(body) {
   );
 }
 
+function getRegistrationErrorMessage(err) {
+  if (err == null) return "";
+  if (typeof err === "string") return err;
+  if (typeof err.message === "string" && err.message.trim()) return err.message;
+  if (typeof err.shortMessage === "string" && err.shortMessage.trim()) {
+    return err.shortMessage;
+  }
+  if (typeof err.reason === "string" && err.reason.trim()) return err.reason;
+  return "";
+}
+
+function isExpectedRegistrationBlocker(message) {
+  const m = message.toLowerCase();
+  return (
+    m.includes("already registered") ||
+    m.includes("at capacity") ||
+    m.includes("not available") ||
+    m.includes("invalid promo") ||
+    m.includes("invalid tier") ||
+    m.includes("rejected") ||
+    m.includes("denied")
+  );
+}
+
+function logRegistrationFailure(flowLabel, err) {
+  const message = getRegistrationErrorMessage(err) || "Unknown error";
+  if (isExpectedRegistrationBlocker(message)) {
+    console.warn(`[REGISTRATION] ${flowLabel} blocked:`, message);
+  } else {
+    console.error(`[REGISTRATION] ${flowLabel} failed:`, message);
+  }
+  return message;
+}
+
 export function StepConnectAndPay({
   selectedTier,
   tierIndex,
@@ -101,10 +147,17 @@ export function StepConnectAndPay({
   onContinueToConfirm,
   phase = "connect",
   brandVariant = "hyperscaled",
+  initialPromoCode,
 }) {
-  const { address, isConnected, chainId } = useAccount();
+  const { address, isConnected, chainId, connector } = useAccount();
+  const connectedWalletName = connector?.name || "your wallet";
   const { switchChain, switchChainAsync } = useSwitchChain();
   const { disconnectAsync } = useDisconnect();
+  const { connectAsync, connectors } = useConnect();
+  const { openConnectModal: openRainbowConnectModal } = useConnectModal();
+  const [pendingReconnect, setPendingReconnect] = useState(false);
+  const hlConnectTargetRef = useRef(null);
+  const connectDraftRestoredRef = useRef(false);
   const { data: walletClient } = useWalletClient();
   const { signMessageAsync } = useSignMessage();
 
@@ -114,7 +167,7 @@ export function StepConnectAndPay({
   const [hlWalletTouched, setHlWalletTouched] = useState(false);
   const [payoutWallet, setPayoutWallet] = useState("");
   const [payoutPrefilled, setPayoutPrefilled] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("eip712"); // null | "base" | "hyperliquid" | "eip712"
+  const [paymentMethod, setPaymentMethod] = useState("eip712");
   const [confirmed, setConfirmed] = useState(false);
   const [editingPayout, setEditingPayout] = useState(false);
   const [editPayoutValue, setEditPayoutValue] = useState("");
@@ -123,8 +176,78 @@ export function StepConnectAndPay({
   const [emailTouched, setEmailTouched] = useState(false);
   const [hlBalance, setHlBalance] = useState(null);
   const [hlBalanceLoading, setHlBalanceLoading] = useState(false);
-  const [eip712Step, setEip712Step] = useState(null); // "builderFee" | "signing" | "submitting" | "verifying" | "provisioning"
+  const [eip712Step, setEip712Step] = useState(null);
   const [devPrice, setDevPrice] = useState(null);
+
+  useEffect(() => {
+    if (
+      pendingReconnect &&
+      !isConnected &&
+      typeof openRainbowConnectModal === "function"
+    ) {
+      setPendingReconnect(false);
+      openRainbowConnectModal();
+    }
+  }, [pendingReconnect, isConnected, openRainbowConnectModal]);
+
+  const [couponCode, setCouponCode] = useState("");
+
+  useEffect(() => {
+    if (connectDraftRestoredRef.current || !selectedTier?.accountSize) return;
+    const draft = readConnectDraft({
+      minerSlug,
+      accountSize: selectedTier.accountSize,
+    });
+    if (!draft) return;
+    connectDraftRestoredRef.current = true;
+    if (draft.hlWallet) {
+      setHlWallet(draft.hlWallet);
+      setHlWalletTouched(true);
+      setEditingHlWallet(false);
+    }
+    if (draft.email) {
+      setEmail(draft.email);
+      setEmailTouched(true);
+    }
+    if (draft.couponCode) {
+      setCouponCode(draft.couponCode);
+    }
+    if (draft.payoutWallet) {
+      setPayoutWallet(draft.payoutWallet);
+    }
+    if (draft.paymentMethod) {
+      setPaymentMethod(draft.paymentMethod);
+    }
+  }, [minerSlug, selectedTier?.accountSize]);
+
+  const armConnectDraft = useCallback(() => {
+    if (!selectedTier?.accountSize) return;
+    persistConnectDraft({
+      minerSlug,
+      accountSize: selectedTier.accountSize,
+      hlWallet,
+      email,
+      couponCode,
+      paymentMethod,
+      payoutWallet,
+    });
+  }, [
+    minerSlug,
+    selectedTier?.accountSize,
+    hlWallet,
+    email,
+    couponCode,
+    paymentMethod,
+    payoutWallet,
+  ]);
+  const [couponPricing, setCouponPricing] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+
+  const [hlOwnershipBundle, setHlOwnershipBundle] = useState(null);
+  const [signingOwnership, setSigningOwnership] = useState(false);
+  const hlOwnershipAnchorRef = useRef(null);
+  const lastConnectedAddressRef = useRef(null);
+  const [hlMismatchReconnecting, setHlMismatchReconnecting] = useState(false);
 
   const {
     resetPaymentStatus,
@@ -132,11 +255,115 @@ export function StepConnectAndPay({
 
   const { handleHelpFocus, handleHelpBlur } = useRegistrationHelp();
 
+  const hsPortalId = process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID || "";
+  const hsFormId = process.env.NEXT_PUBLIC_HUBSPOT_FORM_ID || "";
+  const isHubspotBrand = (brandVariant === "hyperscaled" || brandVariant === "vanta") && hsPortalId && hsFormId;
+  const hubspotFormReadyRef = useRef(false);
+  const hubspotFormContainerRef = useRef(null);
+  // Drives the fade-in / skeleton state for the embedded form so the user
+  // doesn't see a momentary blank-then-pop when arriving at step 2.
+  const [hubspotFormReady, setHubspotFormReady] = useState(false);
+
+  // ── Load and create HubSpot email form for HS/Vanta brands ──────────────
+  // The component stays mounted across step 1 ↔ step 2 (its parent only
+  // toggles `phase`), but the `<div id="hubspot-email-form">` container is
+  // unmounted while we're on the confirm phase and re-created when the user
+  // navigates back. Re-run the effect on every transition into the connect
+  // phase so the embedded form is rebuilt into the fresh container.
+  useEffect(() => {
+    if (!isHubspotBrand || phase !== "connect") return;
+
+    let cancelled = false;
+    hubspotFormReadyRef.current = false;
+    setHubspotFormReady(false);
+
+    // Safety net — if HubSpot's `onFormReady` doesn't fire within 5s
+    // (network blocked, ad-blocker, third-party hiccup, …) reveal whatever
+    // is in the container so the user isn't stuck on a permanent skeleton.
+    const fallbackTimer = setTimeout(() => {
+      if (!cancelled && !hubspotFormReadyRef.current) {
+        setHubspotFormReady(true);
+      }
+    }, 5000);
+
+    const createForm = () => {
+      if (cancelled || hubspotFormReadyRef.current) return;
+      const container = document.getElementById("hubspot-email-form");
+      if (!container || !window.hbspt) return;
+
+      // Clear any previous form instance
+      container.innerHTML = "";
+
+      window.hbspt.forms.create({
+        portalId: hsPortalId,
+        formId: hsFormId,
+        region: "na1",
+        target: "#hubspot-email-form",
+        onFormReady: ($form) => {
+          if (cancelled) return;
+          hubspotFormReadyRef.current = true;
+
+          // Find the email input and sync with React state
+          const input = $form?.[0]?.querySelector('input[type="email"], input[name="email"]')
+            || container.querySelector('input[type="email"], input[name="email"]');
+
+          if (input) {
+            input.setAttribute("data-testid", "reg-email");
+            // Set placeholder to match our design
+            input.placeholder = "you@example.com";
+
+            // Pre-fill if email already in state (e.g. back-navigation)
+            if (email) input.value = email;
+
+            input.addEventListener("input", (e) => {
+              setEmail(e.target.value);
+            });
+            input.addEventListener("blur", () => {
+              setEmailTouched(true);
+            });
+          }
+
+          // Defer the fade-in by one frame so the styled input is fully laid
+          // out before we transition `opacity: 0 → 1`. Without this the user
+          // can briefly see HubSpot's default unstyled markup.
+          requestAnimationFrame(() => {
+            if (!cancelled) setHubspotFormReady(true);
+          });
+        },
+      });
+    };
+
+    if (window.hbspt) {
+      // Script already loaded — create synchronously.
+      createForm();
+    } else {
+      const existingScript = document.querySelector('script[src*="hsforms.net"]');
+      if (existingScript) {
+        existingScript.addEventListener("load", createForm);
+      } else {
+        const script = document.createElement("script");
+        script.src = "//js.hsforms.net/forms/embed/v2.js";
+        script.charset = "utf-8";
+        script.async = true;
+        script.onload = createForm;
+        document.head.appendChild(script);
+      }
+    }
+
+    return () => {
+      cancelled = true;
+      clearTimeout(fallbackTimer);
+    };
+  }, [isHubspotBrand, phase]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const hlWalletValid = isValidHLAddress(hlWallet);
   const showHlWalletError = hlWalletTouched && hlWallet.length > 0 && !hlWalletValid;
   const emailValid = email.length === 0 || isValidEmail(email);
   const emailReady = email.length > 0 && isValidEmail(email);
-  const showEmailError = emailTouched && email.length > 0 && !emailValid;
+  // Email is collected on every brand (HubSpot widget for Vanta/Hyperscaled,
+  // a plain input elsewhere) and required to advance to the review step.
+  const showEmailError =
+    emailTouched && (email.length === 0 || !emailValid);
 
   // Funnel events — one-shot so we don't double-count on rerenders, toggling,
   // or user going back and forward through steps.
@@ -166,11 +393,26 @@ export function StepConnectAndPay({
     });
   }, [paymentMethod, selectedTier, brandVariant]);
 
+  useEffect(() => {
+    if (phase === "connect" && paymentState === "error") {
+      setPaymentState("idle");
+      setEip712Step(null);
+      setErrorMessage("");
+    }
+  }, [phase, paymentState]);
+
+  useEffect(() => {
+    if (paymentState !== "error") return;
+    setPaymentState("idle");
+    setEip712Step(null);
+    setErrorMessage("");
+  }, [hlWallet, couponCode, email]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Re-fetch tier pricing when HL wallet is entered (dev wallets get reduced
   // price). Discount applies if either the HL trading wallet OR the connected
   // paying wallet is in DEV_TEST_WALLETS.
   useEffect(() => {
-    if (!hlWalletValid || !minerSlug) {
+    if (!selectedTier || !hlWalletValid || !minerSlug) {
       setDevPrice(null);
       return;
     }
@@ -204,10 +446,154 @@ export function StepConnectAndPay({
         }
       });
     return () => controller.abort();
-  }, [hlWallet, hlWalletValid, minerSlug, address, selectedTier.accountSize, selectedTier.promoPrice]);
+  }, [hlWallet, hlWalletValid, minerSlug, address, selectedTier?.accountSize, selectedTier?.promoPrice]);
 
-  const price = devPrice ?? selectedTier.promoPrice;
+  useEffect(() => {
+    let cancelled = false;
+    async function run() {
+      const fromProp =
+        typeof initialPromoCode === "string"
+          ? initialPromoCode.trim().toUpperCase()
+          : "";
+      if (fromProp) {
+        if (!cancelled) setCouponCode(fromProp);
+        return;
+      }
+      try {
+        const res = await fetch("/api/register/attribution-promo");
+        const json = await res.json().catch(() => ({}));
+        const p =
+          typeof json.promo === "string" ? json.promo.trim().toUpperCase() : "";
+        if (!cancelled && p) setCouponCode(p);
+      } catch {
+        /* ignore */
+      }
+    }
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialPromoCode]);
+
+  useEffect(() => {
+    const trimmedUpper = couponCode.trim().toUpperCase();
+    if (!trimmedUpper) {
+      setCouponPricing(null);
+      setCouponLoading(false);
+      return;
+    }
+    if (!minerSlug || selectedTier == null || tierIndex == null) return;
+
+    let cancelled = false;
+    const t = window.setTimeout(async () => {
+      if (cancelled) return;
+      setCouponLoading(true);
+      try {
+        const payload = {
+          minerSlug,
+          tierIndex,
+          accountSize: selectedTier.accountSize,
+          ...(hlWalletValid ? { hlAddress: hlWallet } : {}),
+          ...(address ? { hlTransferSender: address } : {}),
+          ...(emailReady ? { email } : {}),
+          couponCode: trimmedUpper,
+        };
+        const res = await fetch("/api/register/validate-coupon", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const json = await res.json().catch(() => ({}));
+        if (cancelled) return;
+        if (!res.ok) {
+          setCouponPricing({
+            ok: false,
+            error:
+              typeof json.error === "string"
+                ? json.error
+                : "Invalid promo code.",
+            validatedFor: trimmedUpper,
+          });
+        } else {
+          setCouponPricing({ ...json, validatedFor: trimmedUpper });
+        }
+      } catch {
+        if (!cancelled) {
+          setCouponPricing({
+            ok: false,
+            error: "Could not validate promo code.",
+            validatedFor: trimmedUpper,
+          });
+        }
+      } finally {
+        if (!cancelled) setCouponLoading(false);
+      }
+    }, 450);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+  }, [
+    couponCode,
+    minerSlug,
+    tierIndex,
+    selectedTier,
+    hlWallet,
+    hlWalletValid,
+    address,
+    emailReady,
+    email,
+  ]);
+
+  const tierListDisplay = devPrice ?? selectedTier.promoPrice;
+
+  const promoNeedsServer = couponCode.trim().length > 0;
+  const promoTrimmedUpper = couponCode.trim().toUpperCase();
+
+  const couponPricingMatchesInput =
+    !promoNeedsServer ||
+    (couponPricing != null &&
+      couponPricing.validatedFor === promoTrimmedUpper);
+
+  const promoCheckingForCurrentInput =
+    promoNeedsServer && couponLoading && !couponPricingMatchesInput;
+
+  const promoReady =
+    !promoNeedsServer ||
+    (couponPricingMatchesInput && couponPricing?.ok === true);
+
+  const promoFieldErrorMsg =
+    promoNeedsServer &&
+    couponPricingMatchesInput &&
+    couponPricing?.ok === false
+      ? couponPricing.error || "Invalid promo code."
+      : null;
+
+  const lastGoodCouponPricing =
+    couponPricing && couponPricing.ok === true ? couponPricing : null;
+
+  const price =
+    promoNeedsServer && lastGoodCouponPricing?.effectivePrice != null
+      ? Number(lastGoodCouponPricing.effectivePrice)
+      : tierListDisplay;
+
   const isFree = Number(price) === 0;
+
+  const challengeFeeBasisUsd =
+    lastGoodCouponPricing?.baseAfterWallet != null
+      ? Number(lastGoodCouponPricing.baseAfterWallet)
+      : tierListDisplay;
+
+  const showPromoDiscountLine =
+    promoNeedsServer &&
+    lastGoodCouponPricing?.couponApplied === true &&
+    Number(lastGoodCouponPricing.discountAmount ?? 0) > 0;
+
+  const promoDiscountUsd = showPromoDiscountLine
+    ? Number(lastGoodCouponPricing.discountAmount)
+    : 0;
+
+  const promoCodeUpperDisplay = promoTrimmedUpper;
 
   const resolvedHlAddress = hlWallet;
   const hlAddressReady = hlWallet.length > 0 && hlWalletValid;
@@ -244,6 +630,142 @@ export function StepConnectAndPay({
   const hlHasEnough = hlBalance != null && hlBalance >= price;
   const walletMatchesHL =
     address && hlWallet && address.toLowerCase() === hlWallet.toLowerCase();
+
+  useEffect(() => {
+    if (isConnected && address) {
+      lastConnectedAddressRef.current = address;
+    }
+  }, [isConnected, address]);
+
+  useEffect(() => {
+    if (walletMatchesHL && hlAddressReady) {
+      hlOwnershipAnchorRef.current = hlWallet.toLowerCase();
+      setHlMismatchReconnecting(false);
+      hlConnectTargetRef.current = null;
+    }
+  }, [walletMatchesHL, hlWallet, hlAddressReady]);
+
+  const handleConnectDifferentHlWallet = useCallback(async () => {
+    if (!hlWallet || !isValidHLAddress(hlWallet)) return;
+
+    hlConnectTargetRef.current = hlWallet.toLowerCase();
+    setHlMismatchReconnecting(true);
+    setConfirmed(false);
+    if (paymentState === "error") {
+      setPaymentState("idle");
+      setErrorMessage("");
+    }
+    armConnectDraft();
+
+    try {
+      const outcome = await connectPreferredAccount({
+        targetAddress: hlWallet,
+        disconnectAsync,
+        connectAsync,
+        connectors,
+        chainId: BASE_CHAIN_ID,
+      });
+      if (outcome === "modal") {
+        setPendingReconnect(true);
+      } else if (outcome === "rejected" || outcome === "pending") {
+        hlConnectTargetRef.current = null;
+      }
+    } catch {
+      hlConnectTargetRef.current = null;
+    }
+  }, [
+    hlWallet,
+    paymentState,
+    disconnectAsync,
+    connectAsync,
+    connectors,
+    armConnectDraft,
+  ]);
+
+  const handleConnectForEip712 = useCallback(async () => {
+    if (paymentState === "error") {
+      setPaymentState("idle");
+      setErrorMessage("");
+    }
+    setConfirmed(false);
+
+    if (!hlWallet || !isValidHLAddress(hlWallet)) {
+      openRainbowConnectModal?.();
+      return;
+    }
+
+    armConnectDraft();
+    try {
+      const outcome = await connectPreferredAccount({
+        targetAddress: hlWallet,
+        disconnectAsync,
+        connectAsync,
+        connectors,
+        chainId: BASE_CHAIN_ID,
+      });
+      if (outcome === "modal") {
+        openRainbowConnectModal?.();
+      }
+    } catch {
+      openRainbowConnectModal?.();
+    }
+  }, [
+    hlWallet,
+    paymentState,
+    disconnectAsync,
+    connectAsync,
+    connectors,
+    openRainbowConnectModal,
+    armConnectDraft,
+  ]);
+
+  const currentBundleSignedFor = bundleSignedFor({
+    minerSlug,
+    hlAddress: resolvedHlAddress,
+    accountSize: selectedTier?.accountSize,
+    tierIndex,
+    payoutAddress: resolvedPayoutAddress || resolvedHlAddress,
+    email: emailReady ? email : "",
+  });
+  const hlOwnershipBundleValid =
+    !!hlOwnershipBundle && bundleStillCovers(hlOwnershipBundle, currentBundleSignedFor);
+  useEffect(() => {
+    if (hlOwnershipBundle && !hlOwnershipBundleValid) {
+      const a = hlOwnershipBundle.signedFor;
+      const b = currentBundleSignedFor;
+      const diffs = Object.keys(b).filter((k) => a[k] !== b[k]);
+      console.warn("[REGISTRATION] HL ownership bundle invalidated", {
+        diffs,
+        before: Object.fromEntries(diffs.map((k) => [k, a[k]])),
+        after: Object.fromEntries(diffs.map((k) => [k, b[k]])),
+      });
+      setHlOwnershipBundle(null);
+    }
+  }, [hlOwnershipBundle, hlOwnershipBundleValid, currentBundleSignedFor]);
+
+  useEffect(() => {
+    if (hlOwnershipBundleValid && resolvedHlAddress) {
+      hlOwnershipAnchorRef.current = resolvedHlAddress.toLowerCase();
+    }
+  }, [hlOwnershipBundleValid, resolvedHlAddress]);
+
+  const hlAddressChangedFromAnchor =
+    hlAddressReady &&
+    hlOwnershipAnchorRef.current != null &&
+    hlWallet.toLowerCase() !== hlOwnershipAnchorRef.current;
+
+  const hlOwnershipMismatchActive =
+    hlAddressReady &&
+    !walletMatchesHL &&
+    ((paymentMethod === "eip712" || isFree) ||
+      (paymentMethod === "base" && !hlOwnershipBundleValid));
+
+  const showHlOwnershipMismatchBanner =
+    hlOwnershipMismatchActive &&
+    (isConnected || hlMismatchReconnecting);
+
+  const bannerConnectedAddress =
+    address || lastConnectedAddressRef.current || "";
 
   useEffect(() => {
     if (paymentMethod !== "eip712" || !isConnected || !address) {
@@ -316,77 +838,94 @@ export function StepConnectAndPay({
     onPaymentProcessing?.(true);
 
     try {
-      // Call tolt.signup() now so we have a customer_id before the server
-      // records the transaction. Guard against double-calls on retry.
-      let toltCustomerId = window.tolt_data?.customer_id || null;
-      if (!toltCustomerId && window.tolt) {
-        try {
-          const result = await window.tolt.signup(resolvedHlAddress);
-          toltCustomerId = result?.customer_id || window.tolt_data?.customer_id || null;
-        } catch { /* tolt unavailable */ }
-      }
+      const useCachedOwnership =
+        hlOwnershipBundleValid && bundleStillCovers(hlOwnershipBundle, currentBundleSignedFor);
 
-      const body = {
-        minerSlug,
-        hlAddress: resolvedHlAddress,
-        accountSize: selectedTier.accountSize,
-        payoutAddress: resolvedPayoutAddress || address,
-        tierIndex,
-        toltCustomerId,
-        email: emailReady ? email : undefined,
-        // Used by the backend to qualify the dev-wallet discount; the actual
-        // signer in the payment payload is the source of truth on retry.
-        hlTransferSender: address,
-      };
-
-      // Block "already registered" and similar errors before requesting payment.
-      await runPreflight(body);
-
-      // Ensure the Hyperscaled builder fee is approved on the connected wallet
-      // before we sign the payment. This is silent for users who already have
-      // an approval on file; otherwise we switch to Arbitrum, prompt a
-      // signature, and switch back to Base before the x402 flow.
-      console.info("[REGISTRATION] Base: ensuring builder fee approval");
-      const prevChainIdForBuilder = chainId;
-      try {
-        const result = await ensureBuilderFeeApproved({
-          address,
-          chainId,
-          switchChainAsync,
-        });
-        console.info("[REGISTRATION] Base: builder fee approval", result);
-      } finally {
-        if (prevChainIdForBuilder && prevChainIdForBuilder !== HL_SIGNING_CHAIN_ID) {
-          await switchChainAsync({ chainId: prevChainIdForBuilder }).catch(() => {});
+      let toltCustomerId = useCachedOwnership ? hlOwnershipBundle.toltCustomerId : null;
+      if (!useCachedOwnership) {
+        toltCustomerId = window.tolt_data?.customer_id || null;
+        if (!toltCustomerId && window.tolt) {
+          try {
+            const result = await window.tolt.signup(resolvedHlAddress);
+            toltCustomerId = result?.customer_id || window.tolt_data?.customer_id || null;
+          } catch { /* tolt unavailable */ }
         }
       }
 
-      // Wallet-ownership signature for the HL address. One MetaMask
-      // popup; the server skips the gate on the unsigned probe below
-      // (no side effects), and we re-use the same `signedBody` bytes
-      // for both the probe and the settle so the body hash bound to
-      // the signature matches what the server reads on settle.
+      let body;
       let ownershipHeaders;
       let signedBody;
-      try {
-        const signed = await signRegistrationRequest({
-          path: "/api/register",
-          body,
-          hlAddress: resolvedHlAddress,
-          connectedAddress: address,
-          signMessageAsync,
-        });
-        ownershipHeaders = signed.headers;
-        signedBody = signed.body;
-      } catch (err) {
-        console.warn("[REGISTRATION] Base: ownership signature aborted", { error: err?.message });
-        throw err;
+
+      if (useCachedOwnership) {
+        signedBody = hlOwnershipBundle.signedBody;
+        ownershipHeaders = hlOwnershipBundle.headers;
+        body = JSON.parse(signedBody);
+      } else {
+        body = {
+          ...buildBaseRegisterBody({
+            minerSlug,
+            hlAddress: resolvedHlAddress,
+            accountSize: selectedTier.accountSize,
+            tierIndex,
+            payoutAddress: resolvedPayoutAddress || address,
+            email: emailReady ? email : undefined,
+            toltCustomerId,
+          }),
+          hlTransferSender: address,
+        };
+      }
+
+      // Block "already registered" and similar errors before requesting payment.
+      await runPreflight(body, couponCode);
+
+      if (!useCachedOwnership) {
+        console.info("[REGISTRATION] Base: ensuring builder fee approval");
+        const prevChainIdForBuilder = chainId;
+        try {
+          const result = await ensureBuilderFeeApproved({
+            address,
+            chainId,
+            switchChainAsync,
+          });
+          console.info("[REGISTRATION] Base: builder fee approval", result);
+        } finally {
+          if (prevChainIdForBuilder && prevChainIdForBuilder !== HL_SIGNING_CHAIN_ID) {
+            await switchChainAsync({ chainId: prevChainIdForBuilder }).catch(() => {});
+          }
+        }
+      } else {
+        console.info("[REGISTRATION] Base: skipping builder-fee approval (dual-wallet — done from HL)");
+      }
+
+      if (!useCachedOwnership) {
+        try {
+          const signed = await signRegistrationRequest({
+            path: "/api/register",
+            body,
+            hlAddress: resolvedHlAddress,
+            connectedAddress: address,
+            signMessageAsync,
+          });
+          ownershipHeaders = signed.headers;
+          signedBody = signed.body;
+        } catch (err) {
+          console.warn("[REGISTRATION] Base: ownership signature aborted", { error: err?.message });
+          throw err;
+        }
+      } else {
+        console.info("[REGISTRATION] Base: replaying cached HL ownership bundle for dual-wallet pay");
       }
 
       console.info("[REGISTRATION] Base: probing /api/register for 402");
+      const couponHeader = couponCodeHeader(couponCode);
+      const payerHeader = address ? { "x-payer-address": address } : {};
       const probeRes = await fetch("/api/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...couponHeader,
+          ...payerHeader,
+        },
         body: signedBody,
       });
       console.info("[REGISTRATION] Base: probe response", { status: probeRes.status });
@@ -394,6 +933,27 @@ export function StepConnectAndPay({
       if (probeRes.status === 409) {
         const data = await probeRes.json().catch(() => ({}));
         throw new Error(data.error || "You are already registered with this miner.");
+      }
+
+      if (probeRes.ok) {
+        const data = await probeRes.json().catch(() => ({}));
+        if (data?.status === "registered" || typeof data?.txHash === "string") {
+          console.info("[REGISTRATION] Base: dev-mode auto-register detected, skipping x402", {
+            txHash: data.txHash,
+            status: data.status,
+          });
+          setPaymentState("success");
+          onPaymentProcessing?.(false);
+          setTimeout(() => {
+            onPaymentComplete({
+              txHash: data.txHash || "",
+              hlAddress: resolvedHlAddress,
+              registrationStatus: data.status,
+              paymentMethod: "base",
+            });
+          }, 1500);
+          return;
+        }
       }
 
       if (probeRes.status !== 402) {
@@ -469,6 +1029,8 @@ export function StepConnectAndPay({
           "Content-Type": "application/json",
           "payment-signature": encodePaymentSignatureHeader(fullPayload),
           ...ownershipHeaders,
+          ...couponHeader,
+          ...payerHeader,
         },
         body: signedBody,
       });
@@ -518,17 +1080,14 @@ export function StepConnectAndPay({
         });
       }, 1500);
     } catch (err) {
-      console.error("[REGISTRATION] Base payment failed", { error: err?.message });
+      const message = logRegistrationFailure("Base payment", err);
       setPaymentState("error");
       onPaymentProcessing?.(false);
 
-      if (
-        err.message?.includes("User rejected") ||
-        err.message?.includes("denied")
-      ) {
+      if (message.includes("User rejected") || message.includes("denied")) {
         setErrorMessage("Signature rejected — you can try again when ready.");
       } else {
-        setErrorMessage(err.message || "Payment failed — please try again.");
+        setErrorMessage(message || "Payment failed — please try again.");
       }
     }
   }, [
@@ -543,8 +1102,125 @@ export function StepConnectAndPay({
     resolvedPayoutAddress,
     email,
     emailReady,
+    couponCode,
     onPaymentComplete,
     onPaymentProcessing,
+    signMessageAsync,
+    hlOwnershipBundle,
+    hlOwnershipBundleValid,
+    currentBundleSignedFor,
+  ]);
+
+  const captureHlOwnershipBundle = useCallback(async () => {
+    if (!hlAddressReady || !address || !walletMatchesHL) {
+      throw new Error(
+        `Connect ${truncateAddress(hlWallet)} to verify Hyperliquid ownership.`,
+      );
+    }
+
+    const prevChainIdForBuilder = chainId;
+    try {
+      await ensureBuilderFeeApproved({
+        address,
+        chainId,
+        switchChainAsync,
+      });
+    } finally {
+      if (prevChainIdForBuilder && prevChainIdForBuilder !== HL_SIGNING_CHAIN_ID) {
+        await switchChainAsync({ chainId: prevChainIdForBuilder }).catch(() => {});
+      }
+    }
+
+    let toltCustomerId = window.tolt_data?.customer_id || null;
+    if (!toltCustomerId && window.tolt) {
+      try {
+        const result = await window.tolt.signup(resolvedHlAddress);
+        toltCustomerId = result?.customer_id || window.tolt_data?.customer_id || null;
+      } catch { /* tolt unavailable */ }
+    }
+
+    const body = buildBaseRegisterBody({
+      minerSlug,
+      hlAddress: resolvedHlAddress,
+      accountSize: selectedTier.accountSize,
+      tierIndex,
+      payoutAddress: resolvedPayoutAddress || resolvedHlAddress,
+      email: emailReady ? email : undefined,
+      toltCustomerId,
+    });
+
+    const signed = await signRegistrationRequest({
+      path: "/api/register",
+      body,
+      hlAddress: resolvedHlAddress,
+      connectedAddress: address,
+      signMessageAsync,
+    });
+
+    setHlOwnershipBundle({
+      headers: signed.headers,
+      signedBody: signed.body,
+      signedFor: bundleSignedFor({
+        minerSlug,
+        hlAddress: resolvedHlAddress,
+        accountSize: selectedTier.accountSize,
+        tierIndex,
+        payoutAddress: resolvedPayoutAddress || resolvedHlAddress,
+        email: emailReady ? email : "",
+      }),
+      toltCustomerId,
+      builderFeeApproved: true,
+      signedAt: Date.now(),
+    });
+  }, [
+    hlAddressReady,
+    address,
+    walletMatchesHL,
+    hlWallet,
+    chainId,
+    switchChainAsync,
+    minerSlug,
+    selectedTier,
+    tierIndex,
+    resolvedHlAddress,
+    resolvedPayoutAddress,
+    email,
+    emailReady,
+    signMessageAsync,
+  ]);
+
+  const ownershipSignErrorMessage = (err) =>
+    err?.message?.includes("User rejected") || err?.message?.includes("denied")
+      ? "Signature rejected — try again when ready."
+      : err?.message || "Could not sign HL ownership. Please try again.";
+
+  const handleUseDifferentPayingWallet = useCallback(async () => {
+    if (!walletMatchesHL || !hlAddressReady || !address || signingOwnership) return;
+
+    setSigningOwnership(true);
+    setErrorMessage("");
+    armConnectDraft();
+    try {
+      await captureHlOwnershipBundle();
+      await withReloadSuppressed(async () => {
+        try {
+          await disconnectAsync();
+        } catch { /* already disconnected */ }
+      });
+      setPendingReconnect(true);
+    } catch (err) {
+      setErrorMessage(ownershipSignErrorMessage(err));
+    } finally {
+      setSigningOwnership(false);
+    }
+  }, [
+    walletMatchesHL,
+    hlAddressReady,
+    address,
+    signingOwnership,
+    captureHlOwnershipBundle,
+    disconnectAsync,
+    armConnectDraft,
   ]);
 
   // ── Hyperliquid EIP-712 usdSend payment handler ──────────────────────────
@@ -584,15 +1260,20 @@ export function StepConnectAndPay({
       // Step 0 — Preflight validation (duplicate check, tier/miner sanity).
       // Runs before any signing/transfer so users never pay only to be told
       // they can't register.
-      await runPreflight({
-        minerSlug,
-        hlAddress: resolvedHlAddress,
-        accountSize: selectedTier.accountSize,
-        payoutAddress: resolvedPayoutAddress || address,
-        tierIndex,
-        email: emailReady ? email : undefined,
-        hlTransferSender: address,
-      });
+      await runPreflight(
+        {
+          ...buildBaseRegisterBody({
+            minerSlug,
+            hlAddress: resolvedHlAddress,
+            accountSize: selectedTier.accountSize,
+            tierIndex,
+            payoutAddress: resolvedPayoutAddress || address,
+            email: emailReady ? email : undefined,
+          }),
+          hlTransferSender: address,
+        },
+        couponCode,
+      );
 
       const amount = String(price);
       const nonce = Date.now();
@@ -876,13 +1557,15 @@ export function StepConnectAndPay({
         hlHash,
       });
       const registerBody = {
-        minerSlug,
-        hlAddress: resolvedHlAddress,
-        accountSize: selectedTier.accountSize,
-        payoutAddress: resolvedPayoutAddress || address,
-        tierIndex,
-        toltCustomerId,
-        email: emailReady ? email : undefined,
+        ...buildBaseRegisterBody({
+          minerSlug,
+          hlAddress: resolvedHlAddress,
+          accountSize: selectedTier.accountSize,
+          tierIndex,
+          payoutAddress: resolvedPayoutAddress || address,
+          email: emailReady ? email : undefined,
+          toltCustomerId,
+        }),
         paymentMethod: "eip712",
         hlTransferHash: hlHash,
         hlTransferSender: address,
@@ -897,7 +1580,11 @@ export function StepConnectAndPay({
         });
       const registerRes = await fetch("/api/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...eip712OwnershipHeaders },
+        headers: {
+          "Content-Type": "application/json",
+          ...eip712OwnershipHeaders,
+          ...couponCodeHeader(couponCode),
+        },
         body: eip712SignedBody,
       });
       console.info("[REGISTRATION] EIP-712: /api/register response", {
@@ -950,18 +1637,15 @@ export function StepConnectAndPay({
         });
       }, 1500);
     } catch (err) {
-      console.error("[REGISTRATION] EIP-712 payment failed", { error: err?.message });
+      const message = logRegistrationFailure("EIP-712", err);
       setPaymentState("error");
       setEip712Step(null);
       onPaymentProcessing?.(false);
 
-      if (
-        err.message?.includes("User rejected") ||
-        err.message?.includes("denied")
-      ) {
+      if (message.includes("User rejected") || message.includes("denied")) {
         setErrorMessage("Signature rejected — you can try again when ready.");
       } else {
-        setErrorMessage(err.message || "Payment failed — please try again.");
+        setErrorMessage(message || "Payment failed — please try again.");
       }
     }
   }, [
@@ -978,8 +1662,10 @@ export function StepConnectAndPay({
     resolvedPayoutAddress,
     email,
     emailReady,
+    couponCode,
     onPaymentComplete,
     onPaymentProcessing,
+    signMessageAsync,
   ]);
 
   // ── Free tier signup handler ──────────────────────────────────────────────
@@ -1006,15 +1692,20 @@ export function StepConnectAndPay({
         } catch { /* tolt unavailable */ }
       }
 
-      await runPreflight({
-        minerSlug,
-        hlAddress: resolvedHlAddress,
-        accountSize: selectedTier.accountSize,
-        payoutAddress: resolvedPayoutAddress || resolvedHlAddress,
-        tierIndex,
-        email: emailReady ? email : undefined,
-        ...(isConnected && address ? { hlTransferSender: address } : {}),
-      });
+      await runPreflight(
+        {
+          ...buildBaseRegisterBody({
+            minerSlug,
+            hlAddress: resolvedHlAddress,
+            accountSize: selectedTier.accountSize,
+            tierIndex,
+            payoutAddress: resolvedPayoutAddress || resolvedHlAddress,
+            email: emailReady ? email : undefined,
+          }),
+          ...(isConnected && address ? { hlTransferSender: address } : {}),
+        },
+        couponCode,
+      );
 
       // Builder fee approval — only if wallet is connected.
       if (isConnected && walletClient) {
@@ -1033,13 +1724,15 @@ export function StepConnectAndPay({
       setEip712Step("provisioning");
 
       const freeRegisterBody = {
-        minerSlug,
-        hlAddress: resolvedHlAddress,
-        accountSize: selectedTier.accountSize,
-        payoutAddress: resolvedPayoutAddress || resolvedHlAddress,
-        tierIndex,
-        toltCustomerId,
-        email: emailReady ? email : undefined,
+        ...buildBaseRegisterBody({
+          minerSlug,
+          hlAddress: resolvedHlAddress,
+          accountSize: selectedTier.accountSize,
+          tierIndex,
+          payoutAddress: resolvedPayoutAddress || resolvedHlAddress,
+          email: emailReady ? email : undefined,
+          toltCustomerId,
+        }),
         paymentMethod: "free",
         ...(isConnected && address ? { hlTransferSender: address } : {}),
       };
@@ -1053,7 +1746,11 @@ export function StepConnectAndPay({
         });
       const registerRes = await fetch("/api/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...freeOwnershipHeaders },
+        headers: {
+          "Content-Type": "application/json",
+          ...freeOwnershipHeaders,
+          ...couponCodeHeader(couponCode),
+        },
         body: freeSignedBody,
       });
 
@@ -1098,18 +1795,15 @@ export function StepConnectAndPay({
         });
       }, 1500);
     } catch (err) {
-      console.error("[REGISTRATION] Free signup failed", { error: err?.message });
+      const message = logRegistrationFailure("Free signup", err);
       setPaymentState("error");
       setEip712Step(null);
       onPaymentProcessing?.(false);
 
-      if (
-        err.message?.includes("User rejected") ||
-        err.message?.includes("denied")
-      ) {
+      if (message.includes("User rejected") || message.includes("denied")) {
         setErrorMessage("Signature rejected — you can try again when ready.");
       } else {
-        setErrorMessage(err.message || "Signup failed — please try again.");
+        setErrorMessage(message || "Signup failed — please try again.");
       }
     }
   }, [
@@ -1125,38 +1819,48 @@ export function StepConnectAndPay({
     resolvedPayoutAddress,
     email,
     emailReady,
+    couponCode,
     onPaymentComplete,
     onPaymentProcessing,
+    signMessageAsync,
   ]);
 
-  // The registration request is signed by the connected wallet to prove
-  // ownership of the typed HL address (see /api/register's gate). Block
-  // every path until they match.
   const ownershipReady = hlAddressReady && isConnected && walletMatchesHL;
+  const baseOwnershipReady =
+    hlAddressReady && isConnected && (walletMatchesHL || hlOwnershipBundleValid);
   const ownershipMismatchMsg =
     hlAddressReady && isConnected && !walletMatchesHL
-      ? `Switch MetaMask to ${truncateAddress(hlWallet)} (or click "Use connected" to register your current wallet)`
+      ? `Switch ${connectedWalletName} to ${truncateAddress(hlWallet)} (or click "Use connected" to register your current wallet)`
       : hlAddressReady && !isConnected
         ? "Connect the wallet whose HL address you're registering"
         : null;
+  const baseOwnershipMismatchMsg =
+    baseOwnershipReady
+      ? null
+      : paymentMethod === "base" && isConnected && !walletMatchesHL
+        ? "Connect your Hyperliquid wallet to sign ownership before paying"
+        : ownershipMismatchMsg;
 
   const canFreeSignup =
+    promoReady &&
     hlAddressReady &&
     ownershipReady &&
     confirmed &&
     paymentState !== "processing";
 
   const canPayBase =
+    promoReady &&
     isConnected &&
     isOnBase &&
     hasEnough &&
     hlAddressReady &&
-    ownershipReady &&
+    baseOwnershipReady &&
     confirmed &&
     !!paymentWallet &&
     paymentState !== "processing";
 
   const canPayEIP712 =
+    promoReady &&
     isConnected &&
     hlHasEnough &&
     hlAddressReady &&
@@ -1167,13 +1871,17 @@ export function StepConnectAndPay({
 
   const missingFieldBase = !hlAddressReady
     ? "Enter your Hyperliquid wallet address to continue"
-    : ownershipMismatchMsg
-      ? ownershipMismatchMsg
+    : baseOwnershipMismatchMsg
+      ? baseOwnershipMismatchMsg
       : !confirmed
         ? "Confirm your details above to continue"
-        : !hasEnough
-          ? "Insufficient USDC balance"
-          : null;
+        : !promoReady && promoNeedsServer
+          ? promoCheckingForCurrentInput
+            ? "Validating promo…"
+            : "Enter a valid promo code or clear the field"
+          : !hasEnough
+            ? "Insufficient USDC balance"
+            : null;
 
   const missingFieldEIP712 = !hlAddressReady
     ? "Enter your Hyperliquid wallet address to continue"
@@ -1181,24 +1889,70 @@ export function StepConnectAndPay({
       ? ownershipMismatchMsg
       : !confirmed
         ? "Confirm your details above to continue"
-        : hlBalanceLoading
-          ? "Checking Hyperliquid balance..."
-          : !hlHasEnough
-            ? hlBalance != null
-              ? "Insufficient USDC on Hyperliquid"
-              : "Could not fetch Hyperliquid balance"
-            : null;
+        : !promoReady && promoNeedsServer
+          ? promoCheckingForCurrentInput
+            ? "Validating promo…"
+            : "Enter a valid promo code or clear the field"
+          : hlBalanceLoading
+            ? "Checking Hyperliquid balance..."
+            : !hlHasEnough
+              ? hlBalance != null
+                ? "Insufficient USDC on Hyperliquid"
+                : "Could not fetch Hyperliquid balance"
+              : null;
 
   // ── Confirm phase: "Continue to review" readiness ──────────────────────────
+  const paymentWalletReadyForContinue =
+    isFree ||
+    (paymentMethod === "base" && isConnected && isOnBase) ||
+    (paymentMethod === "eip712" && isConnected);
+
   const canContinueToConfirm =
+    promoReady &&
     hlAddressReady &&
-    ownershipReady &&
-    (isFree
-      ? true
-      : paymentMethod &&
-        (paymentMethod === "base"
-          ? isConnected && isOnBase
-          : isConnected));
+    emailReady &&
+    paymentMethod &&
+    paymentWalletReadyForContinue &&
+    (paymentMethod === "base" ? baseOwnershipReady : ownershipReady);
+
+  const continueBlockerMsg = (() => {
+    if (!hlAddressReady) {
+      return "Enter your Hyperliquid wallet address to continue";
+    }
+    if (!emailReady) {
+      return "Email address is required to continue";
+    }
+    if (!promoReady && promoNeedsServer) {
+      return promoCheckingForCurrentInput
+        ? "Validating promo…"
+        : "Enter a valid promo code or clear the field to continue";
+    }
+    if (!paymentMethod) {
+      return "Select a payment method to continue";
+    }
+    if (paymentMethod === "base") {
+      if (!isConnected) {
+        return "Connect a wallet to pay on Base";
+      }
+      if (!isOnBase) {
+        return "Switch your wallet to the Base network to continue";
+      }
+      if (!baseOwnershipReady) {
+        return baseOwnershipMismatchMsg ||
+          "Connect your Hyperliquid wallet to verify ownership before continuing";
+      }
+      return null;
+    }
+    if (paymentMethod === "eip712") {
+      if (!isConnected) {
+        return "Connect the wallet that owns your Hyperliquid account";
+      }
+      if (!ownershipReady) {
+        return ownershipMismatchMsg;
+      }
+    }
+    return null;
+  })();
 
   if (phase === "confirm") {
     return (
@@ -1396,7 +2150,11 @@ export function StepConnectAndPay({
                 >
                   {!confirmed
                     ? "Confirm your details above to continue"
-                    : "Sign Up"}
+                    : !promoReady && promoNeedsServer
+                      ? promoCheckingForCurrentInput
+                        ? "Validating promo…"
+                        : "Enter a valid promo code or clear the field"
+                      : "Sign Up"}
                 </Button>
               )}
 
@@ -1618,14 +2376,40 @@ export function StepConnectAndPay({
 
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Challenge fee</span>
-          <span className="text-teal-400 font-bold font-mono">${selectedTier.promoPrice}</span>
+          <span
+            className={
+              showPromoDiscountLine
+                ? "text-muted-foreground font-bold font-mono line-through decoration-muted-foreground"
+                : "text-teal-400 font-bold font-mono"
+            }
+          >
+            ${challengeFeeBasisUsd}
+          </span>
         </div>
+
+        {showPromoDiscountLine ? (
+          <div
+            data-testid="order-promo-line"
+            className="flex items-center justify-between text-sm"
+          >
+            <span className="text-muted-foreground">Promo ({promoCodeUpperDisplay})</span>
+            <span className="font-mono font-semibold text-teal-400">
+              −$
+              {Number.isInteger(promoDiscountUsd)
+                ? promoDiscountUsd
+                : promoDiscountUsd.toFixed(2)}
+            </span>
+          </div>
+        ) : null}
 
         {!isFree && <div className="border-t border-border" />}
 
         <div className="flex items-center justify-between">
           <span className="font-bold">Total</span>
-          <span className="text-xl font-bold font-mono text-teal-400">
+          <span
+            data-testid="order-total"
+            className="text-xl font-bold font-mono text-teal-400"
+          >
             {isFree ? (
               "Free"
             ) : (
@@ -1642,8 +2426,54 @@ export function StepConnectAndPay({
         </p>
       </div>
 
-      {/* ─── 1. Hyperliquid Wallet ─── */}
       <div className="w-full max-w-lg mt-6 space-y-1.5">
+        <label htmlFor="reg-promo" className="text-xs font-medium text-muted-foreground">
+          Promo code <span className="text-muted-foreground/60 font-normal">(optional)</span>
+        </label>
+        <input
+          id="reg-promo"
+          data-testid="reg-promo"
+          type="text"
+          value={couponCode}
+          onChange={(e) => {
+            setCouponCode(e.target.value.toUpperCase());
+            setConfirmed(false);
+          }}
+          placeholder="E.g. SUMMER25"
+          autoCapitalize="characters"
+          autoCorrect="off"
+          spellCheck={false}
+          aria-invalid={promoFieldErrorMsg ? "true" : undefined}
+          aria-describedby="promo-hint"
+          className={`
+            w-full rounded-xl border bg-card p-4 text-sm font-mono tracking-wide uppercase
+            placeholder:text-muted-foreground/50 placeholder:normal-case placeholder:tracking-normal
+            outline-none
+            focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
+            transition-[border-color,box-shadow] duration-200
+            ${promoFieldErrorMsg ? "border-destructive" : "border-border hover:border-white/[0.15]"}
+          `}
+        />
+        <p
+          id="promo-hint"
+          role={promoFieldErrorMsg ? "alert" : undefined}
+          className={
+            promoFieldErrorMsg
+              ? "text-xs text-destructive"
+              : promoCheckingForCurrentInput
+                ? "text-xs text-muted-foreground"
+                : "text-xs text-muted-foreground/60"
+          }
+        >
+          {promoFieldErrorMsg
+            ? promoFieldErrorMsg
+            : promoCheckingForCurrentInput
+              ? "Checking promo…"
+              : "Clearing the field removes the discount."}
+        </p>
+      </div>
+
+      <div className="w-full max-w-lg mt-4 space-y-1.5">
         <label htmlFor="hl-wallet" className="text-xs font-medium text-muted-foreground">
           Hyperliquid wallet address (the wallet you trade with)
         </label>
@@ -1659,7 +2489,6 @@ export function StepConnectAndPay({
               data-testid="hl-wallet-change"
               onClick={() => {
                 setEditingHlWallet(true);
-                setHlWallet("");
                 setHlWalletTouched(false);
                 setConfirmed(false);
               }}
@@ -1676,6 +2505,7 @@ export function StepConnectAndPay({
               value={hlWallet}
               onChange={(e) => {
                 setHlWallet(e.target.value);
+                hlConnectTargetRef.current = null;
                 setConfirmed(false);
               }}
               onFocus={() => handleHelpFocus("hl-wallet")}
@@ -1741,9 +2571,40 @@ export function StepConnectAndPay({
           )}
         </div>
 
-        {/* Surface the wallet/HL-address mismatch the moment it happens
-            so the user can fix it before filling out the rest of the form. */}
-        {hlAddressReady && isConnected && !walletMatchesHL && (
+        {hlAddressReady && !isConnected && isFree && (
+          <div
+            data-testid="wallet-ownership-connect-banner"
+            className="rounded-xl border border-amber-500/30 bg-amber-500/[0.06] p-3.5 mt-2 flex items-start gap-2.5"
+          >
+            <Warning size={16} weight="fill" className="text-amber-400 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <p className="text-sm font-medium text-foreground">
+                Connect a wallet to continue
+              </p>
+              <p className="text-xs text-muted-foreground">
+                You&apos;re registering{" "}
+                <span className="font-mono text-foreground">{truncateAddress(hlWallet)}</span>
+                . Connect the wallet that owns this Hyperliquid address so we can
+                sign and prove ownership.
+              </p>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <ConnectButton.Custom>
+                  {({ openConnectModal }) => (
+                    <button
+                      type="button"
+                      onClick={() => openConnectModal?.()}
+                      className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 inline-flex items-center gap-1.5"
+                    >
+                      <Wallet size={14} weight="bold" />
+                      Connect wallet
+                    </button>
+                  )}
+                </ConnectButton.Custom>
+              </div>
+            </div>
+          </div>
+        )}
+        {showHlOwnershipMismatchBanner && (
           <div
             data-testid="wallet-ownership-mismatch-banner"
             className="rounded-xl border border-amber-500/30 bg-amber-500/[0.06] p-3.5 mt-2 flex items-start gap-2.5"
@@ -1756,34 +2617,44 @@ export function StepConnectAndPay({
               <p className="text-xs text-muted-foreground">
                 You&apos;re registering{" "}
                 <span className="font-mono text-foreground">{truncateAddress(hlWallet)}</span>
-                {" "}but MetaMask is connected as{" "}
-                <span className="font-mono text-foreground">{truncateAddress(address)}</span>.
-                We need a signature from the HL address itself to prove ownership.
+                {bannerConnectedAddress ? (
+                  <>
+                    {" "}but {connectedWalletName} is connected as{" "}
+                    <span className="font-mono text-foreground">
+                      {truncateAddress(bannerConnectedAddress)}
+                    </span>
+                    . We need a signature from the HL address itself to prove ownership.
+                  </>
+                ) : (
+                  <>
+                    . Connect the wallet that owns this address to verify ownership.
+                  </>
+                )}
               </p>
               <div className="flex flex-wrap gap-2 pt-1">
+                {(paymentMethod === "eip712" || isFree) && bannerConnectedAddress && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHlWallet(bannerConnectedAddress);
+                      setHlWalletTouched(true);
+                      setEditingHlWallet(false);
+                      setConfirmed(false);
+                      setHlMismatchReconnecting(false);
+                      hlConnectTargetRef.current = null;
+                    }}
+                    className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                  >
+                    Use {truncateAddress(bannerConnectedAddress)} instead
+                  </button>
+                )}
                 <button
                   type="button"
-                  onClick={() => {
-                    setHlWallet(address);
-                    setHlWalletTouched(true);
-                    setEditingHlWallet(false);
-                    setConfirmed(false);
-                  }}
-                  className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                  onClick={handleConnectDifferentHlWallet}
+                  className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:border-white/[0.15] transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
                 >
-                  Use {truncateAddress(address)} instead
+                  Connect a different wallet
                 </button>
-                <ConnectButton.Custom>
-                  {({ openAccountModal }) => (
-                    <button
-                      type="button"
-                      onClick={openAccountModal}
-                      className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:border-white/[0.15] transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
-                    >
-                      Switch wallet in MetaMask
-                    </button>
-                  )}
-                </ConnectButton.Custom>
               </div>
             </div>
           </div>
@@ -1819,32 +2690,52 @@ export function StepConnectAndPay({
 
       {/* ─── 2. Email ─── */}
       <div className="w-full max-w-lg mt-4 space-y-1.5">
-        <label htmlFor="reg-email" className="text-xs font-medium text-muted-foreground">
-          Email address
+        <label htmlFor={isHubspotBrand ? undefined : "reg-email"} className="text-xs font-medium text-muted-foreground">
+          Email address <span className="text-destructive">*</span>
         </label>
-        <input
-          id="reg-email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          onBlur={() => setEmailTouched(true)}
-          placeholder="you@example.com"
-          aria-label="Email address for registration updates"
-          aria-describedby="email-hint email-error"
-          aria-invalid={showEmailError ? "true" : undefined}
-          className={`
-            w-full rounded-xl border bg-card p-4 text-sm
-            placeholder:text-muted-foreground/50
-            outline-none
-            focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
-            transition-[border-color,box-shadow] duration-200
-            ${showEmailError ? "border-destructive" : "border-border hover:border-white/[0.15]"}
-          `}
-        />
+
+        {isHubspotBrand ? (
+          <div
+            id="hubspot-email-form"
+            ref={hubspotFormContainerRef}
+            className={`hubspot-email-wrapper ${
+              hubspotFormReady ? "hubspot-email-wrapper--ready" : ""
+            } ${showEmailError ? "hubspot-email-wrapper--error" : ""}`}
+            aria-invalid={showEmailError ? "true" : undefined}
+            aria-describedby="email-hint email-error"
+            aria-busy={!hubspotFormReady ? "true" : undefined}
+          />
+        ) : (
+          <input
+            id="reg-email"
+            data-testid="reg-email"
+            type="email"
+            value={email}
+            required
+            onChange={(e) => setEmail(e.target.value)}
+            onBlur={() => setEmailTouched(true)}
+            placeholder="you@example.com"
+            aria-label="Email address for registration updates"
+            aria-describedby="email-hint email-error"
+            aria-invalid={showEmailError ? "true" : undefined}
+            aria-required="true"
+            className={`
+              w-full rounded-xl border bg-card p-4 text-sm
+              placeholder:text-muted-foreground/50
+              outline-none
+              focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
+              transition-[border-color,box-shadow] duration-200
+              ${showEmailError ? "border-destructive" : "border-border hover:border-white/[0.15]"}
+            `}
+          />
+        )}
+
         <div id="email-error" role="alert" className="min-h-[1.25rem]">
           {showEmailError && (
             <p className="text-xs text-destructive">
-              Enter a valid email address
+              {email.length === 0
+                ? "Email address is required"
+                : "Enter a valid email address"}
             </p>
           )}
         </div>
@@ -1942,7 +2833,6 @@ export function StepConnectAndPay({
           </button>
         </div>
 
-        {/* Inline requirements hint for EIP-712 */}
         {paymentMethod === "eip712" && (
           <p className="text-xs text-muted-foreground text-balance">
             Your connected wallet must own the Hyperliquid account. Only withdrawable USDC is&nbsp;available — funds in open positions are&nbsp;excluded.
@@ -1959,22 +2849,37 @@ export function StepConnectAndPay({
               ? <>Connect the wallet you&#8217;ll use to pay with USDC on&nbsp;Base.</>
               : "Connect the wallet that owns your Hyperliquid account to sign and transfer USDC."}
           </p>
-          <ConnectButton.Custom>
-            {({ openConnectModal }) => (
-              <div className="flex justify-center">
-                <button
-                  type="button"
-                  onClick={openConnectModal}
-                  className="shiny-cta h-11 px-8 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                >
-                  <span className="inline-flex items-center gap-2 text-sm font-semibold">
-                    {paymentMethod === "base" ? <Wallet size={18} weight="bold" /> : <ShieldCheck size={18} weight="bold" />}
-                    Connect Wallet
-                  </span>
-                </button>
-              </div>
-            )}
-          </ConnectButton.Custom>
+          {paymentMethod === "eip712" ? (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={handleConnectForEip712}
+                className="shiny-cta h-11 px-8 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                <span className="inline-flex items-center gap-2 text-sm font-semibold">
+                  <ShieldCheck size={18} weight="bold" />
+                  Connect Wallet
+                </span>
+              </button>
+            </div>
+          ) : (
+            <ConnectButton.Custom>
+              {({ openConnectModal }) => (
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={openConnectModal}
+                    className="shiny-cta h-11 px-8 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  >
+                    <span className="inline-flex items-center gap-2 text-sm font-semibold">
+                      <Wallet size={18} weight="bold" />
+                      Connect Wallet
+                    </span>
+                  </button>
+                </div>
+              )}
+            </ConnectButton.Custom>
+          )}
         </div>
       )}
 
@@ -1991,31 +2896,48 @@ export function StepConnectAndPay({
                 Connected
               </span>
             </div>
-            <ConnectButton.Custom>
-              {({ openConnectModal }) => (
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      await disconnectAsync();
-                    } catch {
-                      /* ignore disconnect errors */
-                    }
-                    setConfirmed(false);
-                    if (paymentState === "error") {
-                      setPaymentState("idle");
-                      setErrorMessage("");
-                    }
-                    openConnectModal?.();
-                  }}
-                  className="shrink-0 h-8 px-3 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:border-white/[0.15] transition-[border-color,color] duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                  aria-label="Change connected wallet"
-                >
-                  Change
-                </button>
-              )}
-            </ConnectButton.Custom>
+            <button
+              type="button"
+              data-testid="connected-wallet-change"
+              disabled={signingOwnership}
+              onClick={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (
+                  paymentMethod === "base" &&
+                  walletMatchesHL &&
+                  hlAddressReady
+                ) {
+                  setConfirmed(false);
+                  if (paymentState === "error") {
+                    setPaymentState("idle");
+                    setErrorMessage("");
+                  }
+                  await handleUseDifferentPayingWallet();
+                  return;
+                }
+                setConfirmed(false);
+                if (paymentState === "error") {
+                  setPaymentState("idle");
+                  setErrorMessage("");
+                }
+                armConnectDraft();
+                await withReloadSuppressed(async () => {
+                  try {
+                    await disconnectAsync();
+                  } catch {
+                    /* already disconnected */
+                  }
+                });
+                setPendingReconnect(true);
+              }}
+              className="shrink-0 h-8 px-3 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:border-white/[0.15] transition-[border-color,color] duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Change connected wallet"
+            >
+              {signingOwnership ? "Signing…" : "Change"}
+            </button>
           </div>
+
         </div>
       )}
 
@@ -2104,6 +3026,20 @@ export function StepConnectAndPay({
               setPayoutWallet(hlWallet);
               setPayoutPrefilled(true);
             }
+            // Submit email to HubSpot via Forms API (fire-and-forget)
+            if (isHubspotBrand && email && isValidEmail(email)) {
+              fetch(`https://api.hsforms.com/submissions/v3/integration/submit/${hsPortalId}/${hsFormId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  fields: [{ name: "email", value: email }],
+                  context: {
+                    pageUri: window.location.href,
+                    pageName: document.title,
+                  },
+                }),
+              }).catch(() => { /* non-blocking */ });
+            }
             trackEvent("register_review_reached", {
               tier_name: selectedTier?.name,
               payment_method: paymentMethod === "base" ? "wallet" : "hyperliquid",
@@ -2124,6 +3060,12 @@ export function StepConnectAndPay({
             <ArrowRight size={14} weight="bold" />
           </span>
         </Button>
+
+        {!canContinueToConfirm && continueBlockerMsg && (
+          <p className="text-xs text-muted-foreground/70 text-center mt-2">
+            {continueBlockerMsg}
+          </p>
+        )}
       </div>
 
       {/* Back to plan selection */}

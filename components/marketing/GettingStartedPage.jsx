@@ -424,7 +424,7 @@ function RegistrationSection() {
                 <div className="grid grid-cols-4 gap-0 text-sm border-b border-white/[0.04]">
                   <div className="px-4 py-3 text-zinc-300 font-medium">Tier I</div>
                   <div className="px-4 py-3 text-right text-zinc-200 font-mono">$25K</div>
-                  <div className="px-4 py-3 text-right text-zinc-200 font-mono">$149</div>
+                  <div className="px-4 py-3 text-right text-zinc-200 font-mono">$119</div>
                   <div className="px-4 py-3 text-right text-zinc-400 font-mono">$100K</div>
                 </div>
                 <div className="grid grid-cols-4 gap-0 text-sm border-b border-white/[0.04]">
@@ -441,7 +441,7 @@ function RegistrationSection() {
                     </span>
                   </div>
                   <div className="px-4 py-3 text-right text-zinc-200 font-mono">$100K</div>
-                  <div className="px-4 py-3 text-right text-zinc-200 font-mono">$449</div>
+                  <div className="px-4 py-3 text-right text-zinc-200 font-mono">$399</div>
                   <div className="px-4 py-3 text-right text-teal-400 font-mono">$400K</div>
                 </div>
               </div>

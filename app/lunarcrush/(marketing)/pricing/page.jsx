@@ -1,19 +1,20 @@
 import PricingPage from '@/components/marketing/PricingPage'
 import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
-import { PRICING_TIERS } from '@/lib/constants'
+import { fetchDbPricingTiers } from '@/lib/pricing-db'
 
 export const metadata = buildMetadata({
   title: 'Pricing — LunarCrush Funded Accounts',
   description: 'One-time USDC fee. $5K to $100K scaled accounts. 100% profit split. No subscriptions, no hidden charges.',
   ogTitle: 'LunarCrush Pricing — One Fee. One Challenge. Keep Everything You Earn.',
-  ogDescription: 'Start from $39. Choose $5K to $100K accounts. 100% profit split, monthly USDC payouts, and scaling up to $400K.',
+  ogDescription: 'Start from $59. Choose $5K to $100K accounts. 100% profit split, monthly USDC payouts, and scaling up to $400K.',
   path: '/lunarcrush/pricing',
   brand: 'lunarcrush',
 })
 
-export default function LunarCrushPricing() {
-  const productSchemas = PRICING_TIERS.map((tier) => ({
+export default async function LunarCrushPricing() {
+  const tiers = await fetchDbPricingTiers('lunarcrush')
+  const productSchemas = tiers.map((tier) => ({
     "@context": "https://schema.org",
     "@type": "Product",
     name: `LunarCrush ${tier.name} Funded Account`,
@@ -24,7 +25,7 @@ export default function LunarCrushPricing() {
   return (
     <>
       {productSchemas.map((schema, i) => <JsonLd key={i} data={schema} />)}
-      <PricingPage tiers={PRICING_TIERS} />
+      <PricingPage tiers={tiers} />
     </>
   )
 }

@@ -72,7 +72,7 @@ describe("signRegistrationRequest", () => {
         connectedAddress: OTHER_WALLET,
         signMessageAsync: signFn,
       }),
-    ).rejects.toThrow(/Switch MetaMask/);
+    ).rejects.toThrow(/Connect 0x.*to sign ownership/);
     // The whole point of this gate: never reach signMessageAsync when the
     // signature would just produce a server-side 403.
     expect(signFn).not.toHaveBeenCalled();

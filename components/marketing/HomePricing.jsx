@@ -6,7 +6,13 @@ import Link from 'next/link'
 import { ArrowRight, Star } from '@phosphor-icons/react'
 import { PRICING_TIERS, parseTierAccountSize } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
+import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
+import { useRegistrationCapacity } from '@/hooks/use-registration-capacity'
+import { isFreeTierForRegistration } from '@/lib/registration-tier-helpers'
+import { RegistrationCapacityWaitlist } from '@/components/marketing/RegistrationCapacityWaitlist'
+import { isWsbSaleBannerPublic } from '@/lib/wsb-sale-banner-public'
+import { capacityMinerSlugForBrandId } from '@/lib/capacity-miner-slug'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -14,13 +20,15 @@ const TIER_LABELS = { 'free': 'Free', 'tier-1': 'Starter', 'tier-2': 'Tier I', '
 
 function tierBadge(tier) {
   if (tier.popular) return 'Most Popular'
-  if (tier.id === 'free') return 'Try for Free'
+  if (tier.id === 'free') return 'Only 1,000 Available'
   return null
 }
 
-function PricingCard({ tier, index, brandHref }) {
+function PricingCard({ tier, index, brandHref, withQS, freeAtCapacity, paidAtCapacity }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
+  const free = isFreeTierForRegistration(tier)
+  const soldOut = (free && freeAtCapacity) || (!free && paidAtCapacity)
 
   const details = [
     { label: 'Profit Target', value: tier.profitTargetAmount },
@@ -34,7 +42,7 @@ function PricingCard({ tier, index, brandHref }) {
       initial={{ opacity: 0, y: 24 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ ...spring, delay: index * 0.1 }}
-      className={`relative flex flex-col rounded-2xl p-6 sm:p-8 xl:p-4 ${
+      className={`relative flex h-full min-h-0 flex-col rounded-2xl p-6 sm:p-8 xl:p-4 ${
         tier.popular || tier.id === 'free'
           ? 'shiny-border'
           : 'border border-white/[0.08] bg-[#09090b]'
@@ -51,7 +59,7 @@ function PricingCard({ tier, index, brandHref }) {
       )}
 
       {/* Tier label */}
-      <div className="text-xs font-semibold text-zinc-500 tracking-widest uppercase mt-2 mb-1">
+      <div className="text-xs font-semibold text-zinc-500 tracking-widest uppercase mb-1 mt-4">
         {TIER_LABELS[tier.id]}
       </div>
 
@@ -63,19 +71,19 @@ function PricingCard({ tier, index, brandHref }) {
         <ins className="text-3xl sm:text-4xl xl:text-3xl font-bold font-mono no-underline text-white">
           ${tier.launchPrice}
         </ins>
-        {tier.standardPrice && (
+        {tier.standardPrice > tier.launchPrice && (
           <del className="text-sm text-zinc-600 font-mono">${tier.standardPrice}</del>
         )}
         <span className="text-xs text-zinc-500 font-medium">USDC</span>
         <span className="sr-only">
-          {tier.standardPrice
+          {tier.standardPrice > tier.launchPrice
             ? `Launch price ${tier.launchPrice} USDC, was ${tier.standardPrice} USDC`
             : `${tier.launchPrice} USDC`}
         </span>
       </div>
 
       {/* Details */}
-      <ul className="mt-6 xl:mt-4 space-y-3 xl:space-y-2 flex-1">
+      <ul className="mt-6 xl:mt-4 mb-6 xl:mb-5 flex-1 min-h-0 space-y-3 xl:space-y-2">
         {details.map((d) => (
           <li key={d.label} className="flex items-start justify-between gap-4 xl:gap-2 text-sm xl:text-xs">
             <span className="text-zinc-500">{d.label}</span>
@@ -84,14 +92,19 @@ function PricingCard({ tier, index, brandHref }) {
         ))}
       </ul>
 
+      {soldOut ? (
+        <span className="mt-auto flex items-center justify-center gap-1.5 min-h-12 xl:min-h-10 rounded-xl text-xs sm:text-sm font-semibold tabular-nums whitespace-nowrap cursor-not-allowed opacity-60 bg-white/[0.04] border border-white/[0.08] text-zinc-400 px-3 py-3 xl:px-2 xl:py-2">
+          {free ? "Limit reached" : "Sold out — join waitlist"}
+        </span>
+      ) : (
       <Link
         href={(() => {
           const size = parseTierAccountSize(tier.accountSize)
           const base = brandHref('/register')
-          return size ? `${base}?tier=${size}` : base
+          return withQS(size ? `${base}?tier=${size}` : base)
         })()}
         onClick={() => trackCtaClick({ label: tier.cta, location: `home_pricing:${tier.name || tier.accountSize || 'unknown'}` })}
-        className={`mt-8 xl:mt-4 flex items-center justify-center gap-1.5 min-h-12 xl:min-h-10 rounded-xl text-sm xl:text-xs font-semibold transition-colors ${
+        className={`mt-auto flex items-center justify-center gap-1.5 min-h-12 xl:min-h-10 rounded-xl text-sm xl:text-xs font-semibold transition-colors ${
           tier.popular || tier.id === 'free'
             ? 'shiny-cta px-6 py-3 xl:px-3 xl:py-2'
             : 'bg-white/[0.06] border border-white/[0.08] text-white hover:bg-white/[0.1]'
@@ -100,6 +113,7 @@ function PricingCard({ tier, index, brandHref }) {
         {tier.cta}
         <ArrowRight size={14} weight="bold" />
       </Link>
+      )}
     </motion.div>
   )
 }
@@ -107,6 +121,8 @@ function PricingCard({ tier, index, brandHref }) {
 export default function HomePricing({ tiers = PRICING_TIERS }) {
   const brand = useBrand()
   const brandHref = useBrandHref()
+  const withQS = useWithPreservedQuery()
+  const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity(capacityMinerSlugForBrandId(brand.id))
   tiers = brand.pricingTiers || tiers
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
@@ -133,18 +149,43 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
           </div>
         </motion.div>
 
-        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-6 md:gap-5 xl:gap-3`}>
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-6 md:gap-5 xl:gap-3 items-stretch`}>
           {tiers.map((tier, i) => (
-            <PricingCard key={tier.id} tier={tier} index={i} brandHref={brandHref} />
+            <PricingCard
+              key={tier.id}
+              tier={tier}
+              index={i}
+              brandHref={brandHref}
+              withQS={withQS}
+              freeAtCapacity={freeAtCapacity}
+              paidAtCapacity={paidAtCapacity}
+            />
           ))}
         </div>
+
+        <RegistrationCapacityWaitlist paidAtCapacity={paidAtCapacity} />
+
+        {/* WSB Flash Deal pill — Hyperscaled & Vanta only */}
+        {(brand.id === 'hyperscaled' || brand.id === 'vanta') && isWsbSaleBannerPublic() && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={inView ? { opacity: 1 } : {}}
+            transition={{ ...spring, delay: 0.25 }}
+            className="flex justify-center mt-6"
+          >
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
+              <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
+              <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
+            </div>
+          </motion.div>
+        )}
 
         {/* Universal rules */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ ...spring, delay: 0.3 }}
-          className="text-center text-sm text-zinc-500 mt-8 max-w-[60ch] mx-auto"
+          className="text-center text-sm text-zinc-500 mt-4 max-w-[60ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
           All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time&nbsp;limit

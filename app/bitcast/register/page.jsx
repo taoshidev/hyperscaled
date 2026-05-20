@@ -3,12 +3,13 @@ import { buildMetadata } from "@/lib/metadata"
 import { getMinerBySlug, getTiersForMiner } from "@/lib/miners"
 import { TIERS as TIER_META } from "@/lib/constants"
 import { unstable_cache } from "next/cache"
+import { listPriceUsdcFromDbTier } from "@/lib/wsb-tier-list-price"
 
 export const metadata = buildMetadata({
   title: "Start Your Challenge",
   description: "Choose your scaled account size and begin your one-step challenge on Hyperliquid. No recurring fees. 100% of performance rewards are yours.",
-  ogTitle: "Start Your Challenge — Bitcast Scaled Trading",
-  ogDescription: "Choose from $5K to $100K. One-time USDC fee. Pass the challenge. Keep 100% of your profits.",
+  ogTitle: "Start Your Challenge — HyperFunded Scaled Trading",
+  ogDescription: "Choose from $5K to $100K. One-time USDC fee. Pass the challenge. Keep 100% of eligible rewards.",
   path: "/bitcast/register",
   brand: "bitcast",
 })
@@ -24,7 +25,11 @@ function enrichTier(dbTier, index) {
     name: meta?.name || `$${dbTier.accountSize / 1000}K`,
     accountSize: dbTier.accountSize,
     fullPrice: meta?.fullPrice ?? null,
-    promoPrice: Number(dbTier.priceUsdc),
+    promoPrice: listPriceUsdcFromDbTier(
+      MINER_SLUG,
+      dbTier.accountSize,
+      Number(dbTier.priceUsdc),
+    ),
     badge: meta?.badge ?? null,
     details: meta?.details ?? [],
   }
@@ -60,9 +65,9 @@ export default async function BitcastRegisterPage() {
       initialMinerSlug={MINER_SLUG}
       initialMinerTiers={initialMinerTiers}
       initialPaymentWallet={initialPaymentWallet}
-      logo="/bitcast-logo.svg"
-      logoAlt="Bitcast"
-      logoHref="https://bitcast.network"
+      logo="/hyperfunded-logo.png"
+      logoAlt="HyperFunded"
+      logoHref="https://hyperfunded.co"
       brandVariant="bitcast"
     />
   )

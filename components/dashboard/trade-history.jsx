@@ -1,18 +1,66 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Fragment } from "react";
+import { ChevronRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatUSD, formatPrice, formatReturn, formatTime, pnlColor } from "@/lib/format";
 import { ShareButton } from "./share-button";
+
+const COLS = (
+  <colgroup>
+    <col style={{ width: 32 }} />
+    <col style={{ width: 120 }} />
+    <col style={{ width: 100 }} />
+    <col style={{ width: 130 }} />
+    <col style={{ width: 130 }} />
+    <col style={{ width: 110 }} />
+    <col style={{ width: 100 }} />
+    <col style={{ width: 140 }} />
+    <col style={{ width: 140 }} />
+    <col style={{ width: 40 }} />
+  </colgroup>
+);
 
 function pairName(tradePair) {
   if (Array.isArray(tradePair)) return tradePair[1] || tradePair[0];
   return tradePair || "--";
 }
 
+function DirectionBadge({ direction }) {
+  return (
+    <span
+      className={`inline-block rounded px-1.5 py-0.5 text-xs font-semibold border ${
+        direction === "LONG"
+          ? "bg-teal-400/10 text-teal-400 border-teal-400/20"
+          : direction === "SHORT"
+            ? "bg-red-500/10 text-red-400 border-red-500/20"
+            : "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
+      }`}
+    >
+      {direction}
+    </span>
+  );
+}
+
+function resolveDirection(position) {
+  if (position.direction) return position.direction;
+  if (position.position_type !== "FLAT") return position.position_type;
+  const firstOrder = position.filled_orders?.[0];
+  if (firstOrder?.order_type && firstOrder.order_type !== "FLAT") {
+    return firstOrder.order_type;
+  }
+  return position.position_type;
+}
+
 export function TradeHistory({ positions }) {
   const [showAll, setShowAll] = useState(false);
+  const [expandedRows, setExpandedRows] = useState({});
+
+  const toggleRow = (uuid) => {
+    setExpandedRows((prev) => ({ ...prev, [uuid]: !prev[uuid] }));
+  };
 
   const all = Array.isArray(positions) ? positions : positions?.positions || [];
   const closed = all
@@ -39,9 +87,11 @@ export function TradeHistory({ positions }) {
         ) : (
           <>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm table-fixed">
+                {COLS}
                 <thead>
                   <tr className="border-b border-white/[0.06] text-left text-xs text-zinc-500 uppercase tracking-widest">
+                    <th className="pb-2 font-medium" />
                     <th className="pb-2 pr-4 font-medium">Pair</th>
                     <th className="pb-2 pr-4 font-medium">Direction</th>
                     <th className="pb-2 pr-4 font-medium">Entry Price</th>
@@ -50,63 +100,118 @@ export function TradeHistory({ positions }) {
                     <th className="pb-2 pr-4 font-medium">Return</th>
                     <th className="pb-2 pr-4 font-medium">Opened</th>
                     <th className="pb-2 pr-4 font-medium">Closed</th>
-                    <th className="pb-2 w-10 font-medium"><span className="sr-only">Share</span></th>
+                    <th className="pb-2 font-medium"><span className="sr-only">Share</span></th>
                   </tr>
                 </thead>
                 <tbody>
                   {visible.map((p, i) => {
-                    const direction = p.direction || (p.position_type !== "FLAT" ? p.position_type : null) || p.position_type;
+                    const direction = resolveDirection(p);
                     const openTime = p.open_ms || p.opened_at;
                     const closeTime = p.close_ms || p.closed_at;
                     const ret = p.return_at_close ?? p.return;
+                    const hasOrders = p.filled_orders && p.filled_orders.length > 0;
+                    const isExpanded = !!expandedRows[p.position_uuid || i];
                     return (
-                      <tr key={p.position_uuid || i} className="border-b border-border/50">
-                        <td className="py-2 pr-4 font-medium">
-                          {pairName(p.trade_pair || p.pair)}
-                        </td>
-                        <td className="py-2.5 pr-4">
-                          <span
-                            className={`inline-block rounded px-1.5 py-0.5 text-xs font-semibold border ${
-                              direction === "LONG"
-                                ? "bg-teal-400/10 text-teal-400 border-teal-400/20"
-                                : direction === "SHORT"
-                                  ? "bg-red-500/10 text-red-400 border-red-500/20"
-                                  : "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
-                            }`}
-                          >
-                            {direction}
-                          </span>
-                        </td>
-                        <td className="py-2.5 pr-4 font-mono text-zinc-300">
-                          {formatPrice(p.average_entry_price ?? p.entry_price)}
-                        </td>
-                        <td className={`py-2.5 pr-4 font-mono font-semibold ${pnlColor((p.realized_pnl ?? 0) - (p.fees ?? 0))}`}>
-                          {formatUSD((p.realized_pnl ?? 0) - (p.fees ?? 0))}
-                        </td>
-                        <td className="py-2.5 pr-4 font-mono text-zinc-500">
-                          {p.fees != null ? `-${formatUSD(p.fees)}` : "--"}
-                        </td>
-                        <td className={`py-2.5 pr-4 font-mono font-semibold ${pnlColor((ret || 1) - 1)}`}>
-                          {formatReturn(ret)}
-                        </td>
-                        <td className="py-2.5 pr-4 text-zinc-500 text-xs">
-                          {openTime ? formatTime(openTime) : "--"}
-                        </td>
-                        <td className="py-2.5 pr-4 text-zinc-500 text-xs">
-                          {closeTime ? formatTime(closeTime) : "--"}
-                        </td>
-                        <td className="py-2.5 text-right">
-                          <ShareButton
-                            trade={{
-                              ticker: pairName(p.trade_pair || p.pair).replace(/\/.*$/, ""),
-                              direction: direction === "FLAT" ? "CLOSED" : direction,
-                              returnValue: ret || 1,
-                              entryPrice: p.average_entry_price ?? p.entry_price,
-                              markPrice: null,
-                            }}
-                          />
-                        </td>
-                      </tr>
+                      <Fragment key={p.position_uuid || i}>
+                        <tr
+                          className={`border-b border-border/50 transition-colors ${hasOrders ? "cursor-pointer hover:bg-white/[0.02]" : ""}`}
+                          onClick={hasOrders ? () => toggleRow(p.position_uuid || i) : undefined}
+                        >
+                          <td className="py-2.5">
+                            {hasOrders ? (
+                              <motion.div
+                                animate={{ rotate: isExpanded ? 90 : 0 }}
+                                transition={{ duration: 0.2, ease: "easeInOut" }}
+                                style={{ display: "inline-flex" }}
+                              >
+                                <ChevronRight size={14} className="text-zinc-500" />
+                              </motion.div>
+                            ) : null}
+                          </td>
+                          <td className="py-2 pr-4 font-medium">
+                            {pairName(p.trade_pair || p.pair)}
+                          </td>
+                          <td className="py-2.5 pr-4">
+                            <DirectionBadge direction={direction} />
+                          </td>
+                          <td className="py-2.5 pr-4 font-mono text-zinc-300">
+                            {formatPrice(p.average_entry_price ?? p.entry_price)}
+                          </td>
+                          <td className={`py-2.5 pr-4 font-mono font-semibold ${pnlColor((p.realized_pnl ?? 0) - (p.fees ?? 0))}`}>
+                            {formatUSD((p.realized_pnl ?? 0) - (p.fees ?? 0))}
+                          </td>
+                          <td className="py-2.5 pr-4 font-mono text-zinc-500">
+                            {p.fees != null ? `-${formatUSD(p.fees)}` : "--"}
+                          </td>
+                          <td className={`py-2.5 pr-4 font-mono font-semibold ${pnlColor((ret || 1) - 1)}`}>
+                            {formatReturn(ret)}
+                          </td>
+                          <td className="py-2.5 pr-4 text-zinc-500 text-xs">
+                            {openTime ? formatTime(openTime) : "--"}
+                          </td>
+                          <td className="py-2.5 pr-4 text-zinc-500 text-xs">
+                            {closeTime ? formatTime(closeTime) : "--"}
+                          </td>
+                          <td className="py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
+                            <ShareButton
+                              trade={{
+                                ticker: pairName(p.trade_pair || p.pair).replace(/\/.*$/, ""),
+                                direction: direction === "FLAT" ? "CLOSED" : direction,
+                                returnValue: ret || 1,
+                                entryPrice: p.average_entry_price ?? p.entry_price,
+                                markPrice: null,
+                              }}
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colSpan={10} className="p-0" style={{ border: 0 }}>
+                            <AnimatePresence initial={false}>
+                              {isExpanded && hasOrders && (
+                                <motion.div
+                                  key="orders"
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.22, ease: [0.04, 0.62, 0.23, 0.98] }}
+                                  style={{ overflow: "hidden" }}
+                                >
+                                  <table className="w-full table-fixed">
+                                    {COLS}
+                                    <tbody>
+                                      {p.filled_orders.map((order, oi) => (
+                                        <tr
+                                          key={order.order_uuid || oi}
+                                          className="border-b border-border/30 bg-zinc-900/40 text-xs"
+                                        >
+                                          <td className="py-1.5 text-zinc-600 pl-1">↳</td>
+                                          <td className="py-1.5 pr-4 text-zinc-500">Order {oi + 1}</td>
+                                          <td className="py-1.5 pr-4">
+                                            <DirectionBadge direction={order.order_type} />
+                                          </td>
+                                          <td className="py-1.5 pr-4 font-mono text-zinc-400">
+                                            {order.price ? formatPrice(order.price) : "--"}
+                                          </td>
+                                          <td className="py-1.5 pr-4 text-zinc-600">--</td>
+                                          <td className="py-1.5 pr-4 text-zinc-600">--</td>
+                                          <td className="py-1.5 pr-4 text-zinc-600">
+                                            {order.execution_type || "--"}
+                                          </td>
+                                          <td className="py-1.5 pr-4 text-zinc-500">
+                                            {order.processed_ms ? formatTime(order.processed_ms) : "--"}
+                                          </td>
+                                          <td className="py-1.5 pr-4 text-zinc-600">--</td>
+                                          <td className="py-1.5" />
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </td>
+                        </tr>
+                      </Fragment>
                     );
                   })}
                 </tbody>

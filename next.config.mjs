@@ -4,9 +4,19 @@ import { withSentryConfig } from "@sentry/nextjs";
 const nextConfig = {
   env: {
     USE_TESTNET: process.env.USE_TESTNET || "false",
+    NEXT_PUBLIC_WSB_SALE_BANNER:
+      process.env.WSB_SALE_BANNER === "true" ? "true" : "false",
   },
-  // Nodemailer is Node-only; keep it external so resolution matches runtime node_modules.
-  serverExternalPackages: ["nodemailer"],
+  // Keep Node-only libs external so webpack doesn’t omit them from Vercel’s traced bundle.
+  // lib/db dynamically imports Cloud SQL Connector when CLOUD_SQL_INSTANCE_CONNECTION_NAME is set.
+  // Do not use outputFileTracingIncludes with '/*' here — it blows up every function’s trace
+  // (hundreds of MB, invalid serverless packages on Vercel). Removing webpackIgnore on those
+  // imports in lib/db + listing packages here is enough for NFT to trace them.
+  serverExternalPackages: [
+    "nodemailer",
+    "@google-cloud/cloud-sql-connector",
+    "google-auth-library",
+  ],
   webpack: (config, { isServer }) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
@@ -43,8 +53,8 @@ export default withSentryConfig(nextConfig, {
 
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
   // This can increase your server load as well as your hosting bill.
-  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
-  // side errors will fail.
+  // Note: Check that the configured route will not match with your Next.js proxy (edge);
+  // otherwise reporting of client-side errors will fail.
   tunnelRoute: "/monitoring",
 
   webpack: {

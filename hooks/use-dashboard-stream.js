@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { reportWarning } from "@/lib/errors";
 
@@ -12,67 +12,76 @@ export function useDashboardStream(hlAddress) {
   const timerRef = useRef(null);
   const hasReportedDisconnectRef = useRef(false);
 
-  const connect = useCallback(() => {
-    if (!hlAddress) return;
+  useEffect(() => {
+    if (!hlAddress) return undefined;
 
-    if (esRef.current) {
-      esRef.current.close();
-    }
+    let cancelled = false;
 
-    setStatus("connecting");
-    const es = new EventSource(
-      `/api/dashboard/stream?hl_address=${hlAddress}`,
-    );
-    esRef.current = es;
+    function connect() {
+      if (!hlAddress || cancelled) return;
 
-    es.onopen = () => {
-      setStatus("connected");
-      retriesRef.current = 0;
-      hasReportedDisconnectRef.current = false;
-    };
-
-    es.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-        if (msg.type === "error") {
-          // Server sent an explicit error — close and let onerror retry
-          es.close();
-          return;
-        }
-        if (msg.type === "dashboard") {
-          queryClient.invalidateQueries({ queryKey: ["dashboard", hlAddress] });
-        } else if (msg.type === "event") {
-          queryClient.setQueryData(["events", hlAddress], (old) => {
-            const prev = Array.isArray(old) ? old : [];
-            return [msg.data, ...prev];
-          });
-        }
-      } catch {}
-    };
-
-    es.onerror = () => {
-      es.close();
-      esRef.current = null;
-
-      if (!hasReportedDisconnectRef.current) {
-        hasReportedDisconnectRef.current = true;
-        reportWarning("SSE stream disconnected", {
-          source: "dashboard-stream",
-          userId: hlAddress,
-        });
+      if (esRef.current) {
+        esRef.current.close();
       }
 
-      setStatus("error");
-      const delay = Math.min(1000 * 2 ** retriesRef.current, 30000);
-      retriesRef.current += 1;
-      timerRef.current = setTimeout(connect, delay);
-    };
-  }, [hlAddress, queryClient]);
+      setStatus("connecting");
+      const es = new EventSource(
+        `/api/dashboard/stream?hl_address=${hlAddress}`,
+      );
+      esRef.current = es;
 
-  useEffect(() => {
+      es.onopen = () => {
+        setStatus("connected");
+        retriesRef.current = 0;
+        hasReportedDisconnectRef.current = false;
+      };
+
+      es.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === "error") {
+            // Server sent an explicit error — close and let onerror retry
+            es.close();
+            return;
+          }
+          if (msg.type === "dashboard") {
+            queryClient.invalidateQueries({ queryKey: ["dashboard", hlAddress] });
+          } else if (msg.type === "event") {
+            queryClient.setQueryData(["events", hlAddress], (old) => {
+              const prev = Array.isArray(old) ? old : [];
+              return [msg.data, ...prev];
+            });
+          }
+        } catch {
+          void 0;
+        }
+      };
+
+      es.onerror = () => {
+        es.close();
+        esRef.current = null;
+
+        if (!hasReportedDisconnectRef.current) {
+          hasReportedDisconnectRef.current = true;
+          reportWarning("SSE stream disconnected", {
+            source: "dashboard-stream",
+            userId: hlAddress,
+          });
+        }
+
+        setStatus("error");
+        const delay = Math.min(1000 * 2 ** retriesRef.current, 30000);
+        retriesRef.current += 1;
+        timerRef.current = setTimeout(() => {
+          connect();
+        }, delay);
+      };
+    }
+
     connect();
 
     return () => {
+      cancelled = true;
       if (timerRef.current) clearTimeout(timerRef.current);
       if (esRef.current) {
         esRef.current.close();
@@ -80,7 +89,7 @@ export function useDashboardStream(hlAddress) {
       }
       setStatus("disconnected");
     };
-  }, [connect]);
+  }, [hlAddress, queryClient]);
 
   return { status };
 }

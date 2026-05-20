@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic"
 export const metadata = buildMetadata({
   title: "Trading Dashboard",
   description: "Monitor your challenge progress, open positions, and payout history in real time.",
-  ogTitle: "Bitcast Trading Dashboard",
+  ogTitle: "HyperFunded Trading Dashboard",
   ogDescription: "Track your scaled account performance, open positions, and USDC payouts in real time.",
   path: "/bitcast/dashboard",
   brand: "bitcast",

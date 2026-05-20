@@ -25,6 +25,7 @@ import {
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import PricingPreview from '@/components/marketing/PricingPreview'
 import { useBrand, useBrandHref } from '@/lib/brand'
+import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
@@ -35,11 +36,12 @@ const spring = { type: 'spring', stiffness: 100, damping: 20 }
 function PageHero() {
   const brand = useBrand()
   const brandHref = useBrandHref()
+  const withQS = useWithPreservedQuery()
   const heroTitle =
     brand.id === 'beanstock'
       ? `Trade on Hyperliquid. Get ${brand.accountType} by Beanstock.`
       : brand.poweredBy && brand.id !== 'hyperscaled'
-        ? `Hyperliquid trading on ${brand.name.replace('Trading', '')} \n\n powered by Hyperscaled`
+        ? `Trade on Hyperliquid. Get ${brand.accountType} by ${brand.name.replace(' Trading', '')}.`
         : `Trade on Hyperliquid. Get ${brand.accountType} by the network.`
 
   return (
@@ -70,7 +72,7 @@ function PageHero() {
           className="mt-8"
         >
           <Link
-            href={brandHref('/register')}
+            href={withQS(brandHref('/register'))}
             onClick={() => trackCtaClick({ label: 'Start Your Challenge', location: 'how_it_works_hero' })}
             className="shiny-cta inline-flex items-center gap-1.5 px-6 py-3 min-h-12"
           >
@@ -184,6 +186,7 @@ const SCALING_QUALIFICATIONS = [
 
 function StepCard({ step, index }) {
   const brandHref = useBrandHref()
+  const withQS = useWithPreservedQuery()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
@@ -254,7 +257,7 @@ function StepCard({ step, index }) {
           </p>
           {step.cta && (
             <Link
-              href={brandHref('/register')}
+              href={withQS(brandHref('/register'))}
               onClick={() => trackCtaClick({ label: 'Get started', location: 'how_it_works_step' })}
               className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-teal-400 hover:text-teal-300 transition-colors"
             >
@@ -325,6 +328,7 @@ const EXTENSION_FEATURES = [
 ]
 
 function ChromeExtensionSection() {
+  const brand = useBrand()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
@@ -357,17 +361,24 @@ function ChromeExtensionSection() {
           transition={{ ...spring, delay: 0.08 }}
           className="mt-6 mb-10 flex justify-center"
         >
-          <a
-            href="https://github.com/taoshidev/hyperscaled_extension"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.02] hover:border-teal-400/30 hover:bg-teal-400/[0.04] px-4 py-2 text-xs sm:text-sm text-zinc-300 transition-colors"
-          >
-            <GithubLogo size={16} weight="fill" className="text-teal-400" />
-            <span>Fully open source —</span>
-            <span className="font-mono text-teal-400">taoshidev/hyperscaled_extension</span>
-            <ArrowRight size={13} weight="bold" className="text-zinc-500" />
-          </a>
+          {brand.id === 'hyperscaled' || brand.id === 'vanta' ? (
+            <a
+              href="https://github.com/taoshidev/hyperscaled_extension"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.02] hover:border-teal-400/30 hover:bg-teal-400/[0.04] px-4 py-2 text-xs sm:text-sm text-zinc-300 transition-colors"
+            >
+              <GithubLogo size={16} weight="fill" className="text-teal-400" />
+              <span>Fully open source —</span>
+              <span className="font-mono text-teal-400">taoshidev/hyperscaled_extension</span>
+              <ArrowRight size={13} weight="bold" className="text-zinc-500" />
+            </a>
+          ) : (
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.02] px-4 py-2 text-xs sm:text-sm text-zinc-300">
+              <GithubLogo size={16} weight="fill" className="text-teal-400" />
+              <span>Fully open source</span>
+            </span>
+          )}
         </motion.div>
 
         {/* Feature grid */}

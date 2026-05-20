@@ -15,11 +15,70 @@ import { MobileHelpSheet } from "./mobile-help-sheet";
 import { useBrandHref } from "@/lib/brand";
 import { reportCritical } from "@/lib/errors";
 import { trackEvent, getRefSource } from "@/lib/analytics";
+import { useRegistrationCapacity } from "@/hooks/use-registration-capacity";
+import { tierBlockedForCaps } from "@/lib/registration-tier-helpers";
+import { clearConnectDraft } from "@/lib/registration-connect-draft";
 
 const STEP_LABELS = ["Select Plan", "Connect & Pay", "Confirm", "Done"];
 const DEFAULT_MINER_SLUG = "vanta";
+const CHECKOUT_STATE_STORAGE_KEY = "hs_register_checkout_state";
+const CHECKOUT_STATE_TTL_MS = 30 * 60 * 1000;
 
 const MOCK_WALLET = "0x0000000000000000000000000000000000000000";
+
+/**
+ * Persist checkout step + tier identity so a remount (wallet modal, error
+ * boundary reset) can restore both. Step alone is not enough — without
+ * accountSize, StepConnectAndPay crashes on selectedTier.accountSize.
+ */
+function readPersistedCheckoutState() {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(CHECKOUT_STATE_STORAGE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (data.savedAt && Date.now() - data.savedAt > CHECKOUT_STATE_TTL_MS) {
+      sessionStorage.removeItem(CHECKOUT_STATE_STORAGE_KEY);
+      return null;
+    }
+    const step = Number(data.step);
+    const accountSize = Number(data.accountSize);
+    if ((step !== 1 && step !== 2) || !Number.isFinite(accountSize) || accountSize <= 0) {
+      return null;
+    }
+    return {
+      step,
+      accountSize,
+      tierIndex: Number.isInteger(data.tierIndex) ? data.tierIndex : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function persistCheckoutState({ step, accountSize, tierIndex }) {
+  if (typeof window === "undefined") return;
+  if ((step !== 1 && step !== 2) || !Number.isFinite(accountSize) || accountSize <= 0) {
+    return;
+  }
+  try {
+    sessionStorage.setItem(
+      CHECKOUT_STATE_STORAGE_KEY,
+      JSON.stringify({ step, accountSize, tierIndex, savedAt: Date.now() }),
+    );
+  } catch {
+    /* private browsing / quota */
+  }
+}
+
+function clearPersistedCheckoutState() {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(CHECKOUT_STATE_STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
 
 function normalizeAccountSize(value) {
   const parsed = Number(value);
@@ -41,8 +100,6 @@ function findTierIndexInList(list, tier) {
   return i >= 0 ? i : 0;
 }
 
-// Resolve a `?tier=<accountSize>` deep-link against a loaded tier list.
-// Returns `{ tier, index }` on a hit, `null` otherwise.
 function resolveTierParam(rawTierParam, tiers) {
   if (!rawTierParam) return null;
   const requestedSize = Number(rawTierParam);
@@ -96,51 +153,115 @@ export function RegistrationFlow({
   brandVariant = "hyperscaled",
 }) {
   const brandHref = useBrandHref();
-  // Exit button always returns to the brand's in-app home so users stay in
-  // the funnel context. Logo can optionally point to an external brand site
-  // (e.g. white-label partner's marketing domain) via `logoHref`.
   const resolvedExitHref = homeHref ?? brandHref("/");
   const resolvedLogoHref = logoHref ?? resolvedExitHref;
   const searchParams = useSearchParams();
+  const {
+    capacity,
+    freeAtCapacity,
+    paidAtCapacity,
+    registrationFullyClosed,
+  } = useRegistrationCapacity(initialMinerSlug);
 
-  const [recovered] = useState(getRecoveredRegistration);
-  // Read `?tier` once at mount; re-reading would yank the user forward
-  // if they hit "Back" and stripped the param.
+  // Browser storage is read only after mount so SSR and the first client
+  // paint match (avoids hydration mismatch on checkout layout vs tier step).
+  const [hasHydrated, setHasHydrated] = useState(false);
+  const hasHydratedRef = useRef(false);
+  const [isRecoveredSession, setIsRecoveredSession] = useState(false);
+  const recoveredDataRef = useRef(null);
+
+  // Read once at mount so a back-nav that strips params doesn't yank the user forward.
   const initialTierParamRef = useRef(searchParams?.get("tier") ?? null);
-  // When SSR provides tiers we resolve the deep-link synchronously and
-  // seed currentStep=1 below — that avoids a flash of step 0. The
-  // effect further down is the fallback for the rare case where SSR
-  // failed to load tiers and the client refetches.
+  const initialPromoParamRef = useRef(searchParams?.get("promo") ?? null);
+  // Resolve synchronously when SSR provided tiers, else the effect below handles it.
   const initialPreselect = useRef(
-    recovered ? null : resolveTierParam(initialTierParamRef.current, initialMinerTiers),
+    resolveTierParam(initialTierParamRef.current, initialMinerTiers),
   ).current;
   const tierPreselectAppliedRef = useRef(initialPreselect != null);
+  // Once the user has entered checkout, capacity / closure effects must not
+  // snap them back to tier selection (e.g. when capacity loads late).
+  const persistedCheckoutRef = useRef(null);
+  const hasEnteredCheckoutRef = useRef(initialPreselect != null);
 
-  const [currentStep, setCurrentStep] = useState(
-    recovered ? 3 : initialPreselect ? 1 : 0,
-  );
-  const [selectedTier, setSelectedTier] = useState(
-    recovered
-      ? {
-          name: recovered.tierName || "Challenge",
-          accountSize: recovered.accountSize || 0,
-          details: [],
-        }
-      : (initialPreselect?.tier ?? null),
-  );
+  const [currentStep, setCurrentStep] = useState(() => (initialPreselect ? 1 : 0));
+  const [selectedTier, setSelectedTier] = useState(initialPreselect?.tier ?? null);
   const [selectedTierIndex, setSelectedTierIndex] = useState(
     initialPreselect?.index ?? null,
   );
-  const [txHash, setTxHash] = useState(recovered?.txHash ?? null);
-  const [hlAddress, setHlAddress] = useState(recovered?.hlAddress ?? null);
-  const [registrationStatus, setRegistrationStatus] = useState(recovered?.registrationStatus ?? null);
+
+  const goToStep = (step) => {
+    if ((step === 1 || step === 2) && selectedTier?.accountSize) {
+      persistCheckoutState({
+        step,
+        accountSize: selectedTier.accountSize,
+        tierIndex: selectedTierIndex,
+      });
+    } else if (step === 0 || step === 3) {
+      clearPersistedCheckoutState();
+    }
+    setCurrentStep(step);
+  };
+  const [txHash, setTxHash] = useState(null);
+  const [hlAddress, setHlAddress] = useState(null);
+  const [registrationStatus, setRegistrationStatus] = useState(null);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState(recovered ? "hyperliquid" : null);
+  const [paymentMethod, setPaymentMethod] = useState(null);
   const [minerTiers, setMinerTiers] = useState(initialMinerTiers);
   const [paymentWallet, setPaymentWallet] = useState(initialPaymentWallet);
 
-  // Load tiers/wallet once per slug. Do not list minerTiers/paymentWallet in deps —
-  // that re-ran the effect after every fetch and could loop (e.g. [] tiers + wallet).
+  useEffect(() => {
+    const recovery = getRecoveredRegistration();
+    if (recovery) {
+      recoveredDataRef.current = recovery;
+      setIsRecoveredSession(true);
+      setSelectedTier({
+        name: recovery.tierName || "Challenge",
+        accountSize: recovery.accountSize || 0,
+        details: [],
+      });
+      setCurrentStep(3);
+      setTxHash(recovery.txHash);
+      setHlAddress(recovery.hlAddress);
+      setRegistrationStatus(recovery.registrationStatus ?? null);
+      setPaymentMethod("hyperliquid");
+      hasEnteredCheckoutRef.current = true;
+      hasHydratedRef.current = true;
+      setHasHydrated(true);
+      trackEvent("register_conversion_recovered", {
+        tier_name: recovery.tierName,
+        ref_source: getRefSource(),
+        brand_variant: brandVariant,
+      });
+      return;
+    }
+
+    const persisted = readPersistedCheckoutState();
+    persistedCheckoutRef.current = persisted;
+    if (persisted?.step === 1 || persisted?.step === 2) {
+      setCurrentStep(persisted.step);
+      hasEnteredCheckoutRef.current = true;
+    }
+
+    hasHydratedRef.current = true;
+    setHasHydrated(true);
+    trackEvent("register_intent", {
+      ref_source: getRefSource(),
+      brand_variant: brandVariant,
+    });
+    if (initialPreselect) {
+      trackEvent("register_tier_selected", {
+        tier_name: initialPreselect.tier?.name,
+        tier_price:
+          initialPreselect.tier?.promoPrice ?? initialPreselect.tier?.fullPrice,
+        ref_source: getRefSource(),
+        brand_variant: brandVariant,
+        preselected: true,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-once hydrate + analytics
+  }, [brandVariant, initialPreselect]);
+
+  // Don't list minerTiers/paymentWallet in deps — would loop on empty fetches.
   useEffect(() => {
     const haveTiers = Array.isArray(minerTiers) && minerTiers.length > 0;
     if (haveTiers && paymentWallet) return;
@@ -162,8 +283,7 @@ export function RegistrationFlow({
         console.warn("[REGISTRATION] miner API unavailable — using empty tiers", { initialMinerSlug, err });
         setMinerTiers([]);
         setPaymentWallet(MOCK_WALLET);
-        // If this branch fires in prod, paymentWallet is 0x000…000 and any
-        // downstream payment would target the zero address. Must page on this.
+        // Mock wallet means downstream payments would target 0x000…0 — page.
         reportCritical(
           err instanceof Error ? err : new Error(`miner API fetch failed: ${err}`),
           {
@@ -176,44 +296,37 @@ export function RegistrationFlow({
           },
         );
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: guard uses initial state only; deps would refetch in a loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialMinerSlug]);
 
-
-  // Funnel entry event. When recovered, fire a recovery event instead of
-  // register_intent so the conversion still appears in analytics.
+  // Rehydrate tier after remount when session has checkout step + accountSize.
   useEffect(() => {
-    if (recovered) {
-      trackEvent("register_conversion_recovered", {
-        tier_name: recovered.tierName,
-        ref_source: getRefSource(),
-        brand_variant: brandVariant,
-      });
+    if (selectedTier) return;
+    const persisted = persistedCheckoutRef.current;
+    if (!persisted?.accountSize) return;
+    if (!Array.isArray(minerTiers) || minerTiers.length === 0) return;
+
+    const match = resolveTierParam(String(persisted.accountSize), minerTiers);
+    if (match) {
+      setSelectedTier(match.tier);
+      setSelectedTierIndex(
+        persisted.tierIndex != null && persisted.tierIndex >= 0
+          ? persisted.tierIndex
+          : match.index,
+      );
       return;
     }
-    trackEvent("register_intent", {
-      ref_source: getRefSource(),
-      brand_variant: brandVariant,
-    });
-    if (initialPreselect) {
-      trackEvent("register_tier_selected", {
-        tier_name: initialPreselect.tier?.name,
-        tier_price:
-          initialPreselect.tier?.promoPrice ?? initialPreselect.tier?.fullPrice,
-        ref_source: getRefSource(),
-        brand_variant: brandVariant,
-        preselected: true,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once on mount
-  }, []);
 
-  // Async fallback: apply the deep-link after the client-side tier
-  // refetch (when SSR didn't provide tiers). The synchronous initializer
-  // above handles the common case.
+    clearPersistedCheckoutState();
+    hasEnteredCheckoutRef.current = false;
+    setCurrentStep(0);
+  }, [minerTiers, selectedTier]);
+
+  // Async fallback for the tier preselect when SSR didn't provide tiers.
   useEffect(() => {
+    if (!hasHydratedRef.current) return;
     if (tierPreselectAppliedRef.current) return;
-    if (recovered) return;
+    if (isRecoveredSession) return;
     const match = resolveTierParam(initialTierParamRef.current, minerTiers);
     if (!match) {
       if (
@@ -231,18 +344,61 @@ export function RegistrationFlow({
     }
     setSelectedTier(match.tier);
     setSelectedTierIndex(match.index);
-    setCurrentStep(1);
-    trackEvent("register_tier_selected", {
-      tier_name: match.tier?.name,
-      tier_price: match.tier?.promoPrice ?? match.tier?.fullPrice,
-      ref_source: getRefSource(),
-      brand_variant: brandVariant,
-      preselected: true,
-    });
+    const blocked =
+      capacity != null &&
+      tierBlockedForCaps(match.tier, freeAtCapacity, paidAtCapacity);
+    goToStep(blocked ? 0 : 1);
+    if (!blocked) {
+      hasEnteredCheckoutRef.current = true;
+      trackEvent("register_tier_selected", {
+        tier_name: match.tier?.name,
+        tier_price: match.tier?.promoPrice ?? match.tier?.fullPrice,
+        ref_source: getRefSource(),
+        brand_variant: brandVariant,
+        preselected: true,
+      });
+    } else {
+      console.info("[REGISTRATION] ?tier blocked by capacity — staying on step 0", {
+        accountSize: match.tier?.accountSize,
+        freeAtCapacity,
+        paidAtCapacity,
+      });
+    }
     tierPreselectAppliedRef.current = true;
-  }, [minerTiers, recovered, brandVariant]);
+  }, [minerTiers, isRecoveredSession, brandVariant, capacity, freeAtCapacity, paidAtCapacity]);
 
-  // B1: Browser refresh guard — only during active payment processing
+  useEffect(() => {
+    if (!hasHydratedRef.current || !registrationFullyClosed || isRecoveredSession) return;
+    if (hasEnteredCheckoutRef.current) return;
+    if (currentStep === 1 || currentStep === 2) {
+      goToStep(0);
+    }
+  }, [registrationFullyClosed, isRecoveredSession, currentStep]);
+
+  // Snap back if capacity loads before checkout and the tier is no longer startable.
+  useEffect(() => {
+    if (!hasHydratedRef.current || !capacity || isRecoveredSession) return;
+    if (hasEnteredCheckoutRef.current) return;
+    if (currentStep !== 1 && currentStep !== 2) return;
+    const tier = selectedTier;
+    if (!tier || !tierBlockedForCaps(tier, freeAtCapacity, paidAtCapacity)) {
+      return;
+    }
+    console.info("[REGISTRATION] capacity blocks selected tier — returning to step 0", {
+      accountSize: tier.accountSize,
+      freeAtCapacity,
+      paidAtCapacity,
+    });
+    goToStep(0);
+  }, [capacity, isRecoveredSession, currentStep, selectedTier, freeAtCapacity, paidAtCapacity]);
+
+  useEffect(() => {
+    if (currentStep === 1 || currentStep === 2) {
+      hasEnteredCheckoutRef.current = true;
+    }
+  }, [currentStep]);
+
+  // Browser refresh guard during active payment processing.
   useEffect(() => {
     if (!paymentProcessing) return;
 
@@ -255,15 +411,13 @@ export function RegistrationFlow({
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [paymentProcessing]);
 
-  // Steps 1 (Connect & Pay) and 2 (Confirm) share StepConnectAndPay to keep
-  // wagmi/extension hooks mounted. We render it in both phases but only show
-  // the active phase's UI via the `phase` prop.
+  // Steps 1 + 2 share StepConnectAndPay to keep wagmi/extension hooks mounted;
+  // the active sub-UI is selected via the `phase` prop.
   const isConnectOrConfirm = currentStep === 1 || currentStep === 2;
 
   return (
-    <main className="min-h-[100dvh] flex flex-col">
-      {/* D2: Minimal nav bar */}
-      <nav className="flex items-center justify-between py-4 px-6 w-full max-w-5xl mx-auto">
+    <main className="min-h-dvh flex flex-col bg-background text-foreground">
+      <nav className="shrink-0 flex items-center justify-between py-4 px-6 w-full max-w-5xl mx-auto">
         <Link
           href={resolvedLogoHref}
           data-testid="register-logo-link"
@@ -285,26 +439,38 @@ export function RegistrationFlow({
         </Link>
       </nav>
 
-      {/* Flow content */}
-      {isConnectOrConfirm ? (
-        /* Steps 1–2: Two-column layout with help sidebar */
-        <Providers>
+      <Providers>
+      {!hasHydrated ? (
+        <div className="flex-1 flex items-center justify-center px-4 pb-20">
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        </div>
+      ) : (
+      isConnectOrConfirm ? (
+        <div className="flex-1 flex flex-col min-h-0 w-full">
           <RegistrationHelpProvider>
-            <div className="flex-1 flex flex-col lg:flex-row lg:justify-center lg:items-start gap-0 lg:gap-8 pt-6 pb-20 px-4 lg:px-8">
-              {/* Form column */}
+            <div className="flex-1 flex flex-col min-h-0 lg:flex-row lg:justify-center lg:items-start gap-0 lg:gap-8 pt-6 pb-20 px-4 lg:px-8 w-full">
               <div className="w-full lg:max-w-[640px] lg:shrink-0">
                 <Stepper
                   currentStep={currentStep}
                   steps={STEP_LABELS}
                 />
+                {!selectedTier ? (
+                  <p className="mt-8 text-sm text-muted-foreground text-center">
+                    Loading checkout…
+                  </p>
+                ) : (
                 <StepConnectAndPay
                   selectedTier={selectedTier}
                   tierIndex={selectedTierIndex}
                   minerSlug={initialMinerSlug}
                   paymentWallet={paymentWallet}
+                  initialPromoCode={initialPromoParamRef.current}
                   phase={currentStep === 2 ? "confirm" : "connect"}
                   brandVariant={brandVariant}
-                  onContinueToConfirm={() => { console.info("[REGISTRATION] advance: 1 -> 2 (confirm)"); setCurrentStep(2); }}
+                  onContinueToConfirm={() => {
+                    console.info("[REGISTRATION] advance: 1 -> 2 (confirm)");
+                    goToStep(2);
+                  }}
                   onPaymentProcessing={setPaymentProcessing}
                   onPaymentComplete={({ txHash: hash, hlAddress: addr, registrationStatus: status, paymentMethod: method }) => {
                     console.info("[REGISTRATION] onPaymentComplete", {
@@ -313,27 +479,39 @@ export function RegistrationFlow({
                       registrationStatus: status,
                       paymentMethod: method,
                     });
+                    clearConnectDraft();
                     setPaymentProcessing(false);
                     setTxHash(hash);
                     setHlAddress(addr);
                     setRegistrationStatus(status);
                     setPaymentMethod(method || null);
-                    setCurrentStep(3);
+                    goToStep(3);
                   }}
-                  onBack={currentStep === 2 ? () => { console.info("[REGISTRATION] back: 2 -> 1"); setCurrentStep(1); } : () => { console.info("[REGISTRATION] back: 1 -> 0"); setCurrentStep(0); }}
+                  onBack={
+                    currentStep === 2
+                      ? () => {
+                          console.info("[REGISTRATION] back: 2 -> 1");
+                          goToStep(1);
+                        }
+                      : () => {
+                          console.info("[REGISTRATION] back: 1 -> 0");
+                          hasEnteredCheckoutRef.current = false;
+                          clearPersistedCheckoutState();
+                          goToStep(0);
+                        }
+                  }
                 />
+                )}
               </div>
 
-              {/* Desktop sidebar */}
               <RegistrationSidebar />
             </div>
             <MobileHelpSheet />
           </RegistrationHelpProvider>
-        </Providers>
+        </div>
       ) : (
-        /* Steps 0 and 3: Single-column centered layout */
-        <div className="flex-1 flex flex-col items-center justify-start pt-6 pb-20 px-4">
-          <div className={`w-full ${currentStep === 3 ? "max-w-5xl" : currentStep === 0 ? "max-w-7xl" : "max-w-3xl"}`}>
+        <div className="flex-1 flex flex-col items-center w-full min-h-0 pt-6 pb-20 px-4 bg-background">
+          <div className={`w-full flex-1 flex flex-col ${currentStep === 3 ? "max-w-5xl" : currentStep === 0 ? "max-w-7xl" : "max-w-3xl"}`}>
             {currentStep === 3 ? (
               <div className="mb-10 flex justify-center">
                 <p className="text-sm font-medium text-teal-400">
@@ -347,9 +525,9 @@ export function RegistrationFlow({
               />
             )}
 
-            {/* Step 0: Tier selection */}
             {currentStep === 0 && (
               <StepSelectTier
+                capacityMinerSlug={initialMinerSlug}
                 tiers={minerTiers}
                 selectedTier={selectedTier}
                 selectedTierIndex={selectedTierIndex}
@@ -366,13 +544,14 @@ export function RegistrationFlow({
                   setSelectedTierIndex(idx);
                 }}
                 onContinue={(tierFromStep, indexFromStep) => {
+                  let canonical = selectedTier;
                   if (tierFromStep) {
                     const list = minerTiers;
                     const idx =
                       Number.isInteger(indexFromStep) && indexFromStep >= 0
                         ? indexFromStep
                         : findTierIndexInList(list, tierFromStep);
-                    const canonical =
+                    canonical =
                       Array.isArray(list) && list[idx] != null ? list[idx] : tierFromStep;
                     setSelectedTier(canonical);
                     setSelectedTierIndex(idx);
@@ -384,19 +563,27 @@ export function RegistrationFlow({
                   } else {
                     console.info("[REGISTRATION] advance: 0 -> 1 (no tier change)");
                   }
-                  const advancingTier = tierFromStep ? (minerTiers?.[selectedTierIndex] || tierFromStep) : selectedTier;
+
+                  if (!canonical || tierBlockedForCaps(canonical, freeAtCapacity, paidAtCapacity)) {
+                    if (canonical) {
+                      console.warn("[REGISTRATION] blocked continue — tier at capacity");
+                    }
+                    return;
+                  }
+
+                  tierPreselectAppliedRef.current = true;
+                  hasEnteredCheckoutRef.current = true;
                   trackEvent("register_tier_selected", {
-                    tier_name: advancingTier?.name,
-                    tier_price: advancingTier?.promoPrice ?? advancingTier?.fullPrice,
+                    tier_name: canonical?.name,
+                    tier_price: canonical?.promoPrice ?? canonical?.fullPrice,
                     ref_source: getRefSource(),
                     brand_variant: brandVariant,
                   });
-                  setCurrentStep(1);
+                  goToStep(1);
                 }}
               />
             )}
 
-            {/* Step 3: Done */}
             {currentStep === 3 && (
               <StepConfirmation
                 selectedTier={selectedTier}
@@ -409,7 +596,9 @@ export function RegistrationFlow({
             )}
           </div>
         </div>
+      )
       )}
+      </Providers>
 
     </main>
   );

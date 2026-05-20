@@ -1,9 +1,16 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ArrowRight, Star, ArrowUpRight } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { useBrand } from "@/lib/brand";
+import { HubspotWaitlistBanner } from "@/components/registration/HubspotWaitlistBanner";
+import { isFreeTierForRegistration } from "@/lib/registration-tier-helpers";
+import { isWsbSaleBannerPublic } from "@/lib/wsb-sale-banner-public";
+
+function isFreeTier(tier) {
+  return isFreeTierForRegistration(tier);
+}
 
 function formatPrice(price) {
   if (price == null || Number.isNaN(Number(price))) return "—";
@@ -46,8 +53,30 @@ export function StepSelectTier({
   selectedTierIndex,
   onSelect,
   onContinue,
+  capacityMinerSlug,
 }) {
   const cardRefs = useRef([]);
+  const [capacity, setCapacity] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const qs =
+      typeof capacityMinerSlug === "string" && capacityMinerSlug.trim()
+        ? `?miner=${encodeURIComponent(capacityMinerSlug.trim())}`
+        : "";
+    fetch(`/api/register/capacity${qs}`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!cancelled && data) setCapacity(data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [capacityMinerSlug]);
+
+  const freeAtCapacity = Boolean(capacity?.free?.atCapacity);
+  const paidAtCapacity = Boolean(capacity?.paid?.atCapacity);
 
   const selectedIndex = useMemo(() => {
     if (Array.isArray(tiers) && Number.isInteger(selectedTierIndex)) {
@@ -58,10 +87,18 @@ export function StepSelectTier({
     return findSelectedIndex(tiers, selectedTier);
   }, [tiers, selectedTier, selectedTierIndex]);
   const hasSelection = selectedIndex >= 0;
+  const selectedTierIsFree = isFreeTier(
+    Array.isArray(tiers) && hasSelection ? tiers[selectedIndex] : selectedTier,
+  );
+  const continueBlocked =
+    paidAtCapacity || (freeAtCapacity && selectedTierIsFree);
 
   function handleSelectIndex(index) {
     if (!Array.isArray(tiers) || !tiers[index]) return;
-    onSelect?.(tiers[index], index);
+    const tier = tiers[index];
+    if (freeAtCapacity && isFreeTier(tier)) return;
+    if (paidAtCapacity && !isFreeTier(tier)) return;
+    onSelect?.(tier, index);
   }
 
   function handleArrowNav(e, index) {
@@ -98,6 +135,11 @@ export function StepSelectTier({
           One challenge. No recurring fees. 100%&nbsp;of performance
           rewards are&nbsp;yours.
         </p>
+        {freeAtCapacity && paidAtCapacity && (
+          <p className="text-center text-sm text-amber-400/95 max-w-lg mx-auto mt-3 text-balance font-medium">
+            Signups are full for this wave — Join the waitlist and we will contact you on the next wave.
+          </p>
+        )}
       </div>
 
       {/* Powered-by callout (white-label brands only) */}
@@ -134,6 +176,10 @@ export function StepSelectTier({
           : tiers.map((tier, i) => {
               const isSelected = i === selectedIndex;
               const isPopular = tier.badge != null;
+              const tierIsFree = isFreeTier(tier);
+              const isSoldOut =
+                (tierIsFree && freeAtCapacity) ||
+                (!tierIsFree && paidAtCapacity);
 
               return (
                 <button
@@ -146,17 +192,21 @@ export function StepSelectTier({
                   data-testid="tier-card"
                   data-tier-name={tier.name}
                   data-tier-account-size={String(tier.accountSize)}
+                  data-sold-out={isSoldOut ? "true" : undefined}
                   aria-checked={isSelected}
-                  aria-label={`${tier.name} — ${formatShortName(tier.accountSize)} ${brand.accountType} account — ${formatPrice(tier.promoPrice)}`}
+                  aria-disabled={isSoldOut || undefined}
+                  aria-label={`${tier.name} — ${formatShortName(tier.accountSize)} ${brand.accountType} account — ${isSoldOut ? (tierIsFree ? "limit reached" : "sold out") : formatPrice(tier.promoPrice)}`}
                   tabIndex={isSelected || (selectedIndex < 0 && i === 0) ? 0 : -1}
                   onClick={() => handleSelectIndex(i)}
                   onKeyDown={(e) => handleArrowNav(e, i)}
+                  disabled={isSoldOut}
                   className={`
-                    relative block w-full text-left cursor-pointer rounded-2xl p-6 xl:p-4 group
+                    relative block w-full text-left rounded-2xl p-6 xl:p-4 group
                     text-card-foreground
                     transition-[border-color,box-shadow,transform,opacity] duration-200
                     animate-[fadeInUp_0.35s_ease-out_both]
                     outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background
+                    ${isSoldOut ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
                     ${isSelected
                       ? "shiny-border"
                       : `border bg-zinc-900/50 ${isPopular
@@ -164,7 +214,7 @@ export function StepSelectTier({
                           : "border-white/[0.06] hover:border-white/[0.10]"
                         }`
                     }
-                    ${hasSelection && !isSelected ? "opacity-70" : ""}
+                    ${hasSelection && !isSelected && !isSoldOut ? "opacity-70" : ""}
                   `}
                   style={{ animationDelay: `${i * 80}ms` }}
                 >
@@ -207,6 +257,9 @@ export function StepSelectTier({
                         {formatPrice(tier.promoPrice)}
                       </span>
                     </ins>
+                    {tier.fullPrice > 0 && tier.fullPrice !== tier.promoPrice && (
+                      <del className="text-sm text-zinc-600 font-mono">{formatPrice(tier.fullPrice)}</del>
+                    )}
                     <span className="text-xs text-zinc-500 font-medium">USDC</span>
                   </div>
 
@@ -228,8 +281,17 @@ export function StepSelectTier({
                     ))}
                   </div>
 
+                  {isSoldOut && (
+                    <div
+                      data-testid="tier-card-sold-out"
+                      className="mt-6 xl:mt-5 h-10 w-full flex items-center justify-center gap-1.5 text-xs font-semibold tabular-nums whitespace-nowrap rounded-md border border-white/[0.08] bg-white/[0.03] text-zinc-400"
+                    >
+                      {tierIsFree ? "Limit reached" : "Sold out — join waitlist"}
+                    </div>
+                  )}
+
                   {/* Inline Continue CTA — appears only on the selected card */}
-                  {isSelected && (
+                  {isSelected && !isSoldOut && (
                     <div
                       role="button"
                       tabIndex={0}
@@ -263,37 +325,57 @@ export function StepSelectTier({
             })}
       </div>
 
-      {/* Continue button */}
-      <div className="flex justify-center mt-8">
-        {hasSelection ? (
-          <button
-            type="button"
-            data-testid="select-tier-continue"
-            onClick={() => onContinue?.(tiers[selectedIndex], selectedIndex)}
-            className="shiny-cta h-11 px-8 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background ring-2 ring-teal-400/45"
-            style={{ boxShadow: '0 0 28px rgba(var(--brand-glow),0.28)' }}
-          >
-            <span className="inline-flex items-center gap-1.5 text-sm font-semibold">
+      {/* WSB Flash Deal pill — Hyperscaled & Vanta only */}
+      {(brand.id === 'hyperscaled' || brand.id === 'vanta') && isWsbSaleBannerPublic() && (
+        <div className="flex justify-center mt-6">
+          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
+            <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
+            <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
+          </div>
+        </div>
+      )}
+
+      {paidAtCapacity && (
+        <div className="mt-8" data-testid="waitlist-paid">
+          <HubspotWaitlistBanner />
+        </div>
+      )}
+
+      {/* Continue button — hidden entirely when the paid cap is hit. */}
+      {!paidAtCapacity && (
+        <div className="flex justify-center mt-8">
+          {hasSelection && !continueBlocked ? (
+            <button
+              type="button"
+              data-testid="select-tier-continue"
+              onClick={() => onContinue?.(tiers[selectedIndex], selectedIndex)}
+              className="shiny-cta h-11 px-8 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background ring-2 ring-teal-400/45"
+              style={{ boxShadow: '0 0 28px rgba(var(--brand-glow),0.28)' }}
+            >
+              <span className="inline-flex items-center gap-1.5 text-sm font-semibold">
+                Continue
+                <ArrowRight size={15} weight="bold" />
+              </span>
+            </button>
+          ) : (
+            <Button
+              disabled
+              className="px-8 h-11 text-sm font-semibold bg-muted text-muted-foreground cursor-not-allowed"
+            >
               Continue
-              <ArrowRight size={15} weight="bold" />
-            </span>
-          </button>
-        ) : (
-          <Button
-            disabled
-            className="px-8 h-11 text-sm font-semibold bg-muted text-muted-foreground cursor-not-allowed"
-          >
-            Continue
-            <ArrowRight size={15} weight="bold" className="ml-1.5" />
-          </Button>
-        )}
-      </div>
+              <ArrowRight size={15} weight="bold" className="ml-1.5" />
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Footer note */}
-      <p className="text-xs text-center text-muted-foreground mt-6">
-        You&#8217;ll choose your payment method and complete checkout in the
-        next step.
-      </p>
+      {!paidAtCapacity && (
+        <p className="text-xs text-center text-muted-foreground mt-6">
+          You&#8217;ll choose your payment method and complete checkout in the
+          next step.
+        </p>
+      )}
     </div>
   );
 }

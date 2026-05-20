@@ -4,6 +4,7 @@ import { getMinerBySlug, getTiersForMiner } from "@/lib/miners";
 import { TIERS as TIER_META } from "@/lib/constants";
 import { unstable_cache } from "next/cache";
 import { reportError } from "@/lib/errors";
+import { listPriceUsdcFromDbTier } from "@/lib/wsb-tier-list-price";
 
 export const metadata = buildMetadata({
   title: "Start Your Challenge",
@@ -19,6 +20,9 @@ export const dynamic = "force-dynamic";
 
 const MINER_SLUG = "vanta";
 
+const REGISTER_CACHE_WSB =
+  process.env.WSB_SALE_BANNER === "true" ? "wsb" : "nosale";
+
 function enrichTier(dbTier, index) {
   const meta = TIER_META.find((t) => t.accountSize === dbTier.accountSize);
   return {
@@ -26,7 +30,11 @@ function enrichTier(dbTier, index) {
     name: meta?.name || `$${dbTier.accountSize / 1000}K`,
     accountSize: dbTier.accountSize,
     fullPrice: meta?.fullPrice ?? null,
-    promoPrice: Number(dbTier.priceUsdc),
+    promoPrice: listPriceUsdcFromDbTier(
+      MINER_SLUG,
+      dbTier.accountSize,
+      Number(dbTier.priceUsdc),
+    ),
     badge: meta?.badge ?? null,
     details: meta?.details ?? [],
   };
@@ -47,7 +55,7 @@ const getCachedRegisterMinerData = unstable_cache(
       initialPaymentWallet: miner.usdcWallet,
     };
   },
-  ["register-miner-vanta"],
+  ["register-miner-vanta", REGISTER_CACHE_WSB],
   {
     revalidate: 60,
     tags: ["pricing-tiers", "pricing-tiers:vanta"],

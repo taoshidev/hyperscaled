@@ -102,6 +102,9 @@ export async function fillHlAddressAndConfirm(
   // Trigger blur so the wizard accepts the value.
   await input.evaluate((el) => el.blur());
 
+  // Email is required before "Continue to review" unlocks (server + client).
+  await fillRegistrationEmail(page);
+
   // Step 1 → Step 2. The button is gated on `canContinueToConfirm`
   // (HL valid + wallet matches + payment method picked when paid).
   // For the free flow it unlocks once HL + ownership are good.
@@ -146,6 +149,22 @@ export function tierCardByAccountSize(page, accountSize) {
   return page
     .locator(`[data-testid="tier-card"][data-tier-account-size="${accountSize}"]`)
     .first();
+}
+
+/** Stable email used across e2e flows; must pass `isValidEmail` in the API. */
+export const E2E_REGISTRATION_EMAIL = "e2e-onboarding@example.com";
+
+/**
+ * Fill the step-1 email field (plain `#reg-email` or HubSpot-injected input).
+ * Waits for HubSpot embed when portal/form env vars are set in dev.
+ */
+export async function fillRegistrationEmail(page, email = E2E_REGISTRATION_EMAIL) {
+  const loc = page.locator('[data-testid="reg-email"]');
+  // HubSpot path: children stay at opacity 0 until `.hubspot-email-wrapper--ready`,
+  // which Playwright treats as not visible — wait for DOM attachment instead.
+  await loc.waitFor({ state: "attached", timeout: 20_000 });
+  await loc.fill(email, { force: true });
+  await loc.evaluate((el) => el.blur());
 }
 
 /**
