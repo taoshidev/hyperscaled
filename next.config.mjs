@@ -7,8 +7,13 @@ const nextConfig = {
     NEXT_PUBLIC_WSB_SALE_BANNER:
       process.env.WSB_SALE_BANNER === "true" ? "true" : "false",
   },
-  // Nodemailer is Node-only; keep it external so resolution matches runtime node_modules.
-  serverExternalPackages: ["nodemailer"],
+  // Keep Node-only libs external so webpack doesn’t omit them from Vercel’s traced bundle.
+  // lib/db dynamically imports Cloud SQL Connector when CLOUD_SQL_INSTANCE_CONNECTION_NAME is set.
+  serverExternalPackages: [
+    "nodemailer",
+    "@google-cloud/cloud-sql-connector",
+    "google-auth-library",
+  ],
   webpack: (config, { isServer }) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
