@@ -8,20 +8,18 @@ import { Button } from "@/components/ui/button";
 import { formatUSD, formatPrice, formatReturn, formatTime, pnlColor } from "@/lib/format";
 import { ShareButton } from "./share-button";
 
-// Column widths shared between the parent table and the accordion inner table.
-// Both use table-fixed + this colgroup so cells align perfectly.
 const COLS = (
   <colgroup>
-    <col style={{ width: 32 }} />   {/* chevron */}
-    <col style={{ width: 120 }} />  {/* pair */}
-    <col style={{ width: 100 }} />  {/* direction */}
-    <col style={{ width: 130 }} />  {/* entry price */}
-    <col style={{ width: 130 }} />  {/* realized pnl */}
-    <col style={{ width: 110 }} />  {/* fees */}
-    <col style={{ width: 100 }} />  {/* return */}
-    <col style={{ width: 140 }} />  {/* opened */}
-    <col style={{ width: 140 }} />  {/* closed */}
-    <col style={{ width: 40 }} />   {/* share */}
+    <col style={{ width: 32 }} />
+    <col style={{ width: 120 }} />
+    <col style={{ width: 100 }} />
+    <col style={{ width: 130 }} />
+    <col style={{ width: 130 }} />
+    <col style={{ width: 110 }} />
+    <col style={{ width: 100 }} />
+    <col style={{ width: 140 }} />
+    <col style={{ width: 140 }} />
+    <col style={{ width: 40 }} />
   </colgroup>
 );
 

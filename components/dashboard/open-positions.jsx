@@ -8,18 +8,17 @@ import { formatPrice, formatLeverage, formatReturn, formatUSD, pnlColor } from "
 import { openPositionUnrealizedUsd } from "@/lib/position-utils";
 import { ShareButton } from "./share-button";
 
-// Column widths shared between the parent table and the accordion inner table.
 const COLS = (
   <colgroup>
-    <col style={{ width: 32 }} />   {/* chevron */}
-    <col style={{ width: 120 }} />  {/* pair */}
-    <col style={{ width: 100 }} />  {/* direction */}
-    <col style={{ width: 130 }} />  {/* entry price */}
-    <col style={{ width: 110 }} />  {/* leverage */}
-    <col style={{ width: 140 }} />  {/* unrealized pnl */}
-    <col style={{ width: 100 }} />  {/* return */}
-    <col style={{ width: 110 }} />  {/* fees */}
-    <col style={{ width: 40 }} />   {/* share */}
+    <col style={{ width: 32 }} />
+    <col style={{ width: 120 }} />
+    <col style={{ width: 100 }} />
+    <col style={{ width: 130 }} />
+    <col style={{ width: 110 }} />
+    <col style={{ width: 140 }} />
+    <col style={{ width: 100 }} />
+    <col style={{ width: 110 }} />
+    <col style={{ width: 40 }} />
   </colgroup>
 );
 

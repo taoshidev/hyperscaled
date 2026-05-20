@@ -2,11 +2,13 @@
 
 import Link from 'next/link'
 import { useBrand, useBrandHref } from '@/lib/brand'
+import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
 
 export default function PromoBanner() {
   const brand = useBrand()
   const brandHref = useBrandHref()
+  const withQS = useWithPreservedQuery()
 
   if (brand.id !== 'hyperscaled' && brand.id !== 'vanta') return null
 
@@ -32,7 +34,7 @@ export default function PromoBanner() {
         </div>
 
         <Link
-          href={brandHref('/register')}
+          href={withQS(brandHref('/register'))}
           onClick={() => trackCtaClick({ label: 'WSB Flash Deal', location: 'promo_bar' })}
           className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-teal-400 px-4 py-1.5 text-xs font-semibold tracking-tight whitespace-nowrap text-black transition-colors hover:bg-teal-300"
         >

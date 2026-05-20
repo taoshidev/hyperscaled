@@ -10,8 +10,20 @@ import { getMinerBySlug, getTiersForMiner, TIERS } from "@/lib/miners";
 import { isValidHLAddress, isValidEvmAddress, isValidEmail } from "@/lib/validation";
 import { USDC_ADDRESS, USDC_DECIMALS, USDC_EIP712_NAME, USDC_EIP712_VERSION, BASE_NETWORK, FACILITATOR_URL, BASESCAN_URL } from "@/lib/constants";
 import { getDb } from "@/lib/db";
-import { users, registrations, affiliates } from "@/lib/db/schema";
+import {
+  users,
+  registrations,
+  affiliates,
+  entityMiners,
+  referralAttributions,
+  registrationAttributions,
+} from "@/lib/db/schema";
 import { eq, and, inArray, sql } from "drizzle-orm";
+import { cookies } from "next/headers";
+import {
+  ATTRIBUTION_COOKIE,
+  verifyAttributionCookie,
+} from "@/lib/auth/attribution-cookie";
 import { facilitator as cdpFacilitator } from "@coinbase/x402";
 import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
 import { isAnyDevTestWallet, DEV_TEST_PRICE } from "@/lib/dev-test";
@@ -19,6 +31,11 @@ import { trackConversion } from "@/lib/tolt";
 import { parseErrorBody } from "@/lib/parse-error-body";
 import { verifyWalletHeaders } from "@/lib/wallet-auth";
 import { checkRegistrationCap } from "@/lib/registration-capacity";
+import {
+  evaluateRegistrationPricing,
+  applyCouponToAmount,
+  recordRegistrationCouponRedemption,
+} from "@/lib/registration-pricing";
 
 const USE_TESTNET = process.env.USE_TESTNET === "true";
 
@@ -101,6 +118,56 @@ function buildPaymentRequirements(miner, tier, requestUrl, overridePrice) {
   };
 }
 
+async function resolveAttributionFromCookie(db) {
+  let raw;
+  try {
+    const cookieStore = await cookies();
+    raw = cookieStore.get(ATTRIBUTION_COOKIE)?.value;
+  } catch {
+    return null;
+  }
+  if (!raw) return null;
+
+  const decoded = await verifyAttributionCookie(raw);
+  if (!decoded) return null;
+
+  let affiliateId = null;
+  if (decoded.affiliate) {
+    try {
+      const [row] = await db
+        .select({ id: affiliates.id })
+        .from(affiliates)
+        .where(eq(affiliates.slug, decoded.affiliate.toLowerCase()))
+        .limit(1);
+      if (row) affiliateId = row.id;
+    } catch {
+      /* ignore */
+    }
+  }
+
+  let entityMinerHotkey = null;
+  if (decoded.tenant) {
+    try {
+      const [row] = await db
+        .select({ hotkey: entityMiners.hotkey })
+        .from(entityMiners)
+        .where(eq(entityMiners.slug, decoded.tenant.toLowerCase()))
+        .limit(1);
+      if (row) entityMinerHotkey = row.hotkey;
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return {
+    affiliateId,
+    entityMinerHotkey,
+    promoCode: decoded.promo ? decoded.promo.toUpperCase() : null,
+    clickId: decoded.clickId,
+    firstTouchAt: new Date(decoded.firstTouchAt * 1000),
+  };
+}
+
 export async function POST(request) {
   const db = await getDb();
   const reqId = Math.random().toString(36).slice(2, 10);
@@ -110,6 +177,8 @@ export async function POST(request) {
     url: request.url,
     hasPaymentSignature,
   });
+
+  const attribution = await resolveAttributionFromCookie(db);
 
   const bodyText = await request.text();
   let body;
@@ -134,6 +203,12 @@ export async function POST(request) {
     hlTransferSender,
   } = body;
 
+  const couponCodeFromHeader = request.headers.get("x-coupon-code");
+  const couponCode =
+    (typeof couponCodeFromHeader === "string" && couponCodeFromHeader.trim().length > 0
+      ? couponCodeFromHeader
+      : body.couponCode) || null;
+
   console.info("[REGISTRATION] body parsed", {
     reqId,
     minerSlug,
@@ -147,6 +222,8 @@ export async function POST(request) {
     paymentMethod,
     hasTransferHash: Boolean(hlTransferHash),
     hlTransferSender,
+    couponCodeProvided: typeof couponCode === "string" && couponCode.trim().length > 0,
+    couponCodeSource: couponCodeFromHeader ? "header" : (body.couponCode ? "body" : "none"),
   });
 
   if (!minerSlug || !hlAddress || !accountSize || tierIndex == null) {
@@ -430,16 +507,38 @@ export async function POST(request) {
   // EIP-712 (passed in body) and x402 (the connected signer). For x402, the
   // claim is verified later against `paymentPayload.payload.authorization.from`.
   const minerWallet = miner.usdcWallet;
-  const price = Number(tier.priceUsdc);
-  const devTest = isAnyDevTestWallet(hlAddress, hlTransferSender);
-  const effectivePrice = devTest ? DEV_TEST_PRICE : price;
+  const pricingEval = await evaluateRegistrationPricing(
+    db,
+    miner,
+    tier,
+    hlAddress,
+    hlTransferSender,
+    email,
+    couponCode,
+  );
+  if (!pricingEval.ok) {
+    console.warn("[REGISTRATION] pricing rejected", {
+      reqId,
+      error: pricingEval.error,
+    });
+    return NextResponse.json(
+      { error: pricingEval.error },
+      { status: 400 },
+    );
+  }
+
+  const tierListPrice = pricingEval.tierListPrice;
+  const devTest = pricingEval.devTest;
+  const couponMeta = pricingEval.couponMeta;
+  const effectivePrice = pricingEval.effectivePrice;
 
   console.info("[REGISTRATION] pricing computed", {
     reqId,
     minerWallet,
-    listPrice: price,
+    listPrice: tierListPrice,
     devTest,
     effectivePrice,
+    couponApplied: Boolean(couponMeta),
   });
 
   if (!minerWallet) {
@@ -450,15 +549,17 @@ export async function POST(request) {
   let txHash;
   let effectivePayoutAddress;
   let settleResult = null;
+  let actualPayer = null;
 
-  // ── Free tier path (no payment required) ─────────────────────────────────
   if (paymentMethod === "free") {
-    if (price !== 0) {
-      console.warn("[REGISTRATION] free payment method requested but tier has a price", {
+    if (Number(effectivePrice) !== 0) {
+      console.warn("[REGISTRATION] free payment method requested but effective price is non-zero", {
         reqId,
         minerSlug,
         tierIndex,
-        price,
+        tierListPrice,
+        effectivePrice,
+        couponApplied: Boolean(couponMeta),
       });
       return NextResponse.json(
         { error: "This tier requires payment." },
@@ -467,11 +568,14 @@ export async function POST(request) {
     }
     txHash = `free-${Date.now()}-${hlAddress.slice(2, 10).toLowerCase()}`;
     effectivePayoutAddress = payoutAddress || hlAddress;
-    console.info("[REGISTRATION] free tier — skipping payment verification", {
+    console.info("[REGISTRATION] free path — skipping payment verification", {
       reqId,
       minerSlug,
       hlAddress,
       txHash,
+      tierListPrice,
+      effectivePrice,
+      couponApplied: Boolean(couponMeta),
     });
 
   // ── Hyperliquid payment path (extension "hyperliquid" + direct "eip712") ──
@@ -483,7 +587,8 @@ export async function POST(request) {
       hlAddress,
       payoutAddress,
       tierIndex,
-      price,
+      tierListPrice,
+      effectivePrice,
       hasTransferHash: Boolean(hlTransferHash),
     });
 
@@ -645,7 +750,8 @@ export async function POST(request) {
         transferSender,
         hlTransferSender,
       );
-      const trueEffectivePrice = trueDevTest ? DEV_TEST_PRICE : price;
+      const trueDevBase = trueDevTest ? DEV_TEST_PRICE : tierListPrice;
+      const trueEffectivePrice = applyCouponToAmount(couponMeta, trueDevBase);
 
       // Allow exact match (±0.01 for HL's internal rounding) OR overpayment.
       // Rejecting only when the user under-paid protects revenue without
@@ -680,6 +786,7 @@ export async function POST(request) {
       }
 
       transferVerified = true;
+      actualPayer = transferSender || null;
       console.info("[REGISTRATION] hyperliquid transfer verified (exact hash)", {
         reqId,
         minerSlug,
@@ -727,12 +834,19 @@ export async function POST(request) {
       console.info("[REGISTRATION] dev mode — skipping x402 payment", { reqId });
       txHash = `dev-${Date.now()}`;
       effectivePayoutAddress = payoutAddress || hlAddress;
+
+      const payerHeader = request.headers.get("x-payer-address");
+      const claimedPayer =
+        (payerHeader && isValidEvmAddress(payerHeader) ? payerHeader : null) ||
+        (hlTransferSender && isValidEvmAddress(hlTransferSender) ? hlTransferSender : null);
+      actualPayer = claimedPayer ? String(claimedPayer).toLowerCase() : null;
+      console.info("[REGISTRATION] dev mode — actualPayer recorded", { reqId, actualPayer });
     } else {
-    const { requirements, paymentRequired } = buildPaymentRequirements(
+    const { paymentRequired } = buildPaymentRequirements(
       miner,
       tier,
       request.url,
-      devTest ? DEV_TEST_PRICE : undefined,
+      effectivePrice,
     );
 
     const paymentSignatureHeader = request.headers.get("payment-signature");
@@ -767,19 +881,23 @@ export async function POST(request) {
     // requirements will charge full price and the signed payload will fail
     // facilitator verification (signed amount won't match required amount).
     const actualSigner = paymentPayload?.payload?.authorization?.from;
-    const trueDevTest = isAnyDevTestWallet(hlAddress, actualSigner);
-    const trueRequirements = trueDevTest === devTest
-      ? requirements
-      : buildPaymentRequirements(
-          miner,
-          tier,
-          request.url,
-          trueDevTest ? DEV_TEST_PRICE : undefined,
-        ).requirements;
+    actualPayer = actualSigner ? String(actualSigner).toLowerCase() : null;
+    const trueDevTestSigner = isAnyDevTestWallet(hlAddress, actualSigner);
+    const trueSettlementPrice = applyCouponToAmount(
+      couponMeta,
+      trueDevTestSigner ? DEV_TEST_PRICE : tierListPrice,
+    );
+    const settlementBuild = buildPaymentRequirements(
+      miner,
+      tier,
+      request.url,
+      trueSettlementPrice,
+    );
+    const trueRequirements = settlementBuild.requirements;
 
     let verifyResult;
     try {
-      console.info("[REGISTRATION] x402 calling facilitator.verify", { reqId, trueDevTest });
+      console.info("[REGISTRATION] x402 calling facilitator.verify", { reqId, trueDevTestSigner });
       verifyResult = await facilitator.verify(paymentPayload, trueRequirements);
       console.info("[REGISTRATION] x402 facilitator.verify result", {
         reqId,
@@ -788,14 +906,29 @@ export async function POST(request) {
       });
     } catch (err) {
       console.error("[REGISTRATION] x402 facilitator.verify threw", { reqId, error: err?.message });
+      const rawMsg = String(err?.message || "");
+      const isAuthFailure =
+        /unauthor[iz]ed/i.test(rawMsg) ||
+        /not valid JSON/i.test(rawMsg) ||
+        err?.status === 401;
+      const friendlyMsg = isAuthFailure
+        ? "Payment facilitator is not configured. The x402 service requires CDP_API_KEY_ID and CDP_API_KEY_SECRET on the server (or USE_TESTNET=true for the public testnet facilitator). Please contact support."
+        : `Payment verification failed: ${rawMsg || "unknown error"}`;
       await reportCritical(err, {
         source: "api/register",
-        metadata: { step: "facilitator_verify", reqId, minerSlug, hlAddress, tierIndex },
+        metadata: {
+          step: "facilitator_verify",
+          reqId,
+          minerSlug,
+          hlAddress,
+          tierIndex,
+          authFailureSuspected: isAuthFailure,
+        },
       });
       await flushErrors();
       return NextResponse.json(
-        { error: `Payment verification failed: ${err?.message || "unknown error"}` },
-        { status: 502 },
+        { error: friendlyMsg },
+        { status: isAuthFailure ? 503 : 502 },
       );
     }
 
@@ -979,6 +1112,60 @@ export async function POST(request) {
     // Continue — registration insert can still work with userId = null
   }
 
+  const appliedPromoCode = couponMeta?.code ?? null;
+  let attributionRowId = null;
+  if (userId && attribution) {
+    try {
+      const [inserted] = await db
+        .insert(referralAttributions)
+        .values({
+          userId,
+          affiliateId: attribution.affiliateId,
+          entityMinerHotkey: attribution.entityMinerHotkey,
+          promoCode: appliedPromoCode,
+          clickId: attribution.clickId,
+          firstTouchAt: attribution.firstTouchAt,
+        })
+        .onConflictDoNothing({ target: referralAttributions.userId })
+        .returning({ id: referralAttributions.id });
+
+      if (inserted) {
+        attributionRowId = inserted.id;
+      } else {
+        const [existingAttribution] = await db
+          .select({ id: referralAttributions.id })
+          .from(referralAttributions)
+          .where(eq(referralAttributions.userId, userId))
+          .limit(1);
+        attributionRowId = existingAttribution?.id ?? null;
+      }
+      console.info("[REGISTRATION] attribution resolved", {
+        reqId,
+        userId,
+        attributionRowId,
+        affiliateId: attribution.affiliateId,
+        entityMinerHotkey: attribution.entityMinerHotkey,
+        promoCode: appliedPromoCode,
+        cookiePromo: attribution.promoCode,
+        wasFirstSignup: Boolean(inserted),
+      });
+    } catch (err) {
+      await reportError(err, {
+        source: "api/register",
+        metadata: {
+          step: "attribution_upsert",
+          reqId,
+          userId,
+          attribution: {
+            affiliateId: attribution.affiliateId,
+            entityMinerHotkey: attribution.entityMinerHotkey,
+            promoCode: appliedPromoCode,
+          },
+        },
+      });
+    }
+  }
+
   // Call miner API
   let registered = false;
   let statusDetail = null;
@@ -1126,6 +1313,7 @@ export async function POST(request) {
     userId,
     minerHotkey: miner.hotkey,
     hlAddress,
+    payerAddress: actualPayer,
     accountSize,
     payoutAddress: effectivePayoutAddress,
     tierIndex,
@@ -1134,7 +1322,14 @@ export async function POST(request) {
     status: registered ? "registered" : "pending",
     statusDetail: {
       paymentMethod: paymentMethod || "x402",
-      ...(devTest ? { devTest: true, originalPrice: price } : {}),
+      ...(devTest ? { devTest: true, originalPrice: tierListPrice } : {}),
+      ...(couponMeta
+        ? {
+            couponApplied: true,
+            promoCodeApplied:
+              typeof couponCode === "string" ? couponCode.trim().toUpperCase() : couponCode ?? null,
+          }
+        : {}),
       ...(statusDetail || {}),
     },
     metadata: minerResponseBody,
@@ -1148,12 +1343,21 @@ export async function POST(request) {
   });
 
   let insertErr = null;
+  let registrationId = null;
   const INSERT_ATTEMPTS = 3;
   for (let attempt = 1; attempt <= INSERT_ATTEMPTS; attempt++) {
     try {
-      await db.insert(registrations).values(registrationRow);
+      const [inserted] = await db
+        .insert(registrations)
+        .values(registrationRow)
+        .returning({ id: registrations.id });
+      registrationId = inserted?.id ?? null;
       insertErr = null;
-      console.info("[REGISTRATION] registration insert succeeded", { reqId, attempt });
+      console.info("[REGISTRATION] registration insert succeeded", {
+        reqId,
+        attempt,
+        registrationId,
+      });
       break;
     } catch (err) {
       insertErr = err;
@@ -1167,6 +1371,56 @@ export async function POST(request) {
       if (attempt < INSERT_ATTEMPTS) {
         await new Promise((r) => setTimeout(r, 250 * 2 ** (attempt - 1)));
       }
+    }
+  }
+
+  if (registrationId && attributionRowId) {
+    try {
+      await db
+        .insert(registrationAttributions)
+        .values({
+          registrationId,
+          attributionId: attributionRowId,
+          affiliateId: attribution?.affiliateId ?? null,
+          entityMinerHotkey: attribution?.entityMinerHotkey ?? null,
+          promoCode: appliedPromoCode,
+          amountUsdc: String(effectivePrice),
+        })
+        .onConflictDoNothing({
+          target: registrationAttributions.registrationId,
+        });
+    } catch (err) {
+      await reportError(err, {
+        source: "api/register",
+        metadata: {
+          step: "registration_attribution_insert",
+          reqId,
+          registrationId,
+          attributionRowId,
+        },
+      });
+    }
+  }
+
+  if (!insertErr && registrationId != null && userId != null && couponMeta?.couponId) {
+    const redemption = await recordRegistrationCouponRedemption(db, {
+      couponId: couponMeta.couponId,
+      userId,
+      paymentIntentId: typeof txHash === "string" ? txHash : null,
+    });
+    if (!redemption.ok) {
+      await reportError(new Error(redemption.error || "Coupon redemption failed"), {
+        source: "api/register",
+        severity: SEVERITY.WARNING,
+        metadata: {
+          step: "coupon_redemption_after_insert",
+          reqId,
+          registrationId,
+          userId,
+          couponId: couponMeta.couponId,
+          txHash,
+        },
+      });
     }
   }
 

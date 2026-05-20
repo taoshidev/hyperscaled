@@ -546,7 +546,7 @@ function StepConfirmation({ selectedTier, email, hlAddress, registrationStatus }
         </div>
 
         <Link
-          href="/dashboard"
+          href={hlAddress ? `/dashboard?addr=${encodeURIComponent(hlAddress)}` : "/dashboard"}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-[color] duration-200 min-h-11 mt-2"
         >
           Go to Dashboard

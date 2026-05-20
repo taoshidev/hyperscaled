@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight } from "@phosphor-icons/react";
 
 import { useBrandHref } from "@/lib/brand";
+import { useWithPreservedQuery } from "@/lib/preserve-query";
 import { trackCtaClick } from "@/lib/analytics";
 
 // Wallet-aware "Start Challenge" CTA. Hides itself when the connected
@@ -13,6 +14,7 @@ import { trackCtaClick } from "@/lib/analytics";
 // rendered inside `<Providers>` (uses wagmi + react-query).
 export default function NavStartChallengeCta() {
   const brandHref = useBrandHref();
+  const withQS = useWithPreservedQuery();
   const { address, isConnected } = useAccount();
 
   // Connected wallet IS the registered HL address (enforced in /api/register),
@@ -40,7 +42,7 @@ export default function NavStartChallengeCta() {
 
   return (
     <Link
-      href={brandHref("/register")}
+      href={withQS(brandHref("/register"))}
       data-testid="nav-start-challenge-cta"
       onClick={() => trackCtaClick({ label: "Start Challenge", location: "nav" })}
       className="shiny-cta px-5 py-2"

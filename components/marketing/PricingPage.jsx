@@ -16,6 +16,7 @@ import {
 import Link from 'next/link'
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import { useBrand, useBrandHref } from '@/lib/brand'
+import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
 import FAQAccordion from '@/components/shared/FAQAccordion'
 import PromoBanner from '@/components/marketing/PromoBanner'
@@ -71,6 +72,7 @@ function PricingHero({ showPromoBar }) {
 /* ── Single Pricing Card ── */
 function PricingCard({ tier, index, freeAtCapacity, paidAtCapacity }) {
   const brandHref = useBrandHref()
+  const withQS = useWithPreservedQuery()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
   const free = isFreeTierForRegistration(tier)
@@ -154,7 +156,7 @@ function PricingCard({ tier, index, freeAtCapacity, paidAtCapacity }) {
       <Link
         href={(() => {
           const base = brandHref('/register')
-          return numericAccountSize ? `${base}?tier=${numericAccountSize}` : base
+          return withQS(numericAccountSize ? `${base}?tier=${numericAccountSize}` : base)
         })()}
         data-testid="pricing-tier-cta"
         onClick={() => trackCtaClick({ label: tier.cta, location: `pricing_page:${tier.name || tier.accountSize || 'unknown'}` })}
