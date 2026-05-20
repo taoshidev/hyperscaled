@@ -14,6 +14,13 @@ const nextConfig = {
     "@google-cloud/cloud-sql-connector",
     "google-auth-library",
   ],
+  // Dynamic/externally resolved DB deps are easy to miss in the serverless trace; force-include.
+  outputFileTracingIncludes: {
+    "/*": [
+      "./node_modules/@google-cloud/cloud-sql-connector/**/*",
+      "./node_modules/google-auth-library/**/*",
+    ],
+  },
   webpack: (config, { isServer }) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
