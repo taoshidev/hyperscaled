@@ -1,6 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useBrand } from "@/lib/brand";
+
+function AccountType() {
+  const brand = useBrand();
+  return <>{brand.accountType}</>;
+}
+
+function BrandName() {
+  const brand = useBrand();
+  return <>{brand.name}</>;
+}
 
 /* ── Shared visual building blocks matching the widget design ────────────── */
 
@@ -196,45 +207,21 @@ export const HELP_CONTENT = {
       <>
         <p className="text-[13px] text-muted-foreground leading-relaxed mb-2">
           You&rsquo;re a few steps away from mirroring your Hyperliquid trades to a{" "}
-          <strong className="text-foreground font-semibold">Hyperscaled account</strong> — pass the
-          challenge and unlock a scaled account with 100% performance rewards.
+          <strong className="text-foreground font-semibold"><BrandName /> account</strong> — pass the
+          challenge and unlock a <AccountType /> account with 100% performance rewards.
         </p>
         <Tip label="Fastest path (existing HL user)">
           <NumberedSteps
             items={[
-              "Install the Hyperscaled Chrome extension",
-              "Log into your Hyperliquid account",
-              <>Fill in this form and choose <strong className="text-foreground font-semibold">Pay with Hyperliquid</strong></>,
-              "Start trading — your trades are mirrored automatically",
+              "Enter your Hyperliquid wallet address",
+              <>Choose <strong className="text-foreground font-semibold">Pay with Hyperliquid</strong> and connect your wallet</>,
+              "Sign the transfer — registration completes instantly",
+              "Install the Chrome extension and start trading",
             ]}
           />
         </Tip>
         <p className="text-[13px] text-muted-foreground leading-relaxed">
           New to Hyperliquid or crypto? Each field below has its own guidance — just click on it.
-        </p>
-      </>
-    ),
-  },
-
-  email: {
-    icon: null,
-    title: "Email Address",
-    content: (
-      <>
-        <p className="text-[13px] text-muted-foreground leading-relaxed mb-2">
-          Enter the email address you&rsquo;d like to use for your Hyperscaled account.
-          This is separate from your Hyperliquid login.
-        </p>
-        <Tip label="What this email is used for">
-          <ul className="list-disc pl-4 mt-1 space-y-0.5 text-[13px] text-muted-foreground">
-            <li>Registration confirmation</li>
-            <li>Trade mirroring notifications</li>
-            <li>Drawdown and performance alerts</li>
-            <li>Payout notifications when you pass the challenge</li>
-          </ul>
-        </Tip>
-        <p className="text-[13px] text-muted-foreground leading-relaxed">
-          Use an email you check regularly — drawdown alerts are time-sensitive.
         </p>
       </>
     ),
@@ -247,9 +234,9 @@ export const HELP_CONTENT = {
       <>
         <p className="text-[13px] text-muted-foreground leading-relaxed mb-2">
           This is the <strong className="text-foreground font-semibold">wallet address you trade from on
-          Hyperliquid</strong> — it starts with <Code>0x</Code>. Hyperscaled monitors
+          Hyperliquid</strong> — it starts with <Code>0x</Code>. <BrandName /> monitors
           this address on-chain and mirrors every trade proportionally to your
-          Hyperscaled account.
+          <BrandName /> account.
         </p>
 
         <Warn label="Use your active trading address">
@@ -292,7 +279,7 @@ export const HELP_CONTENT = {
 
   "payment-eip712": {
     icon: null,
-    title: "Pay with Hyperscaled",
+    title: "Pay with Hyperliquid",
     content: (
       <>
         <p className="text-[13px] text-muted-foreground leading-relaxed mb-2">
@@ -302,25 +289,6 @@ export const HELP_CONTENT = {
           and it executes on Hyperliquid — no extension, no browser tabs, no
           bridging.
         </p>
-
-        <Tip label="How it works">
-          <NumberedSteps
-            items={[
-              <>Connect the wallet that owns your <strong className="text-foreground font-semibold">Hyperliquid account</strong></>,
-              "Your wallet prompts you to sign a Hyperliquid USDC transfer (EIP-712)",
-              "The signed payload is submitted to Hyperliquid automatically",
-              "Registration completes once the transfer is confirmed",
-            ]}
-          />
-        </Tip>
-
-        <Tip label="One signature, one transfer">
-          <p>
-            Unlike the extension method, everything happens in a single wallet
-            prompt — no switching tabs or confirming on Hyperliquid manually.
-            The EIP-712 signature authorizes the USDC transfer directly.
-          </p>
-        </Tip>
 
         <Warn label="Requirements">
           <p>
@@ -333,56 +301,13 @@ export const HELP_CONTENT = {
     ),
   },
 
-  "payment-hl": {
-    icon: null,
-    title: "Pay with Hyperliquid",
-    content: (
-      <>
-        <p className="text-[13px] text-muted-foreground leading-relaxed mb-2">
-          Transfers the challenge fee as USDC{" "}
-          <strong className="text-foreground font-semibold">directly from your Hyperliquid account
-          balance</strong>. This is the fastest and simplest option — no external
-          wallet or bridging needed.
-        </p>
-
-        <Tip label="How it works">
-          <NumberedSteps
-            items={[
-              <>Select <strong className="text-foreground font-semibold">Pay with Hyperliquid</strong></>,
-              "Make sure your HL wallet address is entered above",
-              "Hyperscaled initiates a USDC transfer from your HL account",
-              "Approve it in your HL interface — registration completes instantly",
-            ]}
-          />
-        </Tip>
-
-        <Warn label="Balance check">
-          <p>
-            Your USDC must be in your HL account balance — not locked in open
-            positions. Close or reduce positions if needed to free up the balance.
-          </p>
-          <p>
-            <strong className="text-foreground font-semibold">Use your HL main wallet to pay.</strong>{" "}
-            Hyperliquid only allows sending funds from the main account — you cannot
-            pay from a subaccount.
-          </p>
-        </Warn>
-
-        <p className="text-[13px] text-muted-foreground leading-relaxed">
-          Don&rsquo;t have USDC in your HL account yet? You can deposit from
-          Coinbase or bridge from another network.
-        </p>
-      </>
-    ),
-  },
-
   "payout-wallet": {
     icon: null,
     title: "Payout Wallet",
     content: (
       <>
         <p className="text-[13px] text-muted-foreground leading-relaxed mb-2">
-          When you trade profitably on your funded account, your share of the
+          When you trade profitably on your <AccountType /> account, your share of the
           profits is calculated and sent directly to this wallet —{" "}
           <strong className="text-foreground font-semibold">automatically, with no manual withdrawal
           needed</strong>. Every payout cycle, earned profits land here.

@@ -15,10 +15,12 @@ import {
   ShieldCheck,
   Crosshair,
 } from "@phosphor-icons/react";
-import { BASESCAN_URL } from "@/lib/constants";
-import ExtensionModal from "@/components/marketing/ExtensionModal";
+import { BASESCAN_URL, CHROME_EXTENSION_URL } from "@/lib/constants";
 import { copyToClipboard } from "@/lib/utils";
 import { formatAccountSize, truncateAddress } from "@/lib/format";
+import { useBrand, useBrandHref } from "@/lib/brand";
+import { useExtensionBridge } from "@/hooks/use-extension-bridge";
+import { trackEvent, getRefSource, getBrand } from "@/lib/analytics";
 
 function CopyButton({ text, label }) {
   const [copied, setCopied] = useState(false);
@@ -76,18 +78,19 @@ function MockupProgressBar({ label, value, max, color, bgColor, detail }) {
 }
 
 function ExtensionMockup() {
+  const brand = useBrand();
   return (
     <div
       aria-hidden="true"
       className="origin-top-left"
       style={{ transform: "scale(0.82)", width: "calc(100% / 0.82)" }}
     >
-      <div className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] overflow-hidden shadow-[0_36px_72px_rgba(0,0,0,0.5),0_0_54px_rgba(0,198,167,0.06)]">
+      <div className="rounded-2xl border border-white/[0.08] bg-[#0c0c0e] overflow-hidden" style={{ boxShadow: '0 36px 72px rgba(0,0,0,0.5), 0 0 54px rgba(var(--brand-glow),0.06)' }}>
         <div className="p-5 space-y-4">
           {/* Header bar */}
           <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
             <span className="text-base text-white">
-              Hyper<span className="font-bold">scaled</span>
+              {brand.name}
             </span>
             <div className="flex items-center gap-2">
               <span className="text-xs font-mono text-zinc-500">0x0c86…ddfA</span>
@@ -157,7 +160,7 @@ function ExtensionMockup() {
           <div>
             <div className="flex items-center justify-between">
               <span className="text-xs uppercase tracking-widest text-zinc-500">
-                Open Hyperscaled Positions
+                Open {brand.name} Positions
               </span>
               <span className="text-xs text-zinc-500">View on HL →</span>
             </div>
@@ -192,7 +195,7 @@ function ExtensionMockup() {
           <div className="rounded-md border border-white/[0.06] bg-white/[0.02] px-4 py-4 flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-white">View Full Analytics</p>
-              <p className="text-xs text-white/40">Hyperscaled Dashboard</p>
+              <p className="text-xs text-white/40">{brand.name} Dashboard</p>
             </div>
             <CaretRight size={14} className="text-white/40" />
           </div>
@@ -239,13 +242,35 @@ const itemVariants = {
 
 const POLL_INTERVAL_MS = 5000;
 
-export function StepConfirmation({ selectedTier, hlAddress, txHash, registrationStatus, paymentMethod }) {
-  const isHLPayment = paymentMethod === "hyperliquid";
+export function StepConfirmation({ selectedTier, hlAddress, txHash, registrationStatus, paymentMethod, brandVariant }) {
+  const dashboardHref = (path) => {
+    const base = path;
+    return hlAddress ? `${base}?addr=${encodeURIComponent(hlAddress)}` : base;
+  };
+  const brand = useBrand();
+  const brandHref = useBrandHref();
+  const isHLPayment = paymentMethod === "hyperliquid" || paymentMethod === "eip712";
   const explorerUrl = isHLPayment ? null : `${BASESCAN_URL}/tx/${txHash}`;
 
   const [status, setStatus] = useState(registrationStatus || "pending");
-  const [extensionModalOpen, setExtensionModalOpen] = useState(false);
   const intervalRef = useRef(null);
+  const conversionFiredRef = useRef(false);
+
+  const { extensionDetected } = useExtensionBridge();
+
+  // Fire register_conversion once when the account is confirmed active.
+  // This is the final funnel event — proves the user actually got their account.
+  useEffect(() => {
+    if (status !== "registered" || conversionFiredRef.current) return;
+    conversionFiredRef.current = true;
+    trackEvent("register_conversion", {
+      tier_name: selectedTier?.name,
+      tier_price: selectedTier?.promoPrice ?? selectedTier?.fullPrice,
+      payment_method: isHLPayment ? "hyperliquid" : "wallet",
+      ref_source: getRefSource(),
+      brand_variant: brandVariant || getBrand(),
+    });
+  }, [status, selectedTier, isHLPayment, brandVariant]);
 
   useEffect(() => {
     if (status !== "pending") return;
@@ -274,12 +299,14 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
     };
   }, [status, hlAddress]);
 
+
   const isRegistered = status === "registered";
   const isFailed = status === "failed";
   const isPending = !isRegistered && !isFailed;
 
   return (
     <motion.div
+      data-testid="registration-confirmation"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -299,16 +326,66 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
           />
           <div>
             <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight leading-tight text-balance">
-              You&#8217;re in. Challenge starts&nbsp;now.
+              You&#8217;re registered
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Your funded account is being provisioned on Hyperscaled.
+              Your {brand.accountType} account is being provisioned on {brand.name}.
             </p>
           </div>
         </div>
 
+        {/* Extension CTA — first content block */}
+        <div className="w-full mt-8">
+          {extensionDetected ? (
+            /* Extension already installed */
+            <div className="rounded-xl border border-teal-400/20 bg-teal-400/5 px-5 py-4 flex flex-col items-center gap-3">
+              <div className="flex items-center gap-2.5">
+                <CheckCircle size={20} weight="fill" className="text-teal-400 shrink-0" />
+                <p className="text-sm font-semibold text-teal-400">
+                  Extension installed — you&#8217;re ready to&nbsp;trade
+                </p>
+              </div>
+              <Link
+                href={brandHref(dashboardHref("/dashboard"))}
+                className="shiny-cta h-11 w-full max-w-sm flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                <span className="inline-flex items-center gap-2 text-sm font-semibold">
+                  Go to Dashboard
+                  <ArrowRight size={14} weight="bold" />
+                </span>
+              </Link>
+            </div>
+          ) : (
+            /* Extension not installed */
+            <div className="rounded-xl border border-border bg-zinc-900/50 px-5 py-6 flex flex-col items-center gap-4">
+              <h3 className="text-lg font-bold tracking-tight text-foreground text-balance text-center">
+                Install the Chrome extension to start&nbsp;trading
+              </h3>
+              <p className="text-sm text-muted-foreground text-balance text-center max-w-md">
+                The extension tracks your positions, enforces risk limits, and
+                displays your challenge progress inside Hyperliquid.
+                Required to&nbsp;participate.
+              </p>
+              <a
+                href={CHROME_EXTENSION_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shiny-cta h-11 w-full flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                <span className="inline-flex items-center gap-2 text-sm font-semibold">
+                  <GoogleChromeLogo size={18} weight="bold" />
+                  Install Chrome Extension
+                </span>
+              </a>
+              <p className="text-xs text-muted-foreground">
+                Available for Chrome and&nbsp;Brave
+              </p>
+            </div>
+          )}
+        </div>
+
         {/* Receipt card */}
-        <div className="w-full rounded-xl border border-border bg-zinc-900/50 px-5 pt-4 pb-px mt-8">
+        <div className="w-full rounded-xl border border-border bg-zinc-900/50 px-5 pt-4 pb-px mt-6">
           {/* Plan */}
           <div className="flex items-center justify-between py-2.5">
             <span className="text-sm text-muted-foreground">Plan</span>
@@ -381,44 +458,16 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
           </div>
         </div>
 
-        {/* Extension CTA */}
-        <div className="w-full flex flex-col items-center mt-10 gap-4">
-          <h3 className="text-lg font-bold tracking-tight text-foreground text-balance text-center">
-            Install the Chrome extension to start&nbsp;trading
-          </h3>
-          <p className="text-sm text-muted-foreground text-balance text-center max-w-md">
-            The extension tracks your positions, enforces risk limits, and
-            displays your progress inside&nbsp;Hyperliquid.
-          </p>
-          <button
-            onClick={() => {
-              const a = document.createElement('a')
-              a.href = '/hyperscaled_extension.zip'
-              a.download = 'hyperscaled_extension.zip'
-              a.click()
-              setExtensionModalOpen(true)
-            }}
-            className="shiny-cta h-11 w-full max-w-sm flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        {/* Dashboard link — secondary, below receipt */}
+        {!extensionDetected && (
+          <Link
+            href={brandHref(dashboardHref("/dashboard"))}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-[color] duration-200 min-h-11 mt-4"
           >
-            <span className="inline-flex items-center gap-2 text-sm font-semibold">
-              <GoogleChromeLogo size={18} weight="bold" />
-              Install Chrome Extension
-            </span>
-          </button>
-          <p className="text-xs text-muted-foreground">
-            Available for Chrome and&nbsp;Brave
-          </p>
-          <ExtensionModal open={extensionModalOpen} onClose={() => setExtensionModalOpen(false)} />
-        </div>
-
-        {/* Dashboard link */}
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-[color] duration-200 min-h-11 mt-2"
-        >
-          Go to Dashboard
-          <ArrowRight size={14} weight="bold" />
-        </Link>
+            Go to Dashboard
+            <ArrowRight size={14} weight="bold" />
+          </Link>
+        )}
       </motion.div>
 
       {/* ─── Bottom: "Your Trading Companion" two-column section ─── */}

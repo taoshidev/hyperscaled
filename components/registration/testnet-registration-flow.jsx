@@ -20,7 +20,8 @@ import { Stepper } from "./stepper";
 import { isValidEmail, isValidHLAddress } from "@/lib/validation";
 import { copyToClipboard, cn } from "@/lib/utils";
 import { truncateAddress, formatAccountSize } from "@/lib/format";
-import ExtensionModal from "@/components/marketing/ExtensionModal";
+import { CHROME_EXTENSION_URL } from "@/lib/constants";
+import { reportError } from "@/lib/errors";
 
 const STEP_LABELS = ["Account Size", "Your Info", "Confirmation"];
 
@@ -98,10 +99,10 @@ function StepSelectSize({ tiers, selectedTier, onSelect, onContinue }) {
       <div
         role="radiogroup"
         aria-label="Choose your testnet account size"
-        className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mt-10"
       >
         {!tiers
-          ? [0, 1, 2].map((i) => <div key={i} className="skeleton rounded-2xl h-56" />)
+          ? [0, 1, 2, 3, 4].map((i) => <div key={i} className="skeleton rounded-2xl h-56" />)
           : tiers.map((tier, i) => {
               const isSelected = selectedTier?.accountSize === tier.accountSize;
               const isPopular = tier.accountSize === 50000;
@@ -139,7 +140,7 @@ function StepSelectSize({ tiers, selectedTier, onSelect, onContinue }) {
                       "absolute inset-0 rounded-2xl pointer-events-none transition-opacity",
                       isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100",
                     )}
-                    style={{ background: "radial-gradient(circle at 20% 20%, rgba(0,198,167,0.06), transparent 60%)" }}
+                    style={{ background: "radial-gradient(circle at 20% 20%, rgba(var(--brand-glow),0.06), transparent 60%)" }}
                   />
 
                   {isPopular && (
@@ -285,6 +286,17 @@ function StepInfo({ selectedTier, onSubmit, onBack }) {
       if (!res.ok) {
         setApiError(data.error || "Registration failed. Please try again.");
         setSubmitting(false);
+        reportError(new Error("testnet_register_failed"), {
+          source: "registration/testnet",
+          metadata: {
+            step: "testnet_register",
+            httpStatus: res.status,
+            serverError: data.error,
+            hlAddress: hlAddress.trim(),
+            accountSize: selectedTier.accountSize,
+            tierIndex: selectedTier.tierIndex,
+          },
+        });
         return;
       }
 
@@ -293,9 +305,18 @@ function StepInfo({ selectedTier, onSubmit, onBack }) {
         hlAddress: hlAddress.trim(),
         registrationStatus: data.status,
       });
-    } catch {
+    } catch (err) {
       setApiError("Network error. Please check your connection and try again.");
       setSubmitting(false);
+      reportError(err, {
+        source: "registration/testnet",
+        metadata: {
+          step: "testnet_register_network",
+          hlAddress: hlAddress.trim(),
+          accountSize: selectedTier.accountSize,
+          tierIndex: selectedTier.tierIndex,
+        },
+      });
     }
   }
 
@@ -426,7 +447,6 @@ const itemVariants = {
 
 function StepConfirmation({ selectedTier, email, hlAddress, registrationStatus }) {
   const isRegistered = registrationStatus === "registered";
-  const [extensionModalOpen, setExtensionModalOpen] = useState(false);
 
   return (
     <motion.div
@@ -511,27 +531,22 @@ function StepConfirmation({ selectedTier, email, hlAddress, registrationStatus }
           <p className="text-sm text-muted-foreground text-balance text-center max-w-md">
             The extension tracks your positions, enforces risk limits, and displays your progress inside Hyperliquid.
           </p>
-          <button
-            onClick={() => {
-              const a = document.createElement('a');
-              a.href = '/hyperscaled_extension.zip';
-              a.download = 'hyperscaled_extension.zip';
-              a.click();
-              setExtensionModalOpen(true);
-            }}
+          <a
+            href={CHROME_EXTENSION_URL}
+            target="_blank"
+            rel="noopener noreferrer"
             className="shiny-cta h-11 w-full max-w-sm flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             <span className="inline-flex items-center gap-2 text-sm font-semibold">
               <GoogleChromeLogo size={18} weight="bold" />
               Install Chrome Extension
             </span>
-          </button>
+          </a>
           <p className="text-xs text-muted-foreground">Available for Chrome and Brave</p>
-          <ExtensionModal open={extensionModalOpen} onClose={() => setExtensionModalOpen(false)} />
         </div>
 
         <Link
-          href="/dashboard"
+          href={hlAddress ? `/dashboard?addr=${encodeURIComponent(hlAddress)}` : "/dashboard"}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-[color] duration-200 min-h-11 mt-2"
         >
           Go to Dashboard

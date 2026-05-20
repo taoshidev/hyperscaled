@@ -35,7 +35,7 @@ export function MobileHelpSheet() {
           w-14 h-14 rounded-full
           bg-teal-400 text-zinc-950
           flex items-center justify-center
-          shadow-[0_4px_20px_rgba(0,198,167,0.3)]
+          shadow-[0_4px_20px_rgba(var(--brand-glow),0.3)]
           cursor-pointer outline-none
           focus-visible:ring-2 focus-visible:ring-teal-400
           focus-visible:ring-offset-2 focus-visible:ring-offset-background

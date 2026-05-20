@@ -5,18 +5,28 @@ import { motion, useInView } from 'framer-motion'
 import Link from 'next/link'
 import {
   ArrowRight,
+  ArrowsLeftRight,
+  Bell,
+  Broadcast,
   CheckCircle,
-  XCircle,
-  Wallet,
   ChartLineUp,
-  Target,
+  ClockCountdown,
   CurrencyDollar,
   Eye,
-  ClockCountdown,
+  Gauge,
+  GithubLogo,
+  PuzzlePiece,
+  Scales,
   ShieldCheck,
+  Target,
+  Wallet,
+  XCircle,
 } from '@phosphor-icons/react'
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import PricingPreview from '@/components/marketing/PricingPreview'
+import { useBrand, useBrandHref } from '@/lib/brand'
+import { useWithPreservedQuery } from '@/lib/preserve-query'
+import { trackCtaClick } from '@/lib/analytics'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -24,6 +34,16 @@ const spring = { type: 'spring', stiffness: 100, damping: 20 }
    Section 1 — Page Hero
    ─────────────────────────────────────────────── */
 function PageHero() {
+  const brand = useBrand()
+  const brandHref = useBrandHref()
+  const withQS = useWithPreservedQuery()
+  const heroTitle =
+    brand.id === 'beanstock'
+      ? `Trade on Hyperliquid. Get ${brand.accountType} by Beanstock.`
+      : brand.poweredBy && brand.id !== 'hyperscaled'
+        ? `Trade on Hyperliquid. Get ${brand.accountType} by ${brand.name.replace(' Trading', '')}.`
+        : `Trade on Hyperliquid. Get ${brand.accountType} by the network.`
+
   return (
     <section className="pt-32 pb-16 px-6">
       <div className="max-w-[800px] mx-auto text-center">
@@ -34,7 +54,7 @@ function PageHero() {
           className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1]"
           style={{ textWrap: 'balance' }}
         >
-          Trade on Hyperliquid. Get funded by the&nbsp;network.
+          {heroTitle}
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 16 }}
@@ -43,7 +63,7 @@ function PageHero() {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[62ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          No API keys. No custody. Just Hyperliquid, your wallet, and your trades — we handle the&nbsp;rest.
+          No API keys. No custody. Just Hyperliquid, your wallet, and your trades — {brand.name} handles the&nbsp;rest.
         </motion.p>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -52,7 +72,8 @@ function PageHero() {
           className="mt-8"
         >
           <Link
-            href="/register"
+            href={withQS(brandHref('/register'))}
+            onClick={() => trackCtaClick({ label: 'Start Your Challenge', location: 'how_it_works_hero' })}
             className="shiny-cta inline-flex items-center gap-1.5 px-6 py-3 min-h-12"
           >
             Start Your Challenge
@@ -101,66 +122,71 @@ function KeyDetails({ rows, inline }) {
 /* ───────────────────────────────────────────────
    Section 2 — Step-by-Step Flow (4 steps)
    ─────────────────────────────────────────────── */
-const STEPS = [
-  {
-    number: '01',
-    icon: Wallet,
-    title: 'Register & Choose Your Size',
-    body: 'Visit our app, connect your wallet, and pay the one-time fee to immediately begin your\u00a0challenge.',
-    cta: true,
-    details: [
-      { label: 'Account Sizes', value: '$25K / $50K / $100K' },
-      { label: 'Challenge', value: 'One-Step' },
-      { label: 'KYC Required', value: 'None' },
-      { label: 'Activation', value: 'Immediate' },
-    ],
-  },
-  {
-    number: '02',
-    icon: ChartLineUp,
-    title: 'Trade on Hyperliquid',
-    body: 'Open Hyperliquid and trade as you normally would. Hyperscaled reads your fills from the public data stream — nothing about your workflow\u00a0changes.',
-    details: [
-      { label: 'Platform', value: 'Hyperliquid' },
-      { label: 'Data Access', value: 'Public data only, no API keys needed' },
-      { label: 'Custody', value: 'Your funds always stay with you' },
-    ],
-  },
-  {
-    number: '03',
-    icon: Target,
-    title: 'Track in Real Time',
-    body: 'Your dashboard and Hyperscaled Chrome plugin show your live P&L, drawdown, profit target progress, and expected payout. Updates in real time as you\u00a0trade.',
-    compact: true,
-    details: [
-      { label: 'Platform', value: 'Hyperscaled App & Chrome Plugin' },
-      { label: 'Updates', value: 'Always in real-time' },
-    ],
-  },
-  {
-    number: '04',
-    icon: CurrencyDollar,
-    title: 'Pass. Get Funded. Get Paid.',
-    body: 'Hit the 10% profit target with drawdown under 5% to immediately activate your funded account. Keep 100% of profits with payouts delivered in USDC monthly. Scale to $2.5M with continued\u00a0performance.',
-    details: [
-      { label: 'Profit Target', value: '10%' },
-      { label: 'Max Drawdown (Challenge)', value: '5% daily / 5% EOD trailing' },
-      { label: 'Max Drawdown (Funded)', value: '8% daily / 8% EOD trailing' },
-      { label: 'Payout Cycle', value: 'Monthly' },
-      { label: 'Profit Split', value: '100% — Hyperscaled takes 0%' },
-    ],
-  },
-]
+function getSteps(brandName, brandId, accountType) {
+  return [
+    {
+      number: '01',
+      icon: Wallet,
+      title: 'Register & Choose Your Size',
+      body: 'Connect your wallet and pay the one-time fee to begin your challenge. Choose a $5K to $100K account.',
+      cta: true,
+      details: [
+        { label: 'Account Sizes', value: '$5K / $10K / $25K / $50K / $100K' },
+        { label: 'Challenge', value: 'One-Step' },
+        { label: 'KYC Required', value: 'None' },
+        { label: 'Activation', value: 'Immediate' },
+      ],
+    },
+    {
+      number: '02',
+      icon: ChartLineUp,
+      title: 'Trade on Hyperliquid',
+      body: `Open Hyperliquid and trade as you normally would. ${brandName} reads your fills from the public data stream — nothing about your workflow\u00a0changes.`,
+      details: [
+        { label: 'Platform', value: 'Hyperliquid' },
+        { label: 'Data Access', value: 'Public data only, no API keys needed' },
+        { label: 'Custody', value: 'Your funds always stay with you' },
+      ],
+    },
+    {
+      number: '03',
+      icon: Target,
+      title: 'Track & Enforce in Real Time',
+      body: `Your dashboard shows live P&L, drawdown, and profit target progress. The ${brandName} Chrome extension overlays the same data directly onto Hyperliquid — previewing how each order scales to your funded account and blocking trades that would breach your\u00a0limits.`,
+      compact: true,
+      details: [
+        { label: 'Surfaces', value: `${brandName} App & Chrome Extension` },
+        { label: 'Extension', value: 'Open source on GitHub' },
+        { label: 'Updates', value: 'Real-time as you trade' },
+      ],
+    },
+    {
+      number: '04',
+      icon: CurrencyDollar,
+      title: 'Pass. Get Funded. Get Paid.',
+      body: `Hit the 10% profit target with drawdown under 5% to immediately activate your ${accountType} account. Keep 100% of profits with payouts delivered in USDC monthly. Scale to $400K with continued\u00a0performance.`,
+      details: [
+        { label: 'Profit Target', value: '10%' },
+        { label: 'Max Drawdown (Challenge)', value: '5% daily / 5% EOD trailing' },
+        { label: 'Max Drawdown (Funded)', value: '8% daily / 8% EOD trailing' },
+        { label: 'Payout Cycle', value: 'Monthly' },
+        { label: 'Profit Split', value: `100% — ${brandName} takes 0%` },
+      ],
+    },
+  ]
+}
 
 /* Scaling qualification rows — displayed in ScalingSection */
 const SCALING_QUALIFICATIONS = [
   { label: 'Scaling Qualification', value: '5% quarterly return + all-time Sharpe ratio > 1' },
   { label: '25% Bonus', value: '2% quarterly return + all-time Sharpe ratio > 1' },
-  { label: 'Max Account Size', value: '$2.5M' },
+  { label: 'Max Account Size', value: '$400K' },
   { label: 'Funded Account Profit Target', value: 'None' },
 ]
 
 function StepCard({ step, index }) {
+  const brandHref = useBrandHref()
+  const withQS = useWithPreservedQuery()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
@@ -231,7 +257,8 @@ function StepCard({ step, index }) {
           </p>
           {step.cta && (
             <Link
-              href="/register"
+              href={withQS(brandHref('/register'))}
+              onClick={() => trackCtaClick({ label: 'Get started', location: 'how_it_works_step' })}
               className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-teal-400 hover:text-teal-300 transition-colors"
             >
               Get started
@@ -250,12 +277,149 @@ function StepCard({ step, index }) {
 }
 
 function StepByStepFlow() {
+  const brand = useBrand()
+  const steps = getSteps(brand.name, brand.id, brand.accountType)
   return (
     <section className="px-6 pb-20">
       <div className="max-w-[1100px] mx-auto flex flex-col gap-6">
-        {STEPS.map((step, i) => (
+        {steps.map((step, i) => (
           <StepCard key={step.number} step={step} index={i} />
         ))}
+      </div>
+    </section>
+  )
+}
+
+/* ───────────────────────────────────────────────
+   Chrome Extension Section
+   ─────────────────────────────────────────────── */
+
+const EXTENSION_FEATURES = [
+  {
+    icon: Broadcast,
+    title: 'Live challenge banner',
+    body: 'Profit target, daily drawdown, and trailing drawdown overlaid on every Hyperliquid page.',
+  },
+  {
+    icon: ArrowsLeftRight,
+    title: 'Mirror preview',
+    body: 'See how each order scales to your funded account — mirrored size, ratio, and remaining capacity.',
+  },
+  {
+    icon: Scales,
+    title: 'Auto size clamping',
+    body: 'Orders that exceed per-pair or portfolio caps get trimmed to the largest allowed fill automatically.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Drawdown guardrails',
+    body: 'Trades that would breach daily or trailing drawdown limits are blocked before they execute.',
+  },
+  {
+    icon: Gauge,
+    title: 'Popup dashboard',
+    body: 'Balance, open positions, live P&L, and challenge progress — one click from any tab.',
+  },
+  {
+    icon: Bell,
+    title: 'Position notifications',
+    body: 'Desktop alerts on opens, closes, and significant P&L moves.',
+  },
+]
+
+function ChromeExtensionSection() {
+  const brand = useBrand()
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-60px' })
+
+  return (
+    <section ref={ref} className="px-6 pb-24">
+      <div className="max-w-[1100px] mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={spring}
+          className="text-center mb-4"
+        >
+          <span className="inline-flex items-center gap-2 text-xs font-mono text-teal-400 tracking-widest uppercase">
+            <PuzzlePiece size={14} weight="fill" />
+            Chrome Extension
+          </span>
+          <h2 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight" style={{ textWrap: 'balance' }}>
+            Your guardrails, built into&nbsp;Hyperliquid
+          </h2>
+          <p className="mt-4 text-sm sm:text-base text-zinc-400 max-w-[56ch] mx-auto leading-relaxed" style={{ textWrap: 'balance' }}>
+            See how every trade scales, stay inside your limits, and track your challenge — without leaving&nbsp;Hyperliquid.
+          </p>
+        </motion.div>
+
+        {/* Open source callout */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ ...spring, delay: 0.08 }}
+          className="mt-6 mb-10 flex justify-center"
+        >
+          {brand.id === 'hyperscaled' || brand.id === 'vanta' ? (
+            <a
+              href="https://github.com/taoshidev/hyperscaled_extension"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.02] hover:border-teal-400/30 hover:bg-teal-400/[0.04] px-4 py-2 text-xs sm:text-sm text-zinc-300 transition-colors"
+            >
+              <GithubLogo size={16} weight="fill" className="text-teal-400" />
+              <span>Fully open source —</span>
+              <span className="font-mono text-teal-400">taoshidev/hyperscaled_extension</span>
+              <ArrowRight size={13} weight="bold" className="text-zinc-500" />
+            </a>
+          ) : (
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.02] px-4 py-2 text-xs sm:text-sm text-zinc-300">
+              <GithubLogo size={16} weight="fill" className="text-teal-400" />
+              <span>Fully open source</span>
+            </span>
+          )}
+        </motion.div>
+
+        {/* Feature grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ ...spring, delay: 0.16 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+        >
+          {EXTENSION_FEATURES.map((feature) => {
+            const Icon = feature.icon
+            return (
+              <div
+                key={feature.title}
+                className="rounded-2xl border border-white/[0.08] bg-[#09090b] p-6 flex flex-col"
+              >
+                <div className="w-10 h-10 rounded-xl bg-teal-400/10 border border-teal-400/20 flex items-center justify-center mb-4">
+                  <Icon size={20} weight="fill" className="text-teal-400" />
+                </div>
+                <h3 className="text-base font-semibold tracking-tight mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-sm text-zinc-400 leading-relaxed">
+                  {feature.body}
+                </p>
+              </div>
+            )
+          })}
+        </motion.div>
+
+        {/* Open source note */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ ...spring, delay: 0.24 }}
+          className="mt-6 max-w-[700px] mx-auto rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-5 text-center"
+        >
+          <p className="text-sm text-teal-400 font-medium leading-relaxed" style={{ textWrap: 'balance' }}>
+            Every rule the extension enforces is the same rule the network enforces onchain. The code is public — audit&nbsp;it, fork&nbsp;it, or build your&nbsp;own.
+          </p>
+        </motion.div>
       </div>
     </section>
   )
@@ -265,6 +429,7 @@ function StepByStepFlow() {
    Scaling Path (below Step 4)
    ─────────────────────────────────────────────── */
 function ScalingSection() {
+  const brand = useBrand()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
@@ -278,10 +443,10 @@ function ScalingSection() {
           className="text-center mb-10"
         >
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            Scaling path: $100K to&nbsp;$2.5M
+            Scaling path: up to&nbsp;$400K
           </h2>
           <p className="mt-4 text-sm sm:text-base text-zinc-400 max-w-[56ch] mx-auto leading-relaxed" style={{ textWrap: 'balance' }}>
-            Consistently hit quarterly performance targets and your funded account grows automatically with no additional&nbsp;fees.
+            Consistently hit quarterly performance targets and your {brand.accountType} account grows automatically with no additional&nbsp;fees.
           </p>
         </motion.div>
         <ScalingPathVisual />
@@ -297,7 +462,7 @@ function ScalingSection() {
         </motion.div>
 
         <p className="mt-6 text-xs text-zinc-500 text-center max-w-[72ch] mx-auto leading-relaxed">
-          This path applies to Tier III ($100K) accounts. Tier I ($25K) and Tier II ($50K) accounts scale up to $100K maximum, at which point the full scaling path&nbsp;applies.
+          All accounts can scale up to $400K maximum through continued&nbsp;performance.
         </p>
       </div>
     </section>
@@ -323,6 +488,7 @@ const HYPERSCALED_ITEMS = [
 ]
 
 function NonCustodialExplainer() {
+  const brand = useBrand()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
@@ -337,7 +503,7 @@ function NonCustodialExplainer() {
           className="mb-6 border-l-2 border-teal-400 pl-5 py-1"
         >
           <p className="text-sm font-semibold text-teal-300 leading-relaxed">
-            Your wallet. Your keys. Hyperscaled only reads your public trade data and never touches your&nbsp;capital.
+            Your wallet. Your keys. {brand.name} only reads your public trade data and never touches your&nbsp;capital.
           </p>
         </motion.div>
 
@@ -363,10 +529,10 @@ function NonCustodialExplainer() {
             </ul>
           </div>
 
-          {/* Hyperscaled */}
+          {/* Brand comparison */}
           <div className="rounded-2xl border border-teal-400/20 bg-teal-400/[0.03] p-6 sm:p-8">
             <h3 className="text-sm font-semibold text-teal-400 tracking-wide uppercase mb-5">
-              Hyperscaled
+              {brand.name}
             </h3>
             <ul className="space-y-4">
               {HYPERSCALED_ITEMS.map((item) => (
@@ -387,15 +553,19 @@ function NonCustodialExplainer() {
    Section 4 — Payout Mechanics
    ─────────────────────────────────────────────── */
 
-const PAYOUT_STEPS = [
-  { label: 'You trade on HL', icon: ChartLineUp, detail: null },
-  { label: 'Hyperscaled reads performance', icon: Eye, detail: null },
-  { label: 'Monthly cycle closes', icon: ClockCountdown, detail: null },
-  { label: 'USDC sent to wallet', icon: Wallet, detail: '+$2,847.32 USDC' },
-  { label: 'Verifiable onchain', icon: ShieldCheck, detail: '0x7a3...f4e2' },
-]
+function getPayoutSteps(brandName) {
+  return [
+    { label: 'You trade on HL', icon: ChartLineUp, detail: null },
+    { label: `${brandName} reads performance`, icon: Eye, detail: null },
+    { label: 'Monthly cycle closes', icon: ClockCountdown, detail: null },
+    { label: 'USDC sent to wallet', icon: Wallet, detail: '+$2,847.32 USDC' },
+    { label: 'Verifiable onchain', icon: ShieldCheck, detail: '0x7a3...f4e2' },
+  ]
+}
 
 function PayoutMechanics() {
+  const brand = useBrand()
+  const payoutSteps = getPayoutSteps(brand.name)
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
@@ -428,7 +598,7 @@ function PayoutMechanics() {
             Funded account payouts are calculated automatically on a monthly basis for your realized profits. USDC is sent directly to your connected wallet, with no delays or&nbsp;discretion.
           </p>
           <p>
-            A brief KYC is required only for your first payout — just a simple cryptographic wallet&nbsp;verification.
+            A brief KYC is required only for your first payout — a fast identity verification that takes approximately 2&nbsp;minutes.
           </p>
         </motion.div>
 
@@ -441,7 +611,7 @@ function PayoutMechanics() {
         >
           {/* Desktop: horizontal */}
           <div className="hidden md:flex items-start justify-center gap-0">
-            {PAYOUT_STEPS.map((step, i) => {
+            {payoutSteps.map((step, i) => {
               const Icon = step.icon
               return (
                 <div key={step.label} className="flex items-start">
@@ -458,7 +628,7 @@ function PayoutMechanics() {
                       </span>
                     )}
                   </div>
-                  {i < PAYOUT_STEPS.length - 1 && (
+                  {i < payoutSteps.length - 1 && (
                     <div className="w-10 lg:w-16 h-px bg-white/[0.15] mx-2 lg:mx-3 mt-6" />
                   )}
                 </div>
@@ -468,7 +638,7 @@ function PayoutMechanics() {
 
           {/* Mobile: vertical */}
           <div className="flex md:hidden flex-col items-start gap-0 pl-4">
-            {PAYOUT_STEPS.map((step, i) => {
+            {payoutSteps.map((step, i) => {
               const Icon = step.icon
               return (
                 <div key={step.label} className="flex items-start gap-4">
@@ -476,7 +646,7 @@ function PayoutMechanics() {
                     <div className="w-10 h-10 rounded-full bg-teal-400/10 border border-teal-400/20 flex items-center justify-center shrink-0">
                       <Icon size={18} weight="fill" className="text-teal-400" />
                     </div>
-                    {i < PAYOUT_STEPS.length - 1 && (
+                    {i < payoutSteps.length - 1 && (
                       <div className="w-px h-8 bg-white/[0.15]" />
                     )}
                   </div>
@@ -502,7 +672,7 @@ function PayoutMechanics() {
           className="max-w-[700px] mx-auto rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-5 sm:p-6 text-center"
         >
           <p className="text-sm sm:text-base text-teal-400 font-medium leading-relaxed" style={{ textWrap: 'balance' }}>
-            100% of profits go to you. Hyperscaled takes 0%, including on scaled accounts up to&nbsp;$2.5M.
+            100% of profits go to you. {brand.name} takes 0%, including on {brand.accountType} accounts up to&nbsp;$400K.
           </p>
         </motion.div>
       </div>
@@ -518,6 +688,7 @@ export default function HowItWorksPage({ tiers }) {
     <>
       <PageHero />
       <StepByStepFlow />
+      <ChromeExtensionSection />
       <ScalingSection />
       <NonCustodialExplainer />
       <PayoutMechanics />

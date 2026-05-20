@@ -1005,12 +1005,12 @@ Aggregated leaderboard for all Hyperliquid traders. **No authentication required
   "summary": {
     "totalPaidOut": 0,
     "totalTraders": 4200,
-    "fundedTraders": 310,
+    "scaledTraders": 310,
     "inChallenge": 2840,
     "eliminated": 1050,
     "totalVolume": 0
   },
-  "fundedTraders": [
+  "scaledTraders": [
     {
       "rank": 1,
       "address": "0x73ab...f41d",

@@ -2,31 +2,38 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-async function fetchJSON(url) {
-  const res = await fetch(url);
+async function fetchJSON(url, init = {}) {
+  const res = await fetch(url, init);
   if (!res.ok) {
     const err = new Error("Fetch failed");
     err.status = res.status;
     try {
       const body = await res.json();
       err.message = body.error || err.message;
-    } catch {}
+    } catch {
+      // Body is not JSON — keep generic err.message.
+    }
     throw err;
   }
   return res.json();
 }
 
-export function useKycStatus(wallet) {
+/**
+ * `GET /api/kyc/status` is a public read — same trust model as the rest
+ * of the dashboard endpoints. Returns the account's verification state
+ * as a transparency signal.
+ */
+export function useKycStatus(hlAddress) {
   return useQuery({
-    queryKey: ["kyc-status", wallet],
-    queryFn: () => fetchJSON(`/api/kyc/status?wallet=${wallet}`),
-    enabled: !!wallet,
-    staleTime: 30_000,
-    refetchOnWindowFocus: true,
+    queryKey: ["kyc-status", hlAddress],
+    queryFn: () => fetchJSON(`/api/kyc/status?wallet=${hlAddress}`),
+    enabled: !!hlAddress,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
   });
 }
 
-export function useKycToken(wallet) {
+export function useKycToken(wallet, connectedWallet) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -34,7 +41,7 @@ export function useKycToken(wallet) {
       const res = await fetch("/api/kyc/token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wallet }),
+        body: JSON.stringify({ wallet, connectedWallet }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));

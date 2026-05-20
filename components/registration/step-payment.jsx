@@ -8,6 +8,7 @@ import {
   useWalletClient,
   usePublicClient,
   useSwitchChain,
+  useSignMessage,
 } from "wagmi";
 import { parseUnits, formatUnits } from "viem";
 import { x402Client, x402HTTPClient } from "@x402/core/client";
@@ -26,12 +27,15 @@ import {
 import { USDC_ADDRESS, USDC_DECIMALS, BASE_CHAIN_ID, BASE_NETWORK, CHAIN_LABEL } from "@/lib/constants";
 import { usdcAbi } from "@/lib/usdc-abi";
 import { Loader2, AlertTriangle } from "lucide-react";
+import { reportCritical, reportError } from "@/lib/errors";
+import { signRegistrationRequest } from "@/lib/sign-registration";
 
 export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, onComplete, onBack }) {
   const { address, isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
+  const { signMessageAsync } = useSignMessage();
   const [error, setError] = useState(null);
   const [isPaying, setIsPaying] = useState(false);
   const [status, setStatus] = useState(null);
@@ -50,7 +54,21 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
   });
 
   const handlePay = useCallback(async () => {
-    if (!walletClient || !publicClient) return;
+    if (!walletClient || !publicClient) {
+      console.warn("[REGISTRATION][StepPayment] handlePay aborted — missing client", {
+        hasWalletClient: Boolean(walletClient),
+        hasPublicClient: Boolean(publicClient),
+      });
+      return;
+    }
+
+    console.info("[REGISTRATION][StepPayment] handlePay start", {
+      minerSlug: miner.slug,
+      hlAddress,
+      tierIndex,
+      price: tier.priceUsdc,
+      payer: address,
+    });
 
     setError(null);
     setIsPaying(true);
@@ -62,6 +80,16 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
         .find((c) => c.startsWith("hs_affiliate="))
         ?.split("=")[1] || null;
 
+      // Call tolt.signup() now so we have a customer_id before the server
+      // records the transaction. Guard against double-calls on retry.
+      let toltCustomerId = window.tolt_data?.customer_id || null;
+      if (!toltCustomerId && window.tolt) {
+        try {
+          const result = await window.tolt.signup(hlAddress);
+          toltCustomerId = result?.customer_id || window.tolt_data?.customer_id || null;
+        } catch { /* tolt unavailable */ }
+      }
+
       const registrationData = {
         minerSlug: miner.slug,
         hlAddress,
@@ -70,17 +98,58 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
         email,
         tierIndex,
         affiliateUtm,
+        toltCustomerId,
       };
 
+      // Wallet-ownership signature for the HL address being registered.
+      // Required by the server on the SETTLE call; the unsigned probe
+      // call below skips the gate. We sign once (one MetaMask popup) and
+      // reuse the same `signedBody` bytes for both calls so the body
+      // hash bound to the signature matches the bytes the server reads
+      // on the settle. Mismatched wallets / unconnected wallets throw a
+      // user-facing message before MetaMask is ever invoked.
+      setStatus("Verifying wallet ownership...");
+      let ownershipHeaders;
+      let signedBody;
+      try {
+        const signed = await signRegistrationRequest({
+          path: "/api/register",
+          body: registrationData,
+          hlAddress,
+          connectedAddress: address,
+          signMessageAsync,
+        });
+        ownershipHeaders = signed.headers;
+        signedBody = signed.body;
+      } catch (err) {
+        console.warn("[REGISTRATION][StepPayment] ownership signature aborted", { error: err?.message });
+        throw err;
+      }
+
+      console.info("[REGISTRATION][StepPayment] probing /api/register for 402", { affiliateUtm });
       const initialRes = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(registrationData),
+        body: signedBody,
       });
+      console.info("[REGISTRATION][StepPayment] probe response", { status: initialRes.status });
 
       if (initialRes.status !== 402) {
         const data = await initialRes.json();
-        throw new Error(data.error || "Unexpected response from server");
+        const err = new Error(data.error || "Unexpected response from server");
+        reportError(err, {
+          source: "registration/step-payment",
+          userId: address,
+          metadata: {
+            step: "probe_unexpected_status",
+            httpStatus: initialRes.status,
+            serverError: data.error,
+            minerSlug: miner.slug,
+            hlAddress,
+            tierIndex,
+          },
+        });
+        throw err;
       }
 
       setStatus("Waiting for wallet signature...");
@@ -103,6 +172,7 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
 
       const paymentPayload = await httpClient.createPaymentPayload(paymentRequired);
       const paymentHeaders = httpClient.encodePaymentSignatureHeader(paymentPayload);
+      console.info("[REGISTRATION][StepPayment] payment signature created");
 
       setStatus("Processing payment...");
 
@@ -111,16 +181,41 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
         headers: {
           "Content-Type": "application/json",
           ...paymentHeaders,
+          ...ownershipHeaders,
         },
-        body: JSON.stringify(registrationData),
+        body: signedBody,
+      });
+      console.info("[REGISTRATION][StepPayment] paid request response", {
+        status: paidRes.status,
+        ok: paidRes.ok,
       });
 
       const result = await paidRes.json();
 
       if (!paidRes.ok) {
-        throw new Error(result.error || result.message || "Payment failed");
+        const err = new Error(result.error || result.message || "Payment failed");
+        // Money-losing state — user signed and we failed to register.
+        reportCritical(err, {
+          source: "registration/step-payment",
+          userId: address,
+          metadata: {
+            step: "register_after_payment",
+            httpStatus: paidRes.status,
+            serverError: result.error,
+            serverMessage: result.message,
+            serverTxHash: result.txHash,
+            minerSlug: miner.slug,
+            hlAddress,
+            tierIndex,
+          },
+        });
+        throw err;
       }
 
+      console.info("[REGISTRATION][StepPayment] registration succeeded", {
+        status: result.status,
+        txHash: result.txHash,
+      });
       onComplete({
         txHash: result.txHash || "",
         payerAddress: address,
@@ -128,6 +223,7 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
         registrationMessage: result.message || "",
       });
     } catch (err) {
+      console.error("[REGISTRATION][StepPayment] handlePay failed", { error: err?.message });
       setIsPaying(false);
       setStatus(null);
       if (err.message?.includes("User rejected") || err.message?.includes("denied")) {
@@ -136,11 +232,52 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
         setError(err.message || "Payment failed");
       }
     }
-  }, [walletClient, publicClient, miner, tierIndex, hlAddress, email, address, tier, onComplete]);
+  }, [walletClient, publicClient, miner, tierIndex, hlAddress, email, address, tier, onComplete, signMessageAsync]);
 
   const formattedBalance = balance != null ? formatUnits(balance, USDC_DECIMALS) : null;
   const hasEnough = balance != null && balance >= parseUnits(String(price), USDC_DECIMALS);
   const isOnBase = chainId === BASE_CHAIN_ID;
+  const isDev = process.env.NODE_ENV === 'development';
+
+  const handleDevPay = useCallback(async () => {
+    setError(null);
+    setIsPaying(true);
+    setStatus("Registering...");
+    try {
+      const registrationData = {
+        minerSlug: miner.slug,
+        hlAddress,
+        accountSize: tier.accountSize,
+        payoutAddress: hlAddress,
+        email,
+        tierIndex,
+      };
+      const { headers, body } = await signRegistrationRequest({
+        path: "/api/register",
+        body: registrationData,
+        hlAddress,
+        connectedAddress: address,
+        signMessageAsync,
+      });
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...headers },
+        body,
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Registration failed");
+      onComplete({
+        txHash: result.txHash || "",
+        payerAddress: hlAddress,
+        registrationStatus: result.status || "pending",
+        registrationMessage: result.message || "",
+      });
+    } catch (err) {
+      setError(err.message || "Registration failed");
+      setIsPaying(false);
+      setStatus(null);
+    }
+  }, [miner, hlAddress, tier, email, tierIndex, onComplete, address, signMessageAsync]);
 
   return (
     <div className="space-y-6 max-w-md mx-auto">
@@ -175,7 +312,21 @@ export function StepPayment({ miner, minerWallet, tierIndex, hlAddress, email, o
         </CardContent>
       </Card>
 
-      {!isConnected ? (
+      {isDev ? (
+        <div className="space-y-3">
+          <div className="rounded-md border border-yellow-500/30 bg-yellow-500/10 p-3 text-center">
+            <p className="text-xs font-medium text-yellow-500">Dev Mode — Registration Free</p>
+          </div>
+          <Button
+            className="w-full"
+            onClick={handleDevPay}
+            disabled={isPaying}
+            style={{ backgroundColor: miner.color, color: "#fff" }}
+          >
+            {isPaying ? (status || "Registering...") : "Register Free (Dev Mode)"}
+          </Button>
+        </div>
+      ) : !isConnected ? (
         <div className="flex justify-center">
           <ConnectButton />
         </div>

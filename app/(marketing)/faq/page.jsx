@@ -4,7 +4,7 @@ import { JsonLd } from '@/components/shared/JsonLd'
 import { FAQ_ITEMS } from '@/lib/constants'
 
 export const metadata = buildMetadata({
-  title: 'FAQ — Hyperscaled Funded Trading Questions',
+  title: 'FAQ — Hyperscaled Scaled Trading Questions',
   description:
     'Common questions about Hyperscaled — challenges, payouts, KYC, account scaling, and how the protocol works. Everything you need to know.',
   ogTitle: 'Hyperscaled FAQ — Everything You Need to Know',

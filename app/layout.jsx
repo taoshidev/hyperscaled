@@ -1,28 +1,32 @@
+import { Suspense } from "react";
+import Script from "next/script";
 import "./globals.css";
+import { GA_MEASUREMENT_ID } from "@/lib/analytics";
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 
-const SITE_URL = "https://hyperscaled.trade";
+const SITE_URL = process.env.HYPERSCALED_BASE_URL || "https://hyperscaled.trade";
 const OG_IMAGE = {
   url: "/og.png",
   width: 1200,
-  height: 630,
-  alt: "Hyperscaled — Permissionless Funded Trading on Hyperliquid",
+  height: 600,
+  alt: "Hyperscaled — Scaled Trading on Hyperliquid",
 };
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Hyperscaled — Permissionless Funded Trading on Hyperliquid",
+    default: "Hyperscaled — Scaled Trading on Hyperliquid",
     template: "%s",
   },
   description:
-    "Trade on Hyperliquid. Get a funded account. Keep 100% of your profits. 1-step challenge. Monthly USDC payouts. Scale to $2.5M.",
+    "Trade on Hyperliquid. Get a scaled account. Keep 100% of your profits. 1-step challenge. Monthly USDC payouts. Scale to $400K.",
   robots: { index: true, follow: true },
   openGraph: {
     type: "website",
     siteName: "Hyperscaled",
-    title: "Hyperscaled — Permissionless Funded Trading on Hyperliquid",
+    title: "Hyperscaled — Scaled Trading on Hyperliquid",
     description:
-      "The most advanced decentralized prop trading infrastructure. 1-step challenge, 100% profit split, onchain USDC payouts, no KYC to start. Trade your way to $2.5M.",
+      "The most advanced decentralized prop trading infrastructure. 1-step challenge, 100% profit split, onchain USDC payouts, no KYC to start. Trade your way to $400K.",
     url: SITE_URL,
     images: [OG_IMAGE],
   },
@@ -30,7 +34,7 @@ export const metadata = {
     card: "summary_large_image",
     site: "@hyperscaled",
     creator: "@hyperscaled",
-    title: "Hyperscaled — Permissionless Funded Trading on Hyperliquid",
+    title: "Hyperscaled — Scaled Trading on Hyperliquid",
     description:
       "The most advanced decentralized prop trading infrastructure. 1-step challenge, 100% profit split, onchain USDC payouts, no KYC to start.",
     images: ["/og.png"],
@@ -45,19 +49,36 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="antialiased">
+    <html lang="en" className="antialiased" suppressHydrationWarning>
       <head>
         <meta name="theme-color" content="#0a0a0a" />
         <link
           href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600,700,800,900&display=swap"
           rel="stylesheet"
         />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&display=swap"
+          rel="stylesheet"
+        />
       </head>
-      <body className="font-sans antialiased">
-        <div className="w-full bg-teal-500 text-center py-1.5 text-xs font-medium text-black tracking-wide z-[100] fixed top-0 left-0 right-0">
-          Hyperscaled is in testnet. Sign up for free to test the platform. Funds traded are not real. Launching on mainnet by April&nbsp;6th.
-        </div>
-        <div className="h-[30px]" />
+      <body className="font-sans antialiased" suppressHydrationWarning>
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="ga4-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            window.gtag = gtag;
+            gtag('js', new Date());
+            var brand = /vantatrading/i.test(location.hostname) ? 'vanta' : 'hyperscaled';
+            gtag('config', '${GA_MEASUREMENT_ID}', { brand: brand });
+          `}
+        </Script>
+        <Suspense fallback={null}>
+          <PageViewTracker />
+        </Suspense>
         {children}
       </body>
     </html>

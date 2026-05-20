@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useAccount } from "wagmi";
+import { useAccount, useDisconnect } from "wagmi";
+import { useQuery } from "@tanstack/react-query";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { AlertCircle, RefreshCw } from "lucide-react";
-import { MagnifyingGlass, Wallet, ArrowRight, Warning, WifiSlash } from "@phosphor-icons/react";
+import { MagnifyingGlass, Wallet, ArrowRight, Warning, WifiSlash, Receipt } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useBrand, useBrandHref } from "@/lib/brand";
+import { truncateAddress as truncateAddrFn } from "@/lib/format";
 
 import { useDashboardData, usePayoutData } from "@/hooks/use-dashboard";
 import { useDashboardStream } from "@/hooks/use-dashboard-stream";
@@ -26,13 +29,37 @@ import { KycVerification } from "./kyc-verification";
 const FUNDED_DEMO_LOOKUP = "0x7939aF2C9889F59A96C3921B515300A9a70898BD".toLowerCase();
 
 export function Dashboard() {
+  const brandHref = useBrandHref();
+  const brand = useBrand();
   const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
   const searchParams = useSearchParams();
   const preloadAddr = searchParams.get("addr") || "";
   const [lookupAddr, setLookupAddr] = useState(preloadAddr);
   const [lookupSubmitted, setLookupSubmitted] = useState(!!preloadAddr);
   const [useConnectedWallet, setUseConnectedWallet] = useState(false);
   const [dashTab, setDashTab] = useState("performance");
+
+  const onIntro = !useConnectedWallet && !lookupSubmitted;
+  const linkedAccounts = useQuery({
+    queryKey: ["dashboard-accounts", address, brand.id],
+    queryFn: async () => {
+      const minerParam =
+        brand?.id && brand.id !== "hyperscaled"
+          ? `&miner=${encodeURIComponent(brand.id)}`
+          : "";
+      const res = await fetch(
+        `/api/dashboard/accounts?wallet=${encodeURIComponent(address)}${minerParam}`,
+      );
+      if (!res.ok) return { accounts: [] };
+      return res.json();
+    },
+    enabled: Boolean(address && isConnected && onIntro),
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+  const linkedList = linkedAccounts.data?.accounts || [];
+  const showUseConnectedTile = isConnected && linkedList.length === 0;
 
   // User must explicitly choose — connected wallet or lookup
   const activeAddress =
@@ -50,7 +77,11 @@ export function Dashboard() {
   useDashboardStream(
     activeAddress && dashboard.data && !useFundedDemo ? activeAddress : null,
   );
-  const payout = usePayoutData(dashboard.data?.subaccount_uuid ?? null, { useFundedDemo });
+  const payout = usePayoutData(
+    dashboard.data?.subaccount_uuid ?? null,
+    dashboard.data?.hl_address ?? null,
+    { useFundedDemo },
+  );
 
   const handleReset = () => {
     setUseConnectedWallet(false);
@@ -77,19 +108,71 @@ export function Dashboard() {
           </div>
 
           {isConnected ? (
-            <button
-              onClick={() => setUseConnectedWallet(true)}
-              className="w-full flex items-center gap-4 p-4 rounded-xl bg-zinc-900/70 border border-white/[0.08] hover:border-teal-400/40 hover:bg-zinc-900/90 text-left transition-[border-color,box-shadow,background-color] focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background outline-none"
-            >
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-teal-400/10">
-                <Wallet size={20} weight="duotone" className="text-teal-400" />
+            <div className="space-y-3">
+              {linkedList.map((acct) => {
+                const isPayer = acct.role === "payer";
+                return (
+                  <button
+                    key={acct.hlAddress}
+                    onClick={() => {
+                      setLookupAddr(acct.hlAddress);
+                      setLookupSubmitted(true);
+                    }}
+                    className="w-full flex items-center gap-4 p-4 rounded-xl bg-zinc-900/70 border border-teal-400/20 hover:border-teal-400/50 hover:bg-zinc-900/90 text-left transition-[border-color,box-shadow,background-color] focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background outline-none"
+                  >
+                    <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-teal-400/10 shrink-0">
+                      {isPayer ? (
+                        <Receipt size={20} weight="duotone" className="text-teal-400" />
+                      ) : (
+                        <Wallet size={20} weight="duotone" className="text-teal-400" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">
+                        {isPayer ? "Open registered account" : "Your registered account"}
+                        {acct.accountSize ? (
+                          <span className="ml-2 text-xs text-zinc-500 font-normal">
+                            ${Number(acct.accountSize).toLocaleString()}
+                          </span>
+                        ) : null}
+                      </p>
+                      <p className="text-xs text-zinc-500 font-mono truncate">
+                        {acct.hlAddress}
+                      </p>
+                    </div>
+                    <ArrowRight size={16} className="text-zinc-500" />
+                  </button>
+                );
+              })}
+
+              {showUseConnectedTile && (
+                <button
+                  onClick={() => setUseConnectedWallet(true)}
+                  className="w-full flex items-center gap-4 p-4 rounded-xl bg-zinc-900/70 border border-white/[0.08] hover:border-teal-400/40 hover:bg-zinc-900/90 text-left transition-[border-color,box-shadow,background-color] focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background outline-none"
+                >
+                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-teal-400/10">
+                    <Wallet size={20} weight="duotone" className="text-teal-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white">Use connected wallet</p>
+                    <p className="text-xs text-zinc-500 font-mono truncate">{address}</p>
+                  </div>
+                  <ArrowRight size={16} className="text-zinc-500" />
+                </button>
+              )}
+
+              <div className="flex items-center justify-center gap-2 pt-1 text-xs text-zinc-500">
+                <span className="font-mono">{truncateAddrFn(address)}</span>
+                <span aria-hidden="true">·</span>
+                <button
+                  type="button"
+                  onClick={() => disconnect()}
+                  className="text-teal-400/80 hover:text-teal-400 transition-colors underline-offset-2 hover:underline outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded"
+                >
+                  Connect a different wallet
+                </button>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white">Use connected wallet</p>
-                <p className="text-xs text-zinc-500 font-mono truncate">{address}</p>
-              </div>
-              <ArrowRight size={16} className="text-zinc-500" />
-            </button>
+            </div>
           ) : (
             <div className="flex justify-center">
               <ConnectButton />
@@ -273,7 +356,7 @@ export function Dashboard() {
             This wallet is not registered with any entity miner.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-            <Link href="/register">
+            <Link href={brandHref("/register")}>
               <span className="shiny-cta px-6 py-3 inline-flex items-center gap-1.5">
                 <span className="flex items-center gap-1.5">
                   Register Now
@@ -354,7 +437,7 @@ export function Dashboard() {
     <div className="min-h-[calc(100dvh-4rem)] px-6 py-8">
       <div className="max-w-[1400px] mx-auto space-y-6">
         {/* KYC Verification */}
-        <KycVerification wallet={address} />
+        <KycVerification hlAddress={activeAddress} connectedWallet={address} />
 
         {/* Account Header */}
         <div className="flex justify-between items-start flex-wrap gap-4">
@@ -374,7 +457,9 @@ export function Dashboard() {
                 {isFunded ? "Funded" : "Evaluation"}
               </span>
               <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-white/[0.04] text-zinc-400 border border-white/[0.08]">
-                {isFunded ? "5x" : "1.25x"} Leverage
+                {data.limits?.max_portfolio_usd && data.account_size
+                  ? `${(data.limits.max_portfolio_usd / data.account_size).toFixed(2)}x`
+                  : isFunded ? "5x" : "1x"} Portfolio Size
               </span>
             </div>
           </div>
@@ -428,6 +513,7 @@ export function Dashboard() {
               challengePeriod={data.challenge_period}
               statistics={data.statistics}
               quarterlyPnl={data.quarterly_pnl}
+              limits={data.limits}
             />
 
             {/* Performance Stats */}

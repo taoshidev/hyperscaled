@@ -2,15 +2,162 @@
 
 ## Current status
 
-Fixes batch complete. Payout frequency updated from weekly/7-day to monthly across all pages. Tradeable pairs added to EVAL_RULES. Telegram bot link in footer. Nav collapse tightened. Homepage Step 01/02 mockups fixed. Permissionless banner removed. Pricing emoji removed. Agents tags removed. Partners copy + spacing fixed.
+Free $1K tier + builder-fee approval added to the registration flow (2026-04-23).
+
+## Free tier + Builder Fee in Registration (2026-04-23)
+
+### What changed
+- **DB (prod)**: inserted a new `entity_tiers` row for the Vanta miner — `account_size=1000`, `price_usdc=0.00`, `profit_split=100`, `is_active=true`. Had to `setval('entity_tiers_id_seq', MAX(id))` first because the sequence was at 16 while max id was 17 (later vanta 5K/10K rows were inserted outside the sequence).
+- **TIERS meta** in `lib/constants.js`: added a `{ id: "free", name: "Free", accountSize: 1000, fullPrice: 0, promoPrice: 0, ... }` entry ahead of the `nano` tier so `/api/miners/[slug]`'s `enrichTier` can resolve it.
+- **New util** `lib/hl-builder-fee.js`:
+  - `getCurrentBuilderFee(user)` — queries HL `/info` `maxBuilderFee` for `HYPERSCALED_BUILDER_ADDRESS`.
+  - `ensureBuilderFeeApproved({ address, chainId, switchChainAsync, feeRate = "0.05%" })` — returns `{ skipped: true }` when an approval already exists; otherwise switches to Arbitrum, signs `HyperliquidTransaction:ApproveBuilderFee`, posts to `/exchange`. Does NOT switch back — callers handle that.
+- **`components/registration/step-connect-pay.jsx`**:
+  - Derives `isFree = Number(price) === 0`.
+  - Order summary hides del/ins price row and renders "Free" as the total when free.
+  - Payment method selector (`eip712`/`base` cards) is hidden when `isFree`.
+  - Wallet connection block and payout wallet block appear when `isFree` regardless of paymentMethod.
+  - New `handleFreeSignup` runs: tolt → `runPreflight` → `ensureBuilderFeeApproved` → `POST /api/register` with `paymentMethod: "free"`.
+  - `handlePayEIP712` calls `ensureBuilderFeeApproved` after the chain switch to Arbitrum, before the usdSend signature. Reuses the Arbitrum session — no extra switching.
+  - `handlePayBase` calls `ensureBuilderFeeApproved` before the x402 probe; wraps the call in a try/finally that switches back to the previous chain so the user can sign the Base x402 payment.
+  - `eip712Step` adds a `"builderFee"` state rendered as "Preparing your account…".
+- **`app/api/register/route.js`**: added a `paymentMethod === "free"` branch that validates `price === 0`, sets `txHash = "free-${ts}-${hlAddress.slice(2,10)}"`, picks `effectivePayoutAddress = payoutAddress || hlAddress`, then falls through to the user-upsert / miner-API / registration-insert logic. Rejects `paymentMethod: "free"` on any tier where the price is not zero.
+
+### Key decisions
+- Builder fee runs on the connected (payer) wallet, not on `hlWallet`. For the common case those match; the existing `walletMatchesHL` warning covers the cross-wallet case and we don't block registration on it (keeps parity with the prior payment flow).
+- Skip-if-approved policy: we never overwrite an existing approval. A user who already set a different `maxFeeRate` (from `/builder`) keeps that rate.
+- Free tier `tierIndex` is 0 (smallest account_size sorts first). The backend already uses `activeTiers[tierIndex]` resolved server-side, so this is safe as long as the DB row count matches what the client fetched — which it does because both go through the same `/api/miners/[slug]` → `enrichTier` path.
+- Chose to synthesize a `txHash` for the free tier (`free-${ts}-${walletPrefix}`) rather than null because the `registrations_tx_hash_unique` index disallows duplicate hashes and the column is nullable in schema but every existing row has one.
+
+### Files added / modified
+- `lib/hl-builder-fee.js` (new)
+- `lib/constants.js` — TIERS meta + Free entry
+- `components/registration/step-connect-pay.jsx` — free-tier UI, builder-fee call sites, new handleFreeSignup
+- `app/api/register/route.js` — free payment method branch
+- `docs/BUILD_STATE.md` — registration flow table updated
+- `.claude/phase-notes.md` — this entry
+
+### Verified
+- `/api/miners/vanta` returns the free tier at index 0 with `promoPrice: 0`.
+- `/api/register/preflight` with `{ tierIndex: 0, accountSize: 1000 }` returns `{ ok: true, price: 0 }`.
+- `/register` and `/builder` render 200 after changes.
+- esbuild parse passes on all touched files.
+
+## Builder Code Page (2026-04-22)
+
+## Previous Builder Code Page (2026-04-22)
+
+### What changed
+- New route `/builder` with standalone layout wrapping `<Providers>` (wagmi + RainbowKit)
+- New client component `components/builder/builder-code-form.jsx`:
+  - Hero + explainer card describing builder codes
+  - Wallet connect via RainbowKit `<ConnectButton />`
+  - "Current approval" panel querying HL `/info` with `{ type: "maxBuilderFee", user, builder }`; skeleton loader, pulse-teal dot on active approval, refresh button
+  - Fee rate input pre-filled `0.05%` (half the 0.1% perp cap); validates format, blocks >1% (spot cap), warns >0.1% (perp cap)
+  - Sign button performs EIP-712 `HyperliquidTransaction:ApproveBuilderFee` signature (Arbitrum chain switch → signTypedData → POST `/exchange`), re-queries approval on success
+  - aria-live status line for screen-reader progress
+- New constant `HYPERSCALED_BUILDER_ADDRESS = "0x7939aF2C9889F59A96C3921B515300A9a70898BB"` in `lib/constants.js`
+
+### Files added / modified
+- `app/builder/layout.jsx` (new)
+- `app/builder/page.jsx` (new)
+- `components/builder/builder-code-form.jsx` (new)
+- `lib/constants.js` — added `HYPERSCALED_BUILDER_ADDRESS`
+
+### Verified
+- `curl http://localhost:4568/builder` returns 200 with correct metadata and rendered card structure
+- EIP-712 types match the Hyperliquid Python SDK's `sign_approve_builder_fee` (hyperliquidChain:string, maxFeeRate:string, builder:address, nonce:uint64)
+- Signing flow mirrors the existing `handlePayEIP712` in `components/registration/step-connect-pay.jsx`
+
+## Registration Phase 6 — Checkout UX Polish (2026-04-02)
+
+## Registration Phase 6 — Checkout UX Polish (2026-04-02)
+
+### What changed
+- Selected payment card now shows solid teal ring-[1.5px] border in addition to shiny-border effect
+- HL wallet address auto-fills from connected wallet on connect (no button press)
+- "Auto-detect" replaced with "Change" (when populated) / "Connect wallet" (when disconnected)
+- Copy button removed from HL wallet field on Connect & Pay step
+- Full EVM addresses shown on Confirm screen (text-xs, break-all) instead of truncated
+- Help sidebar (RegistrationSidebar, MobileHelpSheet, RegistrationHelpProvider) removed entirely from registration flow
+- Steps 1-2 now use single-column centered layout (max-w-lg) instead of two-column with sidebar
+- Helper text updated to match auto-fill behavior
+- handleHelpFocus/handleHelpBlur calls removed from payment method selectors
+
+### Files modified
+- `components/registration/step-connect-pay.jsx` — wallet auto-fill, copy removal, full addresses, border, removed help hooks
+- `components/registration/registration-flow.jsx` — removed sidebar/help imports, single-column layout
+
+### Verified
+- "Skip payment (dev only)" already gated behind `process.env.NODE_ENV === "development"`
+
+## Registration Phase 4 — Polish Fixes (2026-04-02)
+
+### What changed
+- HL wallet address shows truncated with copy button when valid (click to edit)
+- Removed "How it works" (4 steps) and "One signature, one transfer" sections from payment-eip712 help content
+- Moved requirements text inline under payment method selector (visible when EIP-712 selected)
+- Removed `payment-hl` help entry (dead extension payment method)
+- Updated "Getting Started" fastest-path steps to reflect current flow (no extension install step)
+
+### Files modified
+- `components/registration/step-connect-pay.jsx` — wallet truncation UI, inline requirements hint
+- `components/registration/help-content.jsx` — removed sections, removed payment-hl, updated default steps
+
+## Registration Phase 3 — Decouple Extension from Payment (2026-04-02)
+
+### What changed
+- Removed "Send via Extension" payment method option entirely from Connect & Pay step
+- Removed `extensionDetected` gating from `canPayHL` and `canContinueToConfirm`
+- Removed extension detection status blocks (install prompt + "Extension detected" indicator) from Connect & Pay
+- Removed `handlePayHL` handler, extension verification watcher, and related refs (`hlPaymentParamsRef`, `verificationRunRef`, `callbacksRef`)
+- Removed unused imports: `CurrencyDollar`, `GoogleChromeLogo`, `ExtensionModal`, `useRef`, `initiatePayment`, `paymentStatus`, `paymentSenderAddress`, `registrationResult`
+- Payment grid changed from 3-col to 2-col (only "Pay with Hyperliquid" + "Pay with Wallet")
+- Success screen (`step-confirmation.jsx`) restructured:
+  - Extension CTA is now the first content block after success header
+  - If extension detected: shows "Extension installed — you're ready to trade" + prominent dashboard link
+  - If not detected: shows install heading, description ("Required to participate"), full-width install button, "Available for Chrome and Brave"
+  - Receipt card moved below extension CTA
+  - Secondary "Go to Dashboard" text link shown only when extension not installed (when installed, the dashboard link is in the prominent CTA block)
+- `useExtensionBridge` added to `StepConfirmation` for extension detection
+- `isHLPayment` now includes `paymentMethod === "eip712"` (no explorer URL for HL payments regardless of method)
+
+### Key decisions
+- Extension detection kept via `useExtensionBridge` hook — only moved where it's evaluated (success screen, not payment flow)
+- Extension bridge hook still runs its detection logic (DOM markers, postMessage pings) — no changes to `hooks/use-extension-bridge.js`
+- `resetPaymentStatus` kept in step-connect-pay.jsx (used by Base payment method selection)
+
+## Registration Phase 2 — usdSend EIP-712 (2026-04-02)
+
+### What changed
+- Created `lib/hl-payment.js` — utility functions for usdSend EIP-712 signing and submission
+  - `buildUsdSendTypes()`, `buildUsdSendDomain()`, `buildUsdSendMessage()`, `submitUsdSend()`
+- Replaced `sendAsset` action with `usdSend` in `handlePayEIP712` handler
+  - `sendAsset` used spot-to-spot transfer with 8 typed fields
+  - `usdSend` uses perps account transfer with 4 typed fields (simpler)
+- Added inline progress steps during EIP-712 payment: Signing → Submitting → Verifying → Provisioning
+  - Reuses existing `PaymentStep` component from extension flow
+- Added `eip712Step` state to track progress granularity
+- Added backend TODO comment in `lib/hl-payment.js` for WebSocket listener
+- Added env vars `NEXT_PUBLIC_HL_RECEIVING_WALLET` and `NEXT_PUBLIC_HL_CHAIN` to `.env.example`
+- Base and Extension payment paths untouched
+
+### Key decisions
+- Used existing `HL_SIGNING_CHAIN_ID`, `HL_CHAIN_NAME`, `HL_API_URL` from `lib/constants.js` rather than the `NEXT_PUBLIC_HL_CHAIN` env var pattern from the spec (avoids duplication)
+- The `hl-payment.js` utility imports from constants rather than reading env vars directly
+- Transfer hash lookup still checks `userNonFundingLedgerUpdates` but matches `type: "usdSend"` instead of `type: "send"`
+
+## Previous status
+
+Fixes batch complete. Payout frequency updated from monthly/7-day to monthly across all pages. Tradeable pairs added to EVAL_RULES. Telegram bot link in footer. Nav collapse tightened. Homepage Step 01/02 mockups fixed. Permissionless banner removed. Pricing emoji removed. Agents tags removed. Partners copy + spacing fixed.
 
 ## Fixes Batch Session (2026-03-28)
 
-### Payout frequency: weekly → monthly
+### Payout frequency: monthly → monthly
 - Updated 20+ instances across lib/constants.js, lib/pricing.js, HowItWorks.jsx, HowItWorksPage.jsx, PricingPage.jsx, RulesPage.jsx, Solution.jsx, layout.jsx, and all page metadata
 - FUNDED_RULES payout cycle → "Monthly", PRICING_TIERS payoutCycle → "Monthly"
 - FAQ answers updated (7-day cycle → monthly cycle)
-- Verified: only remaining "weekly" is sitemap.js changeFrequency (not payout-related)
+- Verified: only remaining "monthly" is sitemap.js changeFrequency (not payout-related)
 
 ### Other fixes
 - Added Tradeable Pairs row to EVAL_RULES in lib/constants.js
@@ -28,7 +175,7 @@ Fixes batch complete. Payout frequency updated from weekly/7-day to monthly acro
 
 ### Wallet search — Leaderboard
 - Added `searchQuery` state + `MagnifyingGlass`/`XCircle` search bar above table
-- `useMemo` filters both funded and challenge tables by partial address match (case-insensitive)
+- `useMemo` filters both scaled and challenge tables by partial address match (case-insensitive)
 - Clear button resets search; "No results" state with "Show all traders" button
 - `initialSearch` prop from page's `?addr=` query param auto-populates on load
 - Removed unused `onSearch` prop from Nav
@@ -110,7 +257,7 @@ Fixes batch complete. Payout frequency updated from weekly/7-day to monthly acro
   - `components/marketing/Hero.jsx` — Chrome Extension CTA → "View Leaderboard", removed DownloadSimple import, text-[10px] ×12
   - `components/marketing/Footer.jsx` — "Built on Bittensor" removed from tagline, copyright 2025→2026, transition-all ×1
   - `components/marketing/Solution.jsx` — "Up to 100%" → "100%" ×2 (compareRows + hsBest)
-  - `components/marketing/Features.jsx` — "we bring the funding" → "the network provides funded account access", text-[10px] ×3, transition-all ×1
+  - `components/marketing/Features.jsx` — "we bring the funding" → "the network provides scaled account access", text-[10px] ×3, transition-all ×1
   - `components/marketing/Problem.jsx` — text-[10px] ×1, transition-all ×1
   - `components/marketing/WaitlistForm.jsx` — transition-all ×1
   - `components/marketing/Stats.jsx` — text-[10px] ×1
@@ -172,7 +319,7 @@ Fixes batch complete. Payout frequency updated from weekly/7-day to monthly acro
   - NETWORK_STATS — 5 stats (value/label/description) for Stats section + reuse
   - HERO_STATS — 3 inline stats for Hero section
   - EVAL_RULES — 8 evaluation phase rules (rule/parameter)
-  - FUNDED_RULES — 7 funded account rules (rule/parameter)
+  - FUNDED_RULES — 7 scaled account rules (rule/parameter)
   - SCALING_PATH — 9 steps from $100K → $2.5M (from/to)
   - SCALING_MILESTONES — 12 milestones from $25K → $2.5M
   - PRICING_TIERS — 3 tiers with full spec details (launch/standard pricing, targets, drawdowns, CTAs)
@@ -220,7 +367,7 @@ Fixes batch complete. Payout frequency updated from weekly/7-day to monthly acro
 
   **Features**: All 6 cards rewritten per spec. "Grow Your Account" card uses ScalingPathVisual from shared components.
 
-  **PartnersCTA** (new): Dark card section between Features and FAQ. "FOR OPERATORS & INSTITUTIONS" label, "Run your own funded trading firm." headline, CTA linking to /partners.
+  **PartnersCTA** (new): Dark card section between Features and FAQ. "FOR OPERATORS & INSTITUTIONS" label, "Run your own scaled trading firm." headline, CTA linking to /partners.
 
   **FAQ**: Added `Link` import, "View full FAQ →" link to `/faq` in left sticky panel.
 
@@ -261,13 +408,13 @@ Fixes batch complete. Payout frequency updated from weekly/7-day to monthly acro
 
   **Step 0 — CTA Link Fix**: Changed all generic "Start Your Evaluation" / "Start Evaluation" CTAs from external app.hyperscaled.trade to /register. Affected: Nav.jsx, Hero.jsx, HowItWorksPage.jsx (hero + bottom CTA). PricingPage tier-specific CTAs kept external (correct). Rule: generic "Start Your Evaluation" → /register, tier-specific "Start $25K Evaluation" → https://app.hyperscaled.trade.
 
-  **Page Hero**: Headline "From Hyperliquid trader to funded account — here's exactly how it works.", subtext about no API keys/custody/separate platform, CTA to /register.
+  **Page Hero**: Headline "From Hyperliquid trader to scaled account — here's exactly how it works.", subtext about no API keys/custody/separate platform, CTA to /register.
 
   **4-Step Flow**: Full-width cards with left text + right key details box.
   - Step 01: Register and Select Account Size (4 detail rows: sizes, fee, KYC, activation)
   - Step 02: Trade on Hyperliquid (4 rows: platform, data access, custody, minimum capital)
   - Step 03: Track Your Progress (3 rows: dashboard, updates, tracked metrics)
-  - Step 04: Pass, Get Funded, Get Paid (9 rows: profit target, drawdown eval/funded, payout cycle, profit split, max size, funded profit target, scaling qualification, bonus qualification)
+  - Step 04: Pass, Get Funded, Get Paid (9 rows: profit target, drawdown eval/scaled, payout cycle, profit split, max size, scaled profit target, scaling qualification, bonus qualification)
 
   **Scaling Path Visual**: Reuses ScalingPathVisual from shared components. Includes note about Tier I/II scaling to $100K before full path applies.
 
@@ -338,7 +485,7 @@ Fixes batch complete. Payout frequency updated from weekly/7-day to monthly acro
 - **Phase 8 — Partners Page**:
   Files created: 2 (app/partners/page.jsx, components/marketing/PartnersPage.jsx)
 
-  **Page Hero**: Badge pill ("Partner Program" with teal dot), headline "Run your own funded trading firm. Powered by Hyperscaled infrastructure." (second line in zinc-400), subtext about launching without infrastructure, dual CTAs (mailto:partners@hyperscaled.trade primary, Download Partner Overview secondary with TODO for PDF link).
+  **Page Hero**: Badge pill ("Partner Program" with teal dot), headline "Run your own scaled trading firm. Powered by Hyperscaled infrastructure." (second line in zinc-400), subtext about launching without infrastructure, dual CTAs (mailto:partners@hyperscaled.trade primary, Download Partner Overview secondary with TODO for PDF link).
 
   **What You Control**: 6 feature cards in 3x2 grid (lg) / 2x3 (sm) / 1-col (mobile). Each card: CheckCircle teal icon + title + description. Items: pricing, profit split, direct payments, white-label branding, permissionless scaling, network-aligned incentives.
 
@@ -348,7 +495,7 @@ Fixes batch complete. Payout frequency updated from weekly/7-day to monthly acro
 
   **Division of Responsibility**: Two-column card layout matching Rules page disqualification pattern. Left card (neutral border): operator responsibilities (4 items). Right card (teal-tinted border): Hyperscaled responsibilities (5 items). Both use CheckCircle icons.
 
-  **Funding Capacity Table**: Desktop table with Account Size / Alpha Required columns (3 rows: $25K/7.14, $50K/14.28, $100K/28.5). Mobile stacked cards. Below: "$3,500 in funded capital per 1 Alpha token."
+  **Funding Capacity Table**: Desktop table with Account Size / Alpha Required columns (3 rows: $25K/7.14, $50K/14.28, $100K/28.5). Mobile stacked cards. Below: "$3,500 in scaled capital per 1 Alpha token."
 
   **Application CTA**: Centered headline "Ready to launch your firm?", body about 48-hour review + whiteglove onboarding, shiny-cta mailto button.
 
@@ -380,14 +527,14 @@ Fixes batch complete. Payout frequency updated from weekly/7-day to monthly acro
   **Constants (lib/constants.js)**:
   - HERO_STATS: stat1 → 1-Step/Evaluation, stat2 → 100%/Profit Split, stat3 unchanged
   - NETWORK_STATS: "4,200+ Funded Traders" → "5,500+ Traders"
-  - PRICING_TIERS: tier-1/2 scalingPath → "Up to $100K", all payoutCycle → "Weekly", popular moved from tier-2 to tier-3, strikethrough prices verified ($299/$549/$999)
+  - PRICING_TIERS: tier-1/2 scalingPath → "Up to $100K", all payoutCycle → "Monthly", popular moved from tier-2 to tier-3, strikethrough prices verified ($299/$549/$999)
 
   **Hero (Hero.jsx)**:
   - Added hero stats row back below CTAs (was removed in prior commit), importing from HERO_STATS
   - Stats display: 1-Step Evaluation · 100% Profit Split · $30M+ Rewards Distributed
 
   **Problem (Problem.jsx)**:
-  - Subtext: "Legacy funded trading" → "Funded trading", "KYC walls, profit extraction" → "KYC barriers, payout denials"
+  - Subtext: "Legacy scaled trading" → "Funded trading", "KYC walls, profit extraction" → "KYC barriers, payout denials"
   - Card 1 body: shortened to single sentence about 150+ countries
   - Card 2 body: "extract" → "keep", "No accountability, no transparency —" → "No accountability or transparency,"
   - Card 3 body: "full discretion" → "full, centralized discretion", ending changed to "no guarantee you receive a payout"
@@ -395,20 +542,20 @@ Fixes batch complete. Payout frequency updated from weekly/7-day to monthly acro
 
   **Solution (Solution.jsx)**:
   - Headline: "Permissionless. No middlemen." → "Decentralized. Transparent."
-  - Body: "protocol-funded simulated account" → "funded account on our network", "onchain, automatically, on a 7-day cycle" → "weekly, automatically, and onchain"
+  - Body: "protocol-scaled simulated account" → "scaled account on our network", "onchain, automatically, on a 7-day cycle" → "monthly, automatically, and onchain"
   - Feature 2: "7-day cycle. Fully verifiable." → "every week. Fully transparent."
   - Feature 4: "That's all we need." → "It's that simple."
   - Comparison table KYC: "None" → "No" (also updated hsBest Set)
 
   **HowItWorks (HowItWorks.jsx)**:
-  - Headline: "Get funded by the network." → "Earn a funded trading account."
+  - Headline: "Get scaled by the network." → "Earn a scaled trading account."
   - Step 01 title: "Start Your Evaluation" → "Start your Challenge"
   - Step 01 body: removed "USDC registration fee", simplified to "Pay a one-time fee. No recurring charges or subscriptions."
   - Step 03 body: restructured around "Hyperscaled Challenge" phrasing
 
   **Features (Features.jsx)**:
   - Headline: "Built for traders who trade with an edge." → "Built for traders with an edge."
-  - Card 1 body: shortened to "Trade, perform, and unlock funded capital through our one-step challenge."
+  - Card 1 body: shortened to "Trade, perform, and unlock scaled capital through our one-step challenge."
   - Card 2 body: "scales automatically — no application, no fees" → "will automatically grow with zero fees"
   - Card 3 body: simplified to "Pay your registration fee in USDC, receive payouts in USDC. Direct to your wallet and verifiable onchain."
   - Card 4 body: shortened to "Every payout is tracked onchain. No exceptions."
@@ -439,14 +586,14 @@ Fixes batch complete. Payout frequency updated from weekly/7-day to monthly acro
   - FUNDED_RULES: removed redundant Drawdown Limit row (covered by Daily Loss + EOD Trailing)
 
   **HowItWorksPage (HowItWorksPage.jsx)**:
-  - Hero: headline → "Trade on Hyperliquid. Get funded by the network.", subtext shortened
+  - Hero: headline → "Trade on Hyperliquid. Get scaled by the network.", subtext shortened
   - Step 01: title "Register & Choose Your Size", body shortened, added "Get started" CTA link, details: "Challenge: One-Step", "KYC Required: None"
   - Step 02: title removed "(Your Normal Workflow)", body shortened, details simplified
   - Step 03: title "Track in Real Time", body mentions Chrome plugin, details: "Platform: Hyperscaled App & Chrome Plugin", "Updates: Always in real-time", removed Tracked metrics row
   - Step 04: title punctuated "Pass. Get Funded. Get Paid.", body shortened, "Max Drawdown (Funded): 8% daily / 8% EOD trailing", "25% bonus" label
   - Scaling body: removed "no re-evaluation"
   - Non-custodial explainer: removed 3 body paragraphs + label/heading, replaced with callout bar "Your wallet. Your keys..." above comparison boxes
-  - Payout mechanics: headline "Automated. Weekly. Onchain.", body rewritten, KYC note shortened
+  - Payout mechanics: headline "Automated. Monthly. Onchain.", body rewritten, KYC note shortened
   - Bottom CTA: removed "View Pricing" secondary link
   - Added PricingPreview component between PayoutMechanics and BottomCTA
 

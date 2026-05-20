@@ -10,7 +10,7 @@ export const metadata = buildMetadata({
     "Monitor your Hyperscaled challenge progress, open positions, and payout history in real time.",
   ogTitle: "Hyperscaled Trading Dashboard",
   ogDescription:
-    "Track your funded account performance, open positions, and USDC payouts in real time.",
+    "Track your scaled account performance, open positions, and USDC payouts in real time.",
   path: "/dashboard",
 });
 

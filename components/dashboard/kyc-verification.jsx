@@ -8,9 +8,9 @@ import { useKycStatus, useKycToken } from "@/hooks/use-kyc";
 import { useQueryClient } from "@tanstack/react-query";
 import SumsubWebSdk from "@sumsub/websdk-react";
 
-export function KycVerification({ wallet }) {
-  const { data: kyc, isLoading } = useKycStatus(wallet);
-  const tokenMutation = useKycToken(wallet);
+export function KycVerification({ hlAddress, connectedWallet }) {
+  const { data: kyc, isLoading } = useKycStatus(hlAddress);
+  const tokenMutation = useKycToken(hlAddress, connectedWallet);
   const queryClient = useQueryClient();
   const [sdkToken, setSdkToken] = useState(null);
   const [showSdk, setShowSdk] = useState(false);
@@ -39,10 +39,10 @@ export function KycVerification({ wallet }) {
   const handleMessage = useCallback(
     (event) => {
       if (event === "idCheck.onApplicantSubmitted") {
-        queryClient.invalidateQueries({ queryKey: ["kyc-status", wallet] });
+        queryClient.invalidateQueries({ queryKey: ["kyc-status", hlAddress] });
       }
     },
-    [queryClient, wallet],
+    [queryClient, hlAddress],
   );
 
   const handleError = useCallback((err) => {
@@ -51,6 +51,17 @@ export function KycVerification({ wallet }) {
   }, []);
 
   if (isLoading || !kyc) return null;
+
+  // Client-side hint for showing the "Start Verification" button. The
+  // authoritative check happens server-side in /api/kyc/token, which
+  // also accepts any wallet authorized for this HL address via Sumsub.
+  // We don't fetch the authorized list here (it's not in the public
+  // KYC status response), so the button is visible only when the
+  // connected wallet IS the HL address. Multi-wallet-authorized users
+  // can still complete KYC by connecting the HL wallet, or by hitting
+  // /api/kyc/token directly.
+  const connLower = connectedWallet?.toLowerCase();
+  const isAuthorized = !!connLower && connLower === hlAddress?.toLowerCase();
 
   // Already showing SDK widget
   if (showSdk && sdkToken) {
@@ -69,6 +80,9 @@ export function KycVerification({ wallet }) {
   }
 
   const status = kyc.kycStatus;
+
+  // Show approved/pending status regardless of authorization (informational)
+  // But gate actionable states (none, rejected) behind authorization
 
   if (status === "approved") {
     return (
@@ -89,6 +103,12 @@ export function KycVerification({ wallet }) {
         </CardContent>
       </Card>
     );
+  }
+
+  // Non-owners viewing a dashboard only see the public-status badges
+  // (`approved` above, `pending` below). Actionable states render nothing.
+  if (!isAuthorized && status !== "pending") {
+    return null;
   }
 
   if (status === "rejected") {
@@ -134,14 +154,16 @@ export function KycVerification({ wallet }) {
               Your identity verification is being reviewed.
             </p>
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleStart}
-            disabled={tokenMutation.isPending}
-          >
-            Continue Verification
-          </Button>
+          {isAuthorized && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleStart}
+              disabled={tokenMutation.isPending}
+            >
+              Continue Verification
+            </Button>
+          )}
           {error && (
             <p className="text-xs text-red-500 mt-1">{error}</p>
           )}

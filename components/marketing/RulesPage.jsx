@@ -9,7 +9,10 @@ import {
   Warning,
 } from '@phosphor-icons/react'
 import RulesTable from '@/components/shared/RulesTable'
-import { EVAL_RULES, FUNDED_RULES, SCALING_PATH } from '@/lib/constants'
+import { EVAL_RULES, getFundedRules, SCALING_PATH, BUYING_POWER_BY_SIZE, WEIGHT_LIMITS, FEE_RULES, TRADABLE_PAIRS } from '@/lib/constants'
+import { useBrand, useBrandHref } from '@/lib/brand'
+import { useWithPreservedQuery } from '@/lib/preserve-query'
+import { trackCtaClick } from '@/lib/analytics'
 
 /* ───────────────────────────────────────────────
    TOC sections definition
@@ -17,27 +20,15 @@ import { EVAL_RULES, FUNDED_RULES, SCALING_PATH } from '@/lib/constants'
 const TOC_SECTIONS = [
   { id: 'challenge', label: 'Challenge' },
   { id: 'pairs', label: 'Available Pairs' },
-  { id: 'funded', label: 'Funded Account' },
+  { id: 'weight-tracking', label: 'Weight Tracking' },
+  { id: 'tracking', label: 'Tracking' },
+  { id: 'fees', label: 'Fees' },
+  { id: 'scaled', label: 'Funded Account' },
   { id: 'scaling', label: 'Scaling' },
   { id: 'disqualification', label: 'Disqualification' },
+  { id: 'best-practices', label: 'Best Practices' },
   { id: 'kyc', label: 'KYC & Payouts' },
   { id: 'protocol', label: 'Protocol' },
-]
-
-const AVAILABLE_PAIRS = [
-  { base: 'ADA', quote: 'USDC' },
-  { base: 'BCH', quote: 'USDC' },
-  { base: 'BTC', quote: 'USDC' },
-  { base: 'DOGE', quote: 'USDC' },
-  { base: 'ETH', quote: 'USDC' },
-  { base: 'HYPE', quote: 'USDC' },
-  { base: 'LINK', quote: 'USDC' },
-  { base: 'LTC', quote: 'USDC' },
-  { base: 'SOL', quote: 'USDC' },
-  { base: 'TAO', quote: 'USDC' },
-  { base: 'XMR', quote: 'USDC' },
-  { base: 'XRP', quote: 'USDC' },
-  { base: 'ZEC', quote: 'USDC' },
 ]
 
 /* ───────────────────────────────────────────────
@@ -157,6 +148,7 @@ function useActiveSection() {
    Section 1 — Page Hero
    ─────────────────────────────────────────────── */
 function PageHero() {
+  const brand = useBrand()
   return (
     <section className="pt-32 pb-16 px-6">
       <div className="max-w-[800px] mx-auto text-center">
@@ -170,7 +162,7 @@ function PageHero() {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[62ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          Every rule is published open-source and enforced automatically by the protocol. What you see here is exactly how Hyperscaled&nbsp;operates.
+          Every rule is published open-source and enforced automatically by the protocol. What you see here is exactly how {brand.name}&nbsp;operates.
         </p>
       </div>
     </section>
@@ -181,6 +173,7 @@ function PageHero() {
    Section 2 — Challenge Rules
    ─────────────────────────────────────────────── */
 function EvalRulesSection() {
+  const brand = useBrand()
   return (
     <section id="challenge" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
@@ -188,7 +181,7 @@ function EvalRulesSection() {
           Challenge Phase
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
-          The Hyperscaled challenge is one step. Rules are consistent across all account&nbsp;sizes.
+          The {brand.name} challenge is one step. Rules are consistent across all account&nbsp;sizes.
         </p>
 
         <RulesTable rules={EVAL_RULES} />
@@ -209,32 +202,237 @@ function EvalRulesSection() {
    Section 2b — Available Trading Pairs
    ─────────────────────────────────────────────── */
 function AvailablePairsSection() {
+  const brand = useBrand()
+  const totalPairs = TRADABLE_PAIRS.reduce((sum, group) => sum + group.count, 0)
   return (
     <section id="pairs" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Available Pairs
         </span>
-        <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
-          The following trading pairs are available during both the Challenge and Funded&nbsp;phases.
+        <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed">
+          There are <span className="text-white font-medium">{totalPairs} tradable pairs</span> across crypto, commodities, indices, and stocks. Although you can trade any pair on Hyperliquid, only these {totalPairs} predefined pairs are tracked and counted toward your {brand.accountType} trading&nbsp;performance.
         </p>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {AVAILABLE_PAIRS.map((pair) => (
+        <div className="mt-8 space-y-6">
+          {TRADABLE_PAIRS.map((group) => (
+            <div key={group.category}>
+              <h3 className="text-xs text-zinc-500 tracking-widest uppercase font-medium mb-3">
+                {group.category} ({group.count})
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {group.pairs.map((pair) => (
+                  <span
+                    key={pair}
+                    className="text-xs font-mono text-zinc-300 bg-white/[0.04] border border-white/[0.06] rounded-md px-2.5 py-1.5"
+                  >
+                    {pair}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ───────────────────────────────────────────────
+   Section 2c — Weight Tracking & Limits
+   ─────────────────────────────────────────────── */
+function WeightTrackingSection() {
+  const brand = useBrand()
+  return (
+    <section id="weight-tracking" className="px-6 pb-20 scroll-mt-[110px]">
+      <div className="max-w-[900px] mx-auto">
+        <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
+          Weight Tracking & Limits
+        </span>
+        <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed">
+          {brand.name} mirrors a trader's Hyperliquid positions by replicating each position's target portfolio weight. HL trades are never blocked or modified — {brand.name} only adjusts what it copies on its own&nbsp;side.
+        </p>
+        <p className="mt-3 text-sm sm:text-base text-zinc-400 leading-relaxed">
+          {brand.name} enforces two independent weight limits when&nbsp;tracking:
+        </p>
+        <ul className="mt-4 space-y-2 text-sm text-zinc-400">
+          <li>
+            <span className="text-white font-medium">Per-pair limit</span> — max exposure to a single trade pair. When HL exposure is above the limit, the copied position is capped at the limit; subsequent HL changes in that pair are only mirrored once HL exposure crosses back below the&nbsp;limit.
+          </li>
+          <li>
+            <span className="text-white font-medium">Portfolio limit</span> — max aggregate exposure across all tracked positions. When the portfolio is at the limit, any further increase is clipped to remaining portfolio headroom, or skipped if no headroom exists. Headroom frees up when an existing position is&nbsp;reduced.
+          </li>
+        </ul>
+        <div className="mt-5 rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-4">
+          <p className="text-sm text-teal-300">
+            All limits are enforced automatically by the platform. HL is the source of truth — {brand.name} mirrors HL as closely as its limits allow, and resumes tracking as soon as weight exposure re-enters the allowed&nbsp;range.
+          </p>
+        </div>
+
+        {/* Weight tiers by account size */}
+        <h3 className="mt-10 mb-4 text-xs text-zinc-500 tracking-widest uppercase font-medium">
+          Weight Tiers by Account Size
+        </h3>
+
+        {/* Desktop */}
+        <div className="hidden md:block rounded-lg border border-white/[0.06] overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/[0.06] bg-white/[0.02]">
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Starting Account Size</th>
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Challenge Weight Tier</th>
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Funded Weight Tier</th>
+              </tr>
+            </thead>
+            <tbody>
+              {BUYING_POWER_BY_SIZE.map((row, i) => (
+                <tr
+                  key={row.size}
+                  className={i < BUYING_POWER_BY_SIZE.length - 1 ? 'border-b border-white/[0.04]' : ''}
+                >
+                  <td className="px-4 py-3 text-white font-medium font-mono whitespace-nowrap">{row.size}</td>
+                  <td className="px-4 py-3 text-zinc-400 font-mono">{row.challenge}</td>
+                  <td className="px-4 py-3 text-zinc-400 font-mono">{row.funded}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile */}
+        <div className="md:hidden space-y-3">
+          {BUYING_POWER_BY_SIZE.map((row) => (
             <div
-              key={pair.base}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg bg-white/[0.03] border border-white/[0.06]"
+              key={row.size}
+              className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-4"
             >
-              <span className="text-sm font-semibold text-zinc-200">{pair.base}</span>
-              <span className="text-xs text-zinc-600">/</span>
-              <span className="text-sm text-zinc-400">{pair.quote}</span>
+              <div className="text-white font-medium font-mono text-sm mb-2">{row.size}</div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-zinc-500">Challenge tier</span>
+                <span className="text-zinc-200 font-mono">{row.challenge}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm mt-1">
+                <span className="text-zinc-500">Funded tier</span>
+                <span className="text-zinc-200 font-mono">{row.funded}</span>
+              </div>
             </div>
           ))}
         </div>
 
-        <p className="mt-6 text-xs text-zinc-600">
-          Additional pairs may be added as the network expands. All pairs settle in&nbsp;USDC.
+        {/* Weight limits by tier */}
+        <h3 className="mt-10 mb-4 text-xs text-zinc-500 tracking-widest uppercase font-medium">
+          Weight Limits by Tier
+        </h3>
+
+        {/* Desktop */}
+        <div className="hidden md:block rounded-lg border border-white/[0.06] overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/[0.06] bg-white/[0.02]">
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Weight Tier</th>
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Per-Pair Limit</th>
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Portfolio Limit</th>
+              </tr>
+            </thead>
+            <tbody>
+              {WEIGHT_LIMITS.map((row, i) => (
+                <tr
+                  key={row.tier}
+                  className={i < WEIGHT_LIMITS.length - 1 ? 'border-b border-white/[0.04]' : ''}
+                >
+                  <td className="px-4 py-3 text-white font-medium whitespace-nowrap">{row.tier}</td>
+                  <td className="px-4 py-3 text-zinc-400 font-mono">{row.perPair}</td>
+                  <td className="px-4 py-3 text-zinc-400 font-mono">{row.portfolio}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile */}
+        <div className="md:hidden space-y-3">
+          {WEIGHT_LIMITS.map((row) => (
+            <div
+              key={row.tier}
+              className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-4"
+            >
+              <div className="text-white font-medium text-sm mb-2">{row.tier}</div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-zinc-500">Per-pair limit</span>
+                <span className="text-zinc-200 font-mono">{row.perPair}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm mt-1">
+                <span className="text-zinc-500">Portfolio limit</span>
+                <span className="text-zinc-200 font-mono">{row.portfolio}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ───────────────────────────────────────────────
+   Section 2d — Tracking Methodology
+   ─────────────────────────────────────────────── */
+function TrackingMethodologySection() {
+  const brand = useBrand()
+  return (
+    <section id="tracking" className="px-6 pb-20 scroll-mt-[110px]">
+      <div className="max-w-[900px] mx-auto">
+        <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
+          Tracking Methodology
+        </span>
+
+        {/* Order Fills */}
+        <h3 className="mt-6 mb-3 text-sm font-semibold text-white">Order Fills</h3>
+        <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
+          {brand.name} tracks trade executions, not pending orders. Open limit orders do not appear in your {brand.name} account until they fill on Hyperliquid. Once a fill&nbsp;occurs:
         </p>
+        <ul className="mt-3 space-y-2 text-sm text-zinc-400">
+          <li>
+            <span className="text-white font-medium">Market orders</span> — mirrored at a price simulated from Hyperliquid's live L2 orderbook, walking the book to compute the average fill price for the {brand.name} order size. This reflects realistic execution under current liquidity and may differ from your actual Hyperliquid fill&nbsp;price.
+          </li>
+          <li>
+            <span className="text-white font-medium">Limit orders</span> — mirrored at the original limit price, with zero slippage (subject to change in future&nbsp;versions).
+          </li>
+        </ul>
+
+        {/* Weight Definition */}
+        <h3 className="mt-8 mb-3 text-sm font-semibold text-white">Weight Definition</h3>
+        <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
+          Each position's weight is its <span className="text-white font-medium">notional value</span> (not margin) expressed as a percentage of your total HL account value — including perpetual account equity (margin + unrealized PnL) and available spot&nbsp;balance.
+        </p>
+        <p className="mt-3 text-sm sm:text-base text-zinc-400 leading-relaxed">
+          Weighting by notional ensures {brand.name} replicates your portfolio-level returns, not just your trading actions. For a given notional, the leverage or margin used on Hyperliquid has no effect on what {brand.name} mirrors. {brand.name} places no restrictions on your Hyperliquid trading, including leverage and margin mode choice. Note that higher leverage still increases liquidation risk on Hyperliquid itself. If a position is liquidated on Hyperliquid, it is also closed in your {brand.name}&nbsp;account.
+        </p>
+
+        {/* 5-Second Cooldown */}
+        <h3 className="mt-8 mb-3 text-sm font-semibold text-white">5-Second Cooldown</h3>
+        <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
+          Your {brand.name} account mirrors each Hyperliquid fill immediately, subject to a <span className="text-white font-medium">5-second cooldown</span> between consecutive updates. If multiple fills occur within 5 seconds, only the first is mirrored immediately; once the cooldown expires, {brand.name} reads your latest cumulative HL position and applies a single update reflecting the net result — regardless of how many fills happened in&nbsp;between.
+        </p>
+      </div>
+    </section>
+  )
+}
+
+/* ───────────────────────────────────────────────
+   Section 2e — Spread, Fees & Slippage
+   ─────────────────────────────────────────────── */
+function FeesSection() {
+  const brand = useBrand()
+  return (
+    <section id="fees" className="px-6 pb-20 scroll-mt-[110px]">
+      <div className="max-w-[900px] mx-auto">
+        <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
+          Spread, Fees & Slippage
+        </span>
+        <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
+          The following costs are applied to your {brand.name} account, consistent with real trading on&nbsp;Hyperliquid.
+        </p>
+        <RulesTable rules={FEE_RULES} />
       </div>
     </section>
   )
@@ -244,17 +442,18 @@ function AvailablePairsSection() {
    Section 3 — Funded Account Rules
    ─────────────────────────────────────────────── */
 function FundedRulesSection() {
+  const brand = useBrand()
   return (
-    <section id="funded" className="px-6 pb-20 scroll-mt-[110px]">
+    <section id="scaled" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Funded Account Phase
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
-          Once you pass the challenge, your funded account is activated immediately. These rules apply for the duration of your funded&nbsp;trading.
+          Once you pass the challenge, your {brand.accountType} account is activated immediately. These rules apply for the duration of your {brand.accountType}&nbsp;trading.
         </p>
 
-        <RulesTable rules={FUNDED_RULES} />
+        <RulesTable rules={getFundedRules(brand.accountType, brand.name)} />
       </div>
     </section>
   )
@@ -264,22 +463,27 @@ function FundedRulesSection() {
    Section 4 — Scaling Rules
    ─────────────────────────────────────────────── */
 
-const DOES_DISQUALIFY = [
-  'Breaching the daily loss limit (5% during the challenge / 8% when funded)',
-  'Breaching the EOD trailing loss limit (5% during the challenge / 8% when funded)',
-  'Attempting to manipulate challenge performance (wash trading, coordinated cross-account hedging)',
-]
+function getDisqualifyRules(accountType) {
+  return [
+    `Breaching the daily loss limit (5% during the challenge / 8% when ${accountType})`,
+    `Breaching the EOD trailing loss limit (5% during the challenge / 8% when ${accountType})`,
+    'Attempting to manipulate challenge performance (wash trading, coordinated cross-account hedging)',
+    'Martingale and martingale-like strategies (progressively increasing position size after losses)',
+    '30 consecutive days of inactivity (no trades placed)',
+  ]
+}
 
 const DOES_NOT_DISQUALIFY = [
   'Trading during news events',
   'Holding positions overnight',
-  'Trading any perpetual available on Hyperliquid',
-  'Taking time off — there is no minimum trading day requirement',
+  'Trading any perpetual available on Hyperliquid — only the 60 predefined pairs are tracked toward your performance',
+  'Taking time off — there is no minimum trading frequency, but 30 days of inactivity results in elimination',
   'Using algorithmic or automated trading strategies',
   'Any drawdown within the defined limits',
 ]
 
 function ScalingRulesSection() {
+  const brand = useBrand()
   return (
     <section id="scaling" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
@@ -287,7 +491,7 @@ function ScalingRulesSection() {
           Account Scaling
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-10">
-          Consistent performance on your funded account unlocks access to progressively larger account sizes, up to a maximum of $2.5M. Scaling is automatic and based on performance thresholds — no application required, no additional&nbsp;fees.
+          Consistent performance on your {brand.accountType} account unlocks access to progressively larger account sizes, up to a maximum of $400K. Scaling is automatic and based on performance thresholds — no application required, no additional&nbsp;fees.
         </p>
 
         {/* Qualifications callout boxes */}
@@ -338,7 +542,7 @@ function ScalingRulesSection() {
 
         {/* Tier note */}
         <p className="text-xs text-zinc-500 leading-relaxed mb-10">
-          Tier I and Tier II accounts ($25K and $50K) can scale up to $100K. Tier III accounts ($100K) can scale up to&nbsp;$2.5M.
+          All accounts ($5K, $10K, $25K, $50K, and $100K) can scale up to&nbsp;$400K.
         </p>
 
         {/* Scaling path table */}
@@ -399,6 +603,8 @@ function ScalingRulesSection() {
    Section 5 — Disqualification Rules
    ─────────────────────────────────────────────── */
 function DisqualificationSection() {
+  const brand = useBrand()
+  const disqualifyRules = getDisqualifyRules(brand.accountType)
   return (
     <section id="disqualification" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
@@ -406,7 +612,7 @@ function DisqualificationSection() {
           Disqualification
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
-          Not every risk leads to disqualification. Here is what does and does not end your challenge or funded&nbsp;account.
+          Not every risk leads to disqualification. Here is what does and does not end your challenge or {brand.accountType}&nbsp;account.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -416,7 +622,7 @@ function DisqualificationSection() {
               What causes disqualification
             </h3>
             <ul className="space-y-4">
-              {DOES_DISQUALIFY.map((item) => (
+              {disqualifyRules.map((item) => (
                 <li key={item} className="flex items-start gap-3 text-sm text-zinc-400">
                   <XCircle size={20} weight="fill" className="text-red-400 shrink-0 mt-0.5" />
                   {item}
@@ -446,9 +652,61 @@ function DisqualificationSection() {
 }
 
 /* ───────────────────────────────────────────────
+   Section 5b — Best Practices
+   ─────────────────────────────────────────────── */
+
+const BEST_PRACTICES = [
+  {
+    title: 'Depositing or withdrawing from your HL account while positions are open',
+    body: 'Position weights are calculated as a percentage of your total HL account value. Changing this value while positions are open shifts the weight of every open position, which can trigger unintended mirrored trades or produce incorrect position sizes. We recommend flattening or closing all tracked positions before adjusting your HL balance.',
+  },
+  {
+    title: 'Mixing Hyperscaled tracking with unrelated HL trading activity',
+    body: 'Hyperscaled only tracks a curated set of liquid perpetuals. Activity outside this set still affects your total HL account value and therefore distorts the weights Hyperscaled sees for tracked pairs. To isolate Hyperscaled from this noise, we strongly recommend using a dedicated wallet or a separate HL subaccount exclusively for Hyperscaled tracking.',
+  },
+  {
+    title: 'High-frequency trading on Hyperliquid',
+    body: 'Hyperscaled enforces a 5-second cooldown between updates, and there is inherent latency across HL fill execution, orderbook data updates, and on-chain processing. As a result, HFT-style activity on Hyperliquid is unlikely to be accurately reflected in Hyperscaled. Fills will be consolidated or missed entirely, and your Hyperscaled performance is likely to diverge significantly from your Hyperliquid results.',
+  },
+]
+
+function BestPracticesSection() {
+  const brand = useBrand()
+  return (
+    <section id="best-practices" className="px-6 pb-20 scroll-mt-[110px]">
+      <div className="max-w-[900px] mx-auto">
+        <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
+          Best Practices
+        </span>
+        <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
+          The following behaviors are not blocked or restricted by {brand.name}, but each may significantly degrade your {brand.name} performance. We strongly recommend avoiding&nbsp;them.
+        </p>
+        <div className="space-y-4">
+          {BEST_PRACTICES.map((item) => (
+            <div
+              key={item.title}
+              className="rounded-xl border border-amber-400/20 bg-amber-400/[0.03] p-5"
+            >
+              <div className="flex items-start gap-3">
+                <Warning size={20} weight="fill" className="text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-semibold text-amber-300 mb-2">{item.title}</h4>
+                  <p className="text-sm text-zinc-400 leading-relaxed">{item.body}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ───────────────────────────────────────────────
    Section 6 — KYC and Payout Eligibility
    ─────────────────────────────────────────────── */
 function KYCSection() {
+  const brand = useBrand()
   return (
     <section id="kyc" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
@@ -463,7 +721,7 @@ function KYCSection() {
             KYC is not required to register, trade, or complete the challenge. It is required only to receive a&nbsp;payout.
           </p>
           <p>
-            When your funded account reaches payout eligibility at the end of a monthly cycle, you will be prompted to complete a simple cryptographic wallet verification. Payouts are then sent in USDC directly to your connected wallet. The entire payout flow is automated and verifiable&nbsp;onchain.
+            When your {brand.accountType} account reaches payout eligibility at the end of a 30-day cycle, you will be prompted to complete a brief identity verification to unlock payouts. Payouts are then sent in USDC directly to your connected wallet. The entire payout flow is automated and verifiable&nbsp;onchain.
           </p>
         </div>
       </div>
@@ -475,6 +733,9 @@ function KYCSection() {
    Section 7 — Protocol Transparency + CTA
    ─────────────────────────────────────────────── */
 function ProtocolSection() {
+  const brand = useBrand()
+  const brandHref = useBrandHref()
+  const withQS = useWithPreservedQuery()
   return (
     <section id="protocol" className="px-6 pb-24 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
@@ -486,13 +747,14 @@ function ProtocolSection() {
         </h2>
         <div className="mt-4 rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-5 sm:p-6">
           <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-            All rules are enforced programmatically by the Hyperscaled protocol. There is no back office, no discretionary review committee, and no ability to override outcomes. Any rule changes are published publicly before taking&nbsp;effect.
+            All rules are enforced programmatically by the {brand.name} protocol. There is no back office, no discretionary review committee, and no ability to override outcomes. Any rule changes are published publicly before taking&nbsp;effect.
           </p>
         </div>
 
         <div className="mt-8">
           <Link
-            href="/register"
+            href={withQS(brandHref('/register'))}
+            onClick={() => trackCtaClick({ label: 'Start Your Challenge', location: 'rules_bottom' })}
             className="text-sm text-teal-400 hover:text-teal-300 transition-colors inline-flex items-center gap-1.5"
           >
             Start Your Challenge
@@ -517,9 +779,13 @@ export default function RulesPage() {
       <div data-toc-content>
         <EvalRulesSection />
         <AvailablePairsSection />
+        <WeightTrackingSection />
+        <TrackingMethodologySection />
+        <FeesSection />
         <FundedRulesSection />
         <ScalingRulesSection />
         <DisqualificationSection />
+        <BestPracticesSection />
         <KYCSection />
         <ProtocolSection />
       </div>

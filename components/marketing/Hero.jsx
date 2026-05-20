@@ -5,6 +5,13 @@ import Link from 'next/link'
 import { ArrowRight, TrendUp, ArrowsClockwise } from '@phosphor-icons/react'
 import { HERO_STATS } from '@/lib/constants'
 import LiquidCrystalBg from './LiquidCrystalBg'
+import dynamic from 'next/dynamic'
+
+const BeamsBg = dynamic(() => import('./BeamsBg'), { ssr: false })
+import PromoBanner from './PromoBanner'
+import { useBrand, useBrandHref } from '@/lib/brand'
+import { useWithPreservedQuery } from '@/lib/preserve-query'
+import { trackCtaClick } from '@/lib/analytics'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -24,13 +31,24 @@ const cardVariants = {
 }
 
 export default function Hero() {
-  return (
-    <section className="relative min-h-[100dvh] flex items-center overflow-hidden pt-16">
-      {/* Liquid crystal shader background */}
-      <LiquidCrystalBg className="pointer-events-none" />
-      <div className="absolute inset-0 bg-zinc-950/60 pointer-events-none" />
+  const brand = useBrand()
+  const brandHref = useBrandHref()
+  const withQS = useWithPreservedQuery()
 
-      <div className="relative max-w-[1400px] mx-auto px-6 w-full py-20">
+  return (
+    <section className={`relative min-h-[100dvh] flex flex-col overflow-hidden ${brand.parentSite ? 'pt-24' : 'pt-16'}`}>
+      {/* Animated shader background */}
+      {brand.showLiquidCrystal && brand.heroBeams
+        ? <BeamsBg className="pointer-events-none" />
+        : brand.showLiquidCrystal
+          ? <LiquidCrystalBg className="pointer-events-none" />
+          : null}
+      <div className={`absolute inset-0 pointer-events-none ${brand.heroBeams ? 'bg-zinc-950/30' : 'bg-zinc-950/60'}`} />
+
+      {/* Promo banner — scrolls with hero */}
+      <PromoBanner />
+
+      <div className="relative max-w-[1400px] mx-auto px-6 w-full py-20 flex-1 flex items-center">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-20 items-center">
 
           {/* Left column */}
@@ -42,10 +60,14 @@ export default function Hero() {
           >
             {/* Eyebrow */}
             <motion.div variants={itemVariants} className="mb-6">
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-teal-400/20 bg-teal-400/8 text-xs text-teal-400 font-medium">
+              <Link
+                href={withQS(brandHref('/register'))}
+                onClick={() => trackCtaClick({ label: 'Free $1k Eyebrow', location: 'hero_eyebrow' })}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-teal-400/20 bg-teal-400/8 text-xs text-teal-400 font-medium hover:bg-teal-400/12 transition-colors"
+              >
                 <span className="w-1.5 h-1.5 rounded-full bg-teal-400 pulse-teal" />
-                Built on Hyperliquid · Powered by Bittensor
-              </span>
+                Free $1k challenge accounts are live — only 1,000 available
+              </Link>
             </motion.div>
 
             {/* Headline */}
@@ -53,8 +75,7 @@ export default function Hero() {
               variants={itemVariants}
               className="text-5xl md:text-6xl xl:text-7xl tracking-tighter leading-none font-bold mb-6"
             >
-              Permissionless{' '}
-              <span className="text-teal-400">Funded Trading</span>{' '}
+              <span className="text-teal-400 capitalize">{brand.accountType} Trading</span>{' '}
               on Hyperliquid
             </motion.h1>
 
@@ -63,13 +84,14 @@ export default function Hero() {
               variants={itemVariants}
               className="text-base text-zinc-400 leading-relaxed max-w-[56ch] mb-8"
             >
-              Trade with more capital without risking your own stack. Keep 100% of your profits and grow your account to&nbsp;$2.5M. Built on the most advanced decentralized prop trading infrastructure in the&nbsp;world.
+              {brand.heroSub}
             </motion.p>
 
             {/* CTA buttons */}
             <motion.div variants={itemVariants} className="flex flex-col items-center sm:items-start sm:flex-row gap-3 mb-10">
               <Link
-                href="/register"
+                href={withQS(brandHref('/register'))}
+                onClick={() => trackCtaClick({ label: 'Start Your Challenge', location: 'hero' })}
                 className="shiny-cta px-6 py-3 min-h-12 whitespace-nowrap text-center"
               >
                 <span className="flex items-center justify-center gap-1.5">
@@ -78,7 +100,7 @@ export default function Hero() {
                 </span>
               </Link>
               <Link
-                href="/how-it-works"
+                href={brandHref('/how-it-works')}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 min-h-12 rounded-xl border border-white/[0.12] text-white text-sm font-medium hover:border-white/[0.24] hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-teal-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 active:scale-[0.98] transition-[border-color,background-color,transform] duration-200"
               >
                 Learn More
@@ -88,7 +110,7 @@ export default function Hero() {
 
             {/* Inline stats */}
             <motion.div variants={itemVariants} className="flex flex-wrap gap-x-8 gap-y-3">
-              {HERO_STATS.map((stat) => (
+              {(brand.heroStats || HERO_STATS).map((stat) => (
                 <div key={stat.label} className="flex items-baseline gap-2">
                   <span className="text-lg font-bold tracking-tight text-white">{stat.value}</span>
                   <span className="text-sm text-zinc-500">{stat.label}</span>
@@ -108,14 +130,14 @@ export default function Hero() {
             <div
               className="relative bg-zinc-900/70 rounded-2xl border border-white/[0.08] p-5 backdrop-blur-sm"
               style={{
-                boxShadow: '0 40px 80px rgba(0,0,0,0.5), 0 0 60px rgba(0,198,167,0.06)',
+                boxShadow: `0 40px 80px rgba(0,0,0,0.5), 0 0 60px rgba(var(--brand-glow),0.06)`,
               }}
             >
               {/* Card inner glow */}
               <div
                 className="absolute inset-0 rounded-2xl pointer-events-none"
                 style={{
-                  background: 'radial-gradient(circle at 80% 20%, rgba(0,198,167,0.07), transparent 55%)',
+                  background: `radial-gradient(circle at 80% 20%, rgba(var(--brand-glow),0.07), transparent 55%)`,
                 }}
               />
 
@@ -128,7 +150,7 @@ export default function Hero() {
                     Live
                   </span>
                 </div>
-                <div className="text-xs text-zinc-600 font-mono">7d cycle</div>
+                <div className="text-xs text-zinc-600 font-mono">30d cycle</div>
               </div>
 
               {/* Balance */}
@@ -211,7 +233,7 @@ export default function Hero() {
                   <ArrowsClockwise size={11} />
                   Updated just now
                 </div>
-                <a href="/leaderboard" className="text-xs text-teal-400 hover:text-teal-300 transition-colors flex items-center gap-1">
+                <a href={brandHref('/leaderboard')} className="text-xs text-teal-400 hover:text-teal-300 transition-colors flex items-center gap-1">
                   View Full Analytics
                   <ArrowRight size={10} />
                 </a>

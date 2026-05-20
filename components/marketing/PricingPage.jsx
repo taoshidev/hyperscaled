@@ -13,31 +13,40 @@ import {
   LinkSimple,
   Star,
 } from '@phosphor-icons/react'
+import Link from 'next/link'
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
+import { useBrand, useBrandHref } from '@/lib/brand'
+import { useWithPreservedQuery } from '@/lib/preserve-query'
+import { trackCtaClick } from '@/lib/analytics'
 import FAQAccordion from '@/components/shared/FAQAccordion'
-import { PRICING_TIERS, PRICING_FAQ } from '@/lib/constants'
+import PromoBanner from '@/components/marketing/PromoBanner'
+import { PRICING_TIERS, PRICING_FAQ, parseTierAccountSize } from '@/lib/constants'
+import { isWsbSaleBannerPublic } from '@/lib/wsb-sale-banner-public'
+import { useRegistrationCapacity } from '@/hooks/use-registration-capacity'
+import { isFreeTierForRegistration } from '@/lib/registration-tier-helpers'
+import { RegistrationCapacityWaitlist } from '@/components/marketing/RegistrationCapacityWaitlist'
+import { capacityMinerSlugForBrandId } from '@/lib/capacity-miner-slug'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
-const TIER_LABELS = { 'tier-1': 'Tier I', 'tier-2': 'Tier II', 'tier-3': 'Tier III' }
+const TIER_LABELS = { 'free': 'Free', 'tier-1': 'Starter', 'tier-2': 'Tier I', 'tier-3': 'Tier II', 'tier-4': 'Tier III', 'tier-5': 'Tier IV' }
 
-/* ── Launch Pricing Banner ── */
-function LaunchBanner() {
-  return (
-    <div className="mt-16 bg-teal-400/10 border-b border-teal-400/20">
-      <div className="max-w-[1400px] mx-auto px-6 py-3 text-center">
-        <p className="text-sm text-teal-400 font-medium" style={{ textWrap: 'balance' }}>
-          Launch Pricing Active — Save up to 50% for a limited&nbsp;time.
-        </p>
-      </div>
-    </div>
-  )
+function tierBadge(tier) {
+  if (tier.popular) return 'Most Popular'
+  if (tier.id === 'free') return 'Only 1,000 Available'
+  return null
 }
 
 /* ── Page Hero ── */
-function PricingHero() {
+function PricingHero({ showPromoBar }) {
+  const brand = useBrand()
+  const topPad = showPromoBar
+    ? "pt-8"
+    : brand.parentSite
+      ? "pt-32"
+      : "pt-24"
   return (
-    <section className="pt-16 pb-16 px-6">
+    <section className={`pb-16 px-6 ${topPad}`}>
       <div className="max-w-[800px] mx-auto text-center">
         <motion.h1
           initial={{ opacity: 0, y: 16 }}
@@ -55,7 +64,7 @@ function PricingHero() {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[60ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          Pay a one-time USDC registration fee to take the Hyperscaled challenge. No hidden&nbsp;fees.
+          Take the {brand.name} Challenge with no hidden rules, fees, or time limit. Rewards distributed&nbsp;monthly.
         </motion.p>
       </div>
     </section>
@@ -63,19 +72,21 @@ function PricingHero() {
 }
 
 /* ── Single Pricing Card ── */
-function PricingCard({ tier, index }) {
+function PricingCard({ tier, index, freeAtCapacity, paidAtCapacity }) {
+  const brandHref = useBrandHref()
+  const withQS = useWithPreservedQuery()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
+  const free = isFreeTierForRegistration(tier)
+  const soldOut = (free && freeAtCapacity) || (!free && paidAtCapacity)
 
   const details = [
-    { label: 'Account Size', value: tier.accountSize },
-    { label: 'Profit Target', value: `${tier.profitTarget} (${tier.profitTargetAmount} target)` },
-    { label: 'Max Drawdown', value: `${tier.maxDrawdown} (${tier.maxDrawdownAmount} limit)` },
-    { label: 'Profit Split', value: tier.profitSplit },
-    { label: 'Payout Cycle', value: tier.payoutCycle },
-    { label: 'Scaling Path', value: tier.scalingPath },
-    { label: 'Time Limit', value: tier.timeLimit },
+    { label: 'Profit Target', value: tier.profitTargetAmount },
+    { label: 'Max Drawdown', value: `${tier.maxDrawdownAmount} limit` },
+    { label: 'Scaling', value: tier.scalingPath },
   ]
+
+  const numericAccountSize = parseTierAccountSize(tier.accountSize);
 
   return (
     <motion.div
@@ -83,24 +94,27 @@ function PricingCard({ tier, index }) {
       initial={{ opacity: 0, y: 24 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ ...spring, delay: index * 0.1 }}
-      className={`relative flex flex-col rounded-2xl p-6 sm:p-8 ${
-        tier.popular
+      data-testid="pricing-tier-card"
+      data-tier-id={tier.id}
+      data-tier-account-size={numericAccountSize ? String(numericAccountSize) : ""}
+      className={`relative flex h-full min-h-0 flex-col rounded-2xl p-6 sm:p-8 xl:p-4 ${
+        tier.popular || tier.id === 'free'
           ? 'shiny-border'
           : 'border border-white/[0.08] bg-[#09090b]'
       }`}
     >
-      {/* Popular badge */}
-      {tier.popular && (
+      {/* Badge — Most Popular or Try for Free */}
+      {tierBadge(tier) && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="inline-flex items-center gap-1 bg-teal-400 text-[#09090b] text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full">
             <Star size={12} weight="fill" />
-            Most Popular
+            {tierBadge(tier)}
           </span>
         </div>
       )}
 
       {/* Tier label */}
-      <div className="text-xs font-semibold text-zinc-500 tracking-widest uppercase mt-2 mb-1">
+      <div className="text-xs font-semibold text-zinc-500 tracking-widest uppercase mb-1 mt-4">
         {TIER_LABELS[tier.id]}
       </div>
 
@@ -109,53 +123,94 @@ function PricingCard({ tier, index }) {
 
       {/* Pricing */}
       <div className="mt-4 flex items-baseline gap-2">
-        <ins className="text-3xl sm:text-4xl font-bold font-mono no-underline text-white">
+        <ins
+          data-testid="pricing-tier-launch-price"
+          className="text-3xl sm:text-4xl xl:text-3xl font-bold font-mono no-underline text-white"
+        >
           ${tier.launchPrice}
         </ins>
-        <del className="text-sm text-zinc-600 font-mono">${tier.standardPrice}</del>
+        {tier.standardPrice > tier.launchPrice && (
+          <del className="text-sm text-zinc-600 font-mono">${tier.standardPrice}</del>
+        )}
         <span className="text-xs text-zinc-500 font-medium">USDC</span>
         <span className="sr-only">
-          Launch price {tier.launchPrice} USDC, was {tier.standardPrice} USDC
+          {tier.standardPrice > tier.launchPrice
+            ? `Launch price ${tier.launchPrice} USDC, was ${tier.standardPrice} USDC`
+            : `${tier.launchPrice} USDC`}
         </span>
       </div>
 
       {/* Details */}
-      <ul className="mt-6 space-y-3 flex-1">
+      <ul className="mt-6 xl:mt-4 mb-6 xl:mb-5 flex-1 min-h-0 space-y-3 xl:space-y-2">
         {details.map((d) => (
-          <li key={d.label} className="flex items-start justify-between gap-4 text-sm">
+          <li key={d.label} className="flex items-start justify-between gap-4 xl:gap-2 text-sm xl:text-xs">
             <span className="text-zinc-500">{d.label}</span>
             <span className="text-right font-medium font-mono text-zinc-200">{d.value}</span>
           </li>
         ))}
       </ul>
 
-      {/* CTA */}
-      <a
-        href="https://app.hyperscaled.trade"
-        target="_blank"
-        rel="noopener noreferrer"
-        className={`mt-8 flex items-center justify-center gap-1.5 min-h-12 rounded-xl text-sm font-semibold transition-colors ${
-          tier.popular
-            ? 'shiny-cta px-6 py-3'
+      {soldOut ? (
+        <span className="mt-auto flex items-center justify-center gap-1.5 min-h-12 xl:min-h-10 rounded-xl text-xs sm:text-sm font-semibold tabular-nums whitespace-nowrap cursor-not-allowed opacity-60 bg-white/[0.04] border border-white/[0.08] text-zinc-400 px-3 py-3 xl:px-2 xl:py-2">
+          {free ? "Limit reached" : "Sold out — join waitlist"}
+        </span>
+      ) : (
+      <Link
+        href={(() => {
+          const base = brandHref('/register')
+          return withQS(numericAccountSize ? `${base}?tier=${numericAccountSize}` : base)
+        })()}
+        data-testid="pricing-tier-cta"
+        onClick={() => trackCtaClick({ label: tier.cta, location: `pricing_page:${tier.name || tier.accountSize || 'unknown'}` })}
+        className={`mt-auto flex items-center justify-center gap-1.5 min-h-12 xl:min-h-10 rounded-xl text-sm xl:text-xs font-semibold transition-colors ${
+          tier.popular || tier.id === 'free'
+            ? 'shiny-cta px-6 py-3 xl:px-3 xl:py-2'
             : 'bg-white/[0.06] border border-white/[0.08] text-white hover:bg-white/[0.1]'
         }`}
       >
         {tier.cta}
         <ArrowRight size={14} weight="bold" />
-      </a>
+      </Link>
+      )}
     </motion.div>
   )
 }
 
 /* ── Pricing Cards Grid ── */
-function PricingCards({ tiers }) {
+function PricingCards({ tiers, brandId }) {
+  const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity(capacityMinerSlugForBrandId(brandId))
   return (
     <section className="px-6 pb-20">
-      <div className="max-w-[1100px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-5">
-        {tiers.map((tier, i) => (
-          <PricingCard key={tier.id} tier={tier} index={i} />
-        ))}
+      <div className="max-w-[1400px] mx-auto w-full flex flex-col gap-8">
+        <div
+          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-6 md:gap-5 xl:gap-3 items-stretch`}
+        >
+          {tiers.map((tier, i) => (
+            <PricingCard
+              key={tier.id}
+              tier={tier}
+              index={i}
+              freeAtCapacity={freeAtCapacity}
+              paidAtCapacity={paidAtCapacity}
+            />
+          ))}
+        </div>
+        <RegistrationCapacityWaitlist
+          paidAtCapacity={paidAtCapacity}
+          className="mt-0"
+        />
+        {(brandId === 'hyperscaled' || brandId === 'vanta') && isWsbSaleBannerPublic() && (
+          <div className="flex justify-center">
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
+              <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
+              <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
+            </div>
+          </div>
+        )}
       </div>
+      <p className="text-center text-sm text-zinc-500 mt-4 max-w-[60ch] mx-auto" style={{ textWrap: 'balance' }}>
+        All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time&nbsp;limit
+      </p>
     </section>
   )
 }
@@ -248,7 +303,7 @@ function EvalProgressWidget() {
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06]">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-teal-400 shrink-0" style={{ boxShadow: '0 0 6px rgba(0,198,167,0.7)' }} />
+          <span className="w-2 h-2 rounded-full bg-teal-400 shrink-0" style={{ boxShadow: '0 0 6px rgba(var(--brand-glow),0.7)' }} />
           <span className="text-sm font-semibold text-white">Challenge Progress</span>
         </div>
         <span className="text-xs text-zinc-500 font-mono">$100K Account</span>
@@ -305,11 +360,12 @@ function EvalProgressWidget() {
 
 /* ── A Model Built for Traders ── */
 function ModelSection() {
+  const brand = useBrand()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
   const bullets = [
-    'A funded account upon challenge completion',
+    `A ${brand.accountType} account upon challenge completion`,
     'Verifiable payouts through onchain technology',
     '100% profit split — you keep your earnings',
     'A system designed for trader success',
@@ -359,6 +415,7 @@ function ModelSection() {
 
 /* ── Scaling Path Section ── */
 function ScalingSection() {
+  const brand = useBrand()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
@@ -372,10 +429,10 @@ function ScalingSection() {
           className="text-center mb-10"
         >
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            Start at $25K. Scale to&nbsp;$2.5M.
+            Start at $25K. Scale to&nbsp;$400K.
           </h2>
           <p className="mt-4 text-sm sm:text-base text-zinc-400 max-w-[56ch] mx-auto leading-relaxed" style={{ textWrap: 'balance' }}>
-            Every funded trader starts at their selected account size. Consistent performance unlocks the next tier automatically — no additional&nbsp;fees.
+            Every {brand.accountType} trader starts at their selected account size. Consistent performance unlocks the next tier automatically — no additional&nbsp;fees.
           </p>
         </motion.div>
         <ScalingPathVisual />
@@ -414,11 +471,20 @@ function PricingFAQSection() {
 
 /* ── Page Compose ── */
 export default function PricingPage({ tiers = PRICING_TIERS }) {
+  const brand = useBrand()
+  const resolvedTiers = brand.pricingTiers || tiers
+  const showWsbPromo =
+    (brand.id === 'hyperscaled' || brand.id === 'vanta') &&
+    isWsbSaleBannerPublic()
   return (
     <>
-      <LaunchBanner />
-      <PricingHero />
-      <PricingCards tiers={tiers} />
+      {showWsbPromo && (
+        <div className={brand.parentSite ? 'mt-24' : 'mt-16'}>
+          <PromoBanner />
+        </div>
+      )}
+      <PricingHero showPromoBar={showWsbPromo} />
+      <PricingCards tiers={resolvedTiers} brandId={brand.id} />
       <WhatsIncludedGrid />
       <ModelSection />
       <ScalingSection />

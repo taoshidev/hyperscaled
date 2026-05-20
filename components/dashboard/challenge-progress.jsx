@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { formatUSD } from "@/lib/format";
 
-export function ChallengeProgress({ accountSize, accountSizeData, drawdown, challengePeriod, statistics, quarterlyPnl: rawQuarterlyPnl }) {
+export function ChallengeProgress({ accountSize, accountSizeData, drawdown, challengePeriod, statistics, quarterlyPnl: rawQuarterlyPnl, limits }) {
   if (!challengePeriod || !drawdown) return null;
 
   const isFunded =
@@ -11,7 +11,13 @@ export function ChallengeProgress({ accountSize, accountSizeData, drawdown, chal
     challengePeriod.bucket === "SUBACCOUNT_ALPHA";
 
   const profitTarget = accountSize * 0.1;
-  const totalPnl = accountSizeData?.total_realized_pnl ?? 0;
+  // Use total_realized_pnl to match the leaderboard; fall back to balance delta
+  // if the field is absent (older API responses).
+  const totalPnl = accountSizeData?.total_realized_pnl != null
+    ? accountSizeData.total_realized_pnl
+    : (accountSizeData?.balance != null && accountSizeData?.account_size != null)
+      ? accountSizeData.balance - accountSizeData.account_size
+      : 0;
   const profitPct = profitTarget > 0 ? Math.max(0, (totalPnl / profitTarget) * 100) : 0;
 
   const intradayDD = Math.max(0, drawdown.intraday_drawdown_pct ?? 0);
@@ -27,7 +33,10 @@ export function ChallengeProgress({ accountSize, accountSizeData, drawdown, chal
   const eodMaxLoss = accountSize * (eodThreshold / 100);
   const eodRemaining = eodMaxLoss - accountSize * (eodDD / 100);
 
-  const leverageLabel = isFunded ? "5x" : "1.25x";
+  const portfolioMultiplier = limits?.max_portfolio_usd != null && accountSize > 0
+    ? limits.max_portfolio_usd / accountSize
+    : isFunded ? 5 : 1.25;
+  const leverageLabel = `${portfolioMultiplier % 1 === 0 ? portfolioMultiplier.toFixed(0) : portfolioMultiplier.toFixed(2)}x`;
 
   if (isFunded) {
     return <FundedProgress
@@ -62,7 +71,7 @@ export function ChallengeProgress({ accountSize, accountSizeData, drawdown, chal
             <h3 className="text-sm text-zinc-400">Account Progress</h3>
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
               <span>
-                Max Leverage:{" "}
+                Portfolio Size:{" "}
                 <strong className="text-zinc-300 font-medium">{leverageLabel}</strong>
               </span>
               <span>
@@ -215,7 +224,7 @@ function FundedProgress({
             <h3 className="text-sm text-zinc-400">Account Status</h3>
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
               <span>
-                Max Leverage:{" "}
+                Portfolio Size:{" "}
                 <strong className="text-zinc-300 font-medium">{leverageLabel}</strong>
               </span>
               <span>

@@ -1,0 +1,16 @@
+<svg width="148" height="28" viewBox="0 0 148 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bc-g" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#e040fb"/>
+    </linearGradient>
+  </defs>
+  <!-- Left arch -->
+  <path d="M3 23 L3 14 C3 8.5,7 5,12 5 C14.5 5,16.5 6,18 7.5" stroke="url(#bc-g)" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+  <!-- Left arch bottom -->
+  <path d="M3 23 C3 23,7 24,10 22 L10 14 C10 11,11.5 9,14 8.5" stroke="url(#bc-g)" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+  <!-- Right arch -->
+  <path d="M18 7.5 C20 9,21 11,21 14 L21 22 C21 22,24 24,27 23 L27 14 C27 8.5,23 5,18 5" stroke="url(#bc-g)" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+  <!-- Wordmark -->
+  <text x="35" y="19.5" font-family="'Geist','Helvetica Neue',Arial,sans-serif" font-size="13.5" font-weight="700" fill="white" letter-spacing="0.01em">bitcast</text>
+</svg>

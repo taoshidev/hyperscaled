@@ -2,12 +2,14 @@ import Nav from '@/components/marketing/Nav'
 import Footer from '@/components/marketing/Footer'
 import { JsonLd } from '@/components/shared/JsonLd'
 
+const BASE_URL = process.env.HYPERSCALED_BASE_URL || "https://hyperscaled.trade";
+
 const ORGANIZATION_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "Hyperscaled",
-  url: "https://hyperscaled.trade",
-  logo: "https://hyperscaled.trade/hyperscaled-logo.svg",
+  url: BASE_URL,
+  logo: `${BASE_URL}/hyperscaled-logo.svg`,
   description:
     "Decentralized prop trading network built on Hyperliquid. 1-step challenge, 100% profit split, onchain USDC payouts.",
   sameAs: [
@@ -21,7 +23,7 @@ const WEBSITE_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   name: "Hyperscaled",
-  url: "https://hyperscaled.trade",
+  url: BASE_URL,
 }
 
 export default function MarketingLayout({ children }) {

@@ -1,10 +1,10 @@
 import HowItWorksPage from '@/components/marketing/HowItWorksPage'
 import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
-import { getPricingTiers } from '@/lib/pricing'
+import { fetchDbPricingTiers } from '@/lib/pricing-db'
 
 export const metadata = buildMetadata({
-  title: 'How It Works — Hyperscaled Funded Trading',
+  title: 'How It Works — Hyperscaled Scaled Trading',
   description:
     'See exactly how Hyperscaled works. Connect your wallet, trade on Hyperliquid, pass the challenge, and keep 100% of your monthly USDC payouts.',
   ogTitle: 'How Hyperscaled Works — Trade on Hyperliquid, Get Funded, Keep 100%',
@@ -16,7 +16,7 @@ export const metadata = buildMetadata({
 const HOW_TO_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "HowTo",
-  name: "How to get a funded trading account on Hyperscaled",
+  name: "How to get a scaled trading account on Hyperscaled",
   description:
     "Connect your wallet, trade on Hyperliquid, pass the 1-step challenge, and keep 100% of your USDC payouts.",
   step: [
@@ -24,7 +24,7 @@ const HOW_TO_SCHEMA = {
       "@type": "HowToStep",
       position: 1,
       name: "Register and pay",
-      text: "Connect your wallet at app.hyperscaled.trade. Choose a $25K, $50K, or $100K account. Pay a one-time USDC fee on Base.",
+      text: "Connect your wallet at app.hyperscaled.trade. Choose a $5K to $100K account. Pay a one-time USDC fee on Base.",
     },
     {
       "@type": "HowToStep",
@@ -36,7 +36,7 @@ const HOW_TO_SCHEMA = {
       "@type": "HowToStep",
       position: 3,
       name: "Track your progress",
-      text: "Monitor your challenge progress in real time via the Hyperscaled dashboard or Chrome extension. 10% profit target, 5% max drawdown, no time limit.",
+      text: "Monitor your challenge progress in real time via the Hyperscaled dashboard or the open-source Chrome extension, which overlays live stats on Hyperliquid, previews how each order scales to your funded account, and blocks trades that would breach your drawdown. 10% profit target, 5% max drawdown, no time limit.",
     },
     {
       "@type": "HowToStep",
@@ -48,7 +48,7 @@ const HOW_TO_SCHEMA = {
 }
 
 export default async function HowItWorks() {
-  const tiers = await getPricingTiers()
+  const tiers = await fetchDbPricingTiers()
   return (
     <>
       <JsonLd data={HOW_TO_SCHEMA} />

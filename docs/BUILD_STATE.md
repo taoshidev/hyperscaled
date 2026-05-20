@@ -1,6 +1,6 @@
 # Build State
 
-Last updated: 2026-03-26
+Last updated: 2026-04-22
 
 ## Marketing Site (`/`)
 
@@ -38,7 +38,7 @@ Last updated: 2026-03-26
 | Page route + metadata | Done |
 | Launch pricing banner | Done — CRA: updated to "Save up to 50% for a limited time" |
 | Page hero | Done — CRA: subtext "take the Hyperscaled challenge. No hidden fees." |
-| 3-tier pricing cards (shiny-border on popular) | Done — CRA: Most Popular moved to $100K, tier I/II scaling → $100K, payout cycle → Weekly |
+| 3-tier pricing cards (shiny-border on popular) | Done — CRA: Most Popular moved to $100K, tier I/II scaling → $100K, payout cycle → Monthly |
 | What's Included feature grid | Done — CRA: replaced badge row with 6-card grid (icons + title + desc) |
 | A Model Built for Traders section | Done — CRA: bullet list + EvalProgressWidget mockup |
 | Scaling path visual | Done |
@@ -54,12 +54,12 @@ Last updated: 2026-03-26
 | Item | State |
 |------|-------|
 | Page route + metadata | Done |
-| Page hero + CTA | Done — CRB: headline "Trade on Hyperliquid. Get funded by the network.", subtext shortened |
+| Page hero + CTA | Done — CRB: headline "Trade on Hyperliquid. Get scaled by the network.", subtext shortened |
 | 4-step flow (register, trade, track, pass) | Done — CRB/UB: all titles/bodies/details rewritten, step 01 has "Get started" CTA, step 02 Minimum Trading Capital row removed |
 | Key details boxes per step | Done — CRB: simplified labels, Chrome Plugin mention |
 | Scaling path visual + tier note | Done — CRB: body shortened |
 | Non-custodial explainer + comparison | Done — CRB/UB: callout bar above comparison, spacing tightened (mb-6) |
-| Payout mechanics + flow diagram | Done — CRB: headline "Automated. Weekly. Onchain.", body + KYC note shortened |
+| Payout mechanics + flow diagram | Done — CRB: headline "Automated. Monthly. Onchain.", body + KYC note shortened |
 | Callout box (100% profit) | Done |
 | PricingPreview widget | Done — CRB: added between payout mechanics and bottom CTA |
 | Bottom CTA | Done — CRB: removed "View Pricing" link |
@@ -133,10 +133,10 @@ Last updated: 2026-03-26
 | NETWORK_STATS | Done — 5 stats (value/label/description). UB: label "Rewards Distributed" → "Network Rewards Distributed" |
 | HERO_STATS | Done — CRA/UA: 1-Step Challenge, 100% Profit Split, $30M+ Rewards |
 | EVAL_RULES | Done — 10 challenge rules (UA: Evaluation→Challenge rename) |
-| FUNDED_RULES | Done — 7 funded account rules |
+| FUNDED_RULES | Done — 7 scaled account rules |
 | SCALING_PATH | Done — 9 steps ($100K → $2.5M) |
 | SCALING_MILESTONES | Done — 12 milestones ($25K → $2.5M) |
-| PRICING_TIERS | Done — CRA: popular moved to tier-3, tier I/II scaling → $100K, payout → Weekly |
+| PRICING_TIERS | Done — CRA: popular moved to tier-3, tier I/II scaling → $100K, payout → Monthly |
 | FAQ_ITEMS | Done — 5 categories (UA: "The Evaluation"→"The Challenge"), 22 entries. UB: removed minimum-capital, added trading-pairs |
 | HOME_FAQ_IDS | Done — 5-item subset for home page |
 | PRICING_FAQ / PRICING_FAQ_IDS | Done — 3 pricing-specific entries |
@@ -176,14 +176,14 @@ Last updated: 2026-03-26
 
 ## Registration Flow (`/register`)
 
-**Status**: Complete — 3-step flow, all screens built
+**Status**: Complete — 4-step flow (Select Plan → Connect & Pay → Confirm → Done). Free $1K tier + builder fee approval added (2026-04-23).
 
 | Item | State |
 |------|-------|
 | /register route + layout | Done |
 | Tier data in lib/constants.js (TIERS) | Done (5% drawdown, Unlimited period, label/value format) |
-| Stepper component (3-step, Phosphor Icons, Framer Motion) | Done (Phase 2: collapsed from 4 to 3 steps; Phase 3: mobile compact "Step X of 3" label) |
-| Registration flow orchestrator (3-step) | Done (Phase 2: Select Plan → Connect & Pay → Confirmation; Phase 3: nav bar, beforeunload guard) |
+| Stepper component (4-step, Phosphor Icons, Framer Motion) | Done (Phase 1 confirm: expanded to 4 steps; mobile "Step X of 4" label) |
+| Registration flow orchestrator (4-step) | Done (Select Plan → Connect & Pay → Confirm → Done; nav bar, beforeunload guard) |
 | Tier selection step (interactive cards, selected state) | Done (label/value rows, Pro card elevated, promo banner) |
 | A11y: ARIA radiogroup + keyboard nav on tier cards | Done |
 | A11y: Semantic stepper (ol/li, aria-current) | Done |
@@ -193,8 +193,9 @@ Last updated: 2026-03-26
 | Performance: targeted transitions (no transition-all) | Done |
 | Contrast: brightened small muted text (oklch 0.65) | Done |
 | Min font size: text-xs (12px) floor on all labels | Done |
-| Email step | Removed (not in flow) |
-| Connect & Pay step (merged wallet + payment) | Done (Phase 2: order summary, RainbowKit connect, alt wallet toggle, USDC payment, wagmi/viem fallback, x402 TODO) |
+| Email field | Done — re-added to Connect & Pay step; optional input between HL wallet and payment method; shown on confirm review card; sent to preflight + register APIs in all payment paths |
+| Connect & Pay step | Done (Phase 1 confirm: HL wallet with Auto-detect, payment method selector, wallet connection, Continue to review) |
+| Confirm step (new) | Done — Phase 1 confirm: review card with trading wallet, inline-editable payout wallet, plan summary, confirmation checkbox, pay button |
 | Old step-hl-address.jsx | Deleted (absorbed into step-connect-pay.jsx) |
 | Old step-payment.jsx | Deleted (absorbed into step-connect-pay.jsx) |
 | Confirmation step | Done (Phase 3: success header, summary card with copy buttons, next steps, dashboard/leaderboard links) |
@@ -221,6 +222,22 @@ Last updated: 2026-03-26
 | Polish: extension UI mockup (account size, progress bars, position row) | Done |
 | Polish: "Go to Dashboard" as secondary text link below receipt | Done |
 | Polish: confirmation container widens to max-w-5xl on step 2 | Done |
+| EIP-712 usdSend payment (Phase 2) | Done — replaced sendAsset with native usdSend EIP-712 typed signature; lib/hl-payment.js utility (buildUsdSendTypes, buildUsdSendDomain, buildUsdSendMessage, submitUsdSend); inline progress steps (Signing → Submitting → Verifying → Provisioning); backend TODO comment for WebSocket listener; env vars NEXT_PUBLIC_HL_RECEIVING_WALLET + NEXT_PUBLIC_HL_CHAIN |
+| Pay with Wallet (Base path) | Still working — untouched in Phase 2 |
+| Pay with Hyperliquid (extension path) | Still working — untouched in Phase 2 |
+| Extension decoupled from payment (Phase 3) | Done — removed "Send via Extension" payment option, removed extension detection gating from payment flow, extension CTA moved to success screen as first content block, conditional display (install CTA vs "ready to trade" confirmation), 2-col payment grid |
+| Success screen restructured (Phase 3) | Done — order: success header → extension CTA/confirmation → receipt card → dashboard link; useExtensionBridge in StepConfirmation for detection |
+| Polish: HL wallet truncation + copy (Phase 4) | Done — truncated display with copy button when valid, click-to-edit, auto-collapse on blur/auto-detect |
+| Polish: Help panel cleanup (Phase 4) | Done — removed "How it works" and "One signature" sections from payment-eip712 help, removed payment-hl (dead extension method), moved requirements inline under payment selector, updated "Getting Started" fastest-path steps |
+| Polish: Payment card selected border (Phase 6) | Done — solid teal ring-[1.5px] on selected payment card alongside shiny-border effect |
+| Polish: Auto-fill HL wallet on connect (Phase 6) | Done — wallet address auto-populates from connected wallet, "Change" button to clear and re-enter, "Connect wallet" button when disconnected, updated helper text |
+| Polish: Remove copy button from Connect & Pay (Phase 6) | Done — copy button removed from HL wallet field, kept only on Confirm and success screens |
+| Polish: Full EVM address on Confirm (Phase 6) | Done — full address in text-xs font-mono on confirm screen, break-all for mobile wrap |
+| Polish: Remove Help sidebar (Phase 6) | Done — removed RegistrationHelpProvider, RegistrationSidebar, MobileHelpSheet from registration flow; single-column centered layout for steps 1-2 |
+| Free $1K tier | Done — added entity_tiers row for Vanta miner ($1K, $0.00, 100% split); TIERS meta in lib/constants.js; tierIndex=0 in /api/miners/vanta response |
+| Free tier UX | Done — payment method selector hidden, payment wallet step skipped, order summary shows "Free", Sign Up button triggers /api/register with paymentMethod="free" |
+| Builder fee approval in registration | Done — all payment paths (free, EIP-712, Base) call ensureBuilderFeeApproved before proceeding; silent skip if maxBuilderFee already >0; no dedicated UI, just runs when user hits Sign Up / Pay |
+| /api/register paymentMethod="free" branch | Done — validates tier.priceUsdc === 0, skips transfer verification, writes synthetic txHash `free-${ts}-${wallet}` to registrations row |
 
 **Next action**: UI polish pass across other pages
 
@@ -232,7 +249,7 @@ Last updated: 2026-03-26
 |------|-------|
 | Leaderboard page | Done |
 | Mock miner data | Done |
-| Wallet address search | Done — search input above table, filters funded + challenge tabs by partial address match, ?addr= query param support, clear/reset, no-results state |
+| Wallet address search | Done — search input above table, filters scaled + challenge tabs by partial address match, ?addr= query param support, clear/reset, no-results state |
 | Page metadata + OG | Done — title, description, openGraph with url in leaderboard layout.jsx |
 
 **Next action**: Design polish, responsive layout
@@ -247,6 +264,24 @@ Last updated: 2026-03-26
 | Miner detail page | Done |
 
 **Next action**: Design polish, PnL charts, performance metrics
+
+## Builder Code (`/builder`)
+
+**Status**: Complete (first pass)
+
+| Item | State |
+|------|-------|
+| Page route + layout (Providers) | Done |
+| Page metadata + OG | Done — title "Builder Code \| Hyperscaled", description, og.url |
+| Hero + explainer card | Done — short copy describing builder codes + revocability |
+| Wallet connect (RainbowKit) | Done |
+| Current approval query (`maxBuilderFee` info) | Done — skeleton loading, pulse-teal active state, refresh button |
+| Max fee rate input with validation | Done — default `0.05%`, blocks >1%, warns >0.1% |
+| EIP-712 `approveBuilderFee` signing | Done — mirrors existing `handlePayEIP712` pattern, chain-switch to Arbitrum, `/exchange` POST |
+| aria-live progress + error display | Done |
+| Post-success refresh | Done — re-queries `maxBuilderFee` after `status: "ok"` |
+
+**Next action**: Link from extension setup / docs once ready. Consider adding a revoke flow (sign with rate `"0%"`).
 
 ## Status Page (`/status`)
 

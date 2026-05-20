@@ -1,26 +1,11 @@
 import { NextResponse } from "next/server";
 import { isValidEvmAddress } from "@/lib/validation";
 import { HL_API_URL } from "@/lib/constants";
+import { checkRateLimit, getTrustedClientId } from "@/lib/rate-limit";
 
 const TEN_MINUTES_MS = 10 * 60 * 1000;
-
-// In-memory rate limiter (per IP, 30 req/min)
-const rateMap = new Map();
-const RATE_WINDOW = 60_000;
-const RATE_MAX = 30;
-const CLEANUP_INTERVAL = 60_000; // clean up every 60s
-let lastCleanup = Date.now();
-
-function getClientIp(request) {
-  // In production behind a reverse proxy, use the leftmost untrusted IP
-  // For Vercel/Cloudflare, prefer their verified headers
-  return (
-    request.headers.get("cf-connecting-ip") ||
-    request.headers.get("x-real-ip") ||
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    "unknown"
-  );
-}
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX_PER_WINDOW = 30;
 
 /** JSON line: PM2 / systemd often render console object args as `[Object]` past depth 2. */
 function verifyLog(label, payload) {
@@ -97,38 +82,40 @@ function humanReadableNoMatch({
   return lines;
 }
 
-function isRateLimited(ip) {
-  const now = Date.now();
-
-  // Periodic cleanup of expired entries
-  if (now - lastCleanup > CLEANUP_INTERVAL) {
-    lastCleanup = now;
-    for (const [key, entry] of rateMap) {
-      if (now - entry.start > RATE_WINDOW) {
-        rateMap.delete(key);
-      }
-    }
-  }
-
-  const entry = rateMap.get(ip);
-  if (!entry || now - entry.start > RATE_WINDOW) {
-    rateMap.set(ip, { start: now, count: 1 });
-    return false;
-  }
-  entry.count += 1;
-  return entry.count > RATE_MAX;
-}
-
 export async function GET(request) {
-  const ip = getClientIp(request);
-  if (isRateLimited(ip)) {
-    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
-  }
-
   const { searchParams } = new URL(request.url);
   const destination = searchParams.get("destination");
   const sender = searchParams.get("sender");
   const amount = searchParams.get("amount");
+
+  // Rate-limit by *sender wallet* first (the strong identifier), then
+  // fall back to the trusted client IP (CF / Vercel headers only). The
+  // raw `x-forwarded-for` chain is intentionally ignored because anyone
+  // can set it.
+  const trustedIp = getTrustedClientId(request);
+  const limiterKey = sender
+    ? `verify-hl:sender:${sender.toLowerCase()}`
+    : trustedIp
+      ? `verify-hl:ip:${trustedIp}`
+      : "verify-hl:unknown";
+
+  const limit = await checkRateLimit({
+    key: limiterKey,
+    limit: RATE_MAX_PER_WINDOW,
+    windowMs: RATE_WINDOW_MS,
+  });
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.ceil(limit.retryAfterMs / 1000) || 1),
+        },
+      },
+    );
+  }
+
   const requestId = `hlv_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
   verifyLog("request", {

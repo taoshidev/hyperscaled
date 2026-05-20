@@ -2,11 +2,16 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-const FUNDED_DEMO_LOOKUP = "0x7939aF2C9889F59A96C3921B515300A9a70898BD".toLowerCase();
+import { buildPayoutWindow } from "@/lib/payout-window";
+
+const FUNDED_DEMO_LOOKUP =
+  "0x7939aF2C9889F59A96C3921B515300A9a70898BD".toLowerCase();
 const FUNDED_DEMO_SUBACCOUNT_UUID = "9e8d1f4f-30f8-4d5a-95a0-b96ba6e026c2";
 
 function normalizeAddress(address) {
-  return String(address || "").trim().toLowerCase();
+  return String(address || "")
+    .trim()
+    .toLowerCase();
 }
 
 function buildFundedDemoDashboard(hlAddress) {
@@ -16,7 +21,7 @@ function buildFundedDemoDashboard(hlAddress) {
   return {
     status: "success",
     timestamp: now,
-    synthetic_hotkey: "hk_demo_funded_01",
+    synthetic_hotkey: "hk_demo_scaled_01",
     subaccount_uuid: FUNDED_DEMO_SUBACCOUNT_UUID,
     subaccount_id: 1842,
     asset_class: "crypto",
@@ -59,7 +64,7 @@ function buildFundedDemoDashboard(hlAddress) {
       total_leverage: 1.42,
       positions: [
         {
-          position_uuid: "funded-demo-pos-1",
+          position_uuid: "scaled-demo-pos-1",
           trade_pair: "BTC/USD",
           position_type: "LONG",
           open_ms: now - 18 * 3_600_000,
@@ -76,7 +81,7 @@ function buildFundedDemoDashboard(hlAddress) {
           fees: 16.42,
         },
         {
-          position_uuid: "funded-demo-pos-2",
+          position_uuid: "scaled-demo-pos-2",
           trade_pair: "ETH/USD",
           position_type: "SHORT",
           open_ms: now - 10 * 3_600_000,
@@ -93,7 +98,7 @@ function buildFundedDemoDashboard(hlAddress) {
           fees: 9.65,
         },
         {
-          position_uuid: "funded-demo-pos-3",
+          position_uuid: "scaled-demo-pos-3",
           trade_pair: "SOL/USD",
           position_type: "FLAT",
           open_ms: now - 4 * week,
@@ -110,7 +115,7 @@ function buildFundedDemoDashboard(hlAddress) {
           fees: 22.47,
         },
         {
-          position_uuid: "funded-demo-pos-4",
+          position_uuid: "scaled-demo-pos-4",
           trade_pair: "BTC/USD",
           position_type: "FLAT",
           open_ms: now - 3 * week,
@@ -127,7 +132,7 @@ function buildFundedDemoDashboard(hlAddress) {
           fees: 28.14,
         },
         {
-          position_uuid: "funded-demo-pos-5",
+          position_uuid: "scaled-demo-pos-5",
           trade_pair: "XRP/USD",
           position_type: "FLAT",
           open_ms: now - 2 * week,
@@ -207,14 +212,30 @@ function buildFundedDemoPayout() {
   return {
     status: "success",
     data: {
-      hotkey: "hk_demo_funded_01",
+      hotkey: "hk_demo_scaled_01",
       total_checkpoints: 4,
       payout: 2850.23,
       checkpoints: [
-        { checkpoint_ms: now - 7 * 86_400_000, pnl: 2850.23, cumulative_pnl: 9428.68 },
-        { checkpoint_ms: now - 14 * 86_400_000, pnl: 2468.12, cumulative_pnl: 6578.45 },
-        { checkpoint_ms: now - 21 * 86_400_000, pnl: 2117.5, cumulative_pnl: 4110.33 },
-        { checkpoint_ms: now - 28 * 86_400_000, pnl: 1992.83, cumulative_pnl: 1992.83 },
+        {
+          checkpoint_ms: now - 7 * 86_400_000,
+          pnl: 2850.23,
+          cumulative_pnl: 9428.68,
+        },
+        {
+          checkpoint_ms: now - 14 * 86_400_000,
+          pnl: 2468.12,
+          cumulative_pnl: 6578.45,
+        },
+        {
+          checkpoint_ms: now - 21 * 86_400_000,
+          pnl: 2117.5,
+          cumulative_pnl: 4110.33,
+        },
+        {
+          checkpoint_ms: now - 28 * 86_400_000,
+          pnl: 1992.83,
+          cumulative_pnl: 1992.83,
+        },
       ],
     },
     timestamp: now,
@@ -225,41 +246,34 @@ function isFundedDemoAddress(address) {
   return normalizeAddress(address) === FUNDED_DEMO_LOOKUP;
 }
 
-async function fetchJSON(url) {
-  const res = await fetch(url);
+async function fetchJSON(url, init) {
+  const res = await fetch(url, init);
   if (!res.ok) {
     const err = new Error("Fetch failed");
     err.status = res.status;
     try {
       const body = await res.json();
       err.message = body.error || err.message;
-    } catch {}
+    } catch {
+      // Body is not JSON — keep generic err.message.
+    }
     throw err;
   }
   return res.json();
 }
 
-async function postJSON(url, body) {
-  const res = await fetch(url, {
+function postJSON(url, payload) {
+  return fetchJSON(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(payload),
   });
-  if (!res.ok) {
-    const err = new Error("Fetch failed");
-    err.status = res.status;
-    try {
-      const b = await res.json();
-      err.message = b.error || err.message;
-    } catch {}
-    throw err;
-  }
-  return res.json();
 }
 
 export function useDashboardData(hlAddress, options = {}) {
   const enabled = !!hlAddress;
-  const useFundedDemo = !!options.useFundedDemo && isFundedDemoAddress(hlAddress);
+  const useFundedDemo =
+    !!options.useFundedDemo && isFundedDemoAddress(hlAddress);
 
   const dashboard = useQuery({
     queryKey: ["dashboard", hlAddress],
@@ -286,27 +300,32 @@ export function useDashboardData(hlAddress, options = {}) {
   return { dashboard, events };
 }
 
-export function usePayoutData(subaccountUuid, options = {}) {
-  const enabled = !!subaccountUuid;
+/**
+ * `/api/dashboard/payout` is a public read (matches the rest of the
+ * dashboard endpoints). `hlAddress` is required by the validator; the
+ * window is snapped to the validator's grid via `buildPayoutWindow`.
+ */
+export function usePayoutData(subaccountUuid, hlAddress, options = {}) {
   const useFundedDemo =
     !!options.useFundedDemo && subaccountUuid === FUNDED_DEMO_SUBACCOUNT_UUID;
 
-  // Query the current payout period (last 30 days as default window)
-  const now = Date.now();
-  const thirtyDaysAgo = now - 30 * 86400000;
+  const enabled = !!subaccountUuid && (useFundedDemo || !!hlAddress);
 
   return useQuery({
-    queryKey: ["payout", subaccountUuid],
-    queryFn: () =>
-      useFundedDemo
+    queryKey: ["payout", subaccountUuid, hlAddress],
+    queryFn: () => {
+      const { startMs, endMs } = buildPayoutWindow(Date.now());
+      return useFundedDemo
         ? Promise.resolve(buildFundedDemoPayout())
         : postJSON("/api/dashboard/payout", {
             subaccount_uuid: subaccountUuid,
-            start_time_ms: thirtyDaysAgo,
-            end_time_ms: now,
-          }),
+            hl_address: hlAddress,
+            start_time_ms: startMs,
+            end_time_ms: endMs,
+          });
+    },
     enabled,
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
     refetchOnWindowFocus: false,
   });
 }

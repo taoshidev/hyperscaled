@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, DiscordLogo, Envelope } from '@phosphor-icons/react'
 import FAQAccordion from '@/components/shared/FAQAccordion'
 import { FAQ_ITEMS } from '@/lib/constants'
+import { useBrand } from '@/lib/brand'
 
 /* ───────────────────────────────────────────────
    TOC sections — derived from FAQ_ITEMS categories
@@ -131,6 +132,7 @@ function useActiveSection() {
    Section 1 — Page Hero
    ─────────────────────────────────────────────── */
 function PageHero() {
+  const brand = useBrand()
   return (
     <section className="pt-32 pb-16 px-6">
       <div className="max-w-[800px] mx-auto text-center">
@@ -144,7 +146,7 @@ function PageHero() {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[62ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          Answers for everything you need to know before starting your Hyperscaled&nbsp;Challenge.
+          Answers for everything you need to know before starting your {brand.name}&nbsp;Challenge.
         </p>
       </div>
     </section>

@@ -2,6 +2,7 @@
 
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
+import { useBrand, brandifyText } from '@/lib/brand'
 import {
   CheckCircle,
   TrendUp,
@@ -28,7 +29,7 @@ const features = [
   {
     icon: CheckCircle,
     title: 'One-Step Challenge',
-    body: 'Trade, perform, and unlock funded capital through our one-step\u00a0challenge.',
+    body: 'Trade, perform, and unlock scaled capital through our one-step\u00a0challenge.',
     span: 'md:col-span-7',
     large: true,
     extra: (
@@ -53,7 +54,7 @@ const features = [
   {
     icon: TrendUp,
     title: 'Grow Your Account',
-    body: 'Hit a 5% quarterly return with a Sharpe ratio above 1 and your account will automatically grow with zero fees. $100K accounts can scale all the way to\u00a0$2.5M.',
+    body: 'Hit a 5% quarterly return with a Sharpe ratio above 1 and your account will automatically grow with zero fees. All accounts can scale up to\u00a0$400K.',
     span: 'md:col-span-5',
     large: false,
     extra: (
@@ -124,6 +125,7 @@ const features = [
 ]
 
 export default function Features() {
+  const brand = useBrand()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -165,7 +167,7 @@ export default function Features() {
                 <div
                   className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                   style={{
-                    background: 'radial-gradient(circle at 15% 15%, rgba(0,198,167,0.07), transparent 60%)',
+                    background: 'radial-gradient(circle at 15% 15%, rgba(var(--brand-glow),0.07), transparent 60%)',
                   }}
                 />
 
@@ -180,7 +182,7 @@ export default function Features() {
                   >
                     {feat.title}
                   </h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed [text-wrap:pretty]">{feat.body}</p>
+                  <p className="text-sm text-zinc-400 leading-relaxed [text-wrap:pretty]">{brandifyText(feat.body, brand)}</p>
                   {feat.extra}
                 </div>
               </motion.div>

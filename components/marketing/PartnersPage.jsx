@@ -18,7 +18,7 @@ import {
 const WHAT_YOU_CONTROL = [
   {
     title: 'Set your own pricing',
-    body: 'Choose your challenge fees across $25K, $50K, and $100K\u00a0tiers',
+    body: 'Choose your challenge fees across $5K, $10K, $25K, $50K, and $100K\u00a0tiers',
     icon: CurrencyDollar,
   },
   {
@@ -37,7 +37,7 @@ const WHAT_YOU_CONTROL = [
     icon: PaintBrush,
   },
   {
-    title: 'Permissionless scaling',
+    title: 'Unlimited scaling',
     body: 'No ceiling on how many traders you can\u00a0fund.',
     icon: ArrowsOutSimple,
   },
@@ -93,7 +93,7 @@ function PageHero() {
           className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1]"
           style={{ textWrap: 'balance' }}
         >
-          Run your own funded trading&nbsp;firm.
+          Run your own scaled trading&nbsp;firm.
           <br />
           <span className="text-zinc-400">
             Powered by Hyperscaled&nbsp;infrastructure.

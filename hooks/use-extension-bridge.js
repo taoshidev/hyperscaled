@@ -51,12 +51,12 @@ export function useExtensionBridge() {
     observer.observe(document.documentElement, { childList: true, subtree: true });
 
     // Send pings at staggered intervals to catch late-loading content scripts
-    window.postMessage({ type: "HYPERSCALED_PING" }, "*");
+    window.postMessage({ type: "HYPERSCALED_PING" }, window.location.origin);
     const retry1 = setTimeout(() => {
-      if (!found) window.postMessage({ type: "HYPERSCALED_PING" }, "*");
+      if (!found) window.postMessage({ type: "HYPERSCALED_PING" }, window.location.origin);
     }, 1000);
     const retry2 = setTimeout(() => {
-      if (!found) window.postMessage({ type: "HYPERSCALED_PING" }, "*");
+      if (!found) window.postMessage({ type: "HYPERSCALED_PING" }, window.location.origin);
     }, 3000);
 
     return () => {
@@ -104,7 +104,7 @@ export function useExtensionBridge() {
         type: "HYPERSCALED_INIT_PAYMENT",
         data,
       },
-      "*"
+      window.location.origin
     );
   }, []);
 

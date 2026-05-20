@@ -424,7 +424,7 @@ function RegistrationSection() {
                 <div className="grid grid-cols-4 gap-0 text-sm border-b border-white/[0.04]">
                   <div className="px-4 py-3 text-zinc-300 font-medium">Tier I</div>
                   <div className="px-4 py-3 text-right text-zinc-200 font-mono">$25K</div>
-                  <div className="px-4 py-3 text-right text-zinc-200 font-mono">$149</div>
+                  <div className="px-4 py-3 text-right text-zinc-200 font-mono">$119</div>
                   <div className="px-4 py-3 text-right text-zinc-400 font-mono">$100K</div>
                 </div>
                 <div className="grid grid-cols-4 gap-0 text-sm border-b border-white/[0.04]">
@@ -441,8 +441,8 @@ function RegistrationSection() {
                     </span>
                   </div>
                   <div className="px-4 py-3 text-right text-zinc-200 font-mono">$100K</div>
-                  <div className="px-4 py-3 text-right text-zinc-200 font-mono">$449</div>
-                  <div className="px-4 py-3 text-right text-teal-400 font-mono">$2.5M</div>
+                  <div className="px-4 py-3 text-right text-zinc-200 font-mono">$399</div>
+                  <div className="px-4 py-3 text-right text-teal-400 font-mono">$400K</div>
                 </div>
               </div>
 
@@ -468,7 +468,7 @@ function RegistrationSection() {
               </p>
               <TipBox label="Payout schedule">
                 <p>
-                  Once you pass the challenge and your funded account is active, you
+                  Once you pass the challenge and your scaled account is active, you
                   will receive an email notification every time a payout is sent. You
                   can update your payout address in the dashboard at any&nbsp;time.
                 </p>
@@ -688,7 +688,7 @@ function ChallengeRulesSection() {
           </h2>
           <p className="text-sm sm:text-base text-zinc-400 leading-relaxed mb-10">
             The Hyperscaled challenge is one step with straightforward rules. Every
-            account size follows the same objectives. Pass once, and your funded account
+            account size follows the same objectives. Pass once, and your scaled account
             activates&nbsp;immediately.
           </p>
         </AnimatedSection>
@@ -753,7 +753,7 @@ function ChallengeRulesSection() {
                 <p className="text-2xl font-bold font-mono text-teal-400 mb-2">100%</p>
                 <p className="text-sm text-zinc-500 leading-relaxed">
                   Hyperscaled takes 0% of your profits, including on scaled accounts
-                  up to&nbsp;$2.5M.
+                  up to&nbsp;$400K.
                 </p>
               </div>
             </div>
@@ -798,7 +798,7 @@ function ChallengeRulesSection() {
                 After You Pass: Account Scaling
               </h3>
               <p className="text-sm text-zinc-400 leading-relaxed mb-4">
-                Passing the challenge activates your funded account immediately. From
+                Passing the challenge activates your scaled account immediately. From
                 there, consistent quarterly performance unlocks progressively larger
                 account sizes, with no additional fees and no&nbsp;application.
               </p>
@@ -809,7 +809,7 @@ function ChallengeRulesSection() {
                   </h4>
                   <p className="text-sm text-zinc-300">
                     $25K and $50K accounts scale up to{' '}
-                    <strong className="font-mono font-semibold">$100K</strong> maximum
+                    <strong className="font-mono font-semibold">$400K</strong> maximum
                   </p>
                 </div>
                 <div className="rounded-lg border border-teal-400/20 bg-teal-400/[0.04] p-4">
@@ -818,7 +818,7 @@ function ChallengeRulesSection() {
                   </h4>
                   <p className="text-sm text-zinc-300">
                     $100K accounts scale up to{' '}
-                    <strong className="font-mono font-semibold text-teal-400">$2.5M</strong> maximum
+                    <strong className="font-mono font-semibold text-teal-400">$400K</strong> maximum
                   </p>
                 </div>
               </div>
@@ -828,7 +828,7 @@ function ChallengeRulesSection() {
                 <Link href="/rules#scaling" className="text-teal-400 hover:underline">
                   full scaling rules
                 </Link>{' '}
-                for the complete path from $100K to&nbsp;$2.5M.
+                for the complete scaling&nbsp;path.
               </p>
             </div>
           </AnimatedSection>
@@ -894,7 +894,7 @@ function AfterRegistrationSection() {
                 {
                   icon: Eye,
                   title: 'Trades Are Mirrored Automatically',
-                  body: 'Hyperscaled reads your fills from the public data stream and mirrors every trade proportionally to your simulated funded account. No action needed from you.',
+                  body: 'Hyperscaled reads your fills from the public data stream and mirrors every trade proportionally to your simulated scaled account. No action needed from you.',
                 },
                 {
                   icon: Target,
@@ -904,7 +904,7 @@ function AfterRegistrationSection() {
                 {
                   icon: HandCoins,
                   title: 'Get Paid When Profitable',
-                  body: 'Pass the 10% profit target and your funded account activates. From there, monthly USDC payouts are calculated automatically and sent to your payout wallet.',
+                  body: 'Pass the 10% profit target and your scaled account activates. From there, monthly USDC payouts are calculated automatically and sent to your payout wallet.',
                 },
               ].map((step) => {
                 const Icon = step.icon
@@ -942,7 +942,7 @@ function AfterRegistrationSection() {
               style={{ textWrap: 'balance' }}
             >
               Pick your account size, pay once, and start trading on Hyperliquid.
-              Your funded account is one challenge&nbsp;away.
+              Your scaled account is one challenge&nbsp;away.
             </p>
             <Link
               href="/prod-register"

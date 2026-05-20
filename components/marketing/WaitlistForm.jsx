@@ -35,7 +35,7 @@ export default function WaitlistForm({ className = '', inputClass = '', btnLabel
       <form
         onSubmit={handleSubmit}
         className="flex flex-col sm:flex-row gap-3"
-        id="get-funded"
+        id="get-scaled"
       >
         {/* Email input */}
         <div className="relative flex-1">

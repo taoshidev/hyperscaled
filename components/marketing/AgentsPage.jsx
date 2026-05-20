@@ -12,8 +12,7 @@ import {
   ArrowSquareOut,
   ArrowRight,
 } from '@phosphor-icons/react'
-import Nav from './Nav'
-import Footer from './Footer'
+import { useBrand, brandifyText } from '@/lib/brand'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 const containerVariants = {
@@ -42,8 +41,9 @@ function CodeBlock({ lines }) {
 // ─── Section A: Hero ──────────────────────────────────────────────────────
 
 function HeroSection() {
+  const brand = useBrand()
   return (
-    <section className="min-h-[60dvh] flex items-center pt-16 px-6 py-20">
+    <section className={`min-h-[60dvh] flex items-center px-6 py-20 ${brand.parentSite ? 'pt-32' : 'pt-24'}`}>
       <div className="max-w-[1400px] mx-auto w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Text */}
@@ -68,7 +68,7 @@ function HeroSection() {
 
             <p className="text-lg text-zinc-400 leading-relaxed max-w-[48ch] mb-8 [text-wrap:pretty]">
               LangChain, CrewAI, plain Python, or OpenClaw — no adapters, no rewrites.
-              Hyperscaled works with whatever runtime your agent already runs on.
+              {brand.name} works with whatever runtime your agent already runs on.
             </p>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -170,6 +170,7 @@ function ValueStrip() {
 // ─── Section C: Integration Paths ────────────────────────────────────────
 
 function IntegrationPaths() {
+  const brand = useBrand()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -206,7 +207,7 @@ function IntegrationPaths() {
           >
             <div
               className="absolute inset-0 rounded-2xl pointer-events-none opacity-60"
-              style={{ background: 'radial-gradient(circle at 10% 10%, rgba(0,198,167,0.06), transparent 60%)' }}
+              style={{ background: 'radial-gradient(circle at 10% 10%, rgba(var(--brand-glow),0.06), transparent 60%)' }}
             />
             {/* Recommended badge */}
             <div className="absolute top-4 right-4 px-2.5 py-1 rounded-full bg-teal-400/10 border border-teal-400/20 text-[10px] text-teal-400 font-medium">
@@ -218,7 +219,7 @@ function IntegrationPaths() {
               </div>
               <h3 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-2">OpenClaw Skill</h3>
               <p className="text-sm text-zinc-400 leading-relaxed max-w-[40ch]">
-                The fastest path. One command installs Hyperscaled into OpenClaw, exposing every
+                The fastest path. One command installs {brand.name} into OpenClaw, exposing every
                 action as a structured tool call with validated outputs.
               </p>
               <CodeBlock lines={[
@@ -227,7 +228,7 @@ function IntegrationPaths() {
                 { text: '> register  trade  positions  orders  rules  payouts', teal: true },
               ]} />
               <div className="flex items-center gap-3 mt-5">
-                <a href="https://clawhub.ai/taoshidev1/funded-account" target="_blank" rel="noreferrer" className="shiny-cta px-4 py-2 text-sm">
+                <a href="https://clawhub.ai/taoshidev1/scaled-account" target="_blank" rel="noreferrer" className="shiny-cta px-4 py-2 text-sm">
                   <span className="flex items-center gap-1.5">
                     Install Skill
                     <ArrowRight size={14} weight="bold" />
@@ -253,7 +254,7 @@ function IntegrationPaths() {
           >
             <div
               className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-              style={{ background: 'radial-gradient(circle at 15% 15%, rgba(0,198,167,0.07), transparent 60%)' }}
+              style={{ background: 'radial-gradient(circle at 15% 15%, rgba(var(--brand-glow),0.07), transparent 60%)' }}
             />
             <div className="relative">
               <div className="w-10 h-10 rounded-xl bg-teal-400/8 border border-teal-400/20 flex items-center justify-center mb-4 group-hover:bg-teal-400/15 transition-colors">
@@ -284,7 +285,7 @@ function IntegrationPaths() {
           >
             <div
               className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-              style={{ background: 'radial-gradient(circle at 15% 15%, rgba(0,198,167,0.07), transparent 60%)' }}
+              style={{ background: 'radial-gradient(circle at 15% 15%, rgba(var(--brand-glow),0.07), transparent 60%)' }}
             />
             <div className="relative">
               <div className="w-10 h-10 rounded-xl bg-teal-400/8 border border-teal-400/20 flex items-center justify-center mb-4 group-hover:bg-teal-400/15 transition-colors">
@@ -311,7 +312,7 @@ function IntegrationPaths() {
           >
             <div
               className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-              style={{ background: 'radial-gradient(circle at 15% 15%, rgba(0,198,167,0.07), transparent 60%)' }}
+              style={{ background: 'radial-gradient(circle at 15% 15%, rgba(var(--brand-glow),0.07), transparent 60%)' }}
             />
             <div className="relative">
               <div className="w-10 h-10 rounded-xl bg-teal-400/8 border border-teal-400/20 flex items-center justify-center mb-4 group-hover:bg-teal-400/15 transition-colors">
@@ -367,7 +368,7 @@ const whyFeatures = [
       <CodeBlock lines={[
         { text: 'AccountInfo(', dim: true },
         { text: '  balance=201271.23,', teal: true },
-        { text: '  phase="funded",', teal: true },
+        { text: '  phase="scaled",', teal: true },
         { text: '  profit_pct=4.2', teal: true },
         { text: ')', dim: true },
       ]} />
@@ -450,6 +451,7 @@ const whyFeatures = [
 ]
 
 function WhyAgentsSection() {
+  const brand = useBrand()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -486,14 +488,14 @@ function WhyAgentsSection() {
               >
                 <div
                   className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  style={{ background: 'radial-gradient(circle at 15% 15%, rgba(0,198,167,0.07), transparent 60%)' }}
+                  style={{ background: 'radial-gradient(circle at 15% 15%, rgba(var(--brand-glow),0.07), transparent 60%)' }}
                 />
                 <div className="relative">
                   <div className="w-10 h-10 rounded-xl bg-teal-400/8 border border-teal-400/20 flex items-center justify-center mb-4 group-hover:bg-teal-400/15 transition-colors">
                     <Icon size={20} className="text-teal-400" />
                   </div>
                   <h3 className="text-base md:text-lg font-bold tracking-tight text-white mb-2">{feat.title}</h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed">{feat.body}</p>
+                  <p className="text-sm text-zinc-400 leading-relaxed">{brandifyText(feat.body, brand)}</p>
                   {feat.extra}
                 </div>
               </motion.div>
@@ -514,7 +516,7 @@ function CTABanner() {
         <div className="relative rounded-2xl border border-teal-400/20 bg-zinc-900/50 p-12 md:p-16 text-center overflow-hidden">
           <div
             className="absolute inset-0 rounded-2xl pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(0,198,167,0.08), transparent 60%)' }}
+            style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(var(--brand-glow),0.08), transparent 60%)' }}
           />
           <div className="relative">
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4 text-balance">
@@ -524,19 +526,11 @@ function CTABanner() {
               Install the OpenClaw skill or drop the Python SDK directly into your agent workflow.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
-              <a href="https://clawhub.ai/taoshidev1/funded-account" target="_blank" rel="noreferrer" className="shiny-cta px-6 py-2.5">
+              <a href="https://clawhub.ai/taoshidev1/scaled-account" target="_blank" rel="noreferrer" className="shiny-cta px-6 py-2.5">
                 <span className="flex items-center gap-1.5">
                   Install OpenClaw Skill
                   <ArrowRight size={15} weight="bold" />
                 </span>
-              </a>
-              <a
-                href="https://docs.hyperscaled.trade"
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl text-sm text-zinc-300 border border-white/[0.08] hover:border-white/[0.18] hover:text-white transition-all"
-              >
-                Read the Docs <ArrowSquareOut size={14} />
               </a>
             </div>
           </div>
@@ -550,16 +544,12 @@ function CTABanner() {
 
 export default function AgentsPage() {
   return (
-    <div className="bg-[#09090b] text-white font-sans">
-      <Nav />
-      <main>
-        <HeroSection />
-        <ValueStrip />
-        <IntegrationPaths />
-        <WhyAgentsSection />
-        <CTABanner />
-      </main>
-      <Footer />
-    </div>
+    <>
+      <HeroSection />
+      <ValueStrip />
+      <IntegrationPaths />
+      <WhyAgentsSection />
+      <CTABanner />
+    </>
   )
 }
