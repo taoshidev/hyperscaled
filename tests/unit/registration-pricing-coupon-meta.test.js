@@ -24,6 +24,10 @@ vi.mock("@/lib/dev-test", () => ({
   DEV_TEST_PRICE: 1,
 }));
 
+vi.mock("@/lib/wsb-tier-list-price", () => ({
+  listPriceUsdcFromDbTier: (_slug, _accountSize, dbPriceUsdc) => Number(dbPriceUsdc),
+}));
+
 vi.mock("@/lib/db/schema", () => ({
   coupons: {
     id: "coupons.id",

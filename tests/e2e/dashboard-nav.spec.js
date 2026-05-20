@@ -28,12 +28,25 @@ import {
 test.describe("Dashboard nav (mocked wallet)", () => {
   let paidTier;
 
-  test.beforeAll(async () => {
+  test.beforeAll(async ({ browser }) => {
     const tiers = await loadActiveTiersBySlug("vanta");
     paidTier =
       tiers.find((t) => Number(t.priceUsdc) > 0 && t.accountSize > 0) ??
       tiers[0];
     expect(paidTier).toBeTruthy();
+
+    const warmCtx = await browser.newContext();
+    const warmPage = await warmCtx.newPage();
+    try {
+      await warmPage.goto("/dashboard", {
+        waitUntil: "domcontentloaded",
+        timeout: 180_000,
+      });
+    } catch {
+      /* the per-test goto will surface any real failure */
+    } finally {
+      await warmCtx.close();
+    }
   });
 
   test.beforeEach(async () => {
@@ -63,7 +76,10 @@ test.describe("Dashboard nav (mocked wallet)", () => {
       });
     });
 
-    await page.goto("/dashboard", { waitUntil: "domcontentloaded" });
+    await page.goto("/dashboard", {
+      waitUntil: "domcontentloaded",
+      timeout: 120_000,
+    });
     // The dashboard layout passes `walletAware` to `<Nav />`, which
     // renders `<NavStartChallengeCta />` with the data-testid.
     await expect(
@@ -116,7 +132,9 @@ test.describe("Dashboard nav (mocked wallet)", () => {
       txHash: `0xseed${Date.now().toString(16)}`,
     });
 
-    await page.goto(`/dashboard?addr=${E2E_OTHER_WALLET_ADDRESS}`);
+    await page.goto(`/dashboard?addr=${E2E_OTHER_WALLET_ADDRESS}`, {
+      timeout: 120_000,
+    });
 
     // The KYC card rendered for non-owners would surface either the
     // "Identity Verification Required for Payouts" copy (status === "none")

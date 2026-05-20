@@ -11,6 +11,8 @@ import { trackCtaClick } from '@/lib/analytics'
 import { useRegistrationCapacity } from '@/hooks/use-registration-capacity'
 import { isFreeTierForRegistration } from '@/lib/registration-tier-helpers'
 import { RegistrationCapacityWaitlist } from '@/components/marketing/RegistrationCapacityWaitlist'
+import { isWsbSaleBannerPublic } from '@/lib/wsb-sale-banner-public'
+import { capacityMinerSlugForBrandId } from '@/lib/capacity-miner-slug'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -120,7 +122,7 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
   const brand = useBrand()
   const brandHref = useBrandHref()
   const withQS = useWithPreservedQuery()
-  const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity()
+  const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity(capacityMinerSlugForBrandId(brand.id))
   tiers = brand.pricingTiers || tiers
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
@@ -164,7 +166,7 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
         <RegistrationCapacityWaitlist paidAtCapacity={paidAtCapacity} />
 
         {/* WSB Flash Deal pill — Hyperscaled & Vanta only */}
-        {(brand.id === 'hyperscaled' || brand.id === 'vanta') && (
+        {(brand.id === 'hyperscaled' || brand.id === 'vanta') && isWsbSaleBannerPublic() && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={inView ? { opacity: 1 } : {}}

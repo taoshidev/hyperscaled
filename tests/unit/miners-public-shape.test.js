@@ -38,8 +38,6 @@ const FORBIDDEN_MINER_KEYS = [
 ];
 
 function buildDbMock(rows) {
-  // Mimic the chained Drizzle builder used by getAllActiveMinersWithTiers:
-  //   db.select(...).from(...).leftJoin(...).where(...).orderBy(...)
   const orderBy = vi.fn().mockResolvedValue(rows);
   const where = vi.fn().mockReturnValue({ orderBy });
   const leftJoin = vi.fn().mockReturnValue({ where });
@@ -48,8 +46,15 @@ function buildDbMock(rows) {
   return { select };
 }
 
+let currentRows = [];
+vi.mock("@/lib/db", () => ({
+  getDb: async () => buildDbMock(currentRows),
+}));
+
+const { getAllActiveMinersWithTiers } = await import("@/lib/miners.js");
+
 const sampleRow = (overrides) => ({
-  hotkey: "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty", // Bob (Substrate dev address — placeholder for tests)
+  hotkey: "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
   name: "Vanta Trading",
   slug: "vanta",
   usdcWallet: "0xBab75f99F42A575Af937cD1c25E851C2cc42D42d",
@@ -62,15 +67,23 @@ const sampleRow = (overrides) => ({
 });
 
 async function loadMinersWithRows(rows) {
-  vi.resetModules();
-  vi.doMock("@/lib/db", () => ({ getDb: async () => buildDbMock(rows) }));
-  return await import("@/lib/miners.js");
+  currentRows = rows;
+  return { getAllActiveMinersWithTiers };
 }
 
 describe("getAllActiveMinersWithTiers public shape", () => {
   beforeEach(() => {
-    vi.resetModules();
-    vi.unmock("@/lib/db");
+    currentRows = [];
+  });
+
+  it("returns an entry for a miner with no tiers and an empty tiers array", async () => {
+    const { getAllActiveMinersWithTiers } = await loadMinersWithRows([
+      sampleRow({ accountSize: null, priceUsdc: null, profitSplit: null }),
+    ]);
+    const result = await getAllActiveMinersWithTiers();
+
+    expect(result).toHaveLength(1);
+    expect(result[0].tiers).toEqual([]);
   });
 
   it("returns only allowlisted miner-level fields", async () => {
@@ -97,15 +110,5 @@ describe("getAllActiveMinersWithTiers public shape", () => {
     expect(Object.keys(miner.tiers[0]).sort()).toEqual(
       [...ALLOWED_TIER_KEYS].sort(),
     );
-  });
-
-  it("returns an entry for a miner with no tiers and an empty tiers array", async () => {
-    const { getAllActiveMinersWithTiers } = await loadMinersWithRows([
-      sampleRow({ accountSize: null, priceUsdc: null, profitSplit: null }),
-    ]);
-    const result = await getAllActiveMinersWithTiers();
-
-    expect(result).toHaveLength(1);
-    expect(result[0].tiers).toEqual([]);
   });
 });

@@ -21,9 +21,11 @@ import { trackCtaClick } from '@/lib/analytics'
 import FAQAccordion from '@/components/shared/FAQAccordion'
 import PromoBanner from '@/components/marketing/PromoBanner'
 import { PRICING_TIERS, PRICING_FAQ, parseTierAccountSize } from '@/lib/constants'
+import { isWsbSaleBannerPublic } from '@/lib/wsb-sale-banner-public'
 import { useRegistrationCapacity } from '@/hooks/use-registration-capacity'
 import { isFreeTierForRegistration } from '@/lib/registration-tier-helpers'
 import { RegistrationCapacityWaitlist } from '@/components/marketing/RegistrationCapacityWaitlist'
+import { capacityMinerSlugForBrandId } from '@/lib/capacity-miner-slug'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -176,7 +178,7 @@ function PricingCard({ tier, index, freeAtCapacity, paidAtCapacity }) {
 
 /* ── Pricing Cards Grid ── */
 function PricingCards({ tiers, brandId }) {
-  const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity()
+  const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity(capacityMinerSlugForBrandId(brandId))
   return (
     <section className="px-6 pb-20">
       <div className="max-w-[1400px] mx-auto w-full flex flex-col gap-8">
@@ -197,7 +199,7 @@ function PricingCards({ tiers, brandId }) {
           paidAtCapacity={paidAtCapacity}
           className="mt-0"
         />
-        {(brandId === 'hyperscaled' || brandId === 'vanta') && (
+        {(brandId === 'hyperscaled' || brandId === 'vanta') && isWsbSaleBannerPublic() && (
           <div className="flex justify-center">
             <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
               <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
@@ -471,7 +473,9 @@ function PricingFAQSection() {
 export default function PricingPage({ tiers = PRICING_TIERS }) {
   const brand = useBrand()
   const resolvedTiers = brand.pricingTiers || tiers
-  const showWsbPromo = brand.id === 'hyperscaled' || brand.id === 'vanta'
+  const showWsbPromo =
+    (brand.id === 'hyperscaled' || brand.id === 'vanta') &&
+    isWsbSaleBannerPublic()
   return (
     <>
       {showWsbPromo && (

@@ -73,6 +73,13 @@ vi.mock("@/lib/db/schema", () => ({
   registrations: { id: "registrations.id" },
   affiliates: { id: "affiliates.id", useCount: "affiliates.useCount" },
   entityMiners: { hotkey: "entity_miners.hotkey", slug: "entity_miners.slug" },
+  entityTiers: {
+    maxFreeRegistrations: "max_free_registrations",
+    hotkey: "hotkey",
+    accountSize: "account_size",
+    isActive: "is_active",
+    priceUsdc: "price_usdc",
+  },
   referralAttributions: {
     id: "referral_attributions.id",
     userId: "referral_attributions.user_id",

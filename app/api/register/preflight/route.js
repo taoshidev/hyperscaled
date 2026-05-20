@@ -118,7 +118,10 @@ export async function POST(request) {
   // input — so a paid tier can't sneak through the free bucket. Existing
   // rows for this hl_address don't bypass the cap; the duplicate check
   // below still runs to surface "already registered" before the user pays.
-  const capRejection = await checkRegistrationCap(tier.priceUsdc);
+  const capRejection = await checkRegistrationCap(tier.priceUsdc, {
+    minerHotkey: miner.hotkey,
+    accountSize: tier.accountSize,
+  });
   if (capRejection) {
     console.warn("[REGISTRATION][preflight] blocked — registration cap reached", {
       reqId,

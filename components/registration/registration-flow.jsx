@@ -17,6 +17,7 @@ import { reportCritical } from "@/lib/errors";
 import { trackEvent, getRefSource } from "@/lib/analytics";
 import { useRegistrationCapacity } from "@/hooks/use-registration-capacity";
 import { tierBlockedForCaps } from "@/lib/registration-tier-helpers";
+import { clearConnectDraft } from "@/lib/registration-connect-draft";
 
 const STEP_LABELS = ["Select Plan", "Connect & Pay", "Confirm", "Done"];
 const DEFAULT_MINER_SLUG = "vanta";
@@ -160,7 +161,7 @@ export function RegistrationFlow({
     freeAtCapacity,
     paidAtCapacity,
     registrationFullyClosed,
-  } = useRegistrationCapacity();
+  } = useRegistrationCapacity(initialMinerSlug);
 
   // Browser storage is read only after mount so SSR and the first client
   // paint match (avoids hydration mismatch on checkout layout vs tier step).
@@ -478,6 +479,7 @@ export function RegistrationFlow({
                       registrationStatus: status,
                       paymentMethod: method,
                     });
+                    clearConnectDraft();
                     setPaymentProcessing(false);
                     setTxHash(hash);
                     setHlAddress(addr);
@@ -525,6 +527,7 @@ export function RegistrationFlow({
 
             {currentStep === 0 && (
               <StepSelectTier
+                capacityMinerSlug={initialMinerSlug}
                 tiers={minerTiers}
                 selectedTier={selectedTier}
                 selectedTierIndex={selectedTierIndex}

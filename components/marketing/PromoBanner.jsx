@@ -4,11 +4,14 @@ import Link from 'next/link'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
+import { isWsbSaleBannerPublic } from '@/lib/wsb-sale-banner-public'
 
 export default function PromoBanner() {
   const brand = useBrand()
   const brandHref = useBrandHref()
   const withQS = useWithPreservedQuery()
+
+  if (!isWsbSaleBannerPublic()) return null
 
   if (brand.id !== 'hyperscaled' && brand.id !== 'vanta') return null
 

@@ -4,6 +4,8 @@ import { withSentryConfig } from "@sentry/nextjs";
 const nextConfig = {
   env: {
     USE_TESTNET: process.env.USE_TESTNET || "false",
+    NEXT_PUBLIC_WSB_SALE_BANNER:
+      process.env.WSB_SALE_BANNER === "true" ? "true" : "false",
   },
   // Nodemailer is Node-only; keep it external so resolution matches runtime node_modules.
   serverExternalPackages: ["nodemailer"],

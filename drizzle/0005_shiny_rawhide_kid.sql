@@ -1,0 +1,1 @@
+ALTER TABLE "entity_tiers" ADD COLUMN "max_free_registrations" integer;

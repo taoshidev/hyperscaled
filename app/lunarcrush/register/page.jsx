@@ -3,6 +3,7 @@ import { buildMetadata } from "@/lib/metadata"
 import { getMinerBySlug, getTiersForMiner } from "@/lib/miners"
 import { TIERS as TIER_META } from "@/lib/constants"
 import { unstable_cache } from "next/cache"
+import { listPriceUsdcFromDbTier } from "@/lib/wsb-tier-list-price"
 
 export const metadata = buildMetadata({
   title: "Start Your Challenge",
@@ -24,7 +25,11 @@ function enrichTier(dbTier, index) {
     name: meta?.name || `$${dbTier.accountSize / 1000}K`,
     accountSize: dbTier.accountSize,
     fullPrice: meta?.fullPrice ?? null,
-    promoPrice: Number(dbTier.priceUsdc),
+    promoPrice: listPriceUsdcFromDbTier(
+      MINER_SLUG,
+      dbTier.accountSize,
+      Number(dbTier.priceUsdc),
+    ),
     badge: meta?.badge ?? null,
     details: meta?.details ?? [],
   }

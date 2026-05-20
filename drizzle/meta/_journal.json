@@ -36,6 +36,13 @@
       "when": 1779252028582,
       "tag": "0004_tranquil_excalibur",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1779260740905,
+      "tag": "0005_shiny_rawhide_kid",
+      "breakpoints": true
     }
   ]
 }

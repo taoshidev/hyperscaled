@@ -23,6 +23,8 @@ import { cookies } from "next/headers";
 import {
   ATTRIBUTION_COOKIE,
   verifyAttributionCookie,
+  stripAttributionPromoFromCookieValue,
+  attributionCookieOptions,
 } from "@/lib/auth/attribution-cookie";
 import { facilitator as cdpFacilitator } from "@coinbase/x402";
 import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
@@ -352,7 +354,10 @@ export async function POST(request) {
   // does — preflight is advisory, this is the only gate that protects
   // /api/register against direct callers and against capacity moving
   // between the preflight call and the payment settlement.
-  const capRejection = await checkRegistrationCap(tier.priceUsdc);
+  const capRejection = await checkRegistrationCap(tier.priceUsdc, {
+    minerHotkey: miner.hotkey,
+    accountSize: tier.accountSize,
+  });
   if (capRejection) {
     console.warn("[REGISTRATION] blocked — registration cap reached", {
       reqId,
@@ -1510,8 +1515,24 @@ export async function POST(request) {
     txHash,
   });
 
-  return new Response(JSON.stringify(responseBody), {
+  const res = NextResponse.json(responseBody, {
     status: 200,
     headers: responseHeaders,
   });
+
+  try {
+    const cookieStore = await cookies();
+    const rawAttr = cookieStore.get(ATTRIBUTION_COOKIE)?.value;
+    const withoutPromo = await stripAttributionPromoFromCookieValue(rawAttr);
+    if (withoutPromo) {
+      res.cookies.set(ATTRIBUTION_COOKIE, withoutPromo, attributionCookieOptions());
+    }
+  } catch (err) {
+    console.warn("[REGISTRATION] could not refresh hs_attr without promo", {
+      reqId,
+      message: err?.message,
+    });
+  }
+
+  return res;
 }

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   signAttributionCookie,
   verifyAttributionCookie,
+  stripAttributionPromoFromCookieValue,
 } from "@/lib/auth/attribution-cookie.js";
 
 const SECRET = "abcdef0123456789abcdef0123456789-test-secret";
@@ -79,5 +80,36 @@ describe("attribution-cookie codec", () => {
     expect(await verifyAttributionCookie("")).toBeNull();
     expect(await verifyAttributionCookie("not-a-cookie")).toBeNull();
     expect(await verifyAttributionCookie("missing.parts.too.many")).toBeNull();
+  });
+
+  it("stripAttributionPromoFromCookieValue removes promo and preserves affiliate", async () => {
+    const original = await signAttributionCookie({
+      affiliate: "jdoe",
+      tenant: "beanstock",
+      promo: "HS-TA34-H1CL",
+      clickId: "55555555-5555-4555-8555-555555555555",
+      firstTouchAt: 1716068400,
+    });
+    const stripped = await stripAttributionPromoFromCookieValue(original);
+    expect(stripped).toBeTruthy();
+    const decoded = await verifyAttributionCookie(stripped);
+    expect(decoded).toEqual({
+      affiliate: "jdoe",
+      tenant: "beanstock",
+      promo: null,
+      clickId: "55555555-5555-4555-8555-555555555555",
+      firstTouchAt: 1716068400,
+    });
+  });
+
+  it("stripAttributionPromoFromCookieValue returns null when there is no promo", async () => {
+    const original = await signAttributionCookie({
+      affiliate: "jdoe",
+      tenant: null,
+      promo: null,
+      clickId: "66666666-6666-4666-8666-666666666666",
+      firstTouchAt: 1716068400,
+    });
+    expect(await stripAttributionPromoFromCookieValue(original)).toBeNull();
   });
 });
