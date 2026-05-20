@@ -31,7 +31,7 @@ describe("GET /api/register/capacity", () => {
     };
     getRegistrationCapacitySnapshotMock.mockResolvedValue(snapshot);
 
-    const res = await GET();
+    const res = await GET(new Request("http://localhost/api/register/capacity"));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toEqual(snapshot);
@@ -41,7 +41,7 @@ describe("GET /api/register/capacity", () => {
   it("fails open with zero counts when the snapshot throws", async () => {
     getRegistrationCapacitySnapshotMock.mockRejectedValue(new Error("db down"));
 
-    const res = await GET();
+    const res = await GET(new Request("http://localhost/api/register/capacity"));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toEqual({

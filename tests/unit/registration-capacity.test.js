@@ -32,10 +32,21 @@ vi.mock("@/lib/db", () => ({
   getDb: (...args) => getDbMock(...args),
 }));
 
+vi.mock("@/lib/miners", () => ({
+  getMinerBySlug: vi.fn().mockResolvedValue(null),
+}));
+
 vi.mock("@/lib/db/schema", () => ({
   registrations: {
     priceUsdc: "price_usdc",
     status: "status",
+  },
+  entityTiers: {
+    maxFreeRegistrations: "max_free_registrations",
+    hotkey: "hotkey",
+    accountSize: "account_size",
+    isActive: "is_active",
+    priceUsdc: "price_usdc",
   },
 }));
 
@@ -139,7 +150,12 @@ describe("registration-capacity — getRegistrationCapacitySnapshot", () => {
   it("returns null max + atCapacity false when both caps are unset", async () => {
     const snap = await getRegistrationCapacitySnapshot();
     expect(snap).toEqual({
-      free: { current: 0, max: null, atCapacity: false },
+      free: {
+        current: 0,
+        max: null,
+        atCapacity: false,
+        scope: "global",
+      },
       paid: { current: 0, max: null, atCapacity: false },
     });
   });
@@ -150,7 +166,12 @@ describe("registration-capacity — getRegistrationCapacitySnapshot", () => {
     // Order: free count first, then paid count (driven by Promise.all order).
     countQueue.push(1000, 50);
     const snap = await getRegistrationCapacitySnapshot();
-    expect(snap.free).toEqual({ current: 1000, max: 1000, atCapacity: true });
+    expect(snap.free).toEqual({
+      current: 1000,
+      max: 1000,
+      atCapacity: true,
+      scope: "global",
+    });
     expect(snap.paid).toEqual({ current: 50, max: 100, atCapacity: false });
   });
 

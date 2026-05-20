@@ -1,10 +1,33 @@
 import { NextResponse } from "next/server";
+import {
+  ATTRIBUTION_COOKIE,
+  attributionCookieOptions,
+  signAttributionCookie,
+} from "@/lib/auth/attribution-cookie";
+import {
+  isAuxiliaryMarketingRequest,
+  tryConsumeAttributionBurst,
+} from "@/lib/marketing-attribution-request.js";
 
 const VANTA_HOSTNAMES = new Set(["hs.vantatrading.io"]);
 const BEANSTOCK_HOSTNAMES = new Set(["www.beanstocktrading.com", "beanstocktrading.com"]);
 const HYPERFUNDED_HOSTNAMES = new Set(["www.hyperfunded.co", "hyperfunded.co"]);
-const INTERNAL_PATH_PREFIXES = ["/_next", "/api", "/monitoring"];
+const INTERNAL_PATH_PREFIXES = ["/_next", "/api", "/monitoring", "/command-center"];
 const AFFILIATE_SLUG_ROUTES = new Set(["strato"]);
+
+const IMPLICIT_TENANT_BY_HOSTNAME = {
+  "hs.vantatrading.io": "vanta",
+  "www.beanstocktrading.com": "beanstock",
+  "beanstocktrading.com": "beanstock",
+};
+const IMPLICIT_TENANT_BY_PATH_PREFIX = {
+  "/vanta": "vanta",
+  "/beanstock": "beanstock",
+  "/lunarcrush": "lunarcrush",
+  "/wsb": "wsb",
+  "/wallstreetbets": "wsb",
+  "/bitcast": "bitcast",
+};
 
 function getHostname(request) {
   const forwardedHost = request.headers.get("x-forwarded-host");
@@ -97,7 +120,7 @@ function applyTrackingCookies(response, { entryCookie, affiliateCookie, toltRefC
   }
 
   if (!affiliateCookie) {
-    const utm = searchParams.get("aff");
+    const utm = searchParams.get("aff") || searchParams.get("affiliate");
     if (utm) {
       response.cookies.set("hs_affiliate", utm, {
         path: "/",
@@ -119,8 +142,97 @@ function applyTrackingCookies(response, { entryCookie, affiliateCookie, toltRefC
   }
 }
 
-/** Next.js 16: edge/network-boundary handler (replaces deprecated `middleware`). */
-export function proxy(request) {
+function pickImplicitTenant(hostname, pathname) {
+  if (IMPLICIT_TENANT_BY_HOSTNAME[hostname]) {
+    return IMPLICIT_TENANT_BY_HOSTNAME[hostname];
+  }
+  for (const [prefix, slug] of Object.entries(IMPLICIT_TENANT_BY_PATH_PREFIX)) {
+    if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
+      return slug;
+    }
+  }
+  return null;
+}
+
+function readAttributionInputs(request, hostname, pathname, searchParams) {
+  const affiliate =
+    searchParams.get("affiliate") || searchParams.get("aff") || null;
+  const tenantParam = searchParams.get("tenant") || null;
+  const promo = searchParams.get("promo") || null;
+  const tenant = tenantParam || pickImplicitTenant(hostname, pathname);
+
+  const hasExplicitSignal = Boolean(affiliate || tenantParam || promo);
+
+  return { affiliate, tenant, promo, hasExplicitSignal };
+}
+
+function makeUuid() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+function fireAndForgetClickRecord(request, payload) {
+  const url = new URL("/api/track/click", request.nextUrl.origin);
+  fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
+    keepalive: true,
+  }).catch(() => {});
+}
+
+async function applyAttributionCookieIfNeeded(response, request, hostname, pathname, searchParams) {
+  const { affiliate, tenant, promo, hasExplicitSignal } = readAttributionInputs(
+    request,
+    hostname,
+    pathname,
+    searchParams,
+  );
+
+  if (!hasExplicitSignal) return;
+
+  if (isAuxiliaryMarketingRequest(request)) return;
+
+  const nowMs = Date.now();
+  if (!tryConsumeAttributionBurst(request, pathname, nowMs)) return;
+
+  const clickId = makeUuid();
+  const firstTouchAt = Math.floor(Date.now() / 1000);
+
+  let cookieValue;
+  try {
+    cookieValue = await signAttributionCookie({
+      affiliate,
+      tenant,
+      promo,
+      clickId,
+      firstTouchAt,
+    });
+  } catch {
+    return;
+  }
+
+  response.cookies.set(ATTRIBUTION_COOKIE, cookieValue, attributionCookieOptions());
+
+  fireAndForgetClickRecord(request, {
+    clickId,
+    affiliate,
+    tenant,
+    promo,
+    landingPath: pathname,
+    referrer: request.headers.get("referer") || null,
+    userAgent: request.headers.get("user-agent") || null,
+    occurredAt: firstTouchAt,
+  });
+}
+
+export async function proxy(request) {
   const { pathname, searchParams } = request.nextUrl;
   const hostname = getHostname(request);
   const entryCookie = request.cookies.get("hs_entry")?.value;
@@ -143,6 +255,13 @@ export function proxy(request) {
       pathname: normalizedVantaPath,
       searchParams,
     });
+    await applyAttributionCookieIfNeeded(
+      response,
+      request,
+      hostname,
+      normalizedVantaPath,
+      searchParams,
+    );
     return response;
   }
 
@@ -158,6 +277,13 @@ export function proxy(request) {
       pathname: normalizedBeanstockPath,
       searchParams,
     });
+    await applyAttributionCookieIfNeeded(
+      response,
+      request,
+      hostname,
+      normalizedBeanstockPath,
+      searchParams,
+    );
     return response;
   }
 
@@ -203,6 +329,14 @@ export function proxy(request) {
         sameSite: "lax",
       });
     }
+
+    await applyAttributionCookieIfNeeded(
+      response,
+      request,
+      hostname,
+      pathname,
+      new URLSearchParams({ affiliate: slug }),
+    );
     return response;
   }
 
@@ -233,9 +367,17 @@ export function proxy(request) {
     searchParams,
   });
 
+  await applyAttributionCookieIfNeeded(
+    response,
+    request,
+    hostname,
+    pathname,
+    searchParams,
+  );
+
   return response;
 }
 
 export const config = {
-  matcher: ["/((?!api|_next|monitoring|.*\\..*).*)"],
+  matcher: ["/((?!api|_next|monitoring|command-center|.*\\..*).*)"],
 };

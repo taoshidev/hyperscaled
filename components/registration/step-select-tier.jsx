@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useBrand } from "@/lib/brand";
 import { HubspotWaitlistBanner } from "@/components/registration/HubspotWaitlistBanner";
 import { isFreeTierForRegistration } from "@/lib/registration-tier-helpers";
+import { isWsbSaleBannerPublic } from "@/lib/wsb-sale-banner-public";
 
 function isFreeTier(tier) {
   return isFreeTierForRegistration(tier);
@@ -52,13 +53,18 @@ export function StepSelectTier({
   selectedTierIndex,
   onSelect,
   onContinue,
+  capacityMinerSlug,
 }) {
   const cardRefs = useRef([]);
   const [capacity, setCapacity] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/register/capacity", { cache: "no-store" })
+    const qs =
+      typeof capacityMinerSlug === "string" && capacityMinerSlug.trim()
+        ? `?miner=${encodeURIComponent(capacityMinerSlug.trim())}`
+        : "";
+    fetch(`/api/register/capacity${qs}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!cancelled && data) setCapacity(data);
@@ -67,7 +73,7 @@ export function StepSelectTier({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [capacityMinerSlug]);
 
   const freeAtCapacity = Boolean(capacity?.free?.atCapacity);
   const paidAtCapacity = Boolean(capacity?.paid?.atCapacity);
@@ -320,7 +326,7 @@ export function StepSelectTier({
       </div>
 
       {/* WSB Flash Deal pill — Hyperscaled & Vanta only */}
-      {(brand.id === 'hyperscaled' || brand.id === 'vanta') && (
+      {(brand.id === 'hyperscaled' || brand.id === 'vanta') && isWsbSaleBannerPublic() && (
         <div className="flex justify-center mt-6">
           <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
             <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />

@@ -220,7 +220,10 @@ describe("POST /api/register/preflight — registration cap enforcement", () => 
     expect(body.code).toBe("REGISTRATION_FREE_CAP");
     expect(body.error).toMatch(/full/i);
     // Cap check was passed the canonical DB price, not the client value.
-    expect(checkRegistrationCapMock).toHaveBeenCalledWith(FREE_TIER.priceUsdc);
+    expect(checkRegistrationCapMock).toHaveBeenCalledWith(FREE_TIER.priceUsdc, {
+      minerHotkey: MINER_HOTKEY,
+      accountSize: FREE_TIER.accountSize,
+    });
   });
 
   it("rejects with 403 + REGISTRATION_PAID_CAP when paid cap is reached", async () => {
@@ -235,7 +238,10 @@ describe("POST /api/register/preflight — registration cap enforcement", () => 
     expect(res.status).toBe(403);
     const body = await res.json();
     expect(body.code).toBe("REGISTRATION_PAID_CAP");
-    expect(checkRegistrationCapMock).toHaveBeenCalledWith(PAID_TIER.priceUsdc);
+    expect(checkRegistrationCapMock).toHaveBeenCalledWith(PAID_TIER.priceUsdc, {
+      minerHotkey: MINER_HOTKEY,
+      accountSize: PAID_TIER.accountSize,
+    });
   });
 
   it("does not consult the validator when blocked by a cap", async () => {

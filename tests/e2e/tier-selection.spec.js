@@ -7,6 +7,7 @@ import {
   pricingCardByAccountSize,
   tierCardByAccountSize,
 } from "./fixtures/onboarding.js";
+import { listPriceUsdcFromDbTier } from "../../lib/wsb-tier-list-price.js";
 
 // The cheapest spec in the suite: no DB writes, no wallet, no
 // registration. Just asserts the wizard's tier list and the marketing
@@ -70,7 +71,9 @@ test.describe("Tier selection", () => {
         .locator('[data-testid="pricing-tier-launch-price"]')
         .innerText();
       const displayedNumber = Number(displayed.replace(/[^\d.]/g, ""));
-      const expectedNumber = Math.round(Number(tier.priceUsdc));
+      const expectedNumber = Math.round(
+        listPriceUsdcFromDbTier("vanta", tier.accountSize, Number(tier.priceUsdc)),
+      );
       expect(
         Math.round(displayedNumber),
         `tier accountSize=${tier.accountSize} expected price ${expectedNumber}`,

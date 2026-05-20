@@ -3,15 +3,20 @@ import * as Sentry from "@sentry/nextjs";
 import { getMinerBySlug, getTiersForMiner } from "@/lib/miners";
 import { TIERS as TIER_META } from "@/lib/constants";
 import { isAnyDevTestWallet, DEV_TEST_PRICE } from "@/lib/dev-test";
+import { listPriceUsdcFromDbTier } from "@/lib/wsb-tier-list-price";
 
-function enrichTier(dbTier, index) {
+function enrichTier(dbTier, index, minerSlug) {
   const meta = TIER_META.find((t) => t.accountSize === dbTier.accountSize);
   return {
     id: meta?.id || `tier-${index}`,
     name: meta?.name || `$${dbTier.accountSize / 1000}K`,
     accountSize: dbTier.accountSize,
     fullPrice: meta?.fullPrice ?? null,
-    promoPrice: Number(dbTier.priceUsdc),
+    promoPrice: listPriceUsdcFromDbTier(
+      minerSlug,
+      dbTier.accountSize,
+      Number(dbTier.priceUsdc),
+    ),
     badge: meta?.badge ?? null,
     details: meta?.details ?? [],
   };
@@ -38,7 +43,7 @@ export async function GET(request, { params }) {
       slug: miner.slug,
       usdcWallet: miner.usdcWallet,
       tiers: activeTiers.map((t, i) => {
-        const enriched = enrichTier(t, i);
+        const enriched = enrichTier(t, i, miner.slug);
         if (devMode) enriched.promoPrice = DEV_TEST_PRICE;
         return enriched;
       }),

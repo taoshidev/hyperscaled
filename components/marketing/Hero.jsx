@@ -10,6 +10,7 @@ import dynamic from 'next/dynamic'
 const BeamsBg = dynamic(() => import('./BeamsBg'), { ssr: false })
 import PromoBanner from './PromoBanner'
 import { useBrand, useBrandHref } from '@/lib/brand'
+import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
@@ -32,6 +33,7 @@ const cardVariants = {
 export default function Hero() {
   const brand = useBrand()
   const brandHref = useBrandHref()
+  const withQS = useWithPreservedQuery()
 
   return (
     <section className={`relative min-h-[100dvh] flex flex-col overflow-hidden ${brand.parentSite ? 'pt-24' : 'pt-16'}`}>
@@ -59,7 +61,7 @@ export default function Hero() {
             {/* Eyebrow */}
             <motion.div variants={itemVariants} className="mb-6">
               <Link
-                href={brandHref('/register')}
+                href={withQS(brandHref('/register'))}
                 onClick={() => trackCtaClick({ label: 'Free $1k Eyebrow', location: 'hero_eyebrow' })}
                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-teal-400/20 bg-teal-400/8 text-xs text-teal-400 font-medium hover:bg-teal-400/12 transition-colors"
               >
@@ -88,7 +90,7 @@ export default function Hero() {
             {/* CTA buttons */}
             <motion.div variants={itemVariants} className="flex flex-col items-center sm:items-start sm:flex-row gap-3 mb-10">
               <Link
-                href={brandHref('/register')}
+                href={withQS(brandHref('/register'))}
                 onClick={() => trackCtaClick({ label: 'Start Your Challenge', location: 'hero' })}
                 className="shiny-cta px-6 py-3 min-h-12 whitespace-nowrap text-center"
               >

@@ -11,6 +11,7 @@ import {
 import RulesTable from '@/components/shared/RulesTable'
 import { EVAL_RULES, getFundedRules, SCALING_PATH, BUYING_POWER_BY_SIZE, WEIGHT_LIMITS, FEE_RULES, TRADABLE_PAIRS } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
+import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
 
 /* ───────────────────────────────────────────────
@@ -734,6 +735,7 @@ function KYCSection() {
 function ProtocolSection() {
   const brand = useBrand()
   const brandHref = useBrandHref()
+  const withQS = useWithPreservedQuery()
   return (
     <section id="protocol" className="px-6 pb-24 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
@@ -751,7 +753,7 @@ function ProtocolSection() {
 
         <div className="mt-8">
           <Link
-            href={brandHref('/register')}
+            href={withQS(brandHref('/register'))}
             onClick={() => trackCtaClick({ label: 'Start Your Challenge', location: 'rules_bottom' })}
             className="text-sm text-teal-400 hover:text-teal-300 transition-colors inline-flex items-center gap-1.5"
           >

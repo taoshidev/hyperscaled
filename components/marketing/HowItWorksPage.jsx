@@ -25,6 +25,7 @@ import {
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import PricingPreview from '@/components/marketing/PricingPreview'
 import { useBrand, useBrandHref } from '@/lib/brand'
+import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
@@ -35,6 +36,7 @@ const spring = { type: 'spring', stiffness: 100, damping: 20 }
 function PageHero() {
   const brand = useBrand()
   const brandHref = useBrandHref()
+  const withQS = useWithPreservedQuery()
   const heroTitle =
     brand.id === 'beanstock'
       ? `Trade on Hyperliquid. Get ${brand.accountType} by Beanstock.`
@@ -70,7 +72,7 @@ function PageHero() {
           className="mt-8"
         >
           <Link
-            href={brandHref('/register')}
+            href={withQS(brandHref('/register'))}
             onClick={() => trackCtaClick({ label: 'Start Your Challenge', location: 'how_it_works_hero' })}
             className="shiny-cta inline-flex items-center gap-1.5 px-6 py-3 min-h-12"
           >
@@ -184,6 +186,7 @@ const SCALING_QUALIFICATIONS = [
 
 function StepCard({ step, index }) {
   const brandHref = useBrandHref()
+  const withQS = useWithPreservedQuery()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
@@ -254,7 +257,7 @@ function StepCard({ step, index }) {
           </p>
           {step.cta && (
             <Link
-              href={brandHref('/register')}
+              href={withQS(brandHref('/register'))}
               onClick={() => trackCtaClick({ label: 'Get started', location: 'how_it_works_step' })}
               className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-teal-400 hover:text-teal-300 transition-colors"
             >

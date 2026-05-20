@@ -6,10 +6,13 @@ import { motion, useInView } from 'framer-motion'
 import { ArrowRight, Star } from '@phosphor-icons/react'
 import { PRICING_TIERS, parseTierAccountSize } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
+import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
 import { useRegistrationCapacity } from '@/hooks/use-registration-capacity'
 import { isFreeTierForRegistration } from '@/lib/registration-tier-helpers'
 import { RegistrationCapacityWaitlist } from '@/components/marketing/RegistrationCapacityWaitlist'
+import { isWsbSaleBannerPublic } from '@/lib/wsb-sale-banner-public'
+import { capacityMinerSlugForBrandId } from '@/lib/capacity-miner-slug'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -24,7 +27,8 @@ function tierBadge(tier) {
 export default function PricingPreview({ tiers = PRICING_TIERS }) {
   const brand = useBrand()
   const brandHref = useBrandHref()
-  const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity()
+  const withQS = useWithPreservedQuery()
+  const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity(capacityMinerSlugForBrandId(brand.id))
   tiers = brand.pricingTiers || tiers
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
@@ -106,7 +110,8 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
                 href={(() => {
                   const size = parseTierAccountSize(tier.accountSize)
                   const base = brandHref('/register')
-                  return size ? `${base}?tier=${size}` : base
+                  const path = size ? `${base}?tier=${size}` : base
+                  return withQS(path)
                 })()}
                 onClick={() => trackCtaClick({ label: tier.cta, location: `pricing_preview:${tier.name || tier.accountSize || 'unknown'}` })}
                 className={`w-full flex items-center justify-center gap-1.5 min-h-12 rounded-xl text-sm font-semibold transition-colors ${
@@ -131,7 +136,7 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
             className="mt-0"
           />
 
-          {(brand.id === 'hyperscaled' || brand.id === 'vanta') && (
+          {(brand.id === 'hyperscaled' || brand.id === 'vanta') && isWsbSaleBannerPublic() && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={inView ? { opacity: 1 } : {}}

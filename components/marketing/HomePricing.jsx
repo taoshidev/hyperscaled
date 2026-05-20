@@ -6,10 +6,13 @@ import Link from 'next/link'
 import { ArrowRight, Star } from '@phosphor-icons/react'
 import { PRICING_TIERS, parseTierAccountSize } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
+import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
 import { useRegistrationCapacity } from '@/hooks/use-registration-capacity'
 import { isFreeTierForRegistration } from '@/lib/registration-tier-helpers'
 import { RegistrationCapacityWaitlist } from '@/components/marketing/RegistrationCapacityWaitlist'
+import { isWsbSaleBannerPublic } from '@/lib/wsb-sale-banner-public'
+import { capacityMinerSlugForBrandId } from '@/lib/capacity-miner-slug'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -21,7 +24,7 @@ function tierBadge(tier) {
   return null
 }
 
-function PricingCard({ tier, index, brandHref, freeAtCapacity, paidAtCapacity }) {
+function PricingCard({ tier, index, brandHref, withQS, freeAtCapacity, paidAtCapacity }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
   const free = isFreeTierForRegistration(tier)
@@ -98,7 +101,7 @@ function PricingCard({ tier, index, brandHref, freeAtCapacity, paidAtCapacity })
         href={(() => {
           const size = parseTierAccountSize(tier.accountSize)
           const base = brandHref('/register')
-          return size ? `${base}?tier=${size}` : base
+          return withQS(size ? `${base}?tier=${size}` : base)
         })()}
         onClick={() => trackCtaClick({ label: tier.cta, location: `home_pricing:${tier.name || tier.accountSize || 'unknown'}` })}
         className={`mt-auto flex items-center justify-center gap-1.5 min-h-12 xl:min-h-10 rounded-xl text-sm xl:text-xs font-semibold transition-colors ${
@@ -118,7 +121,8 @@ function PricingCard({ tier, index, brandHref, freeAtCapacity, paidAtCapacity })
 export default function HomePricing({ tiers = PRICING_TIERS }) {
   const brand = useBrand()
   const brandHref = useBrandHref()
-  const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity()
+  const withQS = useWithPreservedQuery()
+  const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity(capacityMinerSlugForBrandId(brand.id))
   tiers = brand.pricingTiers || tiers
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
@@ -152,6 +156,7 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
               tier={tier}
               index={i}
               brandHref={brandHref}
+              withQS={withQS}
               freeAtCapacity={freeAtCapacity}
               paidAtCapacity={paidAtCapacity}
             />
@@ -161,7 +166,7 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
         <RegistrationCapacityWaitlist paidAtCapacity={paidAtCapacity} />
 
         {/* WSB Flash Deal pill — Hyperscaled & Vanta only */}
-        {(brand.id === 'hyperscaled' || brand.id === 'vanta') && (
+        {(brand.id === 'hyperscaled' || brand.id === 'vanta') && isWsbSaleBannerPublic() && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={inView ? { opacity: 1 } : {}}

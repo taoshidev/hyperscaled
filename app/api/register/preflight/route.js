@@ -5,9 +5,9 @@ import { getDb } from "@/lib/db";
 import { registrations } from "@/lib/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
-import { isAnyDevTestWallet, DEV_TEST_PRICE } from "@/lib/dev-test";
 import { reportError } from "@/lib/errors";
 import { checkRegistrationCap } from "@/lib/registration-capacity";
+import { evaluateRegistrationPricing } from "@/lib/registration-pricing";
 
 // POST /api/register/preflight
 // Runs every check that /api/register runs before payment, so callers on the
@@ -37,6 +37,14 @@ export async function POST(request) {
     hlTransferSender,
   } = body || {};
 
+  // Coupon code travels on `x-coupon-code` (see app/api/register/route.js).
+  // Body fallback is preserved for older clients during the rollout window.
+  const couponCodeFromHeader = request.headers.get("x-coupon-code");
+  const couponCode =
+    (typeof couponCodeFromHeader === "string" && couponCodeFromHeader.trim().length > 0
+      ? couponCodeFromHeader
+      : body?.couponCode) || null;
+
   console.info("[REGISTRATION][preflight] body parsed", {
     reqId,
     minerSlug,
@@ -46,6 +54,8 @@ export async function POST(request) {
     payoutAddress,
     hasEmail: Boolean(email),
     hlTransferSender,
+    couponCodeProvided: typeof couponCode === "string" && couponCode.trim().length > 0,
+    couponCodeSource: couponCodeFromHeader ? "header" : (body?.couponCode ? "body" : "none"),
   });
 
   if (!minerSlug || !hlAddress || !accountSize || tierIndex == null) {
@@ -108,7 +118,10 @@ export async function POST(request) {
   // input — so a paid tier can't sneak through the free bucket. Existing
   // rows for this hl_address don't bypass the cap; the duplicate check
   // below still runs to surface "already registered" before the user pays.
-  const capRejection = await checkRegistrationCap(tier.priceUsdc);
+  const capRejection = await checkRegistrationCap(tier.priceUsdc, {
+    minerHotkey: miner.hotkey,
+    accountSize: tier.accountSize,
+  });
   if (capRejection) {
     console.warn("[REGISTRATION][preflight] blocked — registration cap reached", {
       reqId,
@@ -212,16 +225,46 @@ export async function POST(request) {
     // Fall through — better to let the user try than block on a transient DB error.
   }
 
-  const price = Number(tier.priceUsdc);
-  const devTest = isAnyDevTestWallet(hlAddress, hlTransferSender);
-  const effectivePrice = devTest ? DEV_TEST_PRICE : price;
+  const pricing = await evaluateRegistrationPricing(
+    db,
+    miner,
+    tier,
+    hlAddress,
+    hlTransferSender,
+    email,
+    couponCode,
+  );
+  if (!pricing.ok) {
+    console.warn("[REGISTRATION][preflight] coupon/pricing rejection", {
+      reqId,
+      error: pricing.error,
+    });
+    return NextResponse.json({ error: pricing.error }, { status: 400 });
+  }
 
-  console.info("[REGISTRATION][preflight] ok", { reqId, price, effectivePrice, devTest });
+  const price = pricing.tierListPrice;
+  const effectivePrice = pricing.effectivePrice;
+  const devTest = pricing.devTest;
+
+  console.info("[REGISTRATION][preflight] ok", {
+    reqId,
+    price,
+    effectivePrice,
+    devTest,
+    hasCoupon: Boolean(pricing.couponMeta),
+    tierSlug: pricing.tierSlug,
+  });
 
   return NextResponse.json({
     ok: true,
     price,
     effectivePrice,
     devTest,
+    ...(pricing.couponMeta
+      ? {
+          couponApplied: true,
+          discountAmount: pricing.discountAmount,
+        }
+      : { couponApplied: false }),
   });
 }
