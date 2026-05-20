@@ -80,4 +80,5 @@ jobs:
           JOLLY_GREEN_HOTKEY: ${{ secrets.JOLLY_GREEN_HOTKEY }}
           JOLLY_GREEN_API_URL: ${{ secrets.JOLLY_GREEN_API_URL }}
           JOLLY_GREEN_API_KEY: ${{ secrets.JOLLY_GREEN_API_KEY }}
+          COMMAND_CENTER_STAFF_WALLETS: ${{ secrets.COMMAND_CENTER_STAFF_WALLETS }}
         run: pnpm run db:seed
