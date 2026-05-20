@@ -9,18 +9,14 @@ const nextConfig = {
   },
   // Keep Node-only libs external so webpack doesn’t omit them from Vercel’s traced bundle.
   // lib/db dynamically imports Cloud SQL Connector when CLOUD_SQL_INSTANCE_CONNECTION_NAME is set.
+  // Do not use outputFileTracingIncludes with '/*' here — it blows up every function’s trace
+  // (hundreds of MB, invalid serverless packages on Vercel). Removing webpackIgnore on those
+  // imports in lib/db + listing packages here is enough for NFT to trace them.
   serverExternalPackages: [
     "nodemailer",
     "@google-cloud/cloud-sql-connector",
     "google-auth-library",
   ],
-  // Dynamic/externally resolved DB deps are easy to miss in the serverless trace; force-include.
-  outputFileTracingIncludes: {
-    "/*": [
-      "./node_modules/@google-cloud/cloud-sql-connector/**/*",
-      "./node_modules/google-auth-library/**/*",
-    ],
-  },
   webpack: (config, { isServer }) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
