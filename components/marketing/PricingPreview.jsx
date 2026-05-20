@@ -1,10 +1,11 @@
 'use client'
 
 import { useRef } from 'react'
+import Link from 'next/link'
 import { motion, useInView } from 'framer-motion'
 import { ArrowRight, Star } from '@phosphor-icons/react'
 import { PRICING_TIERS, parseTierAccountSize } from '@/lib/constants'
-import { useBrand } from '@/lib/brand'
+import { useBrand, useBrandHref } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
 import { useRegistrationCapacity } from '@/hooks/use-registration-capacity'
 import { isFreeTierForRegistration } from '@/lib/registration-tier-helpers'
@@ -22,6 +23,7 @@ function tierBadge(tier) {
 
 export default function PricingPreview({ tiers = PRICING_TIERS }) {
   const brand = useBrand()
+  const brandHref = useBrandHref()
   const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity()
   tiers = brand.pricingTiers || tiers
   const ref = useRef(null)
@@ -100,10 +102,11 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
                   {free ? "Limit reached" : "Sold out — join waitlist"}
                 </span>
               ) : (
-              <a
+              <Link
                 href={(() => {
                   const size = parseTierAccountSize(tier.accountSize)
-                  return size ? `/register?tier=${size}` : '/register'
+                  const base = brandHref('/register')
+                  return size ? `${base}?tier=${size}` : base
                 })()}
                 onClick={() => trackCtaClick({ label: tier.cta, location: `pricing_preview:${tier.name || tier.accountSize || 'unknown'}` })}
                 className={`w-full flex items-center justify-center gap-1.5 min-h-12 rounded-xl text-sm font-semibold transition-colors ${
@@ -114,7 +117,7 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
               >
                 {tier.cta}
                 <ArrowRight size={14} weight="bold" />
-              </a>
+              </Link>
               )}
               </div>
             </motion.div>

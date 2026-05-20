@@ -5,6 +5,9 @@ import Link from 'next/link'
 import { ArrowRight, TrendUp, ArrowsClockwise } from '@phosphor-icons/react'
 import { HERO_STATS } from '@/lib/constants'
 import LiquidCrystalBg from './LiquidCrystalBg'
+import dynamic from 'next/dynamic'
+
+const BeamsBg = dynamic(() => import('./BeamsBg'), { ssr: false })
 import PromoBanner from './PromoBanner'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
@@ -32,9 +35,13 @@ export default function Hero() {
 
   return (
     <section className={`relative min-h-[100dvh] flex flex-col overflow-hidden ${brand.parentSite ? 'pt-24' : 'pt-16'}`}>
-      {/* Liquid crystal shader background */}
-      {brand.showLiquidCrystal && <LiquidCrystalBg className="pointer-events-none" />}
-      <div className="absolute inset-0 bg-zinc-950/60 pointer-events-none" />
+      {/* Animated shader background */}
+      {brand.showLiquidCrystal && brand.heroBeams
+        ? <BeamsBg className="pointer-events-none" />
+        : brand.showLiquidCrystal
+          ? <LiquidCrystalBg className="pointer-events-none" />
+          : null}
+      <div className={`absolute inset-0 pointer-events-none ${brand.heroBeams ? 'bg-zinc-950/30' : 'bg-zinc-950/60'}`} />
 
       {/* Promo banner — scrolls with hero */}
       <PromoBanner />
@@ -101,7 +108,7 @@ export default function Hero() {
 
             {/* Inline stats */}
             <motion.div variants={itemVariants} className="flex flex-wrap gap-x-8 gap-y-3">
-              {HERO_STATS.map((stat) => (
+              {(brand.heroStats || HERO_STATS).map((stat) => (
                 <div key={stat.label} className="flex items-baseline gap-2">
                   <span className="text-lg font-bold tracking-tight text-white">{stat.value}</span>
                   <span className="text-sm text-zinc-500">{stat.label}</span>

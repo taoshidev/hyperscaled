@@ -4,10 +4,10 @@ import { JsonLd } from '@/components/shared/JsonLd'
 import { FAQ_ITEMS } from '@/lib/constants'
 
 export const metadata = buildMetadata({
-  title: 'FAQ — Bitcast Scaled Trading Questions',
-  description: 'Common questions about Bitcast — challenges, payouts, KYC, account scaling, and how the protocol works.',
-  ogTitle: 'Bitcast FAQ — Everything You Need to Know',
-  ogDescription: 'Everything you need to know about Bitcast scaled trading. How the challenge works, when you get paid, how scaling works, and what KYC is required.',
+  title: 'FAQ — HyperFunded Trading Questions',
+  description: 'Common questions about HyperFunded challenges, payouts, KYC, account scaling, supported markets, and how the protocol works.',
+  ogTitle: 'HyperFunded FAQ — Everything You Need to Know',
+  ogDescription: 'Everything you need to know about HyperFunded scaled trading. How the challenge works, when you get paid, how scaling works, and what KYC is required.',
   path: '/bitcast/faq',
   brand: 'bitcast',
 })

@@ -130,7 +130,7 @@ export default function Solution() {
                 <span className="text-xs font-semibold text-teal-400">{brand.name}</span>
               </div>
               <div className="p-4 text-center">
-                <span className="text-xs text-zinc-400">FTMO</span>
+                <span className="text-xs text-zinc-400">{brand.competitorLabel || 'FTMO'}</span>
               </div>
             </div>
 

@@ -24,7 +24,7 @@ const BRANDS = [
   {
     slug: "bitcast",
     expectedExitHref: "/bitcast",
-    expectedLogoHref: "https://bitcast.network",
+    expectedLogoHref: "https://hyperfunded.co",
     accountSizeFilter: () => true,
   },
   {

@@ -7,8 +7,8 @@ import { unstable_cache } from "next/cache"
 export const metadata = buildMetadata({
   title: "Start Your Challenge",
   description: "Choose your scaled account size and begin your one-step challenge on Hyperliquid. No recurring fees. 100% of performance rewards are yours.",
-  ogTitle: "Start Your Challenge — Bitcast Scaled Trading",
-  ogDescription: "Choose from $5K to $100K. One-time USDC fee. Pass the challenge. Keep 100% of your profits.",
+  ogTitle: "Start Your Challenge — HyperFunded Scaled Trading",
+  ogDescription: "Choose from $5K to $100K. One-time USDC fee. Pass the challenge. Keep 100% of eligible rewards.",
   path: "/bitcast/register",
   brand: "bitcast",
 })
@@ -60,9 +60,9 @@ export default async function BitcastRegisterPage() {
       initialMinerSlug={MINER_SLUG}
       initialMinerTiers={initialMinerTiers}
       initialPaymentWallet={initialPaymentWallet}
-      logo="/bitcast-logo.svg"
-      logoAlt="Bitcast"
-      logoHref="https://bitcast.network"
+      logo="/hyperfunded-logo.png"
+      logoAlt="HyperFunded"
+      logoHref="https://hyperfunded.co"
       brandVariant="bitcast"
     />
   )
