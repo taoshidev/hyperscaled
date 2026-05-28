@@ -1,7 +1,8 @@
 import HowItWorksPage from '@/components/marketing/HowItWorksPage'
 import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
-import { PRICING_TIERS } from '@/lib/constants'
+import { fetchDbPricingTiers } from '@/lib/pricing-db'
+import { pricingMinerSlugForBrandId } from '@/lib/pricing-miner-slug'
 
 export const metadata = buildMetadata({
   title: 'How It Works — HyperFunded',
@@ -25,11 +26,12 @@ const HOW_TO_SCHEMA = {
   ],
 }
 
-export default function BitcastHowItWorks() {
+export default async function BitcastHowItWorks() {
+  const tiers = await fetchDbPricingTiers(pricingMinerSlugForBrandId('bitcast'))
   return (
     <>
       <JsonLd data={HOW_TO_SCHEMA} />
-      <HowItWorksPage tiers={PRICING_TIERS} />
+      <HowItWorksPage tiers={tiers} />
     </>
   )
 }

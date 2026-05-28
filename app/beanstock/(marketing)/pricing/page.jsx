@@ -2,6 +2,7 @@ import PricingPage from '@/components/marketing/PricingPage'
 import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { fetchDbPricingTiers } from '@/lib/pricing-db'
+import { pricingMinerSlugForBrandId } from '@/lib/pricing-miner-slug'
 
 export const metadata = buildMetadata({
   title: 'Pricing — Beanstock Funded Accounts',
@@ -15,7 +16,7 @@ export const metadata = buildMetadata({
 })
 
 export default async function BeanstockPricing() {
-  const tiers = await fetchDbPricingTiers('beanstock')
+  const tiers = await fetchDbPricingTiers(pricingMinerSlugForBrandId('beanstock'))
   const productSchemas = tiers.map((tier) => ({
     "@context": "https://schema.org",
     "@type": "Product",
