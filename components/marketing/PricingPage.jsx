@@ -470,9 +470,9 @@ function PricingFAQSection() {
 }
 
 /* ── Page Compose ── */
-export default function PricingPage({ tiers = PRICING_TIERS }) {
+export default function PricingPage({ tiers }) {
   const brand = useBrand()
-  const resolvedTiers = brand.pricingTiers || tiers
+  const resolvedTiers = tiers ?? brand.pricingTiers ?? PRICING_TIERS
   const showWsbPromo =
     (brand.id === 'hyperscaled' || brand.id === 'vanta') &&
     isWsbSaleBannerPublic()

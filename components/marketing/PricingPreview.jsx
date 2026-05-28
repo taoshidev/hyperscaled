@@ -24,12 +24,12 @@ function tierBadge(tier) {
   return null
 }
 
-export default function PricingPreview({ tiers = PRICING_TIERS }) {
+export default function PricingPreview({ tiers }) {
   const brand = useBrand()
   const brandHref = useBrandHref()
   const withQS = useWithPreservedQuery()
   const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity(capacityMinerSlugForBrandId(brand.id))
-  tiers = brand.pricingTiers || tiers
+  const resolvedTiers = tiers ?? brand.pricingTiers ?? PRICING_TIERS
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -50,8 +50,8 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
           </h2>
         </motion.div>
 
-        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-4 xl:gap-3 items-stretch`}>
-          {tiers.map((tier, i) => {
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${resolvedTiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-4 xl:gap-3 items-stretch`}>
+          {resolvedTiers.map((tier, i) => {
             const free = isFreeTierForRegistration(tier)
             const soldOut = (free && freeAtCapacity) || (!free && paidAtCapacity)
             return (

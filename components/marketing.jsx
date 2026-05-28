@@ -12,7 +12,7 @@ import { useBrand } from '@/lib/brand'
 
 export default function App({ tiers }) {
   const brand = useBrand()
-  const resolvedTiers = brand.pricingTiers || tiers
+  const resolvedTiers = tiers ?? brand.pricingTiers
 
   return (
     <>
