@@ -80,5 +80,9 @@ jobs:
           JOLLY_GREEN_HOTKEY: ${{ secrets.JOLLY_GREEN_HOTKEY }}
           JOLLY_GREEN_API_URL: ${{ secrets.JOLLY_GREEN_API_URL }}
           JOLLY_GREEN_API_KEY: ${{ secrets.JOLLY_GREEN_API_KEY }}
+          HYPERFUNDED_USDC_WALLET: ${{ secrets.HYPERFUNDED_USDC_WALLET }}
+          HYPERFUNDED_HOTKEY: ${{ secrets.HYPERFUNDED_HOTKEY }}
+          HYPERFUNDED_API_URL: ${{ secrets.HYPERFUNDED_API_URL }}
+          HYPERFUNDED_API_KEY: ${{ secrets.HYPERFUNDED_API_KEY }}
           COMMAND_CENTER_STAFF_WALLETS: ${{ secrets.COMMAND_CENTER_STAFF_WALLETS }}
         run: pnpm run db:seed
