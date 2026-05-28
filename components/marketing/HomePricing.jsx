@@ -118,12 +118,12 @@ function PricingCard({ tier, index, brandHref, withQS, freeAtCapacity, paidAtCap
   )
 }
 
-export default function HomePricing({ tiers = PRICING_TIERS }) {
+export default function HomePricing({ tiers }) {
   const brand = useBrand()
   const brandHref = useBrandHref()
   const withQS = useWithPreservedQuery()
   const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity(capacityMinerSlugForBrandId(brand.id))
-  tiers = brand.pricingTiers || tiers
+  const resolvedTiers = tiers ?? brand.pricingTiers ?? PRICING_TIERS
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -149,8 +149,8 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
           </div>
         </motion.div>
 
-        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-6 md:gap-5 xl:gap-3 items-stretch`}>
-          {tiers.map((tier, i) => (
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${resolvedTiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-6 md:gap-5 xl:gap-3 items-stretch`}>
+          {resolvedTiers.map((tier, i) => (
             <PricingCard
               key={tier.id}
               tier={tier}

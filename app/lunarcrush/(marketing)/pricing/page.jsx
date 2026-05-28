@@ -1,7 +1,7 @@
 import PricingPage from '@/components/marketing/PricingPage'
 import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
-import { fetchDbPricingTiers } from '@/lib/pricing-db'
+import { PRICING_TIERS } from '@/lib/constants'
 
 export const metadata = buildMetadata({
   title: 'Pricing — LunarCrush Funded Accounts',
@@ -13,7 +13,7 @@ export const metadata = buildMetadata({
 })
 
 export default async function LunarCrushPricing() {
-  const tiers = await fetchDbPricingTiers('lunarcrush')
+  const tiers = PRICING_TIERS
   const productSchemas = tiers.map((tier) => ({
     "@context": "https://schema.org",
     "@type": "Product",
