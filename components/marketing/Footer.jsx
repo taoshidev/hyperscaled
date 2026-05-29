@@ -12,9 +12,11 @@ function useFooterLinks() {
       { label: 'How It Works', href: brandHref('/how-it-works') },
       { label: 'Pricing', href: brandHref('/pricing') },
       { label: 'Rules', href: brandHref('/rules') },
-      { label: 'Leaderboard', href: brandHref('/leaderboard') },
+      // Leaderboard is gated pre-launch for compliance-controlled brands
+      // (rankings/returns/payout figures are High-Risk Material pending Vanta approval).
+      !brand.compliance && { label: 'Leaderboard', href: brandHref('/leaderboard') },
       { label: 'For Agents', href: brandHref('/agents') },
-    ],
+    ].filter(Boolean),
     Community: [
       brand.socials.twitter && { label: 'Twitter / X', href: brand.socials.twitter, external: true, icon: TwitterLogo },
       brand.socials.discord && { label: 'Discord', href: brand.socials.discord, external: true, icon: DiscordLogo },
@@ -111,6 +113,15 @@ export default function Footer() {
             </div>
           ))}
         </div>
+
+        {/* Compliance disclosure block (brands with a compliance config only) */}
+        {brand.compliance?.footerBlock && (
+          <div className="border-t border-white/[0.06] pt-8 mb-8">
+            <p className="text-[11px] leading-relaxed text-zinc-600 max-w-[110ch] [text-wrap:pretty]">
+              {brand.compliance.footerBlock}
+            </p>
+          </div>
+        )}
 
         {/* Bottom bar */}
         <div className="border-t border-white/[0.06] pt-8 flex flex-col md:flex-row items-center justify-between gap-4">

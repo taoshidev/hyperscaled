@@ -65,7 +65,7 @@ function DashboardMockup() {
   )
 }
 
-function PayoutMockup() {
+function PayoutMockup({ isHF = false }) {
   const bars = [30, 22, 35, 28, 40, 72, 88]
   return (
     <div className="w-full max-w-sm rounded-xl border border-white/[0.08] bg-zinc-900 overflow-hidden">
@@ -73,9 +73,11 @@ function PayoutMockup() {
         {/* Header */}
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs text-zinc-500 tracking-widest uppercase font-mono">Total Payouts</span>
-          <span className="text-xs font-semibold text-teal-400 bg-teal-400/10 border border-teal-400/20 px-2 py-0.5 rounded-full">
-            +6.0% APY
-          </span>
+          {!isHF && (
+            <span className="text-xs font-semibold text-teal-400 bg-teal-400/10 border border-teal-400/20 px-2 py-0.5 rounded-full">
+              +6.0% APY
+            </span>
+          )}
         </div>
         <div className="text-2xl font-bold tracking-tight text-white mb-4">$150,432.01</div>
 
@@ -109,6 +111,7 @@ function PayoutMockup() {
 
 export default function HowItWorks({ tiers = [] }) {
   const brand = useBrand()
+  const isHF = brand.id === 'bitcast'
   const steps = [
     {
       number: '01',
@@ -128,8 +131,10 @@ export default function HowItWorks({ tiers = [] }) {
       number: '03',
       icon: Trophy,
       title: 'Hit the Target. Get Paid.',
-      body: `Hit the 10% profit target to pass the ${brand.name} Challenge and activate your ${brand.accountType} account immediately. Payouts are delivered to your wallet every 30 days, and you keep 100% of everything you\u00a0earn.`,
-      mockup: <PayoutMockup />,
+      body: isHF
+        ? `Hit the 10% profit target to pass the ${brand.name} Challenge and activate your ${brand.accountType} account immediately. Payouts are delivered to your wallet every 30 days as eligible performance-based rewards \u2014 ${brand.operatorName} retains 0% of eligible performance-based\u00a0rewards.`
+        : `Hit the 10% profit target to pass the ${brand.name} Challenge and activate your ${brand.accountType} account immediately. Payouts are delivered to your wallet every 30 days, and you keep 100% of everything you\u00a0earn.`,
+      mockup: <PayoutMockup isHF={isHF} />,
     },
   ]
 

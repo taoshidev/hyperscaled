@@ -16,7 +16,36 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: spring },
 }
 
-const painPoints = [
+// HyperFunded (bitcast): non-comparative, factual statements about HyperFunded only
+// (no competitor accusations) — FTC §5 / Lanham Act compliance.
+const bitcastPainPoints = [
+  {
+    number: '01',
+    title: 'Open access to a simulated evaluation.',
+    body: 'HyperFunded opens the Vanta-powered simulated Challenge to traders across many countries, with clear rules published upfront.',
+    accentColor: 'text-teal-400',
+    tagBg: 'bg-teal-400/8 border-teal-400/20',
+    tag: 'Open access',
+  },
+  {
+    number: '02',
+    title: 'Eligible rewards, not a profit split.',
+    body: 'HyperFunded is a Vanta-powered simulated evaluation. Invited Scaled Trader Program participants earn eligible performance-based rewards as independent-contractor compensation.',
+    accentColor: 'text-teal-400',
+    tagBg: 'bg-teal-400/8 border-teal-400/20',
+    tag: 'Simulated evaluation',
+  },
+  {
+    number: '03',
+    title: 'Automated, onchain reward delivery.',
+    body: 'Eligible performance-based rewards are delivered automatically and onchain, with every payout verifiable. Passing a Challenge does not guarantee an invitation to the Scaled Trader Program or any compensation.',
+    accentColor: 'text-teal-400',
+    tagBg: 'bg-teal-400/8 border-teal-400/20',
+    tag: 'Onchain delivery',
+  },
+]
+
+const defaultPainPoints = [
   {
     number: '01',
     title: 'Opaque rules and profit cuts lock out the best\u00a0traders.',
@@ -45,6 +74,8 @@ const painPoints = [
 
 export default function Problem() {
   const brand = useBrand()
+  const isBitcast = brand.id === 'bitcast'
+  const painPoints = isBitcast ? bitcastPainPoints : defaultPainPoints
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -62,12 +93,30 @@ export default function Problem() {
             The Problem
           </span>
           <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-2xl mb-5 text-balance">
-            Prop firms take up to 30%.{' '}
-            <span className="text-zinc-500">Then ghost you on&nbsp;payouts.</span>
+            {isBitcast ? (
+              <>
+                A simpler, simulated&nbsp;path.
+              </>
+            ) : (
+              <>
+                Prop firms take up to 30%.{' '}
+                <span className="text-zinc-500">Then ghost you on&nbsp;payouts.</span>
+              </>
+            )}
           </h2>
           <p className="text-base text-zinc-400 leading-relaxed max-w-[60ch] [text-wrap:pretty]">
-            Legacy {brand.accountType} trading is broken by design. KYC walls, profit extraction, and centralized
-            discretion mean profitable traders are systematically&nbsp;underserved.
+            {isBitcast ? (
+              <>
+                HyperFunded is a Vanta-powered simulated {brand.accountType} evaluation. Rules are published
+                upfront, eligible performance-based rewards are delivered automatically onchain, and invited
+                Scaled Trader Program participants are compensated as independent&nbsp;contractors.
+              </>
+            ) : (
+              <>
+                Legacy {brand.accountType} trading is broken by design. KYC walls, profit extraction, and centralized
+                discretion mean profitable traders are systematically&nbsp;underserved.
+              </>
+            )}
           </p>
         </motion.div>
 
@@ -115,7 +164,9 @@ export default function Problem() {
           className="mt-10 border-l-2 border-teal-400 pl-5 py-1"
         >
           <p className="text-sm font-semibold text-teal-300 leading-relaxed max-w-[65ch]">
-            {brand.name} pays out 100% of rewards to traders because our decentralized network is aligned with your success. No&nbsp;exceptions.
+            {isBitcast
+              ? 'Vanta retains 0% of eligible performance-based rewards for invited Scaled Trader Program participants. Rewards are based on simulated performance and paid as independent-contractor compensation — passing a Challenge does not guarantee an invitation or any compensation.'
+              : <>{brand.name} pays out 100% of rewards to traders because our decentralized network is aligned with your success. No&nbsp;exceptions.</>}
           </p>
         </motion.div>
       </div>

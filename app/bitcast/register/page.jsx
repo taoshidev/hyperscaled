@@ -7,9 +7,9 @@ import { listPriceUsdcFromDbTier } from "@/lib/wsb-tier-list-price"
 
 export const metadata = buildMetadata({
   title: "Start Your Challenge",
-  description: "Choose your scaled account size and begin your one-step challenge on Hyperliquid. No recurring fees. 100% of performance rewards are yours.",
+  description: "Choose your simulated scaled account size and begin your one-step Challenge on Hyperliquid. No recurring fees. Earn eligible performance-based rewards.",
   ogTitle: "Start Your Challenge — HyperFunded Scaled Trading",
-  ogDescription: "Choose from $5K to $100K. One-time USDC fee. Pass the challenge. Keep 100% of eligible rewards.",
+  ogDescription: "Choose from $5K to $100K. One-time USDC fee. Pass the Challenge. Earn eligible USDC rewards in a simulated scaled account.",
   path: "/bitcast/register",
   brand: "bitcast",
 })

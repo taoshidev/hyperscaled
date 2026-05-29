@@ -2,6 +2,9 @@ import FAQPage from '@/components/marketing/FAQPage'
 import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { FAQ_ITEMS } from '@/lib/constants'
+import { getBrandConfig, brandifyText } from '@/lib/brand-config'
+
+const brand = getBrandConfig('bitcast')
 
 export const metadata = buildMetadata({
   title: 'FAQ — HyperFunded Trading Questions',
@@ -17,11 +20,17 @@ function buildFaqSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: allItems.map((item) => ({
-      "@type": "Question",
-      name: item.question,
-      acceptedAnswer: { "@type": "Answer", text: item.answer },
-    })),
+    mainEntity: allItems.map((item) => {
+      // Prefer compliant overrides, then apply the brand compliance safety-net
+      const ov = brand.faqOverrides?.[item.id]
+      const q = brandifyText(ov?.question ?? item.question, brand)
+      const a = brandifyText(ov?.answer ?? item.answer, brand)
+      return {
+        "@type": "Question",
+        name: q,
+        acceptedAnswer: { "@type": "Answer", text: a },
+      }
+    }),
   }
 }
 

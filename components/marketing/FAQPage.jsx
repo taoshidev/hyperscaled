@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, DiscordLogo, Envelope } from '@phosphor-icons/react'
 import FAQAccordion from '@/components/shared/FAQAccordion'
 import { FAQ_ITEMS } from '@/lib/constants'
-import { useBrand } from '@/lib/brand'
+import { useBrand, brandifyText } from '@/lib/brand'
 
 /* ───────────────────────────────────────────────
    TOC sections — derived from FAQ_ITEMS categories
@@ -28,6 +28,7 @@ function handleTocClick(e, id) {
 
 function TableOfContents({ activeId }) {
   const navRef = useRef(null)
+  const brand = useBrand()
 
   useEffect(() => {
     function check() {
@@ -64,7 +65,7 @@ function TableOfContents({ activeId }) {
                     : 'text-zinc-600 hover:text-zinc-400'
                 }`}
               >
-                {s.label}
+                {brandifyText(s.label, brand)}
               </a>
             </li>
           ))}
@@ -86,7 +87,7 @@ function TableOfContents({ activeId }) {
                     : 'text-zinc-500 hover:text-zinc-300'
                 }`}
               >
-                {s.label}
+                {brandifyText(s.label, brand)}
               </a>
             ))}
           </div>

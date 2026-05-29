@@ -188,7 +188,9 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
           className="text-center text-sm text-zinc-500 mt-4 max-w-[60ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time&nbsp;limit
+          {brand.id === 'bitcast'
+            ? 'All tiers: 10% profit target · 5% max drawdown · eligible USDC rewards · Monthly payouts · No time limit'
+            : 'All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time limit'}
         </motion.p>
       </div>
     </section>

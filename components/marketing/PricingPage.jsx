@@ -20,6 +20,7 @@ import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
 import FAQAccordion from '@/components/shared/FAQAccordion'
 import PromoBanner from '@/components/marketing/PromoBanner'
+import ComplianceDisclosure from '@/components/marketing/ComplianceDisclosure'
 import { PRICING_TIERS, PRICING_FAQ, parseTierAccountSize } from '@/lib/constants'
 import { isWsbSaleBannerPublic } from '@/lib/wsb-sale-banner-public'
 import { useRegistrationCapacity } from '@/hooks/use-registration-capacity'
@@ -55,7 +56,9 @@ function PricingHero({ showPromoBar }) {
           className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1]"
           style={{ textWrap: 'balance' }}
         >
-          One fee. One challenge. Keep everything you&nbsp;earn.
+          {brand.id === 'bitcast'
+            ? <>One fee. One challenge. Vanta-powered simulated scaled&nbsp;account.</>
+            : <>One fee. One challenge. Keep everything you&nbsp;earn.</>}
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 16 }}
@@ -73,6 +76,7 @@ function PricingHero({ showPromoBar }) {
 
 /* ── Single Pricing Card ── */
 function PricingCard({ tier, index, freeAtCapacity, paidAtCapacity }) {
+  const brand = useBrand()
   const brandHref = useBrandHref()
   const withQS = useWithPreservedQuery()
   const ref = useRef(null)
@@ -172,6 +176,11 @@ function PricingCard({ tier, index, freeAtCapacity, paidAtCapacity }) {
         <ArrowRight size={14} weight="bold" />
       </Link>
       )}
+      {brand.id === 'bitcast' && free && (
+        <p className="mt-3 text-[11px] leading-snug text-zinc-600 text-center">
+          Simulated trading only — no funded or live trading account is created or provided.
+        </p>
+      )}
     </motion.div>
   )
 }
@@ -209,8 +218,16 @@ function PricingCards({ tiers, brandId }) {
         )}
       </div>
       <p className="text-center text-sm text-zinc-500 mt-4 max-w-[60ch] mx-auto" style={{ textWrap: 'balance' }}>
-        All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time&nbsp;limit
+        {brandId === 'bitcast'
+          ? 'All tiers: 10% profit target · 5% max drawdown · eligible USDC rewards · Monthly payouts · No time limit'
+          : 'All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time limit'}
       </p>
+      {brandId === 'bitcast' && (
+        <p className="text-center text-xs text-zinc-600 mt-2">Fees are paid to Vanta.</p>
+      )}
+      <div className="max-w-[1400px] mx-auto w-full flex justify-center">
+        <ComplianceDisclosure className="mt-8" />
+      </div>
     </section>
   )
 }
@@ -250,8 +267,29 @@ const INCLUDED_FEATURES = [
 ]
 
 function WhatsIncludedGrid() {
+  const brand = useBrand()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
+
+  const features =
+    brand.id === 'bitcast'
+      ? INCLUDED_FEATURES.map((feat) => {
+          if (feat.title === 'Monthly Payouts') {
+            return {
+              ...feat,
+              desc: 'Eligible Scaled Trader Program participants receive monthly USDC rewards.',
+            }
+          }
+          if (feat.title === '100% Profit Split') {
+            return {
+              ...feat,
+              title: 'Eligible Performance Rewards',
+              desc: brand.compliance.rewardLine,
+            }
+          }
+          return feat
+        })
+      : INCLUDED_FEATURES
 
   return (
     <section ref={ref} className="px-6 pb-20">
@@ -270,7 +308,7 @@ function WhatsIncludedGrid() {
           transition={{ ...spring, delay: 0.08 }}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
         >
-          {INCLUDED_FEATURES.map((feat) => {
+          {features.map((feat) => {
             const Icon = feat.icon
             return (
               <div
@@ -367,7 +405,9 @@ function ModelSection() {
   const bullets = [
     `A ${brand.accountType} account upon challenge completion`,
     'Verifiable payouts through onchain technology',
-    '100% profit split — you keep your earnings',
+    brand.id === 'bitcast'
+      ? 'Vanta retains 0% of eligible performance-based rewards'
+      : '100% profit split — you keep your earnings',
     'A system designed for trader success',
   ]
 

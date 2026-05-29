@@ -67,6 +67,9 @@ const features = [
     icon: CurrencyDollar,
     title: 'USDC In, USDC Out',
     body: 'Pay your registration fee in USDC, receive payouts in USDC. Direct to your wallet and verifiable\u00a0onchain.',
+    // HyperFunded (bitcast): clarify payee (Vanta) on the pay-in side and frame the
+    // pay-out side as eligible performance-based rewards.
+    bitcastBody: 'Pay your registration fee in USDC to Vanta, and receive eligible performance-based rewards in USDC. Direct to your wallet and verifiable\u00a0onchain.',
     span: 'md:col-span-5',
     large: false,
     extra: (
@@ -182,7 +185,7 @@ export default function Features() {
                   >
                     {feat.title}
                   </h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed [text-wrap:pretty]">{brandifyText(feat.body, brand)}</p>
+                  <p className="text-sm text-zinc-400 leading-relaxed [text-wrap:pretty]">{brandifyText(brand.id === 'bitcast' && feat.bitcastBody ? feat.bitcastBody : feat.body, brand)}</p>
                   {feat.extra}
                 </div>
               </motion.div>
