@@ -12,7 +12,6 @@ import PromoBanner from './PromoBanner'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
-import ComplianceDisclosure from '@/components/marketing/ComplianceDisclosure'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -122,7 +121,6 @@ export default function Hero() {
               ))}
             </motion.div>
 
-            <ComplianceDisclosure className="mt-8 max-w-[60ch]" />
 
           </motion.div>
 
@@ -162,13 +160,13 @@ export default function Hero() {
               {/* Balance */}
               <div className="mb-4">
                 <div className="text-xs text-zinc-500 mb-1">Account Balance</div>
-                <div className="text-3xl font-bold tracking-tight text-teal-400">{isHF ? '— — —' : '$201,271.23'}</div>
+                <div className="text-3xl font-bold tracking-tight text-teal-400">$201,271.23</div>
               </div>
 
               {/* Payout */}
               <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] mb-4">
                 <span className="text-xs text-zinc-400">Current Period Expected Payout</span>
-                <span className="text-sm font-semibold text-white">{isHF ? '—' : '+$1,271.23'}</span>
+                <span className="text-sm font-semibold text-white">+$1,271.23</span>
               </div>
 
               {/* Open position */}
@@ -203,17 +201,8 @@ export default function Hero() {
               <div className="flex items-center gap-2 mb-4 p-3 rounded-xl bg-teal-400/5 border border-teal-400/10">
                 <TrendUp size={14} className="text-teal-400 shrink-0" />
                 <div className="text-xs text-zinc-400 leading-tight">
-                  {isHF ? (
-                    <>
-                      <span className="text-teal-400 font-semibold">— — —</span> All Time Returns · Sharpe{' '}
-                      <span className="text-white">—</span> / —
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-teal-400 font-semibold">+$100,000</span> All Time Returns · Sharpe{' '}
-                      <span className="text-white">9.32%</span> / 1.23
-                    </>
-                  )}
+                  <span className="text-teal-400 font-semibold">+$100,000</span> All Time Returns · Sharpe{' '}
+                  <span className="text-white">9.32%</span> / 1.23
                 </div>
               </div>
 

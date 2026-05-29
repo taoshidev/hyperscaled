@@ -107,7 +107,7 @@ export default function Problem() {
           <p className="text-base text-zinc-400 leading-relaxed max-w-[60ch] [text-wrap:pretty]">
             {isBitcast ? (
               <>
-                HyperFunded is a Vanta-powered simulated {brand.accountType} evaluation. Rules are published
+                HyperFunded is a Vanta-powered simulated scaled evaluation. Rules are published
                 upfront, eligible performance-based rewards are delivered automatically onchain, and invited
                 Scaled Trader Program participants are compensated as independent&nbsp;contractors.
               </>
@@ -156,19 +156,19 @@ export default function Problem() {
           ))}
         </motion.div>
 
-        {/* Callout — left border accent, no card */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ ...spring, delay: 0.5 }}
-          className="mt-10 border-l-2 border-teal-400 pl-5 py-1"
-        >
-          <p className="text-sm font-semibold text-teal-300 leading-relaxed max-w-[65ch]">
-            {isBitcast
-              ? 'Vanta retains 0% of eligible performance-based rewards for invited Scaled Trader Program participants. Rewards are based on simulated performance and paid as independent-contractor compensation — passing a Challenge does not guarantee an invitation or any compensation.'
-              : <>{brand.name} pays out 100% of rewards to traders because our decentralized network is aligned with your success. No&nbsp;exceptions.</>}
-          </p>
-        </motion.div>
+        {/* Callout — left border accent, no card (hidden for compliance brands) */}
+        {!isBitcast && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ ...spring, delay: 0.5 }}
+            className="mt-10 border-l-2 border-teal-400 pl-5 py-1"
+          >
+            <p className="text-sm font-semibold text-teal-300 leading-relaxed max-w-[65ch]">
+              {brand.name} pays out 100% of rewards to traders because our decentralized network is aligned with your success. No&nbsp;exceptions.
+            </p>
+          </motion.div>
+        )}
       </div>
     </section>
   )

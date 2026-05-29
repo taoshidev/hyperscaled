@@ -20,7 +20,6 @@ import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
 import FAQAccordion from '@/components/shared/FAQAccordion'
 import PromoBanner from '@/components/marketing/PromoBanner'
-import ComplianceDisclosure from '@/components/marketing/ComplianceDisclosure'
 import { PRICING_TIERS, PRICING_FAQ, parseTierAccountSize } from '@/lib/constants'
 import { isWsbSaleBannerPublic } from '@/lib/wsb-sale-banner-public'
 import { useRegistrationCapacity } from '@/hooks/use-registration-capacity'
@@ -226,7 +225,6 @@ function PricingCards({ tiers, brandId }) {
         <p className="text-center text-xs text-zinc-600 mt-2">Fees are paid to Vanta.</p>
       )}
       <div className="max-w-[1400px] mx-auto w-full flex justify-center">
-        <ComplianceDisclosure className="mt-8" />
       </div>
     </section>
   )
@@ -284,7 +282,7 @@ function WhatsIncludedGrid() {
             return {
               ...feat,
               title: 'Eligible Performance Rewards',
-              desc: brand.compliance.rewardLine,
+              desc: 'Rewards are based on simulated performance and paid as independent-contractor compensation, not a share of real trading profits.',
             }
           }
           return feat

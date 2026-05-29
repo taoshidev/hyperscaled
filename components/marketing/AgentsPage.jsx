@@ -13,7 +13,6 @@ import {
   ArrowRight,
 } from '@phosphor-icons/react'
 import { useBrand, brandifyText } from '@/lib/brand'
-import ComplianceDisclosure from '@/components/marketing/ComplianceDisclosure'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 const containerVariants = {
@@ -543,7 +542,6 @@ function CTABanner() {
                 </span>
               </a>
             </div>
-            <ComplianceDisclosure className="mt-8 mx-auto text-center" />
           </div>
         </div>
       </div>

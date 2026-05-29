@@ -9,7 +9,6 @@ import {
   Warning,
 } from '@phosphor-icons/react'
 import RulesTable from '@/components/shared/RulesTable'
-import ComplianceDisclosure from '@/components/marketing/ComplianceDisclosure'
 import { EVAL_RULES, getFundedRules, SCALING_PATH, BUYING_POWER_BY_SIZE, WEIGHT_LIMITS, FEE_RULES, TRADABLE_PAIRS } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { useWithPreservedQuery } from '@/lib/preserve-query'
@@ -631,7 +630,6 @@ function ScalingRulesSection() {
 
         {/* Scaling path visual removed — table is sufficient for this page */}
 
-        <ComplianceDisclosure className="mt-8" />
       </div>
     </section>
   )
@@ -804,7 +802,6 @@ function ProtocolSection() {
           </Link>
         </div>
 
-        <ComplianceDisclosure className="mt-8" />
       </div>
     </section>
   )

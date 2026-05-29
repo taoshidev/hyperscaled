@@ -24,7 +24,6 @@ import {
 } from '@phosphor-icons/react'
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import PricingPreview from '@/components/marketing/PricingPreview'
-import ComplianceDisclosure from '@/components/marketing/ComplianceDisclosure'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
@@ -80,7 +79,6 @@ function PageHero() {
             Start Your Challenge
             <ArrowRight size={15} weight="bold" />
           </Link>
-          <ComplianceDisclosure className="mt-8 mx-auto" />
         </motion.div>
       </div>
     </section>
@@ -491,7 +489,6 @@ function ScalingSection() {
           All accounts can scale up to $400K maximum through continued&nbsp;performance.
         </p>
 
-        <ComplianceDisclosure className="mt-8 mx-auto" />
       </div>
     </section>
   )
@@ -729,7 +726,6 @@ function PayoutMechanics() {
           </p>
         </motion.div>
 
-        <ComplianceDisclosure className="mt-8 mx-auto" />
       </div>
     </section>
   )
