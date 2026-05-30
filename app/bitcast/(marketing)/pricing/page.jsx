@@ -5,10 +5,10 @@ import { fetchDbPricingTiers } from '@/lib/pricing-db'
 
 export const metadata = buildMetadata({
   title: 'Pricing — HyperFunded Trading Challenges',
-  description: 'One-time USDC fee. $5K to $100K simulated scaled accounts. One-step Challenge, eligible USDC rewards, no subscriptions, no hidden charges.',
-  ogTitle: 'HyperFunded Pricing — One Fee. One Challenge. Eligible USDC Rewards.',
+  description: 'One-time USDC fee. $5K to $100K simulated scaled accounts. One-step Challenge, USDC rewards, no subscriptions, no hidden charges.',
+  ogTitle: 'HyperFunded Pricing — One Fee. One Challenge. USDC Rewards.',
   ogDescription:
-    'Start from $59. Choose $5K to $100K simulated scaled accounts. Eligible USDC rewards and scaling up to $400K.',
+    'Start from $59. Choose $5K to $100K simulated scaled accounts. USDC rewards and scaling up to $400K.',
   path: '/bitcast/pricing',
   brand: 'bitcast',
 })

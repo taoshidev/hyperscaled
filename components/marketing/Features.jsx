@@ -30,6 +30,7 @@ const features = [
     icon: CheckCircle,
     title: 'One-Step Challenge',
     body: 'Trade, perform, and unlock scaled capital through our one-step\u00a0challenge.',
+    bitcastBody: 'Trade, perform, and unlock simulated scaled capital through our one-step\u00a0challenge.',
     span: 'md:col-span-7',
     large: true,
     extra: (
@@ -68,8 +69,8 @@ const features = [
     title: 'USDC In, USDC Out',
     body: 'Pay your registration fee in USDC, receive payouts in USDC. Direct to your wallet and verifiable\u00a0onchain.',
     // HyperFunded (bitcast): clarify payee (Vanta) on the pay-in side and frame the
-    // pay-out side as eligible performance-based rewards.
-    bitcastBody: 'Pay your registration fee in USDC to Vanta, and receive eligible performance-based rewards in USDC. Direct to your wallet and verifiable\u00a0onchain.',
+    // pay-out side as performance-based rewards.
+    bitcastBody: 'Pay your registration fee in USDC to Vanta, and receive performance-based rewards in USDC. Direct to your wallet and verifiable\u00a0onchain.',
     span: 'md:col-span-5',
     large: false,
     extra: (

@@ -169,7 +169,7 @@ function getSteps(brandName, brandId, accountType, protocolName) {
       icon: CurrencyDollar,
       title: isBitcast ? 'Pass the Challenge. Get Scaled.' : 'Pass. Get Funded. Get Paid.',
       body: isBitcast
-        ? `Hit the 10% profit target with drawdown under 5% to immediately activate your ${accountType} account (simulated). Invited participants may earn eligible performance-based rewards, delivered in USDC monthly. Scale to $400K with continued\u00a0performance.`
+        ? `Hit the 10% profit target with drawdown under 5% to immediately activate your ${accountType} account (simulated). Invited participants may earn performance-based rewards, delivered in USDC monthly. Scale to $400K with continued\u00a0performance.`
         : `Hit the 10% profit target with drawdown under 5% to immediately activate your ${accountType} account. Keep 100% of profits with payouts delivered in USDC monthly. Scale to $400K with continued\u00a0performance.`,
       details: [
         { label: 'Profit Target', value: '10%' },
@@ -180,7 +180,7 @@ function getSteps(brandName, brandId, accountType, protocolName) {
         },
         { label: 'Payout Cycle', value: 'Monthly' },
         isBitcast
-          ? { label: 'Eligible Rewards', value: 'Vanta retains 0%' }
+          ? { label: 'Rewards', value: 'Vanta retains 0%' }
           : { label: 'Profit Split', value: `100% — ${brandName} takes 0%` },
       ],
     },
@@ -512,7 +512,9 @@ function getBrandItems(brandId) {
     brandId === 'bitcast'
       ? 'Rules published onchain; enforced programmatically — changes published publicly before they take effect.'
       : 'Rules published onchain, immutable',
-    'Automated onchain payouts',
+    brandId === 'bitcast'
+      ? 'Automated onchain payouts to participants who meet the program conditions'
+      : 'Automated onchain payouts',
   ]
 }
 
@@ -628,7 +630,7 @@ function PayoutMechanics() {
         >
           {brand.id === 'bitcast' ? (
             <p>
-              Scaled account (simulated) payouts are calculated automatically on a monthly basis for your eligible performance-based rewards. USDC is sent directly to your connected wallet, with no delays or&nbsp;discretion. Passing a Challenge does not guarantee any&nbsp;compensation.
+              Scaled account (simulated) payouts are calculated automatically on a monthly basis for participants who meet the program conditions. USDC is sent directly to your connected wallet, with no delays or&nbsp;discretion. Passing a Challenge does not guarantee any&nbsp;compensation.
             </p>
           ) : (
             <p>

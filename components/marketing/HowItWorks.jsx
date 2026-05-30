@@ -132,7 +132,7 @@ export default function HowItWorks({ tiers = [] }) {
       icon: Trophy,
       title: 'Hit the Target. Get Paid.',
       body: isHF
-        ? `Hit the 10% profit target to pass the ${brand.name} Challenge and activate your ${brand.accountType} account immediately. Payouts are delivered to your wallet every 30 days as eligible performance-based rewards \u2014 ${brand.operatorName} retains 0% of eligible performance-based\u00a0rewards.`
+        ? `Hit the 10% profit target to pass the ${brand.name} Challenge and activate your ${brand.accountType} account immediately. Payouts are delivered to participants who meet the program conditions every 30 days as performance-based rewards \u2014 ${brand.operatorName} retains 0% of performance-based\u00a0rewards.`
         : `Hit the 10% profit target to pass the ${brand.name} Challenge and activate your ${brand.accountType} account immediately. Payouts are delivered to your wallet every 30 days, and you keep 100% of everything you\u00a0earn.`,
       mockup: <PayoutMockup isHF={isHF} />,
     },

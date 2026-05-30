@@ -218,7 +218,7 @@ function PricingCards({ tiers, brandId }) {
       </div>
       <p className="text-center text-sm text-zinc-500 mt-4 max-w-[60ch] mx-auto" style={{ textWrap: 'balance' }}>
         {brandId === 'bitcast'
-          ? 'All tiers: 10% profit target · 5% max drawdown · eligible USDC rewards · Monthly payouts · No time limit'
+          ? 'All tiers: 10% profit target · 5% max drawdown · USDC rewards · Monthly payouts · No time limit'
           : 'All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time limit'}
       </p>
       {brandId === 'bitcast' && (
@@ -275,13 +275,13 @@ function WhatsIncludedGrid() {
           if (feat.title === 'Monthly Payouts') {
             return {
               ...feat,
-              desc: 'Eligible Scaled Trader Program participants receive monthly USDC rewards.',
+              desc: 'Scaled Trader Program participants receive monthly USDC rewards.',
             }
           }
           if (feat.title === '100% Profit Split') {
             return {
               ...feat,
-              title: 'Eligible Performance Rewards',
+              title: 'Performance Rewards',
               desc: 'Rewards are based on simulated performance and paid as independent-contractor compensation, not a share of real trading profits.',
             }
           }
@@ -404,7 +404,7 @@ function ModelSection() {
     `A ${brand.accountType} account upon challenge completion`,
     'Verifiable payouts through onchain technology',
     brand.id === 'bitcast'
-      ? 'Vanta retains 0% of eligible performance-based rewards'
+      ? 'Vanta retains 0% of performance-based rewards'
       : '100% profit split — you keep your earnings',
     'A system designed for trader success',
   ]

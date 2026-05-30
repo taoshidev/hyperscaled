@@ -59,7 +59,7 @@ const bitcastCompareRows = [
   { label: 'Challenge',                          hs: '1-Step',            ftmo: '2-Step' },
   { label: 'Non-Custodial',                      hs: 'Yes',               ftmo: 'No' },
   { label: 'KYC Required',                       hs: 'No KYC to trade; KYC for payout eligibility', ftmo: 'Full KYC' },
-  { label: 'Eligible Rewards Retained by You',   hs: 'Vanta retains 0%',  ftmo: 'Up to 30% retained' },
+  { label: 'Rewards Retained by You',   hs: 'Vanta retains 0%',  ftmo: 'Up to 30% retained' },
   { label: 'Payout Verification',                hs: 'Onchain',           ftmo: 'Centralized' },
   { label: 'Max Account',                        hs: '$400K',             ftmo: '$400K' },
   { label: 'News Trading',                        hs: 'Allowed',          ftmo: 'Restricted' },
@@ -112,7 +112,7 @@ export default function Solution() {
                 {brand.id === 'bitcast' ? (
                   <>
                     Vanta&apos;s protocol mirrors your Hyperliquid trades into a simulated scaled account
-                    and pays out eligible performance-based rewards in USDC — onchain, automatically, monthly.
+                    and pays out performance-based rewards in USDC to participants who meet the program conditions — onchain, automatically, monthly.
                   </>
                 ) : (
                   <>

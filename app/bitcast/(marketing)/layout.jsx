@@ -7,7 +7,7 @@ const ORGANIZATION_SCHEMA = {
   "@type": "Organization",
   name: "HyperFunded",
   url: "https://hyperfunded.co",
-  description: "Simulated scaled perp trading evaluation on Hyperliquid. One-step Challenge, eligible USDC rewards, and scale up to $400K. An Authorized Marketing Partner of Vanta.",
+  description: "Simulated scaled perp trading evaluation on Hyperliquid. One-step Challenge, USDC rewards, and scale up to $400K. An Authorized Marketing Partner of Vanta.",
   sameAs: ["https://x.com/hyperfunded_co"],
 }
 

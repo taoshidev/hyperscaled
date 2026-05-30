@@ -455,9 +455,9 @@ function remapBitcastFundedRules(rules) {
   return rules.map((r) => {
     if (r.rule === 'Profit Split') {
       return {
-        rule: 'Eligible Rewards',
+        rule: 'Rewards',
         parameter:
-          'Vanta retains 0% of eligible performance-based rewards. Rewards are independent-contractor compensation based on simulated performance — not a profit split.',
+          'Vanta retains 0% of performance-based rewards. Rewards are independent-contractor compensation based on simulated performance — not a profit split.',
       }
     }
     if (r.rule === 'Account Breach Consequence') {

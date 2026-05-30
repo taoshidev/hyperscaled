@@ -29,8 +29,8 @@ const bitcastPainPoints = [
   },
   {
     number: '02',
-    title: 'Eligible rewards, not a profit split.',
-    body: 'HyperFunded is a Vanta-powered simulated evaluation. Invited Scaled Trader Program participants earn eligible performance-based rewards as independent-contractor compensation.',
+    title: 'Rewards, not a profit split.',
+    body: 'HyperFunded is a Vanta-powered simulated evaluation. Invited Scaled Trader Program participants earn performance-based rewards as independent-contractor compensation.',
     accentColor: 'text-teal-400',
     tagBg: 'bg-teal-400/8 border-teal-400/20',
     tag: 'Simulated evaluation',
@@ -38,7 +38,7 @@ const bitcastPainPoints = [
   {
     number: '03',
     title: 'Automated, onchain reward delivery.',
-    body: 'Eligible performance-based rewards are delivered automatically and onchain, with every payout verifiable. Passing a Challenge does not guarantee an invitation to the Scaled Trader Program or any compensation.',
+    body: 'Performance-based rewards are delivered automatically and onchain to participants who meet the program conditions, with every payout verifiable. Passing a Challenge does not guarantee an invitation to the Scaled Trader Program or any compensation.',
     accentColor: 'text-teal-400',
     tagBg: 'bg-teal-400/8 border-teal-400/20',
     tag: 'Onchain delivery',
@@ -108,7 +108,7 @@ export default function Problem() {
             {isBitcast ? (
               <>
                 HyperFunded is a Vanta-powered simulated scaled evaluation. Rules are published
-                upfront, eligible performance-based rewards are delivered automatically onchain, and invited
+                upfront, performance-based rewards are delivered automatically onchain, and invited
                 Scaled Trader Program participants are compensated as independent&nbsp;contractors.
               </>
             ) : (

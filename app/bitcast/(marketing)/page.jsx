@@ -7,9 +7,9 @@ export const dynamic = "force-dynamic"
 
 export const metadata = buildMetadata({
   title: "HyperFunded — Scaled Perp Trading on Hyperliquid",
-  description: "Trade perps on Hyperliquid in a Vanta-powered simulated scaled account. Eligible USDC rewards, one-step Challenge, and scale up to $400K.",
+  description: "Trade perps on Hyperliquid in a Vanta-powered simulated scaled account. USDC rewards, one-step Challenge, and scale up to $400K.",
   ogTitle: "HyperFunded — Scaled Perp Trading on Hyperliquid",
-  ogDescription: "Trade perps on Hyperliquid in a Vanta-powered simulated scaled account. One-step Challenge, eligible USDC rewards, scale to $400K.",
+  ogDescription: "Trade perps on Hyperliquid in a Vanta-powered simulated scaled account. One-step Challenge, USDC rewards, scale to $400K.",
   path: "/bitcast",
   brand: "bitcast",
 })
