@@ -1,13 +1,12 @@
 import { buildMetadata } from '@/lib/metadata'
 
 export const metadata = buildMetadata({
-  title: 'Leaderboard — Top Traders on Beanstock',
-  description:
-    'See the top performing funded traders on Beanstock. Live rankings, returns, key metrics, and payout history.',
-  ogTitle: 'Beanstock Leaderboard — Top Funded Traders, Live',
-  ogDescription:
-    'Transparent, onchain performance rankings for every Beanstock funded trader. All-time returns, key metrics, and verified USDC payouts.',
+  title: 'Leaderboard — Beanstock',
+  description: 'Beanstock leaderboard. Coming soon.',
+  ogTitle: 'Leaderboard — Beanstock',
+  ogDescription: 'Beanstock leaderboard. Coming soon.',
   path: '/beanstock/leaderboard',
+  robots: { index: false, follow: false },
   brand: 'beanstock',
 })
 

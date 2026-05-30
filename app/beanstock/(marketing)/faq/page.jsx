@@ -5,7 +5,7 @@ import { FAQ_ITEMS } from '@/lib/constants'
 import { getBrandConfig, brandifyText } from '@/lib/brand-config'
 
 export const metadata = buildMetadata({
-  title: 'FAQ — Beanstock Funded Trading Questions',
+  title: 'FAQ — Beanstock Scaled Trading Questions',
   description:
     'Common questions about Beanstock — challenges, payouts, KYC, account scaling, and how the protocol works.',
   ogTitle: 'Beanstock FAQ — Everything You Need to Know',
@@ -21,14 +21,18 @@ function buildFaqSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: allItems.map((item) => ({
-      "@type": "Question",
-      name: brandifyText(item.question, brand),
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: brandifyText(item.answer, brand),
-      },
-    })),
+    mainEntity: allItems.map((item) => {
+      // Prefer compliant overrides, then apply the brand compliance safety-net
+      const ov = brand.faqOverrides?.[item.id]
+      return {
+        "@type": "Question",
+        name: brandifyText(ov?.question ?? item.question, brand),
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: brandifyText(ov?.answer ?? item.answer, brand),
+        },
+      }
+    }),
   }
 }
 

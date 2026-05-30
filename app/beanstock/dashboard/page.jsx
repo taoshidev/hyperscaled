@@ -10,7 +10,7 @@ export const metadata = buildMetadata({
     "Monitor your challenge progress, open positions, and payout history in real time.",
   ogTitle: "Beanstock Dashboard",
   ogDescription:
-    "Track your funded account performance, open positions, and USDC payouts in real time.",
+    "Track your simulated scaled account performance, open positions, and USDC payouts in real time.",
   path: "/beanstock/dashboard",
   brand: "beanstock",
 })

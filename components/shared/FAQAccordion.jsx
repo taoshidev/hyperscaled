@@ -12,6 +12,9 @@ function FAQItem({ item, isOpen, onToggle }) {
   const id = useId()
   const headingId = `${id}-heading`
   const panelId = `${id}-panel`
+  const override = brand.faqOverrides?.[item.id]
+  const question = override?.question ?? item.question
+  const answer = override?.answer ?? item.answer
 
   return (
     <div className="border-b border-white/[0.06] last:border-0">
@@ -29,7 +32,7 @@ function FAQItem({ item, isOpen, onToggle }) {
               : 'text-zinc-200 group-hover:text-white'
           }`}
         >
-          {brandifyText(item.question, brand)}
+          {brandifyText(question, brand)}
         </span>
         <span className="shrink-0 mt-0.5">
           <CaretDown
@@ -57,7 +60,7 @@ function FAQItem({ item, isOpen, onToggle }) {
             style={{ overflow: 'hidden' }}
           >
             <p className="text-sm text-zinc-400 leading-relaxed pb-5 max-w-[68ch]">
-              {brandifyText(item.answer, brand)}
+              {brandifyText(answer, brand)}
             </p>
           </motion.div>
         )}
@@ -67,6 +70,7 @@ function FAQItem({ item, isOpen, onToggle }) {
 }
 
 export default function FAQAccordion({ items, grouped = false, sectionIds = false }) {
+  const brand = useBrand()
   const [openId, setOpenId] = useState(null)
 
   const toggle = (id) => {
@@ -84,7 +88,7 @@ export default function FAQAccordion({ items, grouped = false, sectionIds = fals
           return (
             <div key={group.category} id={id} className={sectionIds ? 'scroll-mt-24' : undefined}>
               <h2 className="text-2xl font-bold tracking-tight mb-2">
-                {group.category}
+                {brandifyText(group.category, brand)}
               </h2>
               <div className="divide-y divide-white/[0.06] border-t border-white/[0.06]">
                 {group.items.map((item) => (

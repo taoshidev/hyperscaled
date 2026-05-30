@@ -40,7 +40,7 @@ const pillars = [
   },
 ]
 
-const compareRows = [
+const defaultCompareRows = [
   { label: 'Profit Target',       hs: '10%',        ftmo: '15%' },
   { label: 'Challenge',           hs: '1-Step',     ftmo: '2-Step' },
   { label: 'Non-Custodial',       hs: 'Yes',        ftmo: 'No' },
@@ -52,10 +52,36 @@ const compareRows = [
   { label: 'Weekend Trading',     hs: 'Allowed',    ftmo: 'Restricted' },
 ]
 
-const hsBest = new Set(['10%', '1-Step', 'Yes', 'No', '100%', 'Onchain', '$400K', 'Allowed'])
+// HyperFunded (bitcast): compliant, non-comparative framing — no "Profit Split"/"100%",
+// KYC clarified for payout eligibility.
+const bitcastCompareRows = [
+  { label: 'Profit Target',                      hs: '10%',               ftmo: '15%' },
+  { label: 'Challenge',                          hs: '1-Step',            ftmo: '2-Step' },
+  { label: 'Non-Custodial',                      hs: 'Yes',               ftmo: 'No' },
+  { label: 'KYC Required',                       hs: 'No KYC to trade; KYC for payout eligibility', ftmo: 'Full KYC' },
+  { label: 'Rewards Retained by You',   hs: 'Vanta retains 0%',  ftmo: 'Up to 30% retained' },
+  { label: 'Payout Verification',                hs: 'Onchain',           ftmo: 'Centralized' },
+  { label: 'Max Account',                        hs: '$400K',             ftmo: '$400K' },
+  { label: 'News Trading',                        hs: 'Allowed',          ftmo: 'Restricted' },
+  { label: 'Weekend Trading',                     hs: 'Allowed',          ftmo: 'Restricted' },
+]
+
+const defaultHsBest = new Set(['10%', '1-Step', 'Yes', 'No', '100%', 'Onchain', '$400K', 'Allowed'])
+const bitcastHsBest = new Set([
+  '10%', '1-Step', 'Yes', 'No KYC to trade; KYC for payout eligibility',
+  'Vanta retains 0%', 'Onchain', '$400K', 'Allowed',
+])
+
+function getCompareConfig(brand) {
+  if (brand.compliance) {
+    return { rows: bitcastCompareRows, hsBest: bitcastHsBest }
+  }
+  return { rows: defaultCompareRows, hsBest: defaultHsBest }
+}
 
 export default function Solution() {
   const brand = useBrand()
+  const { rows: compareRows, hsBest } = getCompareConfig(brand)
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
   const tableRef = useRef(null)
@@ -83,8 +109,17 @@ export default function Solution() {
                 Open. Onchain.<br />No middlemen.
               </h2>
               <p className="text-base text-zinc-400 leading-relaxed max-w-[52ch] [text-wrap:pretty]">
-                {brand.name} mirrors your Hyperliquid trades into a protocol-{brand.accountType} simulated account
-                and pays out performance rewards in USDC — onchain, automatically, monthly.
+                {brand.compliance ? (
+                  <>
+                    Vanta&apos;s protocol mirrors your Hyperliquid trades into a simulated scaled account
+                    and pays out performance-based rewards in USDC to participants who meet the program conditions — onchain, automatically, monthly.
+                  </>
+                ) : (
+                  <>
+                    {brand.name} mirrors your Hyperliquid trades into a protocol-{brand.accountType} simulated account
+                    and pays out performance rewards in USDC — onchain, automatically, monthly.
+                  </>
+                )}
               </p>
             </motion.div>
 

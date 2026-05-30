@@ -11,6 +11,7 @@ const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
 const allItems = FAQ_ITEMS.flatMap((cat) => cat.items)
 const faqs = HOME_FAQ_IDS.map((id) => allItems.find((item) => item.id === id)).filter(Boolean).map((item) => ({
+  id: item.id,
   q: item.question,
   a: item.answer,
 }))
@@ -19,6 +20,9 @@ function FAQItem({ item, index, brand }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
+  const override = brand.faqOverrides?.[item.id]
+  const q = override?.question ?? item.q
+  const a = override?.answer ?? item.a
 
   return (
     <motion.div
@@ -34,7 +38,7 @@ function FAQItem({ item, index, brand }) {
         aria-expanded={open}
       >
         <span className="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors leading-snug">
-          {brandifyText(item.q, brand)}
+          {brandifyText(q, brand)}
         </span>
         <span className="shrink-0 mt-0.5">
           {open ? (
@@ -55,7 +59,7 @@ function FAQItem({ item, index, brand }) {
             style={{ overflow: 'hidden' }}
           >
             <p className="text-sm text-zinc-400 leading-relaxed pb-5 max-w-[68ch]">
-              {brandifyText(item.a, brand)}
+              {brandifyText(a, brand)}
             </p>
           </motion.div>
         )}
