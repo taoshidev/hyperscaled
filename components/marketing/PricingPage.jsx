@@ -55,7 +55,9 @@ function PricingHero({ showPromoBar }) {
           className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1]"
           style={{ textWrap: 'balance' }}
         >
-          One fee. One challenge. Keep everything you&nbsp;earn.
+          {brand.compliance
+            ? <>One fee. One challenge. Vanta-powered simulated scaled&nbsp;account.</>
+            : <>One fee. One challenge. Keep everything you&nbsp;earn.</>}
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 16 }}
@@ -73,6 +75,7 @@ function PricingHero({ showPromoBar }) {
 
 /* ── Single Pricing Card ── */
 function PricingCard({ tier, index, freeAtCapacity, paidAtCapacity }) {
+  const brand = useBrand()
   const brandHref = useBrandHref()
   const withQS = useWithPreservedQuery()
   const ref = useRef(null)
@@ -172,12 +175,18 @@ function PricingCard({ tier, index, freeAtCapacity, paidAtCapacity }) {
         <ArrowRight size={14} weight="bold" />
       </Link>
       )}
+      {brand.compliance && free && (
+        <p className="mt-3 text-[11px] leading-snug text-zinc-600 text-center">
+          Simulated trading only — no funded or live trading account is created or provided.
+        </p>
+      )}
     </motion.div>
   )
 }
 
 /* ── Pricing Cards Grid ── */
 function PricingCards({ tiers, brandId }) {
+  const brand = useBrand()
   const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity(capacityMinerSlugForBrandId(brandId))
   return (
     <section className="px-6 pb-20">
@@ -209,8 +218,13 @@ function PricingCards({ tiers, brandId }) {
         )}
       </div>
       <p className="text-center text-sm text-zinc-500 mt-4 max-w-[60ch] mx-auto" style={{ textWrap: 'balance' }}>
-        All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time&nbsp;limit
+        {brand.compliance
+          ? 'All tiers: 10% profit target · 5% max drawdown · USDC rewards · Monthly payouts · No time limit'
+          : <>All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time&nbsp;limit</>}
       </p>
+      {brand.compliance && (
+        <p className="text-center text-xs text-zinc-600 mt-2">Fees are paid to Vanta.</p>
+      )}
     </section>
   )
 }
@@ -250,8 +264,25 @@ const INCLUDED_FEATURES = [
 ]
 
 function WhatsIncludedGrid() {
+  const brand = useBrand()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
+
+  const features = brand.compliance
+    ? INCLUDED_FEATURES.map((feat) => {
+        if (feat.title === 'Monthly Payouts') {
+          return { ...feat, desc: 'Scaled Trader Program participants receive monthly USDC rewards.' }
+        }
+        if (feat.title === '100% Profit Split') {
+          return {
+            ...feat,
+            title: 'Performance Rewards',
+            desc: 'Rewards are based on simulated performance and paid as independent-contractor compensation, not a share of real trading profits.',
+          }
+        }
+        return feat
+      })
+    : INCLUDED_FEATURES
 
   return (
     <section ref={ref} className="px-6 pb-20">
@@ -270,7 +301,7 @@ function WhatsIncludedGrid() {
           transition={{ ...spring, delay: 0.08 }}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
         >
-          {INCLUDED_FEATURES.map((feat) => {
+          {features.map((feat) => {
             const Icon = feat.icon
             return (
               <div
@@ -367,7 +398,9 @@ function ModelSection() {
   const bullets = [
     `A ${brand.accountType} account upon challenge completion`,
     'Verifiable payouts through onchain technology',
-    '100% profit split — you keep your earnings',
+    brand.compliance
+      ? 'Vanta retains 0% of performance-based rewards'
+      : '100% profit split — you keep your earnings',
     'A system designed for trader success',
   ]
 

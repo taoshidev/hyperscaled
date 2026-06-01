@@ -109,11 +109,20 @@ function HeroSection() {
                 <div className="text-teal-400">✓ Tools: register, trade, positions, orders, rules, payouts</div>
                 <div className="border-t border-white/[0.05] pt-3 text-zinc-500">$ pip install hyperscaled</div>
                 <div className="text-teal-400">✓ Successfully installed hyperscaled-1.4.2</div>
-                <div className="border-t border-white/[0.05] pt-3 text-zinc-500">$ hyperscaled miners list --json</div>
-                <div className="text-zinc-300">[</div>
-                <div className="text-zinc-300 pl-4">{`{ "slug": "alpha-fund", "tier": 1, "max_account": 200000 },`}</div>
-                <div className="text-zinc-300 pl-4">{`{ "slug": "delta-prop", "tier": 2, "max_account": 500000 }`}</div>
-                <div className="text-zinc-300">]</div>
+                {brand.compliance ? (
+                  <>
+                    <div className="border-t border-white/[0.05] pt-3 text-zinc-500">$ hyperscaled rules list --json</div>
+                    <div className="text-teal-400">✓ Rules retrieved</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="border-t border-white/[0.05] pt-3 text-zinc-500">$ hyperscaled miners list --json</div>
+                    <div className="text-zinc-300">[</div>
+                    <div className="text-zinc-300 pl-4">{`{ "slug": "alpha-fund", "tier": 1, "max_account": 200000 },`}</div>
+                    <div className="text-zinc-300 pl-4">{`{ "slug": "delta-prop", "tier": 2, "max_account": 500000 }`}</div>
+                    <div className="text-zinc-300">]</div>
+                  </>
+                )}
                 <div className="border-t border-white/[0.05] pt-3 text-zinc-500">$ hyperscaled positions open --json</div>
                 <div className="text-teal-400">✓ 2 open positions returned</div>
               </div>
