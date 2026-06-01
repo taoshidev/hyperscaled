@@ -9,6 +9,8 @@ uniform vec2 u_resolution;
 uniform float u_speed;
 uniform vec3 u_radii;
 uniform vec2 u_smoothK;
+uniform vec3 u_color;
+uniform float u_tint;
 out vec4 fragColor;
 
 float sdCircle(vec2 p, float r) {
@@ -39,13 +41,18 @@ void main() {
   // Bright rim by distance
   vec3 base = vec3(0.01 / abs(d));
 
-  // Green/teal brand palette
+  // Brand palette — default teal, or brand-tinted when u_tint is set
   float shift = u_time * 0.3;
-  vec3 pha = vec3(
-    0.32 + 0.08 * cos(shift + uv.x),
-    0.82 + 0.10 * cos(shift * 0.7 + uv.x * 2.0),
-    0.76 + 0.12 * cos(shift * 0.5 + uv.y * 2.0)
-  );
+  vec3 pha;
+  if (u_tint > 0.5) {
+    pha = u_color * (0.85 + 0.15 * cos(shift + uv.x + uv.y * 1.5));
+  } else {
+    pha = vec3(
+      0.32 + 0.08 * cos(shift + uv.x),
+      0.82 + 0.10 * cos(shift * 0.7 + uv.x * 2.0),
+      0.76 + 0.12 * cos(shift * 0.5 + uv.y * 2.0)
+    );
+  }
 
   // Dim overall so it works as a background
   vec3 col = clamp(base * pha * 0.5, 0.0, 1.0);
@@ -63,6 +70,7 @@ export default function LiquidCrystalBg({
   speed = 0.5,
   radii = [0.2, 0.15, 0.22],
   smoothK = [0.2, 0.25],
+  color = null,
   className = '',
 }) {
   const canvasRef = useRef(null)
@@ -116,6 +124,11 @@ export default function LiquidCrystalBg({
     const uSpeed = gl.getUniformLocation(prog, 'u_speed')
     const uRadii = gl.getUniformLocation(prog, 'u_radii')
     const uK = gl.getUniformLocation(prog, 'u_smoothK')
+    const uColor = gl.getUniformLocation(prog, 'u_color')
+    const uTint = gl.getUniformLocation(prog, 'u_tint')
+    const rgb = color
+      ? color.split(',').map((n) => parseFloat(n) / 255)
+      : [0, 0, 0]
 
     const resize = () => {
       const dpr = window.devicePixelRatio || 1
@@ -137,6 +150,8 @@ export default function LiquidCrystalBg({
       gl.uniform1f(uSpeed, speed)
       gl.uniform3fv(uRadii, radii)
       gl.uniform2fv(uK, smoothK)
+      gl.uniform3f(uColor, rgb[0], rgb[1], rgb[2])
+      gl.uniform1f(uTint, color ? 1 : 0)
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
       rafId = requestAnimationFrame(animate)
     }
@@ -146,7 +161,7 @@ export default function LiquidCrystalBg({
       window.removeEventListener('resize', resize)
       cancelAnimationFrame(rafId)
     }
-  }, [speed, radii, smoothK])
+  }, [speed, radii, smoothK, color])
 
   return (
     <div className={`absolute inset-0 overflow-hidden ${className}`}>

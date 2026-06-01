@@ -42,7 +42,7 @@ export default function Hero() {
       {brand.showLiquidCrystal && brand.heroBeams
         ? <BeamsBg className="pointer-events-none" />
         : brand.showLiquidCrystal
-          ? <LiquidCrystalBg className="pointer-events-none" />
+          ? <LiquidCrystalBg className="pointer-events-none" color={brand.id === 'hyperscaled' ? undefined : brand.accentRgb} />
           : null}
       <div className={`absolute inset-0 pointer-events-none ${brand.heroBeams ? 'bg-zinc-950/30' : 'bg-zinc-950/60'}`} />
 
