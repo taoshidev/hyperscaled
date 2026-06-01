@@ -1,10 +1,10 @@
 import { buildMetadata } from '@/lib/metadata'
 
 export const metadata = buildMetadata({
-  title: 'Leaderboard — HyperFunded',
-  description: 'HyperFunded leaderboard. Coming soon.',
-  ogTitle: 'Leaderboard — HyperFunded',
-  ogDescription: 'HyperFunded leaderboard. Coming soon.',
+  title: 'Leaderboard — Hyperstack',
+  description: 'Hyperstack leaderboard. Coming soon.',
+  ogTitle: 'Leaderboard — Hyperstack',
+  ogDescription: 'Hyperstack leaderboard. Coming soon.',
   path: '/bitcast/leaderboard',
   robots: { index: false, follow: false },
   brand: 'bitcast',

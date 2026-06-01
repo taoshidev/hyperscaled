@@ -11,7 +11,7 @@ import {
 
 const VANTA_HOSTNAMES = new Set(["hs.vantatrading.io"]);
 const BEANSTOCK_HOSTNAMES = new Set(["www.beanstocktrading.com", "beanstocktrading.com"]);
-const HYPERFUNDED_HOSTNAMES = new Set(["www.hyperfunded.co", "hyperfunded.co"]);
+const HYPERSTACK_HOSTNAMES = new Set(["www.hyperstack.trade", "hyperstack.trade"]);
 const INTERNAL_PATH_PREFIXES = ["/_next", "/api", "/monitoring", "/command-center"];
 const AFFILIATE_SLUG_ROUTES = new Set(["strato"]);
 
@@ -59,8 +59,8 @@ function shouldRewriteToBeanstock(hostname, pathname) {
   return !INTERNAL_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
-function shouldRewriteToHyperfunded(hostname, pathname) {
-  if (!HYPERFUNDED_HOSTNAMES.has(hostname)) {
+function shouldRewriteToHyperstack(hostname, pathname) {
+  if (!HYPERSTACK_HOSTNAMES.has(hostname)) {
     return false;
   }
 
@@ -95,7 +95,7 @@ function getNormalizedBeanstockPath(pathname) {
   return null;
 }
 
-function getNormalizedHyperfundedPath(pathname) {
+function getNormalizedHyperstackPath(pathname) {
   if (pathname === "/bitcast") {
     return "/";
   }
@@ -241,7 +241,7 @@ export async function proxy(request) {
   const minerMatch = pathname.match(/^\/miner\/([^/]+)/);
   const normalizedVantaPath = getNormalizedVantaPath(pathname);
   const normalizedBeanstockPath = getNormalizedBeanstockPath(pathname);
-  const normalizedHyperfundedPath = getNormalizedHyperfundedPath(pathname);
+  const normalizedHyperstackPath = getNormalizedHyperstackPath(pathname);
 
   if (VANTA_HOSTNAMES.has(hostname) && normalizedVantaPath) {
     const url = request.nextUrl.clone();
@@ -287,16 +287,16 @@ export async function proxy(request) {
     return response;
   }
 
-  if (HYPERFUNDED_HOSTNAMES.has(hostname) && normalizedHyperfundedPath) {
+  if (HYPERSTACK_HOSTNAMES.has(hostname) && normalizedHyperstackPath) {
     const url = request.nextUrl.clone();
-    url.pathname = normalizedHyperfundedPath;
+    url.pathname = normalizedHyperstackPath;
     const response = NextResponse.redirect(url);
     applyTrackingCookies(response, {
       entryCookie,
       affiliateCookie,
       toltRefCookie,
       minerMatch,
-      pathname: normalizedHyperfundedPath,
+      pathname: normalizedHyperstackPath,
       searchParams,
     });
     return response;
@@ -312,7 +312,7 @@ export async function proxy(request) {
   }
 
   const affiliateSlugMatch = pathname.match(/^\/([^/]+)\/?$/);
-  if (affiliateSlugMatch && AFFILIATE_SLUG_ROUTES.has(affiliateSlugMatch[1]) && !VANTA_HOSTNAMES.has(hostname) && !BEANSTOCK_HOSTNAMES.has(hostname) && !HYPERFUNDED_HOSTNAMES.has(hostname)) {
+  if (affiliateSlugMatch && AFFILIATE_SLUG_ROUTES.has(affiliateSlugMatch[1]) && !VANTA_HOSTNAMES.has(hostname) && !BEANSTOCK_HOSTNAMES.has(hostname) && !HYPERSTACK_HOSTNAMES.has(hostname)) {
     const slug = affiliateSlugMatch[1];
     const url = request.nextUrl.clone();
     url.pathname = "/";
@@ -350,7 +350,7 @@ export async function proxy(request) {
     const url = request.nextUrl.clone();
     url.pathname = `/beanstock${pathname}`;
     response = NextResponse.rewrite(url);
-  } else if (shouldRewriteToHyperfunded(hostname, pathname)) {
+  } else if (shouldRewriteToHyperstack(hostname, pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = `/bitcast${pathname}`;
     response = NextResponse.rewrite(url);

@@ -5,7 +5,7 @@ import { useBrand } from '@/lib/brand'
 /*
  * ComplianceDisclosure — renders the required marketing disclosures for
  * brands that carry a `compliance` block in their config (currently
- * HyperFunded / bitcast, per the Vanta AMPA + Marketing Guide).
+ * Hyperstack / bitcast, per the Vanta AMPA + Marketing Guide).
  *
  * Renders nothing for brands without `brand.compliance`, so every other
  * brand is completely unaffected.

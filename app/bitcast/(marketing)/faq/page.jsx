@@ -7,10 +7,10 @@ import { getBrandConfig, brandifyText } from '@/lib/brand-config'
 const brand = getBrandConfig('bitcast')
 
 export const metadata = buildMetadata({
-  title: 'FAQ — HyperFunded Trading Questions',
-  description: 'Common questions about HyperFunded challenges, payouts, KYC, account scaling, supported markets, and how the protocol works.',
-  ogTitle: 'HyperFunded FAQ — Everything You Need to Know',
-  ogDescription: 'Everything you need to know about HyperFunded scaled trading. How the challenge works, when you get paid, how scaling works, and what KYC is required.',
+  title: 'FAQ — Hyperstack Trading Questions',
+  description: 'Common questions about Hyperstack challenges, payouts, KYC, account scaling, supported markets, and how the protocol works.',
+  ogTitle: 'Hyperstack FAQ — Everything You Need to Know',
+  ogDescription: 'Everything you need to know about Hyperstack scaled trading. How the challenge works, when you get paid, how scaling works, and what KYC is required.',
   path: '/bitcast/faq',
   brand: 'bitcast',
 })

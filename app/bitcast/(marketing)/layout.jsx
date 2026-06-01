@@ -5,17 +5,17 @@ import { JsonLd } from '@/components/shared/JsonLd'
 const ORGANIZATION_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "HyperFunded",
-  url: "https://hyperfunded.co",
+  name: "Hyperstack",
+  url: "https://hyperstack.trade",
   description: "Simulated scaled perp trading evaluation on Hyperliquid. One-step Challenge, USDC rewards, and scale up to $400K. An Authorized Marketing Partner of Vanta.",
-  sameAs: ["https://x.com/hyperfunded_co"],
+  sameAs: ["https://x.com/hyperstack_trade"],
 }
 
 const WEBSITE_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "HyperFunded",
-  url: "https://hyperfunded.co",
+  name: "Hyperstack",
+  url: "https://hyperstack.trade",
 }
 
 export default function BitcastMarketingLayout({ children }) {

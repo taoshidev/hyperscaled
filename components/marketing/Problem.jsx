@@ -16,13 +16,13 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: spring },
 }
 
-// HyperFunded (bitcast): non-comparative, factual statements about HyperFunded only
+// Hyperstack (bitcast): non-comparative, factual statements about Hyperstack only
 // (no competitor accusations) — FTC §5 / Lanham Act compliance.
 const bitcastPainPoints = [
   {
     number: '01',
     title: 'Open access to a simulated evaluation.',
-    body: 'HyperFunded opens the Vanta-powered simulated Challenge to traders across many countries, with clear rules published upfront.',
+    body: 'Hyperstack opens the Vanta-powered simulated Challenge to traders across many countries, with clear rules published upfront.',
     accentColor: 'text-teal-400',
     tagBg: 'bg-teal-400/8 border-teal-400/20',
     tag: 'Open access',
@@ -30,7 +30,7 @@ const bitcastPainPoints = [
   {
     number: '02',
     title: 'Rewards, not a profit split.',
-    body: 'HyperFunded is a Vanta-powered simulated evaluation. Invited Scaled Trader Program participants earn performance-based rewards as independent-contractor compensation.',
+    body: 'Hyperstack is a Vanta-powered simulated evaluation. Invited Scaled Trader Program participants earn performance-based rewards as independent-contractor compensation.',
     accentColor: 'text-teal-400',
     tagBg: 'bg-teal-400/8 border-teal-400/20',
     tag: 'Simulated evaluation',
@@ -107,7 +107,7 @@ export default function Problem() {
           <p className="text-base text-zinc-400 leading-relaxed max-w-[60ch] [text-wrap:pretty]">
             {isBitcast ? (
               <>
-                HyperFunded is a Vanta-powered simulated scaled evaluation. Rules are published
+                Hyperstack is a Vanta-powered simulated scaled evaluation. Rules are published
                 upfront, performance-based rewards are delivered automatically onchain, and invited
                 Scaled Trader Program participants are compensated as independent&nbsp;contractors.
               </>
