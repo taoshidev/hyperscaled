@@ -34,6 +34,7 @@ export default function Hero() {
   const brand = useBrand()
   const brandHref = useBrandHref()
   const withQS = useWithPreservedQuery()
+  const isHF = Boolean(brand.compliance)
 
   return (
     <section className={`relative min-h-[100dvh] flex flex-col overflow-hidden ${brand.parentSite ? 'pt-24' : 'pt-16'}`}>
@@ -41,7 +42,7 @@ export default function Hero() {
       {brand.showLiquidCrystal && brand.heroBeams
         ? <BeamsBg className="pointer-events-none" />
         : brand.showLiquidCrystal
-          ? <LiquidCrystalBg className="pointer-events-none" />
+          ? <LiquidCrystalBg className="pointer-events-none" color={brand.id === 'hyperscaled' ? undefined : brand.accentRgb} />
           : null}
       <div className={`absolute inset-0 pointer-events-none ${brand.heroBeams ? 'bg-zinc-950/30' : 'bg-zinc-950/60'}`} />
 
@@ -66,7 +67,9 @@ export default function Hero() {
                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-teal-400/20 bg-teal-400/8 text-xs text-teal-400 font-medium hover:bg-teal-400/12 transition-colors"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-teal-400 pulse-teal" />
-                Free $1k challenge accounts are live — only 1,000 available
+                {isHF
+                  ? 'Free $1k simulated challenge accounts are live'
+                  : 'Free $1k challenge accounts are live — only 1,000 available'}
               </Link>
             </motion.div>
 
@@ -118,6 +121,7 @@ export default function Hero() {
               ))}
             </motion.div>
 
+
           </motion.div>
 
           {/* Right column — Dashboard card */}
@@ -144,7 +148,7 @@ export default function Hero() {
               {/* Header */}
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-zinc-400">Funded Account</span>
+                  <span className="text-xs font-medium text-zinc-400">{isHF ? 'Simulated scaled account' : 'Funded Account'}</span>
                   <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-teal-400/10 border border-teal-400/20 text-xs text-teal-400 font-medium">
                     <span className="w-1 h-1 rounded-full bg-teal-400 pulse-teal" />
                     Live
@@ -226,6 +230,12 @@ export default function Hero() {
                   </div>
                 </div>
               </div>
+
+              {isHF && (
+                <div className="mb-3 text-[10px] uppercase tracking-widest text-zinc-600">
+                  Illustrative only. Not actual results.
+                </div>
+              )}
 
               {/* Footer link */}
               <div className="flex items-center justify-between pt-3 border-t border-white/[0.06]">

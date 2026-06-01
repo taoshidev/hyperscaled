@@ -8,10 +8,10 @@ import { listPriceUsdcFromDbTier } from "@/lib/wsb-tier-list-price"
 export const metadata = buildMetadata({
   title: "Start Your Challenge",
   description:
-    "Choose your funded account size and begin your one-step challenge on Hyperliquid. No recurring fees. 100% of performance rewards are yours.",
-  ogTitle: "Start Your Challenge — Beanstock Funded Trading",
+    "Choose your simulated scaled account size and begin your one-step challenge on Hyperliquid. No recurring fees. performance-based rewards go to invited Scaled Trader Program participants.",
+  ogTitle: "Start Your Challenge — Beanstock Scaled Trading",
   ogDescription:
-    "Choose from $5K to $100K. One-time USDC fee. Pass the challenge. Keep 100% of your profits.",
+    "Choose from $5K to $100K. One-time USDC fee. Pass the challenge. Earn performance-based rewards.",
   path: "/beanstock/register",
   brand: "beanstock",
 })

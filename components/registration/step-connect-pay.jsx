@@ -749,11 +749,6 @@ export function StepConnectAndPay({
     }
   }, [hlOwnershipBundleValid, resolvedHlAddress]);
 
-  const hlAddressChangedFromAnchor =
-    hlAddressReady &&
-    hlOwnershipAnchorRef.current != null &&
-    hlWallet.toLowerCase() !== hlOwnershipAnchorRef.current;
-
   const hlOwnershipMismatchActive =
     hlAddressReady &&
     !walletMatchesHL &&

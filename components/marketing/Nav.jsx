@@ -82,6 +82,7 @@ function MoreDropdown({ brandHref, brand }) {
             <div className="py-1.5">
               {DROPDOWN_LINKS
                 .filter((l) => l.label !== 'Partners' || brand.showPartnersCTA)
+                .filter((l) => l.label !== 'Leaderboard' || !brand.compliance)
                 .map((l) => (
                 <Link
                   key={l.label}
@@ -224,6 +225,7 @@ export default function Nav({ excludeLinks = [], walletAware = false }) {
             <div className="flex flex-col gap-1">
               {allLinks
                 .filter((l) => l.label !== 'Partners' || brand.showPartnersCTA)
+                .filter((l) => l.label !== 'Leaderboard' || !brand.compliance)
                 .map((l) => (
                 <Link
                   key={l.label}

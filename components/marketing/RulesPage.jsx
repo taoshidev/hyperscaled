@@ -17,19 +17,23 @@ import { trackCtaClick } from '@/lib/analytics'
 /* ───────────────────────────────────────────────
    TOC sections definition
    ─────────────────────────────────────────────── */
-const TOC_SECTIONS = [
-  { id: 'challenge', label: 'Challenge' },
-  { id: 'pairs', label: 'Available Pairs' },
-  { id: 'weight-tracking', label: 'Weight Tracking' },
-  { id: 'tracking', label: 'Tracking' },
-  { id: 'fees', label: 'Fees' },
-  { id: 'scaled', label: 'Funded Account' },
-  { id: 'scaling', label: 'Scaling' },
-  { id: 'disqualification', label: 'Disqualification' },
-  { id: 'best-practices', label: 'Best Practices' },
-  { id: 'kyc', label: 'KYC & Payouts' },
-  { id: 'protocol', label: 'Protocol' },
-]
+function getTocSections(hasCompliance) {
+  return [
+    { id: 'challenge', label: 'Challenge' },
+    { id: 'pairs', label: 'Available Pairs' },
+    { id: 'weight-tracking', label: 'Weight Tracking' },
+    { id: 'tracking', label: 'Tracking' },
+    { id: 'fees', label: 'Fees' },
+    { id: 'scaled', label: hasCompliance ? 'Scaled Account (Simulated)' : 'Funded Account' },
+    { id: 'scaling', label: 'Scaling' },
+    { id: 'disqualification', label: 'Disqualification' },
+    { id: 'best-practices', label: 'Best Practices' },
+    { id: 'kyc', label: 'KYC & Payouts' },
+    { id: 'protocol', label: 'Protocol' },
+  ]
+}
+
+const TOC_SECTIONS = getTocSections()
 
 /* ───────────────────────────────────────────────
    Sticky TOC (desktop sidebar + mobile jump bar)
@@ -43,6 +47,8 @@ function handleTocClick(e, id) {
 }
 
 function TableOfContents({ activeId }) {
+  const brand = useBrand()
+  const sections = getTocSections(Boolean(brand.compliance))
   const navRef = useRef(null)
 
   useEffect(() => {
@@ -69,7 +75,7 @@ function TableOfContents({ activeId }) {
         aria-label="Page sections"
       >
         <ul className="space-y-1">
-          {TOC_SECTIONS.map((s) => (
+          {sections.map((s) => (
             <li key={s.id}>
               <a
                 href={`#${s.id}`}
@@ -91,7 +97,7 @@ function TableOfContents({ activeId }) {
       <div className="lg:hidden sticky top-[94px] z-30 bg-[#09090b]/95 backdrop-blur-sm border-b border-white/[0.06]">
         <div className="overflow-x-auto scrollbar-hide">
           <div className="flex items-center gap-1 px-4 py-2 min-w-max">
-            {TOC_SECTIONS.map((s) => (
+            {sections.map((s) => (
               <a
                 key={s.id}
                 href={`#${s.id}`}
@@ -162,7 +168,11 @@ function PageHero() {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[62ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          Every rule is published open-source and enforced automatically by the protocol. What you see here is exactly how {brand.name}&nbsp;operates.
+          {brand.compliance ? (
+            <>Every rule is published open-source and enforced automatically by Vanta&apos;s autonomous onchain protocol. What you see here is exactly how the Vanta-powered Challenge&nbsp;operates.</>
+          ) : (
+            <>Every rule is published open-source and enforced automatically by the protocol. What you see here is exactly how {brand.name}&nbsp;operates.</>
+          )}
         </p>
       </div>
     </section>
@@ -281,7 +291,7 @@ function WeightTrackingSection() {
               <tr className="border-b border-white/[0.06] bg-white/[0.02]">
                 <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Starting Account Size</th>
                 <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Challenge Weight Tier</th>
-                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Funded Weight Tier</th>
+                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">{brand.compliance ? 'Scaled Weight Tier' : 'Funded Weight Tier'}</th>
               </tr>
             </thead>
             <tbody>
@@ -312,7 +322,7 @@ function WeightTrackingSection() {
                 <span className="text-zinc-200 font-mono">{row.challenge}</span>
               </div>
               <div className="flex items-center justify-between text-sm mt-1">
-                <span className="text-zinc-500">Funded tier</span>
+                <span className="text-zinc-500">{brand.compliance ? 'Scaled tier' : 'Funded tier'}</span>
                 <span className="text-zinc-200 font-mono">{row.funded}</span>
               </div>
             </div>
@@ -441,19 +451,44 @@ function FeesSection() {
 /* ───────────────────────────────────────────────
    Section 3 — Funded Account Rules
    ─────────────────────────────────────────────── */
+function remapBitcastFundedRules(rules) {
+  return rules.map((r) => {
+    if (r.rule === 'Profit Split') {
+      return {
+        rule: 'Rewards',
+        parameter:
+          'Vanta retains 0% of performance-based rewards. Rewards are independent-contractor compensation based on simulated performance — not a profit split.',
+      }
+    }
+    if (r.rule === 'Account Breach Consequence') {
+      return {
+        ...r,
+        parameter: r.parameter.replace(
+          'Funded account is closed',
+          'Scaled account (simulated) is closed'
+        ),
+      }
+    }
+    return r
+  })
+}
+
 function FundedRulesSection() {
   const brand = useBrand()
+  const isBitcast = Boolean(brand.compliance)
+  const baseRules = getFundedRules(brand.accountType, brand.name)
+  const rules = isBitcast ? remapBitcastFundedRules(baseRules) : baseRules
   return (
     <section id="scaled" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
-          Funded Account Phase
+          {isBitcast ? 'Scaled Account Phase (Simulated)' : 'Funded Account Phase'}
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
           Once you pass the challenge, your {brand.accountType} account is activated immediately. These rules apply for the duration of your {brand.accountType}&nbsp;trading.
         </p>
 
-        <RulesTable rules={getFundedRules(brand.accountType, brand.name)} />
+        <RulesTable rules={rules} />
       </div>
     </section>
   )
@@ -594,6 +629,7 @@ function ScalingRulesSection() {
         </div>
 
         {/* Scaling path visual removed — table is sufficient for this page */}
+
       </div>
     </section>
   )
@@ -747,7 +783,11 @@ function ProtocolSection() {
         </h2>
         <div className="mt-4 rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-5 sm:p-6">
           <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-            All rules are enforced programmatically by the {brand.name} protocol. There is no back office, no discretionary review committee, and no ability to override outcomes. Any rule changes are published publicly before taking&nbsp;effect.
+            {brand.compliance ? (
+              <>All rules are automated and enforced programmatically by Vanta&apos;s autonomous onchain protocol; any rule changes are published publicly before they take effect. There is no back office, no discretionary review committee, and no ability to override&nbsp;outcomes.</>
+            ) : (
+              <>All rules are enforced programmatically by the {brand.name} protocol. There is no back office, no discretionary review committee, and no ability to override outcomes. Any rule changes are published publicly before taking&nbsp;effect.</>
+            )}
           </p>
         </div>
 
@@ -761,6 +801,7 @@ function ProtocolSection() {
             <ArrowRight size={14} weight="bold" />
           </Link>
         </div>
+
       </div>
     </section>
   )

@@ -7,12 +7,12 @@ import { buildMetadata } from "@/lib/metadata"
 export const dynamic = "force-dynamic"
 
 export const metadata = buildMetadata({
-  title: "Beanstock — Funded Trading on Hyperliquid",
+  title: "Beanstock — Scaled Trading on Hyperliquid",
   description:
-    "Trade on Hyperliquid. Get a funded account. Keep 100% of your profits. 1-step challenge. Monthly USDC payouts. Scale to $400K.",
-  ogTitle: "Beanstock — Funded Trading on Hyperliquid",
+    "Trade on Hyperliquid. Get a simulated scaled account. Earn performance-based rewards. 1-step challenge. Monthly USDC payouts. Scale to $400K.",
+  ogTitle: "Beanstock — Scaled Trading on Hyperliquid",
   ogDescription:
-    "The most advanced decentralized prop trading infrastructure. 1-step challenge, 100% profit split, onchain USDC payouts.",
+    "The most advanced decentralized prop trading infrastructure. 1-step challenge, USDC rewards, onchain USDC payouts.",
   path: "/beanstock",
   brand: "beanstock",
 })

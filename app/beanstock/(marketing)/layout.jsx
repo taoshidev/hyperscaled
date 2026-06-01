@@ -9,7 +9,7 @@ const ORGANIZATION_SCHEMA = {
   url: "https://beanstocktrading.com",
   logo: "https://beanstocktrading.com/beanstock-logo.svg",
   description:
-    "Decentralized prop trading network built on Hyperliquid. 1-step challenge, 100% profit split, onchain USDC payouts.",
+    "Decentralized prop trading network built on Hyperliquid. 1-step challenge, USDC rewards, onchain USDC payouts.",
   sameAs: [
     "https://x.com/beanstockmoney",
     "https://discord.com/invite/wSC49Gtjsy",
