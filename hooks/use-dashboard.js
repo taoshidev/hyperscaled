@@ -270,10 +270,17 @@ function postJSON(url, payload) {
   });
 }
 
+const POLL_INTERVAL_MS = 15_000;
+
 export function useDashboardData(hlAddress, options = {}) {
   const enabled = !!hlAddress;
   const useFundedDemo =
     !!options.useFundedDemo && isFundedDemoAddress(hlAddress);
+
+  const pollInterval =
+    enabled && !useFundedDemo && !options.streamConnected
+      ? POLL_INTERVAL_MS
+      : false;
 
   const dashboard = useQuery({
     queryKey: ["dashboard", hlAddress],
@@ -284,6 +291,7 @@ export function useDashboardData(hlAddress, options = {}) {
     enabled,
     staleTime: 30_000,
     refetchOnWindowFocus: false,
+    refetchInterval: pollInterval,
   });
 
   const events = useQuery({
@@ -295,6 +303,7 @@ export function useDashboardData(hlAddress, options = {}) {
     enabled,
     staleTime: 30_000,
     refetchOnWindowFocus: false,
+    refetchInterval: pollInterval,
   });
 
   return { dashboard, events };

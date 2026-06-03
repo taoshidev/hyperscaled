@@ -11,9 +11,9 @@ const SSE_HEADERS = {
 };
 
 /** Return a valid SSE response containing a single error event, then close. */
-function sseError(message) {
+function sseError(message, { status = null, terminal = false } = {}) {
   const encoder = new TextEncoder();
-  const payload = JSON.stringify({ type: "error", message });
+  const payload = JSON.stringify({ type: "error", message, status, terminal });
   const body = new ReadableStream({
     start(controller) {
       controller.enqueue(encoder.encode(`data: ${payload}\n\n`));
@@ -45,8 +45,12 @@ export async function GET(request) {
   try {
     ({ endpoint_url, hl_address } = await resolveEndpointUrl(hlAddress));
   } catch (err) {
-    reportError(err, { source: "api/dashboard/stream", userId: hlAddress });
-    return sseError(err.message);
+    const status = err.status ?? 500;
+    const isBenignClientError = status === 404 || status === 400;
+    if (!isBenignClientError) {
+      reportError(err, { source: "api/dashboard/stream", userId: hlAddress });
+    }
+    return sseError(err.message, { status, terminal: isBenignClientError });
   }
 
   let upstream;
