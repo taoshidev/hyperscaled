@@ -40,8 +40,13 @@ export function useDashboardStream(hlAddress) {
         try {
           const msg = JSON.parse(event.data);
           if (msg.type === "error") {
-            // Server sent an explicit error — close and let onerror retry
             es.close();
+            esRef.current = null;
+            if (msg.terminal) {
+              cancelled = true;
+              if (timerRef.current) clearTimeout(timerRef.current);
+              setStatus("disconnected");
+            }
             return;
           }
           if (msg.type === "dashboard") {
@@ -60,6 +65,11 @@ export function useDashboardStream(hlAddress) {
       es.onerror = () => {
         es.close();
         esRef.current = null;
+
+        if (cancelled) {
+          setStatus("disconnected");
+          return;
+        }
 
         if (!hasReportedDisconnectRef.current) {
           hasReportedDisconnectRef.current = true;

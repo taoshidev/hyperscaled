@@ -73,10 +73,13 @@ export function Dashboard() {
     lookupSubmitted &&
     (activeAddress || "").toLowerCase() === FUNDED_DEMO_LOOKUP;
 
-  const { dashboard, events } = useDashboardData(activeAddress, { useFundedDemo });
-  useDashboardStream(
-    activeAddress && dashboard.data && !useFundedDemo ? activeAddress : null,
+  const { status: streamStatus } = useDashboardStream(
+    activeAddress && !useFundedDemo ? activeAddress : null,
   );
+  const { dashboard, events } = useDashboardData(activeAddress, {
+    useFundedDemo,
+    streamConnected: streamStatus === "connected",
+  });
   const payout = usePayoutData(
     dashboard.data?.subaccount_uuid ?? null,
     dashboard.data?.hl_address ?? null,
