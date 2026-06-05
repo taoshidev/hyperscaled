@@ -113,6 +113,7 @@ export function CouponCreateButtonModal({ tierChoices }) {
   const [tierValues, setTierValues] = useState([]);
   const [emailsRaw, setEmailsRaw] = useState("");
   const [maxUsesInput, setMaxUsesInput] = useState("");
+  const [notes, setNotes] = useState("");
 
   const resetFields = useCallback(() => {
     setCode("");
@@ -124,6 +125,7 @@ export function CouponCreateButtonModal({ tierChoices }) {
     setTierValues([]);
     setEmailsRaw("");
     setMaxUsesInput("");
+    setNotes("");
     setError(null);
   }, []);
 
@@ -161,6 +163,7 @@ export function CouponCreateButtonModal({ tierChoices }) {
           allowedTierIds,
           allowedEmails,
           maxUses,
+          notes: notes.trim() || null,
         });
         if (result.success) {
           handleOpenChange(false);
@@ -178,6 +181,7 @@ export function CouponCreateButtonModal({ tierChoices }) {
           allowedTierIds,
           allowedEmails,
           maxUses,
+          notes: notes.trim() || null,
         });
         if (result.success) {
           handleOpenChange(false);
@@ -227,6 +231,24 @@ export function CouponCreateButtonModal({ tierChoices }) {
           <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
             <div className="space-y-6">
               <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="coupon-notes" className="text-zinc-300">
+                    Notes
+                  </Label>
+                  <textarea
+                    id="coupon-notes"
+                    rows={3}
+                    maxLength={500}
+                    placeholder="Optional internal description (e.g. campaign or partner)"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    disabled={loading}
+                    className={cn(fieldClass, "min-h-[72px] resize-y py-2")}
+                  />
+                  <p className="text-xs text-zinc-500">
+                    Shown in Command Center only; not visible at checkout.
+                  </p>
+                </div>
                 <div className="space-y-2 sm:col-span-2">
                   <Label className="text-zinc-300">Code</Label>
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { CaretDown } from "@phosphor-icons/react";
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { CaretDown, PencilSimple } from "@phosphor-icons/react";
 import {
   Table,
   TableBody,
@@ -10,7 +11,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { updateCouponNotes } from "@/app/actions/coupons";
 import { cn } from "@/lib/utils";
+
+const fieldClass =
+  "flex w-full rounded-lg border border-white/[0.08] bg-zinc-950/60 px-3 py-2 text-sm text-white placeholder:text-zinc-600 transition-colors focus-visible:outline-none focus-visible:border-teal-400/40 focus-visible:ring-2 focus-visible:ring-teal-400/20 disabled:cursor-not-allowed disabled:opacity-50";
 
 function formatTs(iso) {
   return iso ? new Date(iso).toLocaleString() : "—";
@@ -31,8 +36,119 @@ function shortenWallet(wallet) {
   return `${wallet.slice(0, 6)}…${wallet.slice(-4)}`;
 }
 
+function CouponRowNotesPanel({
+  couponId,
+  couponCode,
+  notes,
+  editing,
+  onEditingChange,
+}) {
+  const router = useRouter();
+  const [draft, setDraft] = useState(notes ?? "");
+  const [isPending, startTransition] = useTransition();
+  const [status, setStatus] = useState(null);
+
+  useEffect(() => {
+    if (!editing) setDraft(notes ?? "");
+  }, [notes, editing]);
+
+  const cancel = () => {
+    setDraft(notes ?? "");
+    setStatus(null);
+    onEditingChange(false);
+  };
+
+  const save = () => {
+    setStatus(null);
+    startTransition(async () => {
+      const result = await updateCouponNotes(
+        couponId,
+        draft.trim() ? draft : null,
+      );
+      if (!result.success) {
+        setStatus({ type: "error", message: result.error });
+        return;
+      }
+      setStatus({ type: "success", message: "Notes saved." });
+      onEditingChange(false);
+      router.refresh();
+    });
+  };
+
+  return (
+    <div className="mb-4 space-y-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-[10px] font-semibold uppercase tracking-widest text-teal-400">
+          Notes
+        </span>
+        {!editing ? (
+          <button
+            type="button"
+            onClick={() => onEditingChange(true)}
+            className="inline-flex items-center gap-1 rounded-md border border-white/[0.08] bg-zinc-900/70 px-2 py-1 text-[11px] text-zinc-300 transition-colors hover:bg-white/[0.04] hover:text-white"
+          >
+            <PencilSimple size={11} weight="bold" aria-hidden />
+            {notes?.trim() ? "Edit notes" : "Add notes"}
+          </button>
+        ) : null}
+      </div>
+      {editing ? (
+        <div className="space-y-2">
+          <label htmlFor={`coupon-notes-${couponId}`} className="sr-only">
+            Notes for {couponCode}
+          </label>
+          <textarea
+            id={`coupon-notes-${couponId}`}
+            rows={3}
+            maxLength={500}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            disabled={isPending}
+            placeholder="Internal description (optional)"
+            className={cn(fieldClass, "min-h-[72px] resize-y")}
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={save}
+              className="inline-flex h-8 items-center rounded-lg border border-teal-400/30 bg-teal-400/15 px-3 text-xs font-medium text-teal-300 transition-colors hover:bg-teal-400/25 disabled:opacity-50"
+            >
+              {isPending ? "Saving…" : "Save"}
+            </button>
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={cancel}
+              className="inline-flex h-8 items-center rounded-lg border border-white/[0.08] bg-zinc-900/70 px-3 text-xs text-zinc-300 transition-colors hover:bg-white/[0.04] hover:text-white disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : notes?.trim() ? (
+        <p className="whitespace-pre-wrap text-sm text-zinc-200">{notes}</p>
+      ) : (
+        <p className="text-sm text-zinc-500">No notes yet.</p>
+      )}
+      {status ? (
+        <p
+          className={cn(
+            "text-xs",
+            status.type === "error" ? "text-red-400" : "text-teal-400",
+          )}
+          role="status"
+        >
+          {status.message}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export function CouponAdminTableRow({ row }) {
   const [open, setOpen] = useState(false);
+  const [editingNotes, setEditingNotes] = useState(false);
   const isExpired = row.validUntil ? new Date(row.validUntil) < new Date() : false;
 
   const discountUi =
@@ -51,6 +167,11 @@ export function CouponAdminTableRow({ row }) {
       : String(row.redemptionCount);
 
   const detailId = `coupon-row-${row.id}`;
+
+  const startEditNotes = () => {
+    setOpen(true);
+    setEditingNotes(true);
+  };
 
   return (
     <>
@@ -124,10 +245,20 @@ export function CouponAdminTableRow({ row }) {
             </span>
           )}
         </TableCell>
+        <TableCell className="w-[100px]">
+          <button
+            type="button"
+            onClick={startEditNotes}
+            className="inline-flex items-center gap-1 rounded-md border border-white/[0.08] bg-zinc-900/70 px-2 py-1 text-[11px] text-zinc-300 transition-colors hover:bg-white/[0.04] hover:text-white"
+          >
+            <PencilSimple size={11} weight="bold" aria-hidden />
+            Notes
+          </button>
+        </TableCell>
       </TableRow>
 
       <TableRow className="border-b border-white/[0.04] hover:bg-transparent">
-        <TableCell colSpan={11} className="bg-[#0a0a0c] p-0">
+        <TableCell colSpan={12} className="bg-[#0a0a0c] p-0">
           <div
             id={detailId}
             role="region"
@@ -143,8 +274,17 @@ export function CouponAdminTableRow({ row }) {
               <div className="px-5 py-4 text-sm">
                 <div className="mb-3 flex flex-wrap gap-x-6 gap-y-1 font-mono text-[11px] text-zinc-500">
                   <span>id: {row.id}</span>
-                  {row.validFrom ? <span>valid from {formatTs(row.validFrom)}</span> : null}
+                  {row.validFrom ? (
+                    <span>valid from {formatTs(row.validFrom)}</span>
+                  ) : null}
                 </div>
+                <CouponRowNotesPanel
+                  couponId={row.id}
+                  couponCode={row.code}
+                  notes={row.notes}
+                  editing={editingNotes}
+                  onEditingChange={setEditingNotes}
+                />
                 <div className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-teal-400">
                   Users who used this code
                 </div>
