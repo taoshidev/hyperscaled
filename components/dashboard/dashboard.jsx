@@ -433,8 +433,16 @@ export function Dashboard() {
   const accountName = `CRYPTO ${sizeLabel}`;
 
   // Derive tier from account size
-  const tierLabel =
-    data.account_size >= 100000 ? "Tier III" : data.account_size >= 50000 ? "Tier II" : "Tier I";
+  const tierMap = [
+    { min: 100000, label: "Tier IV" },
+    { min: 50000, label: "Tier III" },
+    { min: 25000, label: "Tier II" },
+    { min: 10000, label: "Tier I" },
+    { min: 5000, label: "Starter" },
+    { min: 0, label: "Free" },
+  ];
+
+  const tierLabel = tierMap.find(tier => data.account_size >= tier.min)?.label;
 
   return (
     <div className="min-h-[calc(100dvh-4rem)] px-6 py-8">
