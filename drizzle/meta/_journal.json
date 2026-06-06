@@ -50,6 +50,34 @@
       "when": 1780537603403,
       "tag": "0006_coupon_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781042400000,
+      "tag": "0007_promotional_campaigns",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1780776131915,
+      "tag": "0008_woozy_roxanne_simpson",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1780778557699,
+      "tag": "0009_supreme_slipstream",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1780778591131,
+      "tag": "0010_puzzling_gideon",
+      "breakpoints": true
     }
   ]
 }

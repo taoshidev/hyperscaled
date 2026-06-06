@@ -3,6 +3,7 @@ import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { fetchDbPricingTiers } from '@/lib/pricing-db'
 import { pricingMinerSlugForBrandId } from '@/lib/pricing-miner-slug'
+import { resolveActiveCampaign } from '@/lib/campaign-pricing'
 
 export const metadata = buildMetadata({
   title: 'How It Works — Beanstock Scaled Trading',
@@ -50,7 +51,11 @@ const HOW_TO_SCHEMA = {
 }
 
 export default async function BeanstockHowItWorks() {
-  const tiers = await fetchDbPricingTiers(pricingMinerSlugForBrandId('beanstock'))
+  const minerSlug = pricingMinerSlugForBrandId('beanstock')
+  const activeCampaign = await resolveActiveCampaign({ minerSlug }).catch(
+    () => null,
+  )
+  const tiers = await fetchDbPricingTiers(minerSlug, { activeCampaign })
   return (
     <>
       <JsonLd data={HOW_TO_SCHEMA} />

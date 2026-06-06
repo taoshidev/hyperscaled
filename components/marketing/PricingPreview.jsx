@@ -11,7 +11,6 @@ import { trackCtaClick } from '@/lib/analytics'
 import { useRegistrationCapacity } from '@/hooks/use-registration-capacity'
 import { isFreeTierForRegistration } from '@/lib/registration-tier-helpers'
 import { RegistrationCapacityWaitlist } from '@/components/marketing/RegistrationCapacityWaitlist'
-import { isWsbSaleBannerPublic } from '@/lib/wsb-sale-banner-public'
 import { capacityMinerSlugForBrandId } from '@/lib/capacity-miner-slug'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
@@ -135,20 +134,6 @@ export default function PricingPreview({ tiers }) {
             paidAtCapacity={paidAtCapacity}
             className="mt-0"
           />
-
-          {(brand.id === 'hyperscaled' || brand.id === 'vanta') && isWsbSaleBannerPublic() && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={inView ? { opacity: 1 } : {}}
-              transition={{ ...spring, delay: 0.25 }}
-              className="flex justify-center"
-            >
-              <div className="inline-flex items-center gap-2.5 rounded-full bg-white px-4 py-2">
-                <img src="/wsb-logo.svg" alt="" className="-my-1 h-8 w-8 rounded-sm" />
-                <span className="text-sm font-semibold tracking-tight text-zinc-900">WallStreetBets Flash Deal: 50% Off All Challenges</span>
-              </div>
-            </motion.div>
-          )}
         </div>
 
       </div>
