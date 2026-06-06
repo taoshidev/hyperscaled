@@ -4,7 +4,7 @@ import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight, Star } from '@phosphor-icons/react'
-import { PRICING_TIERS, parseTierAccountSize } from '@/lib/constants'
+import { PRICING_TIERS, parseTierAccountSize, isWsbBrand, wsbPromoPrice, WSB_PROMO } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
 
@@ -18,7 +18,7 @@ function tierBadge(tier) {
   return null
 }
 
-function PricingCard({ tier, index, brandHref }) {
+function PricingCard({ tier, index, brandHref, isWsb }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
 
@@ -27,6 +27,11 @@ function PricingCard({ tier, index, brandHref }) {
     { label: 'Max Drawdown', value: `${tier.maxDrawdownAmount} limit` },
     { label: 'Scaling', value: tier.scalingPath },
   ]
+
+  const basePrice = Number(tier.standardPrice) || 0
+  const isFree = tier.id === 'free' || Number(tier.launchPrice) === 0
+  const livePrice = isWsb && basePrice > 0 ? wsbPromoPrice(basePrice) : tier.launchPrice
+  const showStrike = !isFree && basePrice > 0 && basePrice > Number(livePrice)
 
   return (
     <motion.div
@@ -59,20 +64,34 @@ function PricingCard({ tier, index, brandHref }) {
       <h3 className="text-lg font-semibold">{tier.name}</h3>
 
       {/* Pricing */}
-      <div className="mt-4 flex items-baseline gap-2">
-        <ins className="text-3xl sm:text-4xl xl:text-3xl font-bold font-mono no-underline text-white">
-          ${tier.launchPrice}
-        </ins>
-        {tier.standardPrice && (
-          <del className="text-sm text-zinc-600 font-mono">${tier.standardPrice}</del>
-        )}
-        <span className="text-xs text-zinc-500 font-medium">USDC</span>
-        <span className="sr-only">
-          {tier.standardPrice
-            ? `Launch price ${tier.launchPrice} USDC, was ${tier.standardPrice} USDC`
-            : `${tier.launchPrice} USDC`}
-        </span>
-      </div>
+      {isFree ? (
+        <div className="mt-4 flex items-baseline gap-2">
+          <ins className="text-3xl sm:text-4xl xl:text-3xl font-bold font-mono no-underline text-white">
+            $0
+          </ins>
+          <span className="text-xs text-zinc-500 font-medium">USDC</span>
+        </div>
+      ) : (
+        <div className="mt-4 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <ins className="text-3xl sm:text-4xl xl:text-3xl font-bold font-mono no-underline text-white">
+            ${livePrice}
+          </ins>
+          {showStrike && (
+            <del className="text-sm text-zinc-600 font-mono">${basePrice}</del>
+          )}
+          <span className="text-xs text-zinc-500 font-medium">USDC</span>
+          {isWsb && showStrike && (
+            <span className="inline-flex items-center rounded-full bg-teal-400/15 text-teal-300 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5">
+              {WSB_PROMO.discountPct}% off
+            </span>
+          )}
+          <span className="sr-only">
+            {showStrike
+              ? `Promo price ${livePrice} USDC, was ${basePrice} USDC`
+              : `${livePrice} USDC`}
+          </span>
+        </div>
+      )}
 
       {/* Details */}
       <ul className="mt-6 xl:mt-4 space-y-3 xl:space-y-2 flex-1">
@@ -108,6 +127,9 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
   const brand = useBrand()
   const brandHref = useBrandHref()
   tiers = brand.pricingTiers || tiers
+  const isWsb = isWsbBrand(brand.id)
+  // WSB layout runs largest → smallest ($100K leftmost, free rightmost).
+  const orderedTiers = isWsb ? [...tiers].reverse() : tiers
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -133,23 +155,26 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
           </div>
         </motion.div>
 
-        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-6 md:gap-5 xl:gap-3`}>
-          {tiers.map((tier, i) => (
-            <PricingCard key={tier.id} tier={tier} index={i} brandHref={brandHref} />
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${orderedTiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-6 md:gap-5 xl:gap-3`}>
+          {orderedTiers.map((tier, i) => (
+            <PricingCard key={tier.id} tier={tier} index={i} brandHref={brandHref} isWsb={isWsb} />
           ))}
         </div>
 
         {/* WSB Flash Deal pill — Hyperscaled & Vanta only */}
-        {(brand.id === 'hyperscaled' || brand.id === 'vanta') && (
+        {isWsb && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={inView ? { opacity: 1 } : {}}
             transition={{ ...spring, delay: 0.25 }}
-            className="flex justify-center mt-6"
+            className="flex justify-center mt-8"
           >
-            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
-              <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
-              <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
+            <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white shadow-[0_4px_24px_rgba(0,0,0,0.25)]">
+              <img src="/wsb-logo.svg" alt="" className="h-9 w-9 -my-1 rounded-sm" />
+              <span className="text-sm sm:text-base font-semibold text-zinc-900 tracking-tight">
+                WallStreetBets Flash Deal — <span className="font-extrabold text-teal-600">{WSB_PROMO.discountPct}% off all challenges</span>
+                <span className="text-zinc-500 font-medium"> · Ends {WSB_PROMO.endsLabel}</span>
+              </span>
             </div>
           </motion.div>
         )}

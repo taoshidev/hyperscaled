@@ -4,6 +4,7 @@ import { useMemo, useRef } from "react";
 import { Check, ArrowRight, Star, ArrowUpRight } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { useBrand } from "@/lib/brand";
+import { isWsbBrand, wsbPromoPrice, WSB_PROMO } from "@/lib/constants";
 
 function formatPrice(price) {
   if (price == null || Number.isNaN(Number(price))) return "—";
@@ -48,6 +49,18 @@ export function StepSelectTier({
   onContinue,
 }) {
   const cardRefs = useRef([]);
+  const brand = useBrand();
+  const isWsb = isWsbBrand(brand.id);
+
+  // Visual order maps display position → original tier index. WSB brands run
+  // largest → smallest ($100K leftmost, free rightmost). All selection,
+  // focus, and callbacks stay keyed by the ORIGINAL index so the parent's
+  // index-based state is unaffected.
+  const renderOrder = useMemo(() => {
+    if (!Array.isArray(tiers)) return [];
+    const order = tiers.map((_, i) => i);
+    return isWsb ? order.reverse() : order;
+  }, [tiers, isWsb]);
 
   const selectedIndex = useMemo(() => {
     if (Array.isArray(tiers) && Number.isInteger(selectedTierIndex)) {
@@ -64,7 +77,9 @@ export function StepSelectTier({
     onSelect?.(tiers[index], index);
   }
 
-  function handleArrowNav(e, index) {
+  // `pos` is the display position within renderOrder; navigation moves by
+  // visual position and resolves back to the original tier index.
+  function handleArrowNav(e, pos) {
     if (!Array.isArray(tiers) || tiers.length === 0) return;
     if (
       e.key !== "ArrowRight" &&
@@ -77,15 +92,14 @@ export function StepSelectTier({
 
     e.preventDefault();
     const isForward = e.key === "ArrowRight" || e.key === "ArrowDown";
-    const nextIndex = isForward
-      ? (index + 1) % tiers.length
-      : (index - 1 + tiers.length) % tiers.length;
+    const nextPos = isForward
+      ? (pos + 1) % renderOrder.length
+      : (pos - 1 + renderOrder.length) % renderOrder.length;
+    const nextIndex = renderOrder[nextPos];
 
     cardRefs.current[nextIndex]?.focus();
     handleSelectIndex(nextIndex);
   }
-
-  const brand = useBrand();
 
   return (
     <div className="flex flex-col">
@@ -131,9 +145,14 @@ export function StepSelectTier({
               </p>
             </div>
           )
-          : tiers.map((tier, i) => {
+          : renderOrder.map((i, pos) => {
+              const tier = tiers[i];
               const isSelected = i === selectedIndex;
               const isPopular = tier.badge != null;
+              const isFree = tier.id === 'free' || Number(tier.promoPrice) === 0;
+              const hasStrike =
+                Number(tier.fullPrice) > 0 &&
+                Number(tier.fullPrice) !== Number(tier.promoPrice);
 
               return (
                 <button
@@ -148,9 +167,9 @@ export function StepSelectTier({
                   data-tier-account-size={String(tier.accountSize)}
                   aria-checked={isSelected}
                   aria-label={`${tier.name} — ${formatShortName(tier.accountSize)} ${brand.accountType} account — ${formatPrice(tier.promoPrice)}`}
-                  tabIndex={isSelected || (selectedIndex < 0 && i === 0) ? 0 : -1}
+                  tabIndex={isSelected || (selectedIndex < 0 && pos === 0) ? 0 : -1}
                   onClick={() => handleSelectIndex(i)}
-                  onKeyDown={(e) => handleArrowNav(e, i)}
+                  onKeyDown={(e) => handleArrowNav(e, pos)}
                   className={`
                     relative block w-full text-left cursor-pointer rounded-2xl p-6 xl:p-4 group
                     text-card-foreground
@@ -166,7 +185,7 @@ export function StepSelectTier({
                     }
                     ${hasSelection && !isSelected ? "opacity-70" : ""}
                   `}
-                  style={{ animationDelay: `${i * 80}ms` }}
+                  style={{ animationDelay: `${pos * 80}ms` }}
                 >
                   {/* Hover glow — persistent when selected */}
                   <div
@@ -197,7 +216,7 @@ export function StepSelectTier({
                   </div>
 
                   {/* Pricing */}
-                  <div className="flex items-baseline gap-2 mt-3 mb-5 xl:mb-4">
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mt-3 mb-5 xl:mb-4">
                     <ins className="no-underline">
                       <span className="sr-only">Price: </span>
                       <span
@@ -207,10 +226,15 @@ export function StepSelectTier({
                         {formatPrice(tier.promoPrice)}
                       </span>
                     </ins>
-                    {tier.fullPrice > 0 && tier.fullPrice !== tier.promoPrice && (
+                    {hasStrike && (
                       <del className="text-sm text-zinc-600 font-mono">{formatPrice(tier.fullPrice)}</del>
                     )}
                     <span className="text-xs text-zinc-500 font-medium">USDC</span>
+                    {isWsb && hasStrike && !isFree && (
+                      <span className="inline-flex items-center rounded-full bg-teal-400/15 text-teal-300 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5">
+                        {WSB_PROMO.discountPct}% off
+                      </span>
+                    )}
                   </div>
 
                   {/* Separator */}
@@ -267,11 +291,14 @@ export function StepSelectTier({
       </div>
 
       {/* WSB Flash Deal pill — Hyperscaled & Vanta only */}
-      {(brand.id === 'hyperscaled' || brand.id === 'vanta') && (
-        <div className="flex justify-center mt-6">
-          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
-            <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
-            <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
+      {isWsb && (
+        <div className="flex justify-center mt-8">
+          <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white shadow-[0_4px_24px_rgba(0,0,0,0.25)]">
+            <img src="/wsb-logo.svg" alt="" className="h-9 w-9 -my-1 rounded-sm" />
+            <span className="text-sm sm:text-base font-semibold text-zinc-900 tracking-tight">
+              WallStreetBets Flash Deal — <span className="font-extrabold text-teal-600">{WSB_PROMO.discountPct}% off all challenges</span>
+              <span className="text-zinc-500 font-medium"> · Ends {WSB_PROMO.endsLabel}</span>
+            </span>
           </div>
         </div>
       )}

@@ -3,7 +3,7 @@
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { ArrowRight, Star } from '@phosphor-icons/react'
-import { PRICING_TIERS, parseTierAccountSize } from '@/lib/constants'
+import { PRICING_TIERS, parseTierAccountSize, isWsbBrand, wsbPromoPrice, WSB_PROMO } from '@/lib/constants'
 import { useBrand } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
 
@@ -20,6 +20,9 @@ function tierBadge(tier) {
 export default function PricingPreview({ tiers = PRICING_TIERS }) {
   const brand = useBrand()
   tiers = brand.pricingTiers || tiers
+  const isWsb = isWsbBrand(brand.id)
+  // WSB layout runs largest → smallest ($100K leftmost, free rightmost).
+  const orderedTiers = isWsb ? [...tiers].reverse() : tiers
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -40,8 +43,13 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
           </h2>
         </motion.div>
 
-        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-4 xl:gap-3`}>
-          {tiers.map((tier, i) => (
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${orderedTiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-4 xl:gap-3`}>
+          {orderedTiers.map((tier, i) => {
+            const basePrice = Number(tier.standardPrice) || 0
+            const isFree = tier.id === 'free' || Number(tier.launchPrice) === 0
+            const livePrice = isWsb && basePrice > 0 ? wsbPromoPrice(basePrice) : tier.launchPrice
+            const showStrike = !isFree && basePrice > 0 && basePrice > Number(livePrice)
+            return (
             <motion.div
               key={tier.id}
               initial={{ opacity: 0, y: 20 }}
@@ -72,20 +80,34 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
               <div className="text-lg font-semibold text-white mb-3">{tier.name}</div>
 
               {/* Price */}
-              <div className="flex items-baseline gap-2 mb-5">
-                <ins className="text-3xl font-bold font-mono no-underline text-white">
-                  ${tier.launchPrice}
-                </ins>
-                {tier.standardPrice && (
-                  <del className="text-sm text-zinc-600 font-mono">${tier.standardPrice}</del>
-                )}
-                <span className="text-xs text-zinc-500 font-medium">USDC</span>
-                <span className="sr-only">
-                  {tier.standardPrice
-                    ? `Launch price ${tier.launchPrice} USDC, was ${tier.standardPrice} USDC`
-                    : `${tier.launchPrice} USDC`}
-                </span>
-              </div>
+              {isFree ? (
+                <div className="flex items-baseline gap-2 mb-5">
+                  <ins className="text-3xl font-bold font-mono no-underline text-white">
+                    $0
+                  </ins>
+                  <span className="text-xs text-zinc-500 font-medium">USDC</span>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1 mb-5">
+                  <ins className="text-3xl font-bold font-mono no-underline text-white">
+                    ${livePrice}
+                  </ins>
+                  {showStrike && (
+                    <del className="text-sm text-zinc-600 font-mono">${basePrice}</del>
+                  )}
+                  <span className="text-xs text-zinc-500 font-medium">USDC</span>
+                  {isWsb && showStrike && (
+                    <span className="inline-flex items-center rounded-full bg-teal-400/15 text-teal-300 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5">
+                      {WSB_PROMO.discountPct}% off
+                    </span>
+                  )}
+                  <span className="sr-only">
+                    {showStrike
+                      ? `Promo price ${livePrice} USDC, was ${basePrice} USDC`
+                      : `${livePrice} USDC`}
+                  </span>
+                </div>
+              )}
 
               <a
                 href={(() => {
@@ -103,20 +125,24 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
                 <ArrowRight size={14} weight="bold" />
               </a>
             </motion.div>
-          ))}
+            )
+          })}
         </div>
 
         {/* WSB Flash Deal pill — Hyperscaled & Vanta only */}
-        {(brand.id === 'hyperscaled' || brand.id === 'vanta') && (
+        {isWsb && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={inView ? { opacity: 1 } : {}}
             transition={{ ...spring, delay: 0.25 }}
-            className="flex justify-center mt-6"
+            className="flex justify-center mt-8"
           >
-            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
-              <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
-              <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
+            <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white shadow-[0_4px_24px_rgba(0,0,0,0.25)]">
+              <img src="/wsb-logo.svg" alt="" className="h-9 w-9 -my-1 rounded-sm" />
+              <span className="text-sm sm:text-base font-semibold text-zinc-900 tracking-tight">
+                WallStreetBets Flash Deal — <span className="font-extrabold text-teal-600">{WSB_PROMO.discountPct}% off all challenges</span>
+                <span className="text-zinc-500 font-medium"> · Ends {WSB_PROMO.endsLabel}</span>
+              </span>
             </div>
           </motion.div>
         )}

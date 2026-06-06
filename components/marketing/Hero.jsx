@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { ArrowRight, TrendUp, ArrowsClockwise } from '@phosphor-icons/react'
 import { HERO_STATS } from '@/lib/constants'
 import LiquidCrystalBg from './LiquidCrystalBg'
-import PromoBanner from './PromoBanner'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
 
@@ -35,9 +34,6 @@ export default function Hero() {
       {/* Liquid crystal shader background */}
       {brand.showLiquidCrystal && <LiquidCrystalBg className="pointer-events-none" />}
       <div className="absolute inset-0 bg-zinc-950/60 pointer-events-none" />
-
-      {/* Promo banner — scrolls with hero */}
-      <PromoBanner />
 
       <div className="relative max-w-[1400px] mx-auto px-6 w-full py-20 flex-1 flex items-center">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-20 items-center">

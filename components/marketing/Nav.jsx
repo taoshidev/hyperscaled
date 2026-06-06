@@ -4,10 +4,11 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, List, X, DotsThree, ArrowSquareOut } from '@phosphor-icons/react'
-import { CHROME_EXTENSION_URL } from '@/lib/constants'
+import { CHROME_EXTENSION_URL, isWsbBrand, WSB_PROMO } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
 import NavStartChallengeCta from './NavStartChallengeCta'
+import PromoBanner, { PROMO_BANNER_HEIGHT_CLASS } from './PromoBanner'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -125,6 +126,9 @@ export default function Nav({ excludeLinks = [], walletAware = false }) {
   const brand = useBrand()
   const brandHref = useBrandHref()
 
+  // WSB flash-deal banner pinned to the bottom of the fixed nav (HS/Vanta only).
+  const showPromoBanner = isWsbBrand(brand.id) && WSB_PROMO.active
+
   const primaryLinks = excludeLinks.length
     ? PRIMARY_LINKS.filter((l) => !excludeLinks.includes(l.label))
     : PRIMARY_LINKS
@@ -209,6 +213,9 @@ export default function Nav({ excludeLinks = [], walletAware = false }) {
         </div>
       </div>
 
+      {/* WSB flash-deal bar — pinned to the bottom of the nav (HS/Vanta only) */}
+      <PromoBanner />
+
       {/* Hamburger menu — all links for mobile */}
       <AnimatePresence>
         {mobileOpen && (
@@ -252,6 +259,8 @@ export default function Nav({ excludeLinks = [], walletAware = false }) {
         )}
       </AnimatePresence>
     </motion.header>
+    {/* In-flow spacer so page content clears the banner added to the fixed header */}
+    {showPromoBanner && <div className={PROMO_BANNER_HEIGHT_CLASS} aria-hidden="true" />}
     </>
   )
 }

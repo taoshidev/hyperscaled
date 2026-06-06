@@ -18,8 +18,7 @@ import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { trackCtaClick } from '@/lib/analytics'
 import FAQAccordion from '@/components/shared/FAQAccordion'
-import PromoBanner from '@/components/marketing/PromoBanner'
-import { PRICING_TIERS, PRICING_FAQ, parseTierAccountSize } from '@/lib/constants'
+import { PRICING_TIERS, PRICING_FAQ, parseTierAccountSize, isWsbBrand, wsbPromoPrice, WSB_PROMO } from '@/lib/constants'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -36,8 +35,7 @@ function PricingHero() {
   const brand = useBrand()
   return (
     <section className={`pb-16 px-6 ${brand.parentSite ? 'pt-32' : 'pt-24'}`}>
-      <PromoBanner />
-      <div className="max-w-[800px] mx-auto text-center pt-8">
+      <div className="max-w-[800px] mx-auto text-center">
         <motion.h1
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -62,7 +60,7 @@ function PricingHero() {
 }
 
 /* ── Single Pricing Card ── */
-function PricingCard({ tier, index }) {
+function PricingCard({ tier, index, isWsb }) {
   const brandHref = useBrandHref()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
@@ -74,6 +72,12 @@ function PricingCard({ tier, index }) {
   ]
 
   const numericAccountSize = parseTierAccountSize(tier.accountSize);
+
+  // WSB brands show 55% off the base/standard price; others keep launch price.
+  const basePrice = Number(tier.standardPrice) || 0
+  const isFree = tier.id === 'free' || Number(tier.launchPrice) === 0
+  const livePrice = isWsb && basePrice > 0 ? wsbPromoPrice(basePrice) : tier.launchPrice
+  const showStrike = !isFree && basePrice > 0 && basePrice > Number(livePrice)
 
   return (
     <motion.div
@@ -109,23 +113,40 @@ function PricingCard({ tier, index }) {
       <h3 className="text-lg font-semibold">{tier.name}</h3>
 
       {/* Pricing */}
-      <div className="mt-4 flex items-baseline gap-2">
-        <ins
-          data-testid="pricing-tier-launch-price"
-          className="text-3xl sm:text-4xl xl:text-3xl font-bold font-mono no-underline text-white"
-        >
-          ${tier.launchPrice}
-        </ins>
-        {tier.standardPrice && (
-          <del className="text-sm text-zinc-600 font-mono">${tier.standardPrice}</del>
-        )}
-        <span className="text-xs text-zinc-500 font-medium">USDC</span>
-        <span className="sr-only">
-          {tier.standardPrice
-            ? `Launch price ${tier.launchPrice} USDC, was ${tier.standardPrice} USDC`
-            : `${tier.launchPrice} USDC`}
-        </span>
-      </div>
+      {isFree ? (
+        <div className="mt-4 flex items-baseline gap-2">
+          <ins
+            data-testid="pricing-tier-launch-price"
+            className="text-3xl sm:text-4xl xl:text-3xl font-bold font-mono no-underline text-white"
+          >
+            $0
+          </ins>
+          <span className="text-xs text-zinc-500 font-medium">USDC</span>
+        </div>
+      ) : (
+        <div className="mt-4 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <ins
+            data-testid="pricing-tier-launch-price"
+            className="text-3xl sm:text-4xl xl:text-3xl font-bold font-mono no-underline text-white"
+          >
+            ${livePrice}
+          </ins>
+          {showStrike && (
+            <del className="text-sm text-zinc-600 font-mono">${basePrice}</del>
+          )}
+          <span className="text-xs text-zinc-500 font-medium">USDC</span>
+          {isWsb && showStrike && (
+            <span className="inline-flex items-center rounded-full bg-teal-400/15 text-teal-300 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5">
+              {WSB_PROMO.discountPct}% off
+            </span>
+          )}
+          <span className="sr-only">
+            {showStrike
+              ? `Promo price ${livePrice} USDC, was ${basePrice} USDC`
+              : `${livePrice} USDC`}
+          </span>
+        </div>
+      )}
 
       {/* Details */}
       <ul className="mt-6 xl:mt-4 space-y-3 xl:space-y-2 flex-1">
@@ -159,19 +180,25 @@ function PricingCard({ tier, index }) {
 
 /* ── Pricing Cards Grid ── */
 function PricingCards({ tiers, brandId }) {
+  const isWsb = isWsbBrand(brandId)
+  // WSB layout runs largest → smallest ($100K leftmost, free rightmost).
+  const orderedTiers = isWsb ? [...tiers].reverse() : tiers
   return (
     <section className="px-6 pb-20">
-      <div className={`max-w-[1400px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-6 md:gap-5 xl:gap-3`}>
-        {tiers.map((tier, i) => (
-          <PricingCard key={tier.id} tier={tier} index={i} />
+      <div className={`max-w-[1400px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${orderedTiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-6 md:gap-5 xl:gap-3`}>
+        {orderedTiers.map((tier, i) => (
+          <PricingCard key={tier.id} tier={tier} index={i} isWsb={isWsb} />
         ))}
       </div>
       {/* WSB Flash Deal pill — Hyperscaled & Vanta only */}
-      {(brandId === 'hyperscaled' || brandId === 'vanta') && (
-        <div className="flex justify-center mt-6">
-          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
-            <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
-            <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
+      {isWsb && (
+        <div className="flex justify-center mt-8">
+          <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white shadow-[0_4px_24px_rgba(0,0,0,0.25)]">
+            <img src="/wsb-logo.svg" alt="" className="h-9 w-9 -my-1 rounded-sm" />
+            <span className="text-sm sm:text-base font-semibold text-zinc-900 tracking-tight">
+              WallStreetBets Flash Deal — <span className="font-extrabold text-teal-600">{WSB_PROMO.discountPct}% off all challenges</span>
+              <span className="text-zinc-500 font-medium"> · Ends {WSB_PROMO.endsLabel}</span>
+            </span>
           </div>
         </div>
       )}
