@@ -4,7 +4,7 @@ import { useMemo, useRef } from "react";
 import { Check, ArrowRight, Star, ArrowUpRight } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { useBrand } from "@/lib/brand";
-import { isWsbBrand, wsbPromoPrice, WSB_PROMO } from "@/lib/constants";
+import { isWsbBrand, WSB_PROMO } from "@/lib/constants";
 
 function formatPrice(price) {
   if (price == null || Number.isNaN(Number(price))) return "—";
