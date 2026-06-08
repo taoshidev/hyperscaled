@@ -2,12 +2,37 @@ import { test, expect } from "@playwright/test";
 import {
   closePool,
   loadActiveTiersBySlug,
+  loadActiveCampaignForSlug,
 } from "./fixtures/db.js";
 import {
   pricingCardByAccountSize,
   tierCardByAccountSize,
 } from "./fixtures/onboarding.js";
 import { listPriceUsdcFromDbTier } from "../../lib/wsb-tier-list-price.js";
+
+// Mirror of `applyCampaignToTierPrice` + `computeCouponDiscount` so the price
+// assertion accounts for an active promotional campaign (the /pricing storefront
+// shows the campaign-discounted price as the headline). Falls back to the list
+// price when no campaign is active.
+function campaignAdjustedPrice(listPrice, accountSize, campaign) {
+  const original = Number(listPrice);
+  if (!campaign || original <= 0) return original;
+
+  const overrides = campaign.tierPriceOverrides;
+  if (overrides && typeof overrides === "object") {
+    const raw = overrides[String(accountSize)];
+    if (raw != null && Number.isFinite(Number(raw))) {
+      return Math.max(0, Number(raw));
+    }
+  }
+
+  const dv = Number(campaign.discountValue);
+  const discountAmount =
+    campaign.discountType === "percent"
+      ? Math.round(((original * dv) / 100) * 100) / 100
+      : Math.min(dv, original);
+  return Math.round(Math.max(0, original - discountAmount) * 100) / 100;
+}
 
 // The cheapest spec in the suite: no DB writes, no wallet, no
 // registration. Just asserts the wizard's tier list and the marketing
@@ -17,6 +42,7 @@ import { listPriceUsdcFromDbTier } from "../../lib/wsb-tier-list-price.js";
 
 test.describe("Tier selection", () => {
   let tiers;
+  let activeCampaign;
 
   test.beforeAll(async () => {
     tiers = await loadActiveTiersBySlug("vanta");
@@ -24,6 +50,7 @@ test.describe("Tier selection", () => {
       tiers.length,
       "no active vanta tiers found in DB; run `pnpm db:seed`",
     ).toBeGreaterThan(0);
+    activeCampaign = await loadActiveCampaignForSlug("vanta");
   });
 
   test.afterAll(async () => {
@@ -71,8 +98,13 @@ test.describe("Tier selection", () => {
         .locator('[data-testid="pricing-tier-launch-price"]')
         .innerText();
       const displayedNumber = Number(displayed.replace(/[^\d.]/g, ""));
+      const listPrice = listPriceUsdcFromDbTier(
+        "vanta",
+        tier.accountSize,
+        Number(tier.priceUsdc),
+      );
       const expectedNumber = Math.round(
-        listPriceUsdcFromDbTier("vanta", tier.accountSize, Number(tier.priceUsdc)),
+        campaignAdjustedPrice(listPrice, tier.accountSize, activeCampaign),
       );
       expect(
         Math.round(displayedNumber),

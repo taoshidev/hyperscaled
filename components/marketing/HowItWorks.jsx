@@ -24,8 +24,15 @@ function TierSelectorMockup({ tiers = [] }) {
           <div className={`text-sm font-semibold ${t.popular ? 'text-white' : 'text-zinc-300'}`}>
             {t.accountSize}
           </div>
-          <span className={`text-xs font-mono ${t.popular ? 'text-teal-400' : 'text-zinc-500'}`}>
-            ${t.launchPrice}
+          <span className="inline-flex items-baseline gap-1.5">
+            {t.standardPrice > t.launchPrice && (
+              <span className="text-[11px] font-mono text-zinc-600 line-through">
+                ${t.standardPrice}
+              </span>
+            )}
+            <span className={`text-xs font-mono ${t.popular ? 'text-teal-400' : 'text-zinc-500'}`}>
+              ${t.launchPrice}
+            </span>
           </span>
         </div>
       ))}

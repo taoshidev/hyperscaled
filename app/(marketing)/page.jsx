@@ -1,6 +1,11 @@
 import { cookies } from "next/headers";
 import App from "@/components/marketing";
 import { fetchDbPricingTiers } from "@/lib/pricing-db";
+import { pricingMinerSlugForBrandId } from "@/lib/pricing-miner-slug";
+import {
+  resolveActiveCampaign,
+  serializeActiveCampaign,
+} from "@/lib/campaign-pricing";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +25,16 @@ export default async function Page() {
   const cookieStore = await cookies();
   const entry = cookieStore.get("hs_entry")?.value;
   const lockedMiner = entry && entry !== "home" ? entry : null;
-  const tiers = await fetchDbPricingTiers();
-  return <App lockedMiner={lockedMiner} tiers={tiers} />;
+  const minerSlug = pricingMinerSlugForBrandId("hyperscaled");
+  const activeCampaign = await resolveActiveCampaign({ minerSlug }).catch(
+    () => null,
+  );
+  const tiers = await fetchDbPricingTiers(undefined, { activeCampaign });
+  return (
+    <App
+      lockedMiner={lockedMiner}
+      tiers={tiers}
+      activeCampaign={serializeActiveCampaign(activeCampaign)}
+    />
+  );
 }

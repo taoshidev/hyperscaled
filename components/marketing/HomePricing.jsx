@@ -11,7 +11,6 @@ import { trackCtaClick } from '@/lib/analytics'
 import { useRegistrationCapacity } from '@/hooks/use-registration-capacity'
 import { isFreeTierForRegistration } from '@/lib/registration-tier-helpers'
 import { RegistrationCapacityWaitlist } from '@/components/marketing/RegistrationCapacityWaitlist'
-import { isWsbSaleBannerPublic } from '@/lib/wsb-sale-banner-public'
 import { capacityMinerSlugForBrandId } from '@/lib/capacity-miner-slug'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
@@ -164,21 +163,6 @@ export default function HomePricing({ tiers }) {
         </div>
 
         <RegistrationCapacityWaitlist paidAtCapacity={paidAtCapacity} />
-
-        {/* WSB Flash Deal pill — Hyperscaled & Vanta only */}
-        {(brand.id === 'hyperscaled' || brand.id === 'vanta') && isWsbSaleBannerPublic() && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={inView ? { opacity: 1 } : {}}
-            transition={{ ...spring, delay: 0.25 }}
-            className="flex justify-center mt-6"
-          >
-            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
-              <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
-              <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
-            </div>
-          </motion.div>
-        )}
 
         {/* Universal rules */}
         <motion.p

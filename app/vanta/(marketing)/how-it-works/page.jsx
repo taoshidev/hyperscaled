@@ -2,6 +2,7 @@ import HowItWorksPage from '@/components/marketing/HowItWorksPage'
 import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { fetchDbPricingTiers } from '@/lib/pricing-db'
+import { resolveActiveCampaign } from '@/lib/campaign-pricing'
 
 export const metadata = buildMetadata({
   title: 'How It Works — Vanta Trading Scaled Trading',
@@ -49,7 +50,10 @@ const HOW_TO_SCHEMA = {
 }
 
 export default async function VantaHowItWorks() {
-  const tiers = await fetchDbPricingTiers('vanta')
+  const activeCampaign = await resolveActiveCampaign({ minerSlug: 'vanta' }).catch(
+    () => null,
+  )
+  const tiers = await fetchDbPricingTiers('vanta', { activeCampaign })
   return (
     <>
       <JsonLd data={HOW_TO_SCHEMA} />

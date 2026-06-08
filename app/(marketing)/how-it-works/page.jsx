@@ -2,6 +2,8 @@ import HowItWorksPage from '@/components/marketing/HowItWorksPage'
 import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { fetchDbPricingTiers } from '@/lib/pricing-db'
+import { pricingMinerSlugForBrandId } from '@/lib/pricing-miner-slug'
+import { resolveActiveCampaign } from '@/lib/campaign-pricing'
 
 export const metadata = buildMetadata({
   title: 'How It Works — Hyperscaled Scaled Trading',
@@ -48,7 +50,11 @@ const HOW_TO_SCHEMA = {
 }
 
 export default async function HowItWorks() {
-  const tiers = await fetchDbPricingTiers()
+  const minerSlug = pricingMinerSlugForBrandId('hyperscaled')
+  const activeCampaign = await resolveActiveCampaign({ minerSlug }).catch(
+    () => null,
+  )
+  const tiers = await fetchDbPricingTiers(undefined, { activeCampaign })
   return (
     <>
       <JsonLd data={HOW_TO_SCHEMA} />
