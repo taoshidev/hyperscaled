@@ -151,6 +151,7 @@ export function RegistrationFlow({
   homeHref,
   logoHref,
   brandVariant = "hyperscaled",
+  activeCampaign = null,
 }) {
   const brandHref = useBrandHref();
   const resolvedExitHref = homeHref ?? brandHref("/");
@@ -172,7 +173,9 @@ export function RegistrationFlow({
 
   // Read once at mount so a back-nav that strips params doesn't yank the user forward.
   const initialTierParamRef = useRef(searchParams?.get("tier") ?? null);
-  const initialPromoParamRef = useRef(searchParams?.get("promo") ?? null);
+  const initialPromoParamRef = useRef(
+    searchParams?.get("promo") ?? activeCampaign?.coupon?.code ?? null,
+  );
   // Resolve synchronously when SSR provided tiers, else the effect below handles it.
   const initialPreselect = useRef(
     resolveTierParam(initialTierParamRef.current, initialMinerTiers),

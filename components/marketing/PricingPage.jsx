@@ -21,7 +21,6 @@ import { trackCtaClick } from '@/lib/analytics'
 import FAQAccordion from '@/components/shared/FAQAccordion'
 import PromoBanner from '@/components/marketing/PromoBanner'
 import { PRICING_TIERS, PRICING_FAQ, parseTierAccountSize } from '@/lib/constants'
-import { isWsbSaleBannerPublic } from '@/lib/wsb-sale-banner-public'
 import { useRegistrationCapacity } from '@/hooks/use-registration-capacity'
 import { isFreeTierForRegistration } from '@/lib/registration-tier-helpers'
 import { RegistrationCapacityWaitlist } from '@/components/marketing/RegistrationCapacityWaitlist'
@@ -185,7 +184,7 @@ function PricingCard({ tier, index, freeAtCapacity, paidAtCapacity }) {
 }
 
 /* ── Pricing Cards Grid ── */
-function PricingCards({ tiers, brandId }) {
+function PricingCards({ tiers, brandId, activeCampaign }) {
   const brand = useBrand()
   const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity(capacityMinerSlugForBrandId(brandId))
   return (
@@ -208,11 +207,18 @@ function PricingCards({ tiers, brandId }) {
           paidAtCapacity={paidAtCapacity}
           className="mt-0"
         />
-        {(brandId === 'hyperscaled' || brandId === 'vanta') && isWsbSaleBannerPublic() && (
+        {activeCampaign && activeCampaign.bannerEnabled && (
           <div className="flex justify-center">
             <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
-              <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
-              <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
+              <span className="text-sm font-semibold text-zinc-900 tracking-tight">
+                {activeCampaign.bannerText || activeCampaign.name}
+                {activeCampaign.coupon?.code ? (
+                  <>
+                    {' · code '}
+                    <span className="tracking-wide">{activeCampaign.coupon.code}</span>
+                  </>
+                ) : null}
+              </span>
             </div>
           </div>
         )}
@@ -503,21 +509,25 @@ function PricingFAQSection() {
 }
 
 /* ── Page Compose ── */
-export default function PricingPage({ tiers }) {
+export default function PricingPage({ tiers, activeCampaign = null }) {
   const brand = useBrand()
   const resolvedTiers = tiers ?? brand.pricingTiers ?? PRICING_TIERS
-  const showWsbPromo =
+  const showPromo =
     (brand.id === 'hyperscaled' || brand.id === 'vanta') &&
-    isWsbSaleBannerPublic()
+    Boolean(activeCampaign && activeCampaign.bannerEnabled)
   return (
     <>
-      {showWsbPromo && (
+      {showPromo && (
         <div className={brand.parentSite ? 'mt-24' : 'mt-16'}>
-          <PromoBanner />
+          <PromoBanner campaign={activeCampaign} />
         </div>
       )}
-      <PricingHero showPromoBar={showWsbPromo} />
-      <PricingCards tiers={resolvedTiers} brandId={brand.id} />
+      <PricingHero showPromoBar={showPromo} />
+      <PricingCards
+        tiers={resolvedTiers}
+        brandId={brand.id}
+        activeCampaign={activeCampaign}
+      />
       <WhatsIncludedGrid />
       <ModelSection />
       <ScalingSection />

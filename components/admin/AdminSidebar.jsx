@@ -2,10 +2,21 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Tag, SignOut, UsersThree, ChartLineUp } from "@phosphor-icons/react";
+import {
+  Tag,
+  SignOut,
+  UsersThree,
+  ChartLineUp,
+  Megaphone,
+} from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
+  {
+    href: "/command-center/campaigns",
+    label: "Campaigns",
+    icon: Megaphone,
+  },
   {
     href: "/command-center/promo-codes",
     label: "Promotional codes",

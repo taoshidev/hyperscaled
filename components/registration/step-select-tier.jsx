@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { useBrand } from "@/lib/brand";
 import { HubspotWaitlistBanner } from "@/components/registration/HubspotWaitlistBanner";
 import { isFreeTierForRegistration } from "@/lib/registration-tier-helpers";
-import { isWsbSaleBannerPublic } from "@/lib/wsb-sale-banner-public";
 
 function isFreeTier(tier) {
   return isFreeTierForRegistration(tier);
@@ -181,6 +180,21 @@ export function StepSelectTier({
                 (tierIsFree && freeAtCapacity) ||
                 (!tierIsFree && paidAtCapacity);
 
+              // `promoPrice` is the standard list price (the checkout base the
+              // server discounts via coupon). `salePrice` is the campaign-
+              // adjusted price for display. Show the sale price as the headline
+              // and strike through the higher "before" price (the campaign list
+              // price, or any static regular price).
+              const listPrice = Number(tier.promoPrice);
+              const salePrice =
+                tier.salePrice != null ? Number(tier.salePrice) : listPrice;
+              const strikePrice = Math.max(
+                salePrice < listPrice ? listPrice : 0,
+                tier.fullPrice > 0 && tier.fullPrice !== salePrice
+                  ? Number(tier.fullPrice)
+                  : 0,
+              );
+
               return (
                 <button
                   key={getTierKey(tier, i)}
@@ -195,7 +209,7 @@ export function StepSelectTier({
                   data-sold-out={isSoldOut ? "true" : undefined}
                   aria-checked={isSelected}
                   aria-disabled={isSoldOut || undefined}
-                  aria-label={`${tier.name} — ${formatShortName(tier.accountSize)} ${brand.accountType} account — ${isSoldOut ? (tierIsFree ? "limit reached" : "sold out") : formatPrice(tier.promoPrice)}`}
+                  aria-label={`${tier.name} — ${formatShortName(tier.accountSize)} ${brand.accountType} account — ${isSoldOut ? (tierIsFree ? "limit reached" : "sold out") : formatPrice(salePrice)}`}
                   tabIndex={isSelected || (selectedIndex < 0 && i === 0) ? 0 : -1}
                   onClick={() => handleSelectIndex(i)}
                   onKeyDown={(e) => handleArrowNav(e, i)}
@@ -254,11 +268,11 @@ export function StepSelectTier({
                         data-testid="tier-promo-price"
                         className="text-3xl xl:text-2xl font-bold font-mono text-white"
                       >
-                        {formatPrice(tier.promoPrice)}
+                        {formatPrice(salePrice)}
                       </span>
                     </ins>
-                    {tier.fullPrice > 0 && tier.fullPrice !== tier.promoPrice && (
-                      <del className="text-sm text-zinc-600 font-mono">{formatPrice(tier.fullPrice)}</del>
+                    {strikePrice > salePrice && (
+                      <del className="text-sm text-zinc-600 font-mono">{formatPrice(strikePrice)}</del>
                     )}
                     <span className="text-xs text-zinc-500 font-medium">USDC</span>
                   </div>
@@ -324,16 +338,6 @@ export function StepSelectTier({
               );
             })}
       </div>
-
-      {/* WSB Flash Deal pill — Hyperscaled & Vanta only */}
-      {(brand.id === 'hyperscaled' || brand.id === 'vanta') && isWsbSaleBannerPublic() && (
-        <div className="flex justify-center mt-6">
-          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
-            <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
-            <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
-          </div>
-        </div>
-      )}
 
       {paidAtCapacity && (
         <div className="mt-8" data-testid="waitlist-paid">

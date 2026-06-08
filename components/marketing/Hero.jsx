@@ -30,7 +30,7 @@ const cardVariants = {
   visible: { opacity: 1, x: 0, transition: { ...spring, delay: 0.3 } },
 }
 
-export default function Hero() {
+export default function Hero({ activeCampaign = null }) {
   const brand = useBrand()
   const brandHref = useBrandHref()
   const withQS = useWithPreservedQuery()
@@ -47,7 +47,7 @@ export default function Hero() {
       <div className={`absolute inset-0 pointer-events-none ${brand.heroBeams ? 'bg-zinc-950/30' : 'bg-zinc-950/60'}`} />
 
       {/* Promo banner — scrolls with hero */}
-      <PromoBanner />
+      <PromoBanner campaign={activeCampaign} />
 
       <div className="relative max-w-[1400px] mx-auto px-6 w-full py-20 flex-1 flex items-center">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-20 items-center">

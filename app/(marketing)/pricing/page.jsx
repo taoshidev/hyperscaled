@@ -2,6 +2,10 @@ import PricingPage from '@/components/marketing/PricingPage'
 import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { fetchDbPricingTiers } from '@/lib/pricing-db'
+import {
+  resolveActiveCampaign,
+  serializeActiveCampaign,
+} from '@/lib/campaign-pricing'
 
 export const metadata = buildMetadata({
   title: 'Pricing — Hyperscaled Scaled Trading Accounts',
@@ -15,7 +19,8 @@ export const metadata = buildMetadata({
 
 
 export default async function Pricing() {
-  const tiers = await fetchDbPricingTiers()
+  const activeCampaign = await resolveActiveCampaign({ minerSlug: 'vanta' })
+  const tiers = await fetchDbPricingTiers(undefined, { activeCampaign })
   const productSchemas = tiers.map((tier) => ({
     "@context": "https://schema.org",
     "@type": "Product",
@@ -35,7 +40,10 @@ export default async function Pricing() {
       {productSchemas.map((schema, i) => (
         <JsonLd key={i} data={schema} />
       ))}
-      <PricingPage tiers={tiers} />
+      <PricingPage
+        tiers={tiers}
+        activeCampaign={serializeActiveCampaign(activeCampaign)}
+      />
     </>
   )
 }
