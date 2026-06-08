@@ -12,14 +12,13 @@ import {
   entityTiers,
 } from "@/lib/db/schema";
 import { requireCommandCenterStaff } from "@/lib/auth/command-center.js";
+import {
+  resolveCampaignCoupon,
+  syncOwnedCouponWindow,
+} from "@/lib/campaign-coupon";
 
 const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
 const MAX_NOTES = 500;
-
-const normalizeCode = (raw) => {
-  if (raw == null) return "";
-  return String(raw).trim().toUpperCase();
-};
 
 function normalizeSlug(raw) {
   if (raw == null) return "";
@@ -162,69 +161,6 @@ async function deactivateOtherActive(db, hotkeys, exceptCampaignId) {
     .update(promotionalCampaigns)
     .set({ status: "paused", updatedAt: new Date() })
     .where(and(...conds));
-}
-
-async function findOrCreateCouponForCampaign(db, opts, staffWallet) {
-  const code = normalizeCode(opts.code);
-  if (!code) throw new Error("Coupon code is required.");
-
-  const [existing] = await db
-    .select()
-    .from(coupons)
-    .where(eq(coupons.code, code))
-    .limit(1);
-
-  if (existing) {
-    if (
-      opts.discountType &&
-      (opts.discountType !== existing.discountType ||
-        Number(opts.discountValue) !== Number(existing.discountValue))
-    ) {
-      await db
-        .update(coupons)
-        .set({
-          discountType: opts.discountType,
-          discountValue: String(opts.discountValue),
-          updatedAt: new Date(),
-        })
-        .where(eq(coupons.id, existing.id));
-    }
-    if (opts.startsAt && opts.endsAt) {
-      await db
-        .update(coupons)
-        .set({
-          validFrom: opts.startsAt,
-          validUntil: opts.endsAt,
-          updatedAt: new Date(),
-        })
-        .where(eq(coupons.id, existing.id));
-    }
-    return existing.id;
-  }
-
-  if (!opts.discountType || opts.discountValue == null) {
-    throw new Error(
-      "Coupon does not exist; provide discountType + discountValue to create it.",
-    );
-  }
-
-  const [inserted] = await db
-    .insert(coupons)
-    .values({
-      code,
-      discountType: opts.discountType,
-      discountValue: String(opts.discountValue),
-      useType: "unlimited",
-      maxUses: null,
-      allowedEmails: null,
-      allowedTierIds: null,
-      validFrom: opts.startsAt ?? null,
-      validUntil: opts.endsAt ?? null,
-      createdByWallet: staffWallet,
-    })
-    .returning({ id: coupons.id });
-  if (!inserted) throw new Error("Failed to create coupon.");
-  return inserted.id;
 }
 
 export async function listCampaigns() {
@@ -399,7 +335,7 @@ export async function createCampaign(input) {
 
   let couponId;
   try {
-    couponId = await findOrCreateCouponForCampaign(
+    couponId = await resolveCampaignCoupon(
       db,
       {
         couponId: input.couponId ?? null,
@@ -492,7 +428,7 @@ export async function updateCampaign(id, input) {
   let couponId = existing.couponId;
   if (input.couponId || input.couponCode) {
     try {
-      couponId = await findOrCreateCouponForCampaign(
+      couponId = await resolveCampaignCoupon(
         db,
         {
           couponId: input.couponId ?? null,
@@ -560,6 +496,9 @@ export async function updateCampaign(id, input) {
     if (!updated) {
       return { success: false, error: "Update failed." };
     }
+    // Keep a campaign-owned coupon's validity in lockstep with the window.
+    // No-op for shared/partner coupons (see syncOwnedCouponWindow).
+    await syncOwnedCouponWindow(db, couponId, window.startsAt, window.endsAt, id);
     revalidatePath("/command-center/campaigns");
     revalidatePath("/", "layout");
     return { success: true };
@@ -667,12 +606,20 @@ export async function resumeCampaign(id) {
 export async function endCampaign(id) {
   await requireCommandCenterStaff();
   const db = await getDb();
+  const now = new Date();
   const [updated] = await db
     .update(promotionalCampaigns)
-    .set({ status: "ended", endsAt: new Date(), updatedAt: new Date() })
+    .set({ status: "ended", endsAt: now, updatedAt: now })
     .where(eq(promotionalCampaigns.id, id))
-    .returning({ id: promotionalCampaigns.id });
+    .returning({
+      id: promotionalCampaigns.id,
+      couponId: promotionalCampaigns.couponId,
+      startsAt: promotionalCampaigns.startsAt,
+    });
   if (!updated) return { success: false, error: "Campaign not found." };
+  // Expire a campaign-owned coupon immediately so the code stops working at
+  // checkout. Shared/partner coupons are left untouched.
+  await syncOwnedCouponWindow(db, updated.couponId, updated.startsAt, now, id);
   revalidatePath("/command-center/campaigns");
   revalidatePath("/", "layout");
   return { success: true };
