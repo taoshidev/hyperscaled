@@ -147,6 +147,9 @@ export function CouponsAdminView({ result }) {
                       Created by
                     </TableHead>
                     <TableHead className={adminTableHeadClass}>Status</TableHead>
+                    <TableHead className={cn(adminTableHeadClass, "w-[100px]")}>
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </AdminStickyTableHeader>
                 <TableBody>

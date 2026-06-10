@@ -1,0 +1,1 @@
+ALTER TYPE "public"."promotional_campaign_status" ADD VALUE 'paused' BEFORE 'ended';

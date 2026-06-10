@@ -2,6 +2,7 @@ import PricingPage from '@/components/marketing/PricingPage'
 import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { fetchDbPricingTiers } from '@/lib/pricing-db'
+import { pricingMinerSlugForBrandId } from '@/lib/pricing-miner-slug'
 
 export const metadata = buildMetadata({
   title: 'Pricing — Hyperstack Trading Challenges',
@@ -14,7 +15,7 @@ export const metadata = buildMetadata({
 })
 
 export default async function BitcastPricing() {
-  const tiers = await fetchDbPricingTiers('bitcast')
+  const tiers = await fetchDbPricingTiers(pricingMinerSlugForBrandId('bitcast'))
   const productSchemas = tiers.map((tier) => ({
     "@context": "https://schema.org",
     "@type": "Product",

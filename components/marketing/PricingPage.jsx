@@ -21,7 +21,6 @@ import { trackCtaClick } from '@/lib/analytics'
 import FAQAccordion from '@/components/shared/FAQAccordion'
 import PromoBanner from '@/components/marketing/PromoBanner'
 import { PRICING_TIERS, PRICING_FAQ, parseTierAccountSize } from '@/lib/constants'
-import { isWsbSaleBannerPublic } from '@/lib/wsb-sale-banner-public'
 import { useRegistrationCapacity } from '@/hooks/use-registration-capacity'
 import { isFreeTierForRegistration } from '@/lib/registration-tier-helpers'
 import { RegistrationCapacityWaitlist } from '@/components/marketing/RegistrationCapacityWaitlist'
@@ -55,7 +54,7 @@ function PricingHero({ showPromoBar }) {
           className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1]"
           style={{ textWrap: 'balance' }}
         >
-          {brand.id === 'bitcast'
+          {brand.compliance
             ? <>One fee. One challenge. Vanta-powered simulated scaled&nbsp;account.</>
             : <>One fee. One challenge. Keep everything you&nbsp;earn.</>}
         </motion.h1>
@@ -175,7 +174,7 @@ function PricingCard({ tier, index, freeAtCapacity, paidAtCapacity }) {
         <ArrowRight size={14} weight="bold" />
       </Link>
       )}
-      {brand.id === 'bitcast' && free && (
+      {brand.compliance && free && (
         <p className="mt-3 text-[11px] leading-snug text-zinc-600 text-center">
           Simulated trading only — no funded or live trading account is created or provided.
         </p>
@@ -185,7 +184,8 @@ function PricingCard({ tier, index, freeAtCapacity, paidAtCapacity }) {
 }
 
 /* ── Pricing Cards Grid ── */
-function PricingCards({ tiers, brandId }) {
+function PricingCards({ tiers, brandId, activeCampaign }) {
+  const brand = useBrand()
   const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity(capacityMinerSlugForBrandId(brandId))
   return (
     <section className="px-6 pb-20">
@@ -207,25 +207,30 @@ function PricingCards({ tiers, brandId }) {
           paidAtCapacity={paidAtCapacity}
           className="mt-0"
         />
-        {(brandId === 'hyperscaled' || brandId === 'vanta') && isWsbSaleBannerPublic() && (
+        {activeCampaign && activeCampaign.bannerEnabled && (
           <div className="flex justify-center">
             <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
-              <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
-              <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
+              <span className="text-sm font-semibold text-zinc-900 tracking-tight">
+                {activeCampaign.bannerText || activeCampaign.name}
+                {activeCampaign.coupon?.code ? (
+                  <>
+                    {' · code '}
+                    <span className="tracking-wide">{activeCampaign.coupon.code}</span>
+                  </>
+                ) : null}
+              </span>
             </div>
           </div>
         )}
       </div>
       <p className="text-center text-sm text-zinc-500 mt-4 max-w-[60ch] mx-auto" style={{ textWrap: 'balance' }}>
-        {brandId === 'bitcast'
-          ? 'All tiers: 10% profit target · 5% max drawdown · USDC rewards · Monthly payouts · No time limit'
-          : 'All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time limit'}
+        {brand.compliance
+          ? 'All tiers: 10% profit target · 5% max drawdown · USDC rewards · Monthly payouts · No time limit'
+          : <>All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time&nbsp;limit</>}
       </p>
-      {brandId === 'bitcast' && (
+      {brand.compliance && (
         <p className="text-center text-xs text-zinc-600 mt-2">Fees are paid to Vanta.</p>
       )}
-      <div className="max-w-[1400px] mx-auto w-full flex justify-center">
-      </div>
     </section>
   )
 }
@@ -269,25 +274,21 @@ function WhatsIncludedGrid() {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
 
-  const features =
-    brand.id === 'bitcast'
-      ? INCLUDED_FEATURES.map((feat) => {
-          if (feat.title === 'Monthly Payouts') {
-            return {
-              ...feat,
-              desc: 'Scaled Trader Program participants receive monthly USDC rewards.',
-            }
+  const features = brand.compliance
+    ? INCLUDED_FEATURES.map((feat) => {
+        if (feat.title === 'Monthly Payouts') {
+          return { ...feat, desc: 'Scaled Trader Program participants receive monthly USDC rewards.' }
+        }
+        if (feat.title === '100% Profit Split') {
+          return {
+            ...feat,
+            title: 'Performance Rewards',
+            desc: 'Rewards are based on simulated performance and paid as independent-contractor compensation, not a share of real trading profits.',
           }
-          if (feat.title === '100% Profit Split') {
-            return {
-              ...feat,
-              title: 'Performance Rewards',
-              desc: 'Rewards are based on simulated performance and paid as independent-contractor compensation, not a share of real trading profits.',
-            }
-          }
-          return feat
-        })
-      : INCLUDED_FEATURES
+        }
+        return feat
+      })
+    : INCLUDED_FEATURES
 
   return (
     <section ref={ref} className="px-6 pb-20">
@@ -403,7 +404,7 @@ function ModelSection() {
   const bullets = [
     `A ${brand.accountType} account upon challenge completion`,
     'Verifiable payouts through onchain technology',
-    brand.id === 'bitcast'
+    brand.compliance
       ? 'Vanta retains 0% of performance-based rewards'
       : '100% profit split — you keep your earnings',
     'A system designed for trader success',
@@ -508,21 +509,25 @@ function PricingFAQSection() {
 }
 
 /* ── Page Compose ── */
-export default function PricingPage({ tiers = PRICING_TIERS }) {
+export default function PricingPage({ tiers, activeCampaign = null }) {
   const brand = useBrand()
-  const resolvedTiers = brand.pricingTiers || tiers
-  const showWsbPromo =
+  const resolvedTiers = tiers ?? brand.pricingTiers ?? PRICING_TIERS
+  const showPromo =
     (brand.id === 'hyperscaled' || brand.id === 'vanta') &&
-    isWsbSaleBannerPublic()
+    Boolean(activeCampaign && activeCampaign.bannerEnabled)
   return (
     <>
-      {showWsbPromo && (
+      {showPromo && (
         <div className={brand.parentSite ? 'mt-24' : 'mt-16'}>
-          <PromoBanner />
+          <PromoBanner campaign={activeCampaign} />
         </div>
       )}
-      <PricingHero showPromoBar={showWsbPromo} />
-      <PricingCards tiers={resolvedTiers} brandId={brand.id} />
+      <PricingHero showPromoBar={showPromo} />
+      <PricingCards
+        tiers={resolvedTiers}
+        brandId={brand.id}
+        activeCampaign={activeCampaign}
+      />
       <WhatsIncludedGrid />
       <ModelSection />
       <ScalingSection />

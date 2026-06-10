@@ -5,6 +5,11 @@ import { TIERS as TIER_META } from "@/lib/constants";
 import { unstable_cache } from "next/cache";
 import { reportError } from "@/lib/errors";
 import { listPriceUsdcFromDbTier } from "@/lib/wsb-tier-list-price";
+import {
+  resolveActiveCampaign,
+  serializeActiveCampaign,
+  applyCampaignToTierPrice,
+} from "@/lib/campaign-pricing";
 
 export const metadata = buildMetadata({
   title: "Start Your Challenge",
@@ -19,9 +24,6 @@ export const metadata = buildMetadata({
 export const dynamic = "force-dynamic";
 
 const MINER_SLUG = "vanta";
-
-const REGISTER_CACHE_WSB =
-  process.env.WSB_SALE_BANNER === "true" ? "wsb" : "nosale";
 
 function enrichTier(dbTier, index) {
   const meta = TIER_META.find((t) => t.accountSize === dbTier.accountSize);
@@ -40,6 +42,25 @@ function enrichTier(dbTier, index) {
   };
 }
 
+/**
+ * Layer the active promotional campaign onto cached tiers. `promoPrice` stays
+ * the standard list price (the checkout base the server discounts via coupon);
+ * we add a display-only `salePrice` so the tier cards can show the discounted
+ * price with the list price struck through — matching the marketing storefront.
+ */
+function applyCampaignToTiers(tiers, activeCampaign) {
+  if (!Array.isArray(tiers)) return tiers;
+  return tiers.map((t) => {
+    const list = Number(t.promoPrice);
+    const { currentPrice } = applyCampaignToTierPrice(
+      t.accountSize,
+      list,
+      activeCampaign,
+    );
+    return { ...t, salePrice: currentPrice };
+  });
+}
+
 const getCachedRegisterMinerData = unstable_cache(
   async () => {
     const miner = await getMinerBySlug(MINER_SLUG);
@@ -55,7 +76,7 @@ const getCachedRegisterMinerData = unstable_cache(
       initialPaymentWallet: miner.usdcWallet,
     };
   },
-  ["register-miner-vanta", REGISTER_CACHE_WSB],
+  ["register-miner-vanta"],
   {
     revalidate: 60,
     tags: ["pricing-tiers", "pricing-tiers:vanta"],
@@ -78,12 +99,19 @@ export default async function RegisterPage() {
     // Keep nulls so client fallback fetch can recover.
   }
 
+  const activeCampaign = await resolveActiveCampaign({
+    minerSlug: MINER_SLUG,
+  }).catch(() => null);
+
+  const tiersForFlow = applyCampaignToTiers(initialMinerTiers, activeCampaign);
+
   return (
     <RegistrationFlow
       initialMinerSlug={MINER_SLUG}
-      initialMinerTiers={initialMinerTiers}
+      initialMinerTiers={tiersForFlow}
       initialPaymentWallet={initialPaymentWallet}
       brandVariant="hyperscaled"
+      activeCampaign={serializeActiveCampaign(activeCampaign)}
     />
   );
 }

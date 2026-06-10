@@ -122,9 +122,8 @@ function KeyDetails({ rows, inline }) {
 /* ───────────────────────────────────────────────
    Section 2 — Step-by-Step Flow (4 steps)
    ─────────────────────────────────────────────── */
-function getSteps(brandName, brandId, accountType, protocolName) {
-  const isBitcast = brandId === 'bitcast'
-  const enforcer = isBitcast ? "Vanta's protocol" : brandName
+function getSteps(brandName, hasCompliance, accountType, protocolName) {
+  const enforcer = hasCompliance ? "Vanta's protocol" : brandName
   return [
     {
       number: '01',
@@ -154,7 +153,7 @@ function getSteps(brandName, brandId, accountType, protocolName) {
       number: '03',
       icon: Target,
       title: 'Track & Enforce in Real Time',
-      body: isBitcast
+      body: hasCompliance
         ? `Your dashboard shows live P&L, drawdown, and profit target progress. The ${brandName} Chrome extension overlays the same data directly onto Hyperliquid — previewing how each order scales to your scaled account (simulated) and blocking trades that would breach your limits, all enforced by ${protocolName}.`
         : `Your dashboard shows live P&L, drawdown, and profit target progress. The ${brandName} Chrome extension overlays the same data directly onto Hyperliquid — previewing how each order scales to your funded account and blocking trades that would breach your\u00a0limits.`,
       compact: true,
@@ -167,19 +166,19 @@ function getSteps(brandName, brandId, accountType, protocolName) {
     {
       number: '04',
       icon: CurrencyDollar,
-      title: isBitcast ? 'Pass the Challenge. Get Scaled.' : 'Pass. Get Funded. Get Paid.',
-      body: isBitcast
+      title: hasCompliance ? 'Pass the Challenge. Get Scaled.' : 'Pass. Get Funded. Get Paid.',
+      body: hasCompliance
         ? `Hit the 10% profit target with drawdown under 5% to immediately activate your ${accountType} account (simulated). Invited participants may earn performance-based rewards, delivered in USDC monthly. Scale to $400K with continued\u00a0performance.`
         : `Hit the 10% profit target with drawdown under 5% to immediately activate your ${accountType} account. Keep 100% of profits with payouts delivered in USDC monthly. Scale to $400K with continued\u00a0performance.`,
       details: [
         { label: 'Profit Target', value: '10%' },
         { label: 'Max Drawdown (Challenge)', value: '5% daily / 5% EOD trailing' },
         {
-          label: isBitcast ? 'Max Drawdown (Scaled, simulated)' : 'Max Drawdown (Funded)',
+          label: hasCompliance ? 'Max Drawdown (Scaled, simulated)' : 'Max Drawdown (Funded)',
           value: '8% daily / 8% EOD trailing',
         },
         { label: 'Payout Cycle', value: 'Monthly' },
-        isBitcast
+        hasCompliance
           ? { label: 'Rewards', value: 'Vanta retains 0%' }
           : { label: 'Profit Split', value: `100% — ${brandName} takes 0%` },
       ],
@@ -188,16 +187,15 @@ function getSteps(brandName, brandId, accountType, protocolName) {
 }
 
 /* Scaling qualification rows — displayed in ScalingSection */
-function getScalingQualifications(brandId) {
+function getScalingQualifications(hasCompliance) {
   return [
     { label: 'Scaling Qualification', value: '5% quarterly return + all-time Sharpe ratio > 1' },
     { label: '25% Bonus', value: '2% quarterly return + all-time Sharpe ratio > 1' },
     { label: 'Max Account Size', value: '$400K' },
     {
-      label:
-        brandId === 'bitcast'
-          ? 'Scaled Account Profit Target (Simulated)'
-          : 'Funded Account Profit Target',
+      label: hasCompliance
+        ? 'Scaled Account Profit Target (Simulated)'
+        : 'Funded Account Profit Target',
       value: 'None',
     },
   ]
@@ -297,7 +295,7 @@ function StepCard({ step, index }) {
 
 function StepByStepFlow() {
   const brand = useBrand()
-  const steps = getSteps(brand.name, brand.id, brand.accountType, brand.protocolName)
+  const steps = getSteps(brand.name, Boolean(brand.compliance), brand.accountType, brand.protocolName)
   return (
     <section className="px-6 pb-20">
       <div className="max-w-[1100px] mx-auto flex flex-col gap-6">
@@ -313,8 +311,7 @@ function StepByStepFlow() {
    Chrome Extension Section
    ─────────────────────────────────────────────── */
 
-function getExtensionFeatures(brandId) {
-  const isBitcast = brandId === 'bitcast'
+function getExtensionFeatures(hasCompliance) {
   return [
   {
     icon: Broadcast,
@@ -324,7 +321,7 @@ function getExtensionFeatures(brandId) {
   {
     icon: ArrowsLeftRight,
     title: 'Mirror preview',
-    body: isBitcast
+    body: hasCompliance
       ? 'See how each order scales to your scaled account (simulated) — mirrored size, ratio, and remaining capacity.'
       : 'See how each order scales to your funded account — mirrored size, ratio, and remaining capacity.',
   },
@@ -412,7 +409,7 @@ function ChromeExtensionSection() {
           transition={{ ...spring, delay: 0.16 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         >
-          {getExtensionFeatures(brand.id).map((feature) => {
+          {getExtensionFeatures(Boolean(brand.compliance)).map((feature) => {
             const Icon = feature.icon
             return (
               <div
@@ -482,7 +479,7 @@ function ScalingSection() {
           transition={{ ...spring, delay: 0.12 }}
           className="mt-8 max-w-[540px] mx-auto"
         >
-          <KeyDetails rows={getScalingQualifications(brand.id)} />
+          <KeyDetails rows={getScalingQualifications(Boolean(brand.compliance))} />
         </motion.div>
 
         <p className="mt-6 text-xs text-zinc-500 text-center max-w-[72ch] mx-auto leading-relaxed">
@@ -505,14 +502,14 @@ const LEGACY_ITEMS = [
   'Centralized payout discretion',
 ]
 
-function getBrandItems(brandId) {
+function getBrandItems(hasCompliance) {
   return [
     'Trade on Hyperliquid — your own account',
     'Non-custodial — your keys, your wallet',
-    brandId === 'bitcast'
+    hasCompliance
       ? 'Rules published onchain; enforced programmatically — changes published publicly before they take effect.'
       : 'Rules published onchain, immutable',
-    brandId === 'bitcast'
+    hasCompliance
       ? 'Automated onchain payouts to participants who meet the program conditions'
       : 'Automated onchain payouts',
   ]
@@ -535,7 +532,7 @@ function NonCustodialExplainer() {
         >
           <p className="text-sm font-semibold text-teal-300 leading-relaxed">
             Your wallet. Your keys.{' '}
-            {brand.id === 'bitcast' ? "Vanta's protocol" : brand.name} only reads your public trade data and never touches your&nbsp;capital.
+            {brand.compliance ? "Vanta's protocol" : brand.name} only reads your public trade data and never touches your&nbsp;capital.
           </p>
         </motion.div>
 
@@ -567,7 +564,7 @@ function NonCustodialExplainer() {
               {brand.name}
             </h3>
             <ul className="space-y-4">
-              {getBrandItems(brand.id).map((item) => (
+              {getBrandItems(Boolean(brand.compliance)).map((item) => (
                 <li key={item} className="flex items-start gap-3 text-sm text-zinc-200">
                   <CheckCircle size={20} weight="fill" className="text-teal-400 shrink-0 mt-0.5" />
                   {item}
@@ -585,21 +582,20 @@ function NonCustodialExplainer() {
    Section 4 — Payout Mechanics
    ─────────────────────────────────────────────── */
 
-function getPayoutSteps(brandName, brandId) {
-  const isBitcast = brandId === 'bitcast'
-  const reader = isBitcast ? "Vanta's protocol" : brandName
+function getPayoutSteps(brandName, hasCompliance) {
+  const reader = hasCompliance ? "Vanta's protocol" : brandName
   return [
     { label: 'You trade on HL', icon: ChartLineUp, detail: null },
     { label: `${reader} reads performance`, icon: Eye, detail: null },
     { label: 'Monthly cycle closes', icon: ClockCountdown, detail: null },
-    { label: 'USDC sent to wallet', icon: Wallet, detail: isBitcast ? '+— USDC' : '+$2,847.32 USDC' },
+    { label: 'USDC sent to wallet', icon: Wallet, detail: hasCompliance ? '+— USDC' : '+$2,847.32 USDC' },
     { label: 'Verifiable onchain', icon: ShieldCheck, detail: '0x7a3...f4e2' },
   ]
 }
 
 function PayoutMechanics() {
   const brand = useBrand()
-  const payoutSteps = getPayoutSteps(brand.name, brand.id)
+  const payoutSteps = getPayoutSteps(brand.name, Boolean(brand.compliance))
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
@@ -628,7 +624,7 @@ function PayoutMechanics() {
           transition={{ ...spring, delay: 0.08 }}
           className="max-w-[700px] mx-auto mb-14 space-y-4 text-sm sm:text-base text-zinc-400 leading-relaxed"
         >
-          {brand.id === 'bitcast' ? (
+          {brand.compliance ? (
             <p>
               Scaled account (simulated) payouts are calculated automatically on a monthly basis for participants who meet the program conditions. USDC is sent directly to your connected wallet, with no delays or&nbsp;discretion. Passing a Challenge does not guarantee any&nbsp;compensation.
             </p>
@@ -703,7 +699,7 @@ function PayoutMechanics() {
             })}
           </div>
 
-          {brand.id === 'bitcast' && (
+          {brand.compliance && (
             <p className="mt-6 text-center text-[11px] text-zinc-500">
               Illustrative only. Not actual results.
             </p>
@@ -718,7 +714,7 @@ function PayoutMechanics() {
           className="max-w-[700px] mx-auto rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-5 sm:p-6 text-center"
         >
           <p className="text-sm sm:text-base text-teal-400 font-medium leading-relaxed" style={{ textWrap: 'balance' }}>
-            {brand.id === 'bitcast' ? (
+            {brand.compliance ? (
               brand.compliance?.rewardLine
             ) : (
               <>

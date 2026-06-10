@@ -4,8 +4,6 @@ import { withSentryConfig } from "@sentry/nextjs";
 const nextConfig = {
   env: {
     USE_TESTNET: process.env.USE_TESTNET || "false",
-    NEXT_PUBLIC_WSB_SALE_BANNER:
-      process.env.WSB_SALE_BANNER === "true" ? "true" : "false",
   },
   // Keep Node-only libs external so webpack doesn’t omit them from Vercel’s traced bundle.
   // lib/db dynamically imports Cloud SQL Connector when CLOUD_SQL_INSTANCE_CONNECTION_NAME is set.

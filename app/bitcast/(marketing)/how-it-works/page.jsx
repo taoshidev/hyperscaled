@@ -1,7 +1,9 @@
 import HowItWorksPage from '@/components/marketing/HowItWorksPage'
 import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
-import { PRICING_TIERS } from '@/lib/constants'
+import { fetchDbPricingTiers } from '@/lib/pricing-db'
+import { pricingMinerSlugForBrandId } from '@/lib/pricing-miner-slug'
+import { resolveActiveCampaign } from '@/lib/campaign-pricing'
 
 export const metadata = buildMetadata({
   title: 'How It Works — Hyperstack',
@@ -25,11 +27,16 @@ const HOW_TO_SCHEMA = {
   ],
 }
 
-export default function BitcastHowItWorks() {
+export default async function BitcastHowItWorks() {
+  const minerSlug = pricingMinerSlugForBrandId('bitcast')
+  const activeCampaign = await resolveActiveCampaign({ minerSlug }).catch(
+    () => null,
+  )
+  const tiers = await fetchDbPricingTiers(minerSlug, { activeCampaign })
   return (
     <>
       <JsonLd data={HOW_TO_SCHEMA} />
-      <HowItWorksPage tiers={PRICING_TIERS} />
+      <HowItWorksPage tiers={tiers} />
     </>
   )
 }

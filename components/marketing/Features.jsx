@@ -186,7 +186,7 @@ export default function Features() {
                   >
                     {feat.title}
                   </h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed [text-wrap:pretty]">{brandifyText(brand.id === 'bitcast' && feat.bitcastBody ? feat.bitcastBody : feat.body, brand)}</p>
+                  <p className="text-sm text-zinc-400 leading-relaxed [text-wrap:pretty]">{brandifyText(brand.compliance && feat.bitcastBody ? feat.bitcastBody : feat.body, brand)}</p>
                   {feat.extra}
                 </div>
               </motion.div>

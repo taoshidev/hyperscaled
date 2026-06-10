@@ -2,7 +2,7 @@ import { BrandProvider } from '@/lib/brand'
 
 export const metadata = {
   title: {
-    default: 'Beanstock — Funded Trading on Hyperliquid',
+    default: 'Beanstock — Scaled Trading on Hyperliquid',
     template: '%s',
   },
   icons: {

@@ -65,6 +65,46 @@ export async function getMinerHotkeyBySlug(slug) {
 }
 
 /**
+ * Resolve the active promotional campaign for a miner slug, mirroring
+ * `resolveActiveCampaign` in `lib/campaign-pricing.js` (we can't import that
+ * module here — it uses `@/` aliases the Playwright runner doesn't resolve).
+ * Returns `{ tierPriceOverrides, discountType, discountValue }` for the chosen
+ * campaign, or `null` when no campaign is active. Tenant-scoped campaigns win
+ * over site-wide ones.
+ */
+export async function loadActiveCampaignForSlug(slug = "vanta") {
+  const hotkey = await getMinerHotkeyBySlug(slug);
+  const { rows } = await getPool().query(
+    `SELECT c.tier_price_overrides AS overrides,
+            co.discount_type      AS discount_type,
+            co.discount_value     AS discount_value
+       FROM promotional_campaigns c
+       JOIN coupons co ON co.id = c.coupon_id
+      WHERE c.status = 'active'
+        AND c.starts_at <= now()
+        AND c.ends_at   >= now()
+        AND (
+          ($1::text IS NOT NULL AND c.entity_miner_hotkeys @> ARRAY[$1]::text[])
+          OR c.entity_miner_hotkeys IS NULL
+          OR cardinality(c.entity_miner_hotkeys) = 0
+        )
+      ORDER BY (
+        CASE WHEN c.entity_miner_hotkeys IS NOT NULL
+              AND cardinality(c.entity_miner_hotkeys) > 0 THEN 0 ELSE 1 END
+      ) ASC
+      LIMIT 1`,
+    [hotkey],
+  );
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    tierPriceOverrides: row.overrides ?? null,
+    discountType: row.discount_type,
+    discountValue: Number(row.discount_value),
+  };
+}
+
+/**
  * Hard-clean every row associated with a wallet so each test starts
  * from a known-empty state. Order matters because of the FK from
  * registrations.user_id → users.id.

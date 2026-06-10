@@ -109,7 +109,7 @@ function HeroSection() {
                 <div className="text-teal-400">✓ Tools: register, trade, positions, orders, rules, payouts</div>
                 <div className="border-t border-white/[0.05] pt-3 text-zinc-500">$ pip install hyperscaled</div>
                 <div className="text-teal-400">✓ Successfully installed hyperscaled-1.4.2</div>
-                {brand.id === 'bitcast' ? (
+                {brand.compliance ? (
                   <>
                     <div className="border-t border-white/[0.05] pt-3 text-zinc-500">$ hyperscaled rules list --json</div>
                     <div className="text-teal-400">✓ Rules retrieved</div>

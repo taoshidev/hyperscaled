@@ -11,7 +11,6 @@ import { trackCtaClick } from '@/lib/analytics'
 import { useRegistrationCapacity } from '@/hooks/use-registration-capacity'
 import { isFreeTierForRegistration } from '@/lib/registration-tier-helpers'
 import { RegistrationCapacityWaitlist } from '@/components/marketing/RegistrationCapacityWaitlist'
-import { isWsbSaleBannerPublic } from '@/lib/wsb-sale-banner-public'
 import { capacityMinerSlugForBrandId } from '@/lib/capacity-miner-slug'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
@@ -24,12 +23,12 @@ function tierBadge(tier) {
   return null
 }
 
-export default function PricingPreview({ tiers = PRICING_TIERS }) {
+export default function PricingPreview({ tiers }) {
   const brand = useBrand()
   const brandHref = useBrandHref()
   const withQS = useWithPreservedQuery()
   const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity(capacityMinerSlugForBrandId(brand.id))
-  tiers = brand.pricingTiers || tiers
+  const resolvedTiers = tiers ?? brand.pricingTiers ?? PRICING_TIERS
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -50,8 +49,8 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
           </h2>
         </motion.div>
 
-        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-4 xl:gap-3 items-stretch`}>
-          {tiers.map((tier, i) => {
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${resolvedTiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-4 xl:gap-3 items-stretch`}>
+          {resolvedTiers.map((tier, i) => {
             const free = isFreeTierForRegistration(tier)
             const soldOut = (free && freeAtCapacity) || (!free && paidAtCapacity)
             return (
@@ -135,20 +134,6 @@ export default function PricingPreview({ tiers = PRICING_TIERS }) {
             paidAtCapacity={paidAtCapacity}
             className="mt-0"
           />
-
-          {(brand.id === 'hyperscaled' || brand.id === 'vanta') && isWsbSaleBannerPublic() && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={inView ? { opacity: 1 } : {}}
-              transition={{ ...spring, delay: 0.25 }}
-              className="flex justify-center"
-            >
-              <div className="inline-flex items-center gap-2.5 rounded-full bg-white px-4 py-2">
-                <img src="/wsb-logo.svg" alt="" className="-my-1 h-8 w-8 rounded-sm" />
-                <span className="text-sm font-semibold tracking-tight text-zinc-900">WallStreetBets Flash Deal: 50% Off All Challenges</span>
-              </div>
-            </motion.div>
-          )}
         </div>
 
       </div>

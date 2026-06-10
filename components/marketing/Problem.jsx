@@ -16,13 +16,13 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: spring },
 }
 
-// Hyperstack (bitcast): non-comparative, factual statements about Hyperstack only
+// Compliance brands: non-comparative, factual statements about the brand only
 // (no competitor accusations) — FTC §5 / Lanham Act compliance.
-const bitcastPainPoints = [
+const getCompliancePainPoints = (brandName) => [
   {
     number: '01',
     title: 'Open access to a simulated evaluation.',
-    body: 'Hyperstack opens the Vanta-powered simulated Challenge to traders across many countries, with clear rules published upfront.',
+    body: `${brandName} opens the Vanta-powered simulated Challenge to traders across many countries, with clear rules published\u00a0upfront.`,
     accentColor: 'text-teal-400',
     tagBg: 'bg-teal-400/8 border-teal-400/20',
     tag: 'Open access',
@@ -30,7 +30,7 @@ const bitcastPainPoints = [
   {
     number: '02',
     title: 'Rewards, not a profit split.',
-    body: 'Hyperstack is a Vanta-powered simulated evaluation. Invited Scaled Trader Program participants earn performance-based rewards as independent-contractor compensation.',
+    body: `${brandName} is a Vanta-powered simulated evaluation. Invited Scaled Trader Program participants earn performance-based rewards as independent-contractor\u00a0compensation.`,
     accentColor: 'text-teal-400',
     tagBg: 'bg-teal-400/8 border-teal-400/20',
     tag: 'Simulated evaluation',
@@ -74,8 +74,8 @@ const defaultPainPoints = [
 
 export default function Problem() {
   const brand = useBrand()
-  const isBitcast = brand.id === 'bitcast'
-  const painPoints = isBitcast ? bitcastPainPoints : defaultPainPoints
+  const isCompliance = Boolean(brand.compliance)
+  const painPoints = isCompliance ? getCompliancePainPoints(brand.name) : defaultPainPoints
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -93,7 +93,7 @@ export default function Problem() {
             The Problem
           </span>
           <h2 className="text-4xl md:text-6xl tracking-tighter leading-none font-bold max-w-2xl mb-5 text-balance">
-            {isBitcast ? (
+            {isCompliance ? (
               <>
                 A simpler, simulated&nbsp;path.
               </>
@@ -105,9 +105,9 @@ export default function Problem() {
             )}
           </h2>
           <p className="text-base text-zinc-400 leading-relaxed max-w-[60ch] [text-wrap:pretty]">
-            {isBitcast ? (
+            {isCompliance ? (
               <>
-                Hyperstack is a Vanta-powered simulated scaled evaluation. Rules are published
+                {brand.name} is a Vanta-powered simulated scaled evaluation. Rules are published
                 upfront, performance-based rewards are delivered automatically onchain, and invited
                 Scaled Trader Program participants are compensated as independent&nbsp;contractors.
               </>
@@ -157,7 +157,7 @@ export default function Problem() {
         </motion.div>
 
         {/* Callout — left border accent, no card (hidden for compliance brands) */}
-        {!isBitcast && (
+        {!isCompliance && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}

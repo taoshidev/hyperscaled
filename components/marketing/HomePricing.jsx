@@ -11,7 +11,6 @@ import { trackCtaClick } from '@/lib/analytics'
 import { useRegistrationCapacity } from '@/hooks/use-registration-capacity'
 import { isFreeTierForRegistration } from '@/lib/registration-tier-helpers'
 import { RegistrationCapacityWaitlist } from '@/components/marketing/RegistrationCapacityWaitlist'
-import { isWsbSaleBannerPublic } from '@/lib/wsb-sale-banner-public'
 import { capacityMinerSlugForBrandId } from '@/lib/capacity-miner-slug'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
@@ -118,12 +117,12 @@ function PricingCard({ tier, index, brandHref, withQS, freeAtCapacity, paidAtCap
   )
 }
 
-export default function HomePricing({ tiers = PRICING_TIERS }) {
+export default function HomePricing({ tiers }) {
   const brand = useBrand()
   const brandHref = useBrandHref()
   const withQS = useWithPreservedQuery()
   const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity(capacityMinerSlugForBrandId(brand.id))
-  tiers = brand.pricingTiers || tiers
+  const resolvedTiers = tiers ?? brand.pricingTiers ?? PRICING_TIERS
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -149,8 +148,8 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
           </div>
         </motion.div>
 
-        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-6 md:gap-5 xl:gap-3 items-stretch`}>
-          {tiers.map((tier, i) => (
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${resolvedTiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-6 md:gap-5 xl:gap-3 items-stretch`}>
+          {resolvedTiers.map((tier, i) => (
             <PricingCard
               key={tier.id}
               tier={tier}
@@ -165,21 +164,6 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
 
         <RegistrationCapacityWaitlist paidAtCapacity={paidAtCapacity} />
 
-        {/* WSB Flash Deal pill — Hyperscaled & Vanta only */}
-        {(brand.id === 'hyperscaled' || brand.id === 'vanta') && isWsbSaleBannerPublic() && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={inView ? { opacity: 1 } : {}}
-            transition={{ ...spring, delay: 0.25 }}
-            className="flex justify-center mt-6"
-          >
-            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
-              <img src="/wsb-logo.svg" alt="" className="h-8 w-8 -my-1 rounded-sm" />
-              <span className="text-sm font-semibold text-zinc-900 tracking-tight">WallStreetBets Flash Deal: 50% Off All Challenges</span>
-            </div>
-          </motion.div>
-        )}
-
         {/* Universal rules */}
         <motion.p
           initial={{ opacity: 0 }}
@@ -188,9 +172,9 @@ export default function HomePricing({ tiers = PRICING_TIERS }) {
           className="text-center text-sm text-zinc-500 mt-4 max-w-[60ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          {brand.id === 'bitcast'
+          {brand.compliance
             ? 'All tiers: 10% profit target · 5% max drawdown · USDC rewards · Monthly payouts · No time limit'
-            : 'All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time limit'}
+            : <>All tiers: 10% profit target · 5% max drawdown · 100% profit split · Monthly payouts · No time&nbsp;limit</>}
         </motion.p>
       </div>
     </section>

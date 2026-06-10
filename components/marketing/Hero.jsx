@@ -30,11 +30,11 @@ const cardVariants = {
   visible: { opacity: 1, x: 0, transition: { ...spring, delay: 0.3 } },
 }
 
-export default function Hero() {
+export default function Hero({ activeCampaign = null }) {
   const brand = useBrand()
   const brandHref = useBrandHref()
   const withQS = useWithPreservedQuery()
-  const isHF = brand.id === 'bitcast'
+  const isHF = Boolean(brand.compliance)
 
   return (
     <section className={`relative min-h-[100dvh] flex flex-col overflow-hidden ${brand.parentSite ? 'pt-24' : 'pt-16'}`}>
@@ -42,12 +42,12 @@ export default function Hero() {
       {brand.showLiquidCrystal && brand.heroBeams
         ? <BeamsBg className="pointer-events-none" />
         : brand.showLiquidCrystal
-          ? <LiquidCrystalBg className="pointer-events-none" />
+          ? <LiquidCrystalBg className="pointer-events-none" color={brand.id === 'hyperscaled' ? undefined : brand.accentRgb} />
           : null}
       <div className={`absolute inset-0 pointer-events-none ${brand.heroBeams ? 'bg-zinc-950/30' : 'bg-zinc-950/60'}`} />
 
       {/* Promo banner — scrolls with hero */}
-      <PromoBanner />
+      <PromoBanner campaign={activeCampaign} />
 
       <div className="relative max-w-[1400px] mx-auto px-6 w-full py-20 flex-1 flex items-center">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-20 items-center">

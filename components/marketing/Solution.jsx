@@ -73,7 +73,7 @@ const bitcastHsBest = new Set([
 ])
 
 function getCompareConfig(brand) {
-  if (brand.id === 'bitcast') {
+  if (brand.compliance) {
     return { rows: bitcastCompareRows, hsBest: bitcastHsBest }
   }
   return { rows: defaultCompareRows, hsBest: defaultHsBest }
@@ -109,7 +109,7 @@ export default function Solution() {
                 Open. Onchain.<br />No middlemen.
               </h2>
               <p className="text-base text-zinc-400 leading-relaxed max-w-[52ch] [text-wrap:pretty]">
-                {brand.id === 'bitcast' ? (
+                {brand.compliance ? (
                   <>
                     Vanta&apos;s protocol mirrors your Hyperliquid trades into a simulated scaled account
                     and pays out performance-based rewards in USDC to participants who meet the program conditions — onchain, automatically, monthly.

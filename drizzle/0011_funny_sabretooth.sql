@@ -1,0 +1,1 @@
+ALTER TABLE "coupons" ADD COLUMN "campaign_owned" boolean DEFAULT false NOT NULL;

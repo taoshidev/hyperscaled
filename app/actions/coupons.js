@@ -68,6 +68,17 @@ function normalizeAllowedTierIds(raw) {
   return out.length ? out : null;
 }
 
+const MAX_COUPON_NOTES_LENGTH = 500;
+
+function normalizeCouponNotes(raw) {
+  if (raw == null) return null;
+  const t = String(raw).trim();
+  if (!t) return null;
+  return t.length > MAX_COUPON_NOTES_LENGTH
+    ? t.slice(0, MAX_COUPON_NOTES_LENGTH)
+    : t;
+}
+
 function couponTabSqlWhere(tab) {
   if (tab === "percent") {
     return eq(coupons.discountType, "percent");
@@ -123,6 +134,7 @@ function toCouponAdminRowClient(row) {
     validFrom: row.validFrom?.toISOString() ?? null,
     validUntil: row.validUntil?.toISOString() ?? null,
     createdByWallet: row.createdByWallet ?? null,
+    notes: row.notes ?? null,
     createdAt: row.createdAt.toISOString(),
     redemptions: row.redemptions.map((r) => ({
       userId: r.userId,
@@ -197,6 +209,7 @@ export async function listAdminCouponsPage(options) {
       validFrom: coupons.validFrom,
       validUntil: coupons.validUntil,
       createdByWallet: coupons.createdByWallet,
+      notes: coupons.notes,
       createdAt: coupons.createdAt,
     })
     .from(coupons)
@@ -250,6 +263,7 @@ export async function listAdminCouponsPage(options) {
       validFrom: c.validFrom,
       validUntil: c.validUntil,
       createdByWallet: c.createdByWallet ?? null,
+      notes: c.notes ?? null,
       createdAt: c.createdAt,
       redemptionCount: redemptions.length,
       redemptions,
@@ -326,11 +340,37 @@ export async function fetchCouponsForAdminCsvExport(tab, maxRows) {
       validFrom: c.validFrom,
       validUntil: c.validUntil,
       createdByWallet: c.createdByWallet ?? null,
+      notes: c.notes ?? null,
       createdAt: c.createdAt,
       redemptionCount: redemptions.length,
       redemptions,
     };
   });
+}
+
+export async function updateCouponNotes(couponId, notes) {
+  await requireCommandCenterStaff();
+  const db = await getDb();
+  try {
+    const [updated] = await db
+      .update(coupons)
+      .set({
+        notes: normalizeCouponNotes(notes),
+        updatedAt: new Date(),
+      })
+      .where(eq(coupons.id, couponId))
+      .returning({ id: coupons.id });
+    if (!updated) {
+      return { success: false, error: "Coupon not found." };
+    }
+    return { success: true };
+  } catch (e) {
+    console.error("updateCouponNotes:", e);
+    return {
+      success: false,
+      error: e?.message ?? "Failed to update coupon notes.",
+    };
+  }
 }
 
 export async function createCoupon(input) {
@@ -356,6 +396,7 @@ export async function createCoupon(input) {
         allowedTierIds: normalizeAllowedTierIds(input.allowedTierIds ?? null),
         maxUses: normalizeCouponMaxUses(useType, input.maxUses ?? undefined),
         createdByWallet: staff.wallet,
+        notes: normalizeCouponNotes(input.notes),
       })
       .returning({ id: coupons.id });
     if (!inserted) return { success: false, error: "Insert failed." };
@@ -388,6 +429,7 @@ export async function createCouponsBatch(input) {
     allowedTierIds: normalizeAllowedTierIds(input.allowedTierIds ?? null),
     maxUses: normalizeCouponMaxUses(useType, input.maxUses ?? undefined),
     createdByWallet: staff.wallet,
+    notes: normalizeCouponNotes(input.notes),
   };
   let created = 0;
   const maxRetries = 10;
