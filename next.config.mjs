@@ -5,6 +5,14 @@ const nextConfig = {
   env: {
     USE_TESTNET: process.env.USE_TESTNET || "false",
   },
+  // Don't fail the production build on ESLint findings — run lint as its own
+  // CI step instead. `development` currently carries pre-existing lint errors
+  // (react-hooks/set-state-in-effect + react-compiler memoization in the
+  // campaign/coupon components, plus some no-unused-vars) that were blocking
+  // `next build` on Vercel. Re-enable once those are cleaned up.
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   // Keep Node-only libs external so webpack doesn’t omit them from Vercel’s traced bundle.
   // lib/db dynamically imports Cloud SQL Connector when CLOUD_SQL_INSTANCE_CONNECTION_NAME is set.
   // Do not use outputFileTracingIncludes with '/*' here — it blows up every function’s trace

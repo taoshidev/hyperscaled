@@ -52,7 +52,7 @@ const defaultCompareRows = [
   { label: 'Weekend Trading',     hs: 'Allowed',    ftmo: 'Restricted' },
 ]
 
-// HyperFunded (bitcast): compliant, non-comparative framing — no "Profit Split"/"100%",
+// Hyperstack (bitcast): compliant, non-comparative framing — no "Profit Split"/"100%",
 // KYC clarified for payout eligibility.
 const bitcastCompareRows = [
   { label: 'Profit Target',                      hs: '10%',               ftmo: '15%' },

@@ -2,11 +2,11 @@ import { BrandProvider } from '@/lib/brand'
 
 export const metadata = {
   title: {
-    default: 'HyperFunded — Scaled Perp Trading on Hyperliquid',
+    default: 'Hyperstack — Scaled Perp Trading on Hyperliquid',
     template: '%s',
   },
   icons: {
-    icon: [{ url: '/hyperfunded-favicon.png', type: 'image/png' }],
+    icon: [{ url: '/hyperstack-favicon.svg', type: 'image/svg+xml' }],
   },
 }
 
