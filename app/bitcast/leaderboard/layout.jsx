@@ -1,11 +1,12 @@
 import { buildMetadata } from '@/lib/metadata'
 
 export const metadata = buildMetadata({
-  title: 'Leaderboard — Top Traders on HyperFunded',
-  description: 'See the top performing scaled traders on HyperFunded. Live rankings, returns, key metrics, and payout history.',
-  ogTitle: 'HyperFunded Leaderboard — Top Scaled Traders, Live',
-  ogDescription: 'Transparent, onchain performance rankings for every HyperFunded scaled trader. All-time returns, key metrics, and verified USDC payouts.',
+  title: 'Leaderboard — Hyperstack',
+  description: 'Hyperstack leaderboard. Coming soon.',
+  ogTitle: 'Leaderboard — Hyperstack',
+  ogDescription: 'Hyperstack leaderboard. Coming soon.',
   path: '/bitcast/leaderboard',
+  robots: { index: false, follow: false },
   brand: 'bitcast',
 })
 

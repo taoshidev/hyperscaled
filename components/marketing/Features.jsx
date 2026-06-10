@@ -68,7 +68,7 @@ const features = [
     icon: CurrencyDollar,
     title: 'USDC In, USDC Out',
     body: 'Pay your registration fee in USDC, receive payouts in USDC. Direct to your wallet and verifiable\u00a0onchain.',
-    // HyperFunded (bitcast): clarify payee (Vanta) on the pay-in side and frame the
+    // Hyperstack (bitcast): clarify payee (Vanta) on the pay-in side and frame the
     // pay-out side as performance-based rewards.
     bitcastBody: 'Pay your registration fee in USDC to Vanta, and receive performance-based rewards in USDC. Direct to your wallet and verifiable\u00a0onchain.',
     span: 'md:col-span-5',
