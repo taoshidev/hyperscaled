@@ -6,7 +6,7 @@ export const metadata = {
     template: '%s',
   },
   icons: {
-    icon: [{ url: '/hyperfunded-favicon.png', type: 'image/png' }],
+    icon: [{ url: '/hyperstack-favicon.svg', type: 'image/svg+xml' }],
   },
 }
 

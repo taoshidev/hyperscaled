@@ -65,7 +65,7 @@ export default async function BitcastRegisterPage() {
       initialMinerSlug={MINER_SLUG}
       initialMinerTiers={initialMinerTiers}
       initialPaymentWallet={initialPaymentWallet}
-      logo="/hyperfunded-logo.png"
+      logo="/hyperstack-logo.svg"
       logoAlt="Hyperstack"
       logoHref="https://hyperstack.trade"
       brandVariant="bitcast"
