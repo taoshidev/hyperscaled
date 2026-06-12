@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CaretDown, DownloadSimple, Trash, Prohibit } from "@phosphor-icons/react";
+import {
+  CaretDown,
+  DownloadSimple,
+  Trash,
+  Prohibit,
+  PencilSimple,
+} from "@phosphor-icons/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +19,7 @@ import {
   invalidateAllCoupons,
   deleteUnredeemedCoupons,
 } from "@/app/actions/coupons";
+import { CouponBatchEditModal } from "@/components/admin/views/CouponBatchEditModal";
 import { cn } from "@/lib/utils";
 
 function couponsExportPath(tab, format) {
@@ -39,6 +46,7 @@ const dangerBtn = cn(
 export function CouponsListToolbar({ tab }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [batchEditOpen, setBatchEditOpen] = useState(false);
 
   const csvHref = couponsExportPath(tab, "csv");
   const jsonHref = couponsExportPath(tab, "json");
@@ -136,6 +144,16 @@ export function CouponsListToolbar({ tab }) {
         type="button"
         className={ghostBtn}
         disabled={busy}
+        onClick={() => setBatchEditOpen(true)}
+      >
+        <PencilSimple size={14} weight="bold" />
+        Bulk edit batch
+      </button>
+
+      <button
+        type="button"
+        className={ghostBtn}
+        disabled={busy}
         onClick={handleDeleteUnredeemed}
       >
         <Trash size={14} weight="bold" />
@@ -151,6 +169,8 @@ export function CouponsListToolbar({ tab }) {
         <Prohibit size={14} weight="bold" />
         Invalidate all
       </button>
+
+      <CouponBatchEditModal open={batchEditOpen} onOpenChange={setBatchEditOpen} />
     </div>
   );
 }

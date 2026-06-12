@@ -140,6 +140,7 @@ export function AffiliateAdminTableRow({ row, onEdit, promoCodes }) {
                 <AffiliateShareLinkGenerator
                   affiliateSlug={row.slug}
                   defaultTenantSlug={row.entityMinerSlug ?? null}
+                  defaultPromoCode={row.promoCode ?? null}
                   promoCodes={promoCodes}
                 />
               </div>

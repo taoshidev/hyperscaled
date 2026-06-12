@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { updateCouponNotes } from "@/app/actions/coupons";
+import { CouponEditModal } from "@/components/admin/views/CouponEditModal";
 import { cn } from "@/lib/utils";
 
 const fieldClass =
@@ -149,6 +150,7 @@ function CouponRowNotesPanel({
 export function CouponAdminTableRow({ row }) {
   const [open, setOpen] = useState(false);
   const [editingNotes, setEditingNotes] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const isExpired = row.validUntil ? new Date(row.validUntil) < new Date() : false;
 
   const discountUi =
@@ -245,15 +247,24 @@ export function CouponAdminTableRow({ row }) {
             </span>
           )}
         </TableCell>
-        <TableCell className="w-[100px]">
-          <button
-            type="button"
-            onClick={startEditNotes}
-            className="inline-flex items-center gap-1 rounded-md border border-white/[0.08] bg-zinc-900/70 px-2 py-1 text-[11px] text-zinc-300 transition-colors hover:bg-white/[0.04] hover:text-white"
-          >
-            <PencilSimple size={11} weight="bold" aria-hidden />
-            Notes
-          </button>
+        <TableCell className="w-[140px]">
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setEditOpen(true)}
+              className="inline-flex items-center gap-1 rounded-md border border-teal-400/30 bg-teal-400/15 px-2 py-1 text-[11px] font-medium text-teal-300 transition-colors hover:bg-teal-400/25 hover:text-teal-200"
+            >
+              <PencilSimple size={11} weight="bold" aria-hidden />
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={startEditNotes}
+              className="inline-flex items-center gap-1 rounded-md border border-white/[0.08] bg-zinc-900/70 px-2 py-1 text-[11px] text-zinc-300 transition-colors hover:bg-white/[0.04] hover:text-white"
+            >
+              Notes
+            </button>
+          </div>
         </TableCell>
       </TableRow>
 
@@ -277,6 +288,7 @@ export function CouponAdminTableRow({ row }) {
                   {row.validFrom ? (
                     <span>valid from {formatTs(row.validFrom)}</span>
                   ) : null}
+                  {row.batchLabel ? <span>batch: {row.batchLabel}</span> : null}
                 </div>
                 <CouponRowNotesPanel
                   couponId={row.id}
@@ -336,6 +348,8 @@ export function CouponAdminTableRow({ row }) {
           </div>
         </TableCell>
       </TableRow>
+
+      <CouponEditModal open={editOpen} onOpenChange={setEditOpen} coupon={row} />
     </>
   );
 }

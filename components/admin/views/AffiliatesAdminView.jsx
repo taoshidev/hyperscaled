@@ -2,7 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, MagnifyingGlass } from "@phosphor-icons/react";
+import {
+  Plus,
+  MagnifyingGlass,
+  UploadSimple,
+  DownloadSimple,
+  CaretDown,
+} from "@phosphor-icons/react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -28,6 +40,7 @@ import {
 import { cn } from "@/lib/utils";
 import { AffiliateAdminTableRow } from "@/components/admin/views/AffiliateAdminTableRow";
 import { AffiliateEditModal } from "@/components/admin/views/AffiliateEditModal";
+import { BulkAffiliateImportModal } from "@/components/admin/views/BulkAffiliateImportModal";
 
 const TAB_DEFS = [
   { id: "all", label: "All" },
@@ -48,10 +61,20 @@ export function AffiliatesAdminView({
 
   const [editing, setEditing] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
 
   const sortHref = (column) =>
     affiliatesSortToggleHref(tab, q, page, activeSort, activeDir, column);
   const pageHref = (p) => affiliatesPageHref(tab, q, p, activeSort, activeDir);
+
+  const exportHref = (format) => {
+    const p = new URLSearchParams();
+    if (tab !== "all") p.set("tab", tab);
+    if (q && q.trim()) p.set("q", q.trim());
+    if (format === "json") p.set("format", "json");
+    const s = p.toString();
+    return `/api/command-center/export/affiliates${s ? `?${s}` : ""}`;
+  };
 
   const openCreate = () => {
     setEditing(null);
@@ -119,6 +142,50 @@ export function AffiliatesAdminView({
           </div>
         </form>
 
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-zinc-900/70 px-3.5 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/[0.04] hover:text-white"
+            >
+              <DownloadSimple size={14} weight="bold" />
+              Export links
+              <CaretDown size={11} weight="bold" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            className="min-w-32 rounded-lg border border-white/[0.08] bg-[#0c0c0e]/95 p-1 backdrop-blur-xl"
+          >
+            <DropdownMenuItem asChild>
+              <a
+                href={exportHref("csv")}
+                download
+                className="rounded-md px-3 py-2 text-sm text-zinc-300 hover:bg-white/[0.04] hover:text-white focus:bg-white/[0.04] focus:text-white"
+              >
+                CSV
+              </a>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <a
+                href={exportHref("json")}
+                download
+                className="rounded-md px-3 py-2 text-sm text-zinc-300 hover:bg-white/[0.04] hover:text-white focus:bg-white/[0.04] focus:text-white"
+              >
+                JSON
+              </a>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <button
+          type="button"
+          onClick={() => setBulkImportOpen(true)}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-zinc-900/70 px-3.5 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/[0.04] hover:text-white"
+        >
+          <UploadSimple size={14} weight="bold" />
+          Bulk import
+        </button>
         <button
           type="button"
           onClick={openCreate}
@@ -255,6 +322,13 @@ export function AffiliatesAdminView({
         open={modalOpen}
         onOpenChange={setModalOpen}
         affiliate={editing}
+        parentChoices={parentChoices}
+        minerChoices={minerChoices}
+      />
+
+      <BulkAffiliateImportModal
+        open={bulkImportOpen}
+        onOpenChange={setBulkImportOpen}
         parentChoices={parentChoices}
         minerChoices={minerChoices}
       />

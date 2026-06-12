@@ -17,10 +17,11 @@ const PATH_PRESETS = [
 export function AffiliateShareLinkGenerator({
   affiliateSlug,
   defaultTenantSlug,
+  defaultPromoCode,
   promoCodes,
 }) {
   const [tenant, setTenant] = useState(defaultTenantSlug ?? "");
-  const [promo, setPromo] = useState("");
+  const [promo, setPromo] = useState(defaultPromoCode ?? "");
   const [path, setPath] = useState("/");
   const [copied, setCopied] = useState(false);
 

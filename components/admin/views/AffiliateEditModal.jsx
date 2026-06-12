@@ -49,6 +49,7 @@ export function AffiliateEditModal({
   const [name, setName] = useState("");
   const [parentId, setParentId] = useState("");
   const [minerHotkey, setMinerHotkey] = useState("");
+  const [promoCode, setPromoCode] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -63,6 +64,7 @@ export function AffiliateEditModal({
         : String(affiliate.parentAffiliateId),
     );
     setMinerHotkey(affiliate?.entityMinerHotkey ?? "");
+    setPromoCode(affiliate?.promoCode ?? "");
     setIsActive(affiliate?.isActive ?? true);
     setError(null);
   }, [affiliate, open]);
@@ -77,6 +79,7 @@ export function AffiliateEditModal({
         name: name.trim(),
         parentAffiliateId: parentId || null,
         entityMinerHotkey: minerHotkey || null,
+        promoCode: promoCode.trim() || null,
         isActive,
       });
       if (result.success) {
@@ -172,6 +175,23 @@ export function AffiliateEditModal({
               Set when this affiliate row IS one of the partner companies. The
               miner&apos;s slug becomes the value used in{" "}
               <span className="font-mono">?tenant=</span>.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-zinc-300">Promo code</Label>
+            <input
+              type="text"
+              value={promoCode}
+              onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+              placeholder="e.g. KATE_LV"
+              className={cn(fieldClass, "font-mono")}
+              disabled={busy}
+            />
+            <p className="text-[11px] text-zinc-500">
+              The coupon code tied to this affiliate. Pre-fills the share-link
+              generator and the <span className="font-mono">?promo=</span> in
+              exported links. Set automatically by the bulk import.
             </p>
           </div>
 
