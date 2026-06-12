@@ -8,6 +8,16 @@
   scroll-margin-top: 110px;
 }
 
+/* Pin the native date picker toggle to the right edge of the field. The
+   WebKit calendar indicator otherwise sits immediately after the text. */
+input[type="date"].date-field::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset-block: 0;
+  right: 0.75rem;
+  margin-block: auto;
+  cursor: pointer;
+}
+
 :root {
   --radius: 0.625rem;
   --brand-glow: 0, 198, 167;
