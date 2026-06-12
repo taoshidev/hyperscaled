@@ -5,6 +5,7 @@ import {
   and,
   or,
   isNotNull,
+  inArray,
   desc,
   asc,
   count,
@@ -117,7 +118,7 @@ export async function listAdminAffiliatesPage({
       : await db
           .select({ id: affiliates.id, slug: affiliates.slug, name: affiliates.name })
           .from(affiliates)
-          .where(sql`${affiliates.id} = ANY(${sql.raw(`ARRAY[${parentIds.join(",")}]::int[]`)})`);
+          .where(inArray(affiliates.id, parentIds));
   const parentBySlug = Object.fromEntries(parentRows.map((p) => [p.id, p]));
 
   return {
@@ -179,9 +180,7 @@ export async function fetchAffiliatesForAdminCsvExport(tab = "all", q, max = 100
       : await db
           .select({ id: affiliates.id, slug: affiliates.slug })
           .from(affiliates)
-          .where(
-            sql`${affiliates.id} = ANY(${sql.raw(`ARRAY[${parentIds.join(",")}]::int[]`)})`,
-          );
+          .where(inArray(affiliates.id, parentIds));
   const parentById = Object.fromEntries(parentRows.map((p) => [p.id, p.slug]));
 
   return rows.map((r) => ({
@@ -627,7 +626,10 @@ export async function bulkImportAffiliates(input) {
   for (const raw of input.rows) {
     const rawHandle = String(raw?.rawHandle ?? "").trim();
     const rawCode = String(raw?.rawCode ?? "").trim();
-    const slug = raw?.slug ? String(raw.slug) : slugifyHandle(rawHandle);
+    // Re-derive the slug server-side rather than trusting the client value,
+    // matching how `code` is re-normalized below. Falls back to the handle
+    // when no slug was supplied (or it normalizes to empty).
+    const slug = slugifyHandle(raw?.slug || rawHandle);
     const code = raw?.code ? normalizeCouponCode(raw.code) : normalizeCouponCode(rawCode);
     const displayName = rawHandle || slug;
 
