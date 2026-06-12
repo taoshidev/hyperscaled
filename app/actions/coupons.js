@@ -79,6 +79,27 @@ function normalizeCouponNotes(raw) {
     : t;
 }
 
+const MAX_BATCH_LABEL_LENGTH = 120;
+
+function normalizeBatchLabel(raw) {
+  if (raw == null) return null;
+  const t = String(raw).trim();
+  if (!t) return null;
+  return t.length > MAX_BATCH_LABEL_LENGTH
+    ? t.slice(0, MAX_BATCH_LABEL_LENGTH)
+    : t;
+}
+
+const COUPON_USE_TYPES = new Set(["one_time", "multi_use", "unlimited"]);
+const COUPON_DISCOUNT_TYPES = new Set(["percent", "fixed"]);
+
+/** Parse a date-ish input. Returns `undefined` for invalid, `null` for empty. */
+function parseCouponDate(raw) {
+  if (raw == null || raw === "") return null;
+  const d = raw instanceof Date ? raw : new Date(raw);
+  return Number.isFinite(d.getTime()) ? d : undefined;
+}
+
 function couponTabSqlWhere(tab) {
   if (tab === "percent") {
     return eq(coupons.discountType, "percent");
@@ -135,6 +156,7 @@ function toCouponAdminRowClient(row) {
     validUntil: row.validUntil?.toISOString() ?? null,
     createdByWallet: row.createdByWallet ?? null,
     notes: row.notes ?? null,
+    batchLabel: row.batchLabel ?? null,
     createdAt: row.createdAt.toISOString(),
     redemptions: row.redemptions.map((r) => ({
       userId: r.userId,
@@ -210,6 +232,7 @@ export async function listAdminCouponsPage(options) {
       validUntil: coupons.validUntil,
       createdByWallet: coupons.createdByWallet,
       notes: coupons.notes,
+      batchLabel: coupons.batchLabel,
       createdAt: coupons.createdAt,
     })
     .from(coupons)
@@ -264,6 +287,7 @@ export async function listAdminCouponsPage(options) {
       validUntil: c.validUntil,
       createdByWallet: c.createdByWallet ?? null,
       notes: c.notes ?? null,
+      batchLabel: c.batchLabel ?? null,
       createdAt: c.createdAt,
       redemptionCount: redemptions.length,
       redemptions,
@@ -370,6 +394,175 @@ export async function updateCouponNotes(couponId, notes) {
       success: false,
       error: e?.message ?? "Failed to update coupon notes.",
     };
+  }
+}
+
+export async function updateCoupon(input) {
+  await requireCommandCenterStaff();
+  const db = await getDb();
+
+  const id = input?.id;
+  if (!id) return { success: false, error: "Missing coupon id." };
+
+  const code = normalizeCode(String(input.code ?? ""));
+  if (!code) return { success: false, error: "Code is required." };
+
+  if (!COUPON_DISCOUNT_TYPES.has(input.discountType)) {
+    return { success: false, error: "Invalid discount type." };
+  }
+  const discountValueNum = Number(input.discountValue);
+  if (!Number.isFinite(discountValueNum) || discountValueNum <= 0) {
+    return { success: false, error: "Discount value must be a positive number." };
+  }
+  if (input.discountType === "percent" && discountValueNum > 100) {
+    return { success: false, error: "Percent discount cannot exceed 100." };
+  }
+
+  const useType = input.useType ?? "one_time";
+  if (!COUPON_USE_TYPES.has(useType)) {
+    return { success: false, error: "Invalid use type." };
+  }
+  const maxUses = normalizeCouponMaxUses(
+    useType,
+    input.maxUses != null && input.maxUses !== "" ? Number(input.maxUses) : undefined,
+  );
+  if (useType === "multi_use" && (maxUses == null || maxUses < 1)) {
+    return { success: false, error: "Multi-use coupons require a max uses of at least 1." };
+  }
+
+  const validFrom = parseCouponDate(input.validFrom);
+  if (validFrom === undefined) {
+    return { success: false, error: "Invalid valid-from date." };
+  }
+  const validUntil = parseCouponDate(input.validUntil);
+  if (validUntil === undefined) {
+    return { success: false, error: "Invalid valid-until date." };
+  }
+  if (validFrom && validUntil && validUntil < validFrom) {
+    return { success: false, error: "Valid-until must be on or after valid-from." };
+  }
+
+  try {
+    const [updated] = await db
+      .update(coupons)
+      .set({
+        code,
+        discountType: input.discountType,
+        discountValue: String(discountValueNum),
+        useType,
+        maxUses,
+        validFrom,
+        validUntil,
+        notes: normalizeCouponNotes(input.notes),
+        batchLabel: normalizeBatchLabel(input.batchLabel),
+        updatedAt: new Date(),
+      })
+      .where(eq(coupons.id, id))
+      .returning({ id: coupons.id });
+    if (!updated) return { success: false, error: "Coupon not found." };
+    return { success: true, id: updated.id };
+  } catch (e) {
+    if (e?.code === "23505") {
+      return { success: false, error: "A coupon with this code already exists." };
+    }
+    console.error("updateCoupon:", e);
+    return { success: false, error: e?.message ?? "Failed to update coupon." };
+  }
+}
+
+/**
+ * List the distinct batch labels (cohorts) with a count and the spread of
+ * end dates, for the bulk-edit-by-batch picker.
+ */
+export async function listCouponBatches() {
+  await requireCommandCenterStaff();
+  const db = await getDb();
+
+  const rows = await db
+    .select({
+      batchLabel: coupons.batchLabel,
+      count: sql`count(*)::int`,
+      minValidUntil: sql`min(${coupons.validUntil})`,
+      maxValidUntil: sql`max(${coupons.validUntil})`,
+    })
+    .from(coupons)
+    .where(sql`${coupons.batchLabel} is not null`)
+    .groupBy(coupons.batchLabel)
+    .orderBy(asc(coupons.batchLabel));
+
+  return rows.map((r) => ({
+    batchLabel: r.batchLabel,
+    count: Number(r.count ?? 0),
+    minValidUntil: r.minValidUntil
+      ? new Date(r.minValidUntil).toISOString()
+      : null,
+    maxValidUntil: r.maxValidUntil
+      ? new Date(r.maxValidUntil).toISOString()
+      : null,
+  }));
+}
+
+/**
+ * Update every coupon tagged with `batchLabel` in one shot. Only the fields
+ * explicitly supplied are written (so you can shift just the end date for a
+ * whole cohort without touching discounts). Returns the number updated.
+ */
+export async function bulkUpdateCouponsByBatch(input) {
+  await requireCommandCenterStaff();
+  const db = await getDb();
+
+  const batchLabel = normalizeBatchLabel(input?.batchLabel);
+  if (!batchLabel) return { success: false, error: "Select a batch to update." };
+
+  const set = { updatedAt: new Date() };
+  let touched = false;
+
+  if ("validFrom" in input) {
+    const v = parseCouponDate(input.validFrom);
+    if (v === undefined) return { success: false, error: "Invalid valid-from date." };
+    set.validFrom = v;
+    touched = true;
+  }
+  if ("validUntil" in input) {
+    const v = parseCouponDate(input.validUntil);
+    if (v === undefined) return { success: false, error: "Invalid valid-until date." };
+    set.validUntil = v;
+    touched = true;
+  }
+  if (
+    input.discountType != null &&
+    input.discountValue != null &&
+    input.discountValue !== ""
+  ) {
+    if (!COUPON_DISCOUNT_TYPES.has(input.discountType)) {
+      return { success: false, error: "Invalid discount type." };
+    }
+    const n = Number(input.discountValue);
+    if (!Number.isFinite(n) || n <= 0) {
+      return { success: false, error: "Discount value must be a positive number." };
+    }
+    if (input.discountType === "percent" && n > 100) {
+      return { success: false, error: "Percent discount cannot exceed 100." };
+    }
+    set.discountType = input.discountType;
+    set.discountValue = String(n);
+    touched = true;
+  }
+
+  if (!touched) {
+    return { success: false, error: "Provide at least one field to update." };
+  }
+
+  try {
+    const updated = await db
+      .update(coupons)
+      .set(set)
+      .where(eq(coupons.batchLabel, batchLabel))
+      .returning({ id: coupons.id });
+    return { success: true, count: updated.length };
+  } catch (e) {
+    console.error("bulkUpdateCouponsByBatch:", e);
+    return { success: false, error: e?.message ?? "Failed to bulk update." };
   }
 }
 

@@ -1,0 +1,1 @@
+ALTER TABLE "affiliates" ADD COLUMN "promo_code" varchar(255);
