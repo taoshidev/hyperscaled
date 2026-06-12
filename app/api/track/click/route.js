@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { affiliates, entityMiners, referralClicks } from "@/lib/db/schema";
 import { checkRateLimit, getTrustedClientId } from "@/lib/rate-limit";
@@ -9,6 +9,15 @@ export const runtime = "nodejs";
 
 const TRACK_CLICK_LIMIT = 60;
 const TRACK_CLICK_WINDOW_MS = 60_000;
+
+// Collapse repeat landings from a single user action into one click. The
+// proxy mints a fresh clickId on every middleware invocation, and one
+// navigation can replay the landing more than once (dev double-invocation,
+// brand-domain redirects that re-run middleware, prefetch/RSC races, and
+// multi-instance burst-guard misses). Without this, a single page load can
+// record several clicks and over-count the affiliate's useCount. The window
+// is deliberately short so a deliberate revisit seconds later still counts.
+const CLICK_DEDUPE_WINDOW_MS = 10_000;
 
 function hashIp(ip) {
   if (!ip) return null;
@@ -123,40 +132,84 @@ export async function POST(request) {
     }
   }
 
-  try {
-    await db
-      .insert(referralClicks)
-      .values({
-        clickId,
-        affiliateId,
-        entityMinerHotkey,
-        promoCode:
-          typeof promo === "string" && promo ? promo.toUpperCase() : null,
-        landingPath: clamp(landingPath, 1024),
-        referrer: clamp(body?.referrer ?? null, 1024),
-        userAgent: clamp(body?.userAgent ?? null, 512),
-        ipHash: hashIp(clientIp(request)),
-      })
-      .onConflictDoNothing({ target: referralClicks.clickId });
+  const ipHash = hashIp(clientIp(request));
+  const landing = clamp(landingPath, 1024);
 
-    if (affiliateId) {
-      // Atomic increment so concurrent clicks don't lose updates. Failures
-      // are non-fatal — the click row is the source of truth for reporting.
-      try {
-        await db
+  // A single navigation can fire this endpoint more than once, and those
+  // fires arrive concurrently (the proxy posts fire-and-forget). A plain
+  // "select then insert" races — both probes miss before either commits, so
+  // both insert. We serialize identical clicks with a transaction-scoped
+  // advisory lock keyed on the natural identity, then dedupe inside the lock.
+  // Only the first request in the window records a row and bumps the counter.
+  const dedupeKey = [
+    "track-click",
+    affiliateId ?? "",
+    entityMinerHotkey ?? "",
+    ipHash ?? "",
+    landing,
+  ].join("|");
+
+  try {
+    const recorded = await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${dedupeKey}))`);
+
+      const since = new Date(Date.now() - CLICK_DEDUPE_WINDOW_MS);
+      const [recent] = await tx
+        .select({ id: referralClicks.id })
+        .from(referralClicks)
+        .where(
+          and(
+            gt(referralClicks.occurredAt, since),
+            eq(referralClicks.landingPath, landing),
+            affiliateId != null
+              ? eq(referralClicks.affiliateId, affiliateId)
+              : isNull(referralClicks.affiliateId),
+            entityMinerHotkey != null
+              ? eq(referralClicks.entityMinerHotkey, entityMinerHotkey)
+              : isNull(referralClicks.entityMinerHotkey),
+            ipHash != null
+              ? eq(referralClicks.ipHash, ipHash)
+              : isNull(referralClicks.ipHash),
+          ),
+        )
+        .limit(1);
+      if (recent) return false;
+
+      await tx
+        .insert(referralClicks)
+        .values({
+          clickId,
+          affiliateId,
+          entityMinerHotkey,
+          promoCode:
+            typeof promo === "string" && promo ? promo.toUpperCase() : null,
+          landingPath: landing,
+          referrer: clamp(body?.referrer ?? null, 1024),
+          userAgent: clamp(body?.userAgent ?? null, 512),
+          ipHash,
+        })
+        .onConflictDoNothing({ target: referralClicks.clickId });
+
+      if (affiliateId) {
+        // Atomic increment so concurrent clicks for different affiliates
+        // don't lose updates. Kept inside the lock/txn so the counter stays
+        // in lockstep with the referral_clicks row we just wrote.
+        await tx
           .update(affiliates)
           .set({ useCount: sql`${affiliates.useCount} + 1` })
           .where(eq(affiliates.id, affiliateId));
-      } catch {
-        // ignore
       }
-    }
+      return true;
+    });
+
+    return NextResponse.json(
+      { ok: true, deduped: !recorded },
+      { status: 200 },
+    );
   } catch (e) {
     return NextResponse.json(
       { ok: false, error: e instanceof Error ? e.message : String(e) },
       { status: 200 },
     );
   }
-
-  return NextResponse.json({ ok: true }, { status: 200 });
 }
