@@ -175,7 +175,7 @@ function getSteps(brandName, hasCompliance, accountType, protocolName) {
         { label: 'Max Drawdown (Challenge)', value: '5% daily / 5% EOD trailing' },
         {
           label: hasCompliance ? 'Max Drawdown (Scaled, simulated)' : 'Max Drawdown (Funded)',
-          value: '8% daily / 8% EOD trailing',
+          value: '5% daily / 8% EOD trailing',
         },
         { label: 'Payout Cycle', value: 'Monthly' },
         hasCompliance
@@ -328,7 +328,7 @@ function getExtensionFeatures(hasCompliance) {
   {
     icon: Scales,
     title: 'Auto size clamping',
-    body: 'Orders that exceed per-pair or portfolio caps get trimmed to the largest allowed fill automatically.',
+    body: 'Orders that exceed per-pair, asset-class, or portfolio caps get trimmed to the largest allowed fill automatically.',
   },
   {
     icon: ShieldCheck,

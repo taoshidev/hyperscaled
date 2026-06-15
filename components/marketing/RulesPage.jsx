@@ -9,7 +9,7 @@ import {
   Warning,
 } from '@phosphor-icons/react'
 import RulesTable from '@/components/shared/RulesTable'
-import { EVAL_RULES, getFundedRules, SCALING_PATH, BUYING_POWER_BY_SIZE, WEIGHT_LIMITS, FEE_RULES, TRADABLE_PAIRS } from '@/lib/constants'
+import { EVAL_RULES, getFundedRules, SCALING_PATH, BUYING_POWER_BY_SIZE, PER_PAIR_LIMITS, PER_PAIR_OVERRIDES, ASSET_CLASS_LIMITS, PORTFOLIO_LIMITS, FEE_RULES, TRADABLE_PAIRS } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
 import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
@@ -249,6 +249,69 @@ function AvailablePairsSection() {
 }
 
 /* ───────────────────────────────────────────────
+   Tier matrix table (asset-class rows × A/B/C tiers)
+   ─────────────────────────────────────────────── */
+function TierMatrix({ caption, labelHeader, rows }) {
+  return (
+    <div className="mb-6">
+      {caption && (
+        <p className="mb-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">{caption}</p>
+      )}
+      {/* Desktop */}
+      <div className="hidden md:block rounded-lg border border-white/[0.06] overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-white/[0.06] bg-white/[0.02]">
+              <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">{labelHeader}</th>
+              <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Tier A</th>
+              <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Tier B</th>
+              <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Tier C</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => (
+              <tr
+                key={row.label}
+                className={i < rows.length - 1 ? 'border-b border-white/[0.04]' : ''}
+              >
+                <td className="px-4 py-3 text-white font-medium whitespace-nowrap">{row.label}</td>
+                <td className="px-4 py-3 text-zinc-400 font-mono">{row.a}</td>
+                <td className="px-4 py-3 text-zinc-400 font-mono">{row.b}</td>
+                <td className="px-4 py-3 text-zinc-400 font-mono">{row.c}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile */}
+      <div className="md:hidden space-y-3">
+        {rows.map((row) => (
+          <div
+            key={row.label}
+            className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-4"
+          >
+            <div className="text-white font-medium text-sm mb-2">{row.label}</div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-zinc-500">Tier A</span>
+              <span className="text-zinc-200 font-mono">{row.a}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm mt-1">
+              <span className="text-zinc-500">Tier B</span>
+              <span className="text-zinc-200 font-mono">{row.b}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm mt-1">
+              <span className="text-zinc-500">Tier C</span>
+              <span className="text-zinc-200 font-mono">{row.c}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ───────────────────────────────────────────────
    Section 2c — Weight Tracking & Limits
    ─────────────────────────────────────────────── */
 function WeightTrackingSection() {
@@ -263,14 +326,17 @@ function WeightTrackingSection() {
           {brand.name} mirrors a trader's Hyperliquid positions by replicating each position's target portfolio weight. HL trades are never blocked or modified — {brand.name} only adjusts what it copies on its own&nbsp;side.
         </p>
         <p className="mt-3 text-sm sm:text-base text-zinc-400 leading-relaxed">
-          {brand.name} enforces two independent weight limits when&nbsp;tracking:
+          {brand.name} enforces three independent weight limits when tracking. A mirrored position is capped if it would exceed any one of&nbsp;them:
         </p>
         <ul className="mt-4 space-y-2 text-sm text-zinc-400">
           <li>
             <span className="text-white font-medium">Per-pair limit</span> — max exposure to a single trade pair. When HL exposure is above the limit, the copied position is capped at the limit; subsequent HL changes in that pair are only mirrored once HL exposure crosses back below the&nbsp;limit.
           </li>
           <li>
-            <span className="text-white font-medium">Portfolio limit</span> — max aggregate exposure across all tracked positions. When the portfolio is at the limit, any further increase is clipped to remaining portfolio headroom, or skipped if no headroom exists. Headroom frees up when an existing position is&nbsp;reduced.
+            <span className="text-white font-medium">Asset-class limit</span> — max combined exposure across all tracked pairs in one asset class (crypto, commodities, indices, stocks).
+          </li>
+          <li>
+            <span className="text-white font-medium">Portfolio limit</span> — max aggregate exposure across all tracked positions. It is deliberately tighter than the sum of the asset-class limits, so you cannot fill every class to its own cap at once. When the portfolio is at the limit, any further increase is clipped to remaining portfolio headroom, or skipped if no headroom exists. Headroom frees up when an existing position is&nbsp;reduced.
           </li>
         </ul>
         <div className="mt-5 rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-4">
@@ -330,54 +396,43 @@ function WeightTrackingSection() {
         </div>
 
         {/* Weight limits by tier */}
-        <h3 className="mt-10 mb-4 text-xs text-zinc-500 tracking-widest uppercase font-medium">
+        <h3 className="mt-10 mb-2 text-xs text-zinc-500 tracking-widest uppercase font-medium">
           Weight Limits by Tier
         </h3>
+        <p className="mb-5 text-sm text-zinc-400 leading-relaxed">
+          All limits are a percentage of your {brand.name} account balance and depend on your Weight Tier. A mirrored order must satisfy the per-pair, asset-class, and portfolio limit at the same&nbsp;time.
+        </p>
 
-        {/* Desktop */}
-        <div className="hidden md:block rounded-lg border border-white/[0.06] overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/[0.06] bg-white/[0.02]">
-                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Weight Tier</th>
-                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Per-Pair Limit</th>
-                <th className="text-left px-4 py-3 text-xs text-zinc-500 tracking-widest uppercase font-medium">Portfolio Limit</th>
-              </tr>
-            </thead>
-            <tbody>
-              {WEIGHT_LIMITS.map((row, i) => (
-                <tr
-                  key={row.tier}
-                  className={i < WEIGHT_LIMITS.length - 1 ? 'border-b border-white/[0.04]' : ''}
-                >
-                  <td className="px-4 py-3 text-white font-medium whitespace-nowrap">{row.tier}</td>
-                  <td className="px-4 py-3 text-zinc-400 font-mono">{row.perPair}</td>
-                  <td className="px-4 py-3 text-zinc-400 font-mono">{row.portfolio}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <TierMatrix
+          caption="Per-pair limit"
+          labelHeader="Asset Class"
+          rows={PER_PAIR_LIMITS.map((r) => ({ label: r.assetClass, a: r.a, b: r.b, c: r.c }))}
+        />
+
+        {/* Per-pair overrides note */}
+        <div className="mb-6 rounded-xl border border-amber-400/20 bg-amber-400/[0.03] p-4">
+          <p className="text-sm text-zinc-400 leading-relaxed">
+            {PER_PAIR_OVERRIDES.map((o) => (
+              <span key={o.pair}>
+                <span className="text-white font-medium font-mono">{o.pair}</span> is currently set above its class default, at{' '}
+                <span className="font-mono text-zinc-200">{o.a}&nbsp;/&nbsp;{o.b}&nbsp;/&nbsp;{o.c}</span> (A&nbsp;/&nbsp;B&nbsp;/&nbsp;C).{' '}
+              </span>
+            ))}
+            Per-pair limits can be tuned individually, and more per-pair adjustments may&nbsp;follow.
+          </p>
         </div>
 
-        {/* Mobile */}
-        <div className="md:hidden space-y-3">
-          {WEIGHT_LIMITS.map((row) => (
-            <div
-              key={row.tier}
-              className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-4"
-            >
-              <div className="text-white font-medium text-sm mb-2">{row.tier}</div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-zinc-500">Per-pair limit</span>
-                <span className="text-zinc-200 font-mono">{row.perPair}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm mt-1">
-                <span className="text-zinc-500">Portfolio limit</span>
-                <span className="text-zinc-200 font-mono">{row.portfolio}</span>
-              </div>
-            </div>
-          ))}
-        </div>
+        <TierMatrix
+          caption="Asset-class limit"
+          labelHeader="Asset Class"
+          rows={ASSET_CLASS_LIMITS.map((r) => ({ label: r.assetClass, a: r.a, b: r.b, c: r.c }))}
+        />
+
+        <TierMatrix
+          caption="Portfolio limit"
+          labelHeader="Scope"
+          rows={[{ label: 'All tracked positions', a: PORTFOLIO_LIMITS.a, b: PORTFOLIO_LIMITS.b, c: PORTFOLIO_LIMITS.c }]}
+        />
       </div>
     </section>
   )
@@ -500,7 +555,7 @@ function FundedRulesSection() {
 
 function getDisqualifyRules(accountType) {
   return [
-    `Breaching the daily loss limit (5% during the challenge / 8% when ${accountType})`,
+    `Breaching the daily loss limit (5% — applies during the challenge and when ${accountType})`,
     `Breaching the EOD trailing loss limit (5% during the challenge / 8% when ${accountType})`,
     'Attempting to manipulate challenge performance (wash trading, coordinated cross-account hedging)',
     'Martingale and martingale-like strategies (progressively increasing position size after losses)',
@@ -511,7 +566,7 @@ function getDisqualifyRules(accountType) {
 const DOES_NOT_DISQUALIFY = [
   'Trading during news events',
   'Holding positions overnight',
-  'Trading any perpetual available on Hyperliquid — only the 60 predefined pairs are tracked toward your performance',
+  'Trading any perpetual available on Hyperliquid — only the 58 predefined pairs are tracked toward your performance',
   'Taking time off — there is no minimum trading frequency, but 30 days of inactivity results in elimination',
   'Using algorithmic or automated trading strategies',
   'Any drawdown within the defined limits',
