@@ -30,7 +30,7 @@ const features = [
     icon: CheckCircle,
     title: 'One-Step Challenge',
     body: 'Trade, perform, and unlock scaled capital through our one-step\u00a0challenge.',
-    bitcastBody: 'Trade, perform, and unlock simulated scaled capital through our one-step\u00a0challenge.',
+    complianceBody: 'Trade, perform, and unlock simulated scaled capital through our one-step\u00a0challenge.',
     span: 'md:col-span-7',
     large: true,
     extra: (
@@ -68,9 +68,11 @@ const features = [
     icon: CurrencyDollar,
     title: 'USDC In, USDC Out',
     body: 'Pay your registration fee in USDC, receive payouts in USDC. Direct to your wallet and verifiable\u00a0onchain.',
-    // Hyperstack (bitcast): clarify payee (Vanta) on the pay-in side and frame the
-    // pay-out side as performance-based rewards.
-    bitcastBody: 'Pay your registration fee in USDC to Vanta, and receive performance-based rewards in USDC. Direct to your wallet and verifiable\u00a0onchain.',
+    // Beanstock + other Vanta-attributed compliance brands: clarify payee (Vanta)
+    // on the pay-in side and frame the pay-out side as performance-based rewards.
+    complianceBody: 'Pay your registration fee in USDC to Vanta, and receive performance-based rewards in USDC. Direct to your wallet and verifiable\u00a0onchain.',
+    // Self-attributed compliance brands (Hyperstack): trader-first pay-in copy.
+    selfAttributedBody: 'Pay your registration in USDC, and receive performance-based rewards in USDC. Direct to your wallet and verifiable\u00a0onchain.',
     span: 'md:col-span-5',
     large: false,
     extra: (
@@ -186,7 +188,7 @@ export default function Features() {
                   >
                     {feat.title}
                   </h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed [text-wrap:pretty]">{brandifyText(brand.compliance && feat.bitcastBody ? feat.bitcastBody : feat.body, brand)}</p>
+                  <p className="text-sm text-zinc-400 leading-relaxed [text-wrap:pretty]">{brandifyText(brand.compliance?.selfAttributed && feat.selfAttributedBody ? feat.selfAttributedBody : (brand.compliance && feat.complianceBody ? feat.complianceBody : feat.body), brand)}</p>
                   {feat.extra}
                 </div>
               </motion.div>

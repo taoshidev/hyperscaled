@@ -38,11 +38,9 @@ function PageHero() {
   const brandHref = useBrandHref()
   const withQS = useWithPreservedQuery()
   const heroTitle =
-    brand.id === 'beanstock'
-      ? `Trade on Hyperliquid. Get ${brand.accountType} by Beanstock.`
-      : brand.poweredBy && brand.id !== 'hyperscaled'
-        ? `Trade on Hyperliquid. Get ${brand.accountType} by ${brand.name.replace(' Trading', '')}.`
-        : `Trade on Hyperliquid. Get ${brand.accountType} by the network.`
+    brand.poweredBy && brand.id !== 'hyperscaled'
+      ? `Trade on Hyperliquid. Get ${brand.accountType} by ${brand.name.replace(' Trading', '')}.`
+      : `Trade on Hyperliquid. Get ${brand.accountType} by the network.`
 
   return (
     <section className="pt-32 pb-16 px-6">
@@ -63,7 +61,7 @@ function PageHero() {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[62ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          No API keys. No custody. Just Hyperliquid, your wallet, and your trades — {brand.name} handles the&nbsp;rest.
+          No API keys. No custody. Just Hyperliquid, your wallet, and your trades — {brand.name}{' '}handles the&nbsp;rest.
         </motion.p>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -122,8 +120,8 @@ function KeyDetails({ rows, inline }) {
 /* ───────────────────────────────────────────────
    Section 2 — Step-by-Step Flow (4 steps)
    ─────────────────────────────────────────────── */
-function getSteps(brandName, hasCompliance, accountType, protocolName) {
-  const enforcer = hasCompliance ? "Vanta's protocol" : brandName
+function getSteps(brandName, hasCompliance, accountType, protocolName, selfAttributed, reward) {
+  const enforcer = hasCompliance && !selfAttributed ? "Vanta's protocol" : brandName
   return [
     {
       number: '01',
@@ -153,7 +151,9 @@ function getSteps(brandName, hasCompliance, accountType, protocolName) {
       number: '03',
       icon: Target,
       title: 'Track & Enforce in Real Time',
-      body: hasCompliance
+      body: selfAttributed
+        ? `Your dashboard shows live P&L, drawdown, and profit target progress. The ${brandName} Chrome extension overlays the same data directly onto Hyperliquid — previewing how each order scales to your scaled account (simulated) and blocking trades that would breach your limits, all enforced on chain.`
+        : hasCompliance
         ? `Your dashboard shows live P&L, drawdown, and profit target progress. The ${brandName} Chrome extension overlays the same data directly onto Hyperliquid — previewing how each order scales to your scaled account (simulated) and blocking trades that would breach your limits, all enforced by ${protocolName}.`
         : `Your dashboard shows live P&L, drawdown, and profit target progress. The ${brandName} Chrome extension overlays the same data directly onto Hyperliquid — previewing how each order scales to your funded account and blocking trades that would breach your\u00a0limits.`,
       compact: true,
@@ -175,11 +175,11 @@ function getSteps(brandName, hasCompliance, accountType, protocolName) {
         { label: 'Max Drawdown (Challenge)', value: '5% daily / 5% EOD trailing' },
         {
           label: hasCompliance ? 'Max Drawdown (Scaled, simulated)' : 'Max Drawdown (Funded)',
-          value: '8% daily / 8% EOD trailing',
+          value: '5% daily / 8% EOD trailing',
         },
         { label: 'Payout Cycle', value: 'Monthly' },
         hasCompliance
-          ? { label: 'Rewards', value: 'Vanta retains 0%' }
+          ? { label: 'Rewards', value: reward.short }
           : { label: 'Profit Split', value: `100% — ${brandName} takes 0%` },
       ],
     },
@@ -295,7 +295,7 @@ function StepCard({ step, index }) {
 
 function StepByStepFlow() {
   const brand = useBrand()
-  const steps = getSteps(brand.name, Boolean(brand.compliance), brand.accountType, brand.protocolName)
+  const steps = getSteps(brand.name, Boolean(brand.compliance), brand.accountType, brand.protocolName, Boolean(brand.compliance?.selfAttributed), brand.compliance?.reward)
   return (
     <section className="px-6 pb-20">
       <div className="max-w-[1100px] mx-auto flex flex-col gap-6">
@@ -328,7 +328,7 @@ function getExtensionFeatures(hasCompliance) {
   {
     icon: Scales,
     title: 'Auto size clamping',
-    body: 'Orders that exceed per-pair or portfolio caps get trimmed to the largest allowed fill automatically.',
+    body: 'Orders that exceed per-pair, asset-class, or portfolio caps get trimmed to the largest allowed fill automatically.',
   },
   {
     icon: ShieldCheck,
@@ -382,7 +382,7 @@ function ChromeExtensionSection() {
           transition={{ ...spring, delay: 0.08 }}
           className="mt-6 mb-10 flex justify-center"
         >
-          {brand.id === 'hyperscaled' || brand.id === 'vanta' ? (
+          {brand.firstParty ? (
             <a
               href="https://github.com/taoshidev/hyperscaled_extension"
               target="_blank"
@@ -467,7 +467,7 @@ function ScalingSection() {
             Scaling path: up to&nbsp;$400K
           </h2>
           <p className="mt-4 text-sm sm:text-base text-zinc-400 max-w-[56ch] mx-auto leading-relaxed" style={{ textWrap: 'balance' }}>
-            Consistently hit quarterly performance targets and your {brand.accountType} account grows automatically with no additional&nbsp;fees.
+            Consistently hit quarterly performance targets and your {brand.accountType}{' '}account grows automatically with no additional&nbsp;fees.
           </p>
         </motion.div>
         <ScalingPathVisual />
@@ -532,7 +532,8 @@ function NonCustodialExplainer() {
         >
           <p className="text-sm font-semibold text-teal-300 leading-relaxed">
             Your wallet. Your keys.{' '}
-            {brand.compliance ? "Vanta's protocol" : brand.name} only reads your public trade data and never touches your&nbsp;capital.
+            {brand.compliance && !brand.compliance.selfAttributed ? "Vanta's protocol" : brand.name}
+            {' '}only reads {brand.compliance?.selfAttributed ? '' : 'your '}public trade data and never touches your&nbsp;capital.
           </p>
         </motion.div>
 
@@ -718,7 +719,7 @@ function PayoutMechanics() {
               brand.compliance?.rewardLine
             ) : (
               <>
-                100% of profits go to you. {brand.name} takes 0%, including on {brand.accountType} accounts up to&nbsp;$400K.
+                100% of profits go to you. {brand.name}{' '}takes 0%, including on {brand.accountType}{' '}accounts up to&nbsp;$400K.
               </>
             )}
           </p>
