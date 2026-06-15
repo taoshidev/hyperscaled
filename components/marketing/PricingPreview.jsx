@@ -17,9 +17,9 @@ const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
 const TIER_LABELS = { 'free': 'Free', 'tier-1': 'Starter', 'tier-2': 'Tier I', 'tier-3': 'Tier II', 'tier-4': 'Tier III', 'tier-5': 'Tier IV' }
 
-function tierBadge(tier) {
+function tierBadge(tier, brandId) {
   if (tier.popular) return 'Most Popular'
-  if (tier.id === 'free') return 'Only 1,000 Available'
+  if (tier.id === 'free') return brandId === 'bitcast' ? 'Only 200 Available' : 'Only 1,000 Available'
   return null
 }
 
@@ -66,11 +66,11 @@ export default function PricingPreview({ tiers }) {
               }`}
             >
               {/* Badge — Most Popular or Try for Free */}
-              {tierBadge(tier) && (
+              {tierBadge(tier, brand.id) && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <span className="inline-flex items-center gap-1 bg-teal-400 text-[#09090b] text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full">
                     <Star size={12} weight="fill" />
-                    {tierBadge(tier)}
+                    {tierBadge(tier, brand.id)}
                   </span>
                 </div>
               )}

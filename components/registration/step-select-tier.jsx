@@ -131,8 +131,11 @@ export function StepSelectTier({
           Choose your {brand.accountType} account size
         </h2>
         <p className="text-sm text-muted-foreground max-w-md mx-auto text-balance">
-          One challenge. No recurring fees. 100%&nbsp;of performance
-          rewards are&nbsp;yours.
+          {brand.id === 'bitcast' ? (
+            <>You keep 90% of performance-based&nbsp;rewards.</>
+          ) : (
+            <>One challenge. No recurring fees. 100%&nbsp;of performance rewards are&nbsp;yours.</>
+          )}
         </p>
         {freeAtCapacity && paidAtCapacity && (
           <p className="text-center text-sm text-amber-400/95 max-w-lg mx-auto mt-3 text-balance font-medium">

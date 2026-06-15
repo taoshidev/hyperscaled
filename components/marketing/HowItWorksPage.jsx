@@ -122,8 +122,9 @@ function KeyDetails({ rows, inline }) {
 /* ───────────────────────────────────────────────
    Section 2 — Step-by-Step Flow (4 steps)
    ─────────────────────────────────────────────── */
-function getSteps(brandName, hasCompliance, accountType, protocolName) {
-  const enforcer = hasCompliance ? "Vanta's protocol" : brandName
+function getSteps(brandName, hasCompliance, accountType, protocolName, brandId) {
+  const isBitcast = brandId === 'bitcast'
+  const enforcer = hasCompliance && !isBitcast ? "Vanta's protocol" : brandName
   return [
     {
       number: '01',
@@ -153,7 +154,9 @@ function getSteps(brandName, hasCompliance, accountType, protocolName) {
       number: '03',
       icon: Target,
       title: 'Track & Enforce in Real Time',
-      body: hasCompliance
+      body: isBitcast
+        ? `Your dashboard shows live P&L, drawdown, and profit target progress. The ${brandName} Chrome extension overlays the same data directly onto Hyperliquid — previewing how each order scales to your scaled account (simulated) and blocking trades that would breach your limits, all enforced on chain.`
+        : hasCompliance
         ? `Your dashboard shows live P&L, drawdown, and profit target progress. The ${brandName} Chrome extension overlays the same data directly onto Hyperliquid — previewing how each order scales to your scaled account (simulated) and blocking trades that would breach your limits, all enforced by ${protocolName}.`
         : `Your dashboard shows live P&L, drawdown, and profit target progress. The ${brandName} Chrome extension overlays the same data directly onto Hyperliquid — previewing how each order scales to your funded account and blocking trades that would breach your\u00a0limits.`,
       compact: true,
@@ -178,7 +181,9 @@ function getSteps(brandName, hasCompliance, accountType, protocolName) {
           value: '5% daily / 8% EOD trailing',
         },
         { label: 'Payout Cycle', value: 'Monthly' },
-        hasCompliance
+        isBitcast
+          ? { label: 'Rewards', value: 'You keep 90%' }
+          : hasCompliance
           ? { label: 'Rewards', value: 'Vanta retains 0%' }
           : { label: 'Profit Split', value: `100% — ${brandName} takes 0%` },
       ],
@@ -295,7 +300,7 @@ function StepCard({ step, index }) {
 
 function StepByStepFlow() {
   const brand = useBrand()
-  const steps = getSteps(brand.name, Boolean(brand.compliance), brand.accountType, brand.protocolName)
+  const steps = getSteps(brand.name, Boolean(brand.compliance), brand.accountType, brand.protocolName, brand.id)
   return (
     <section className="px-6 pb-20">
       <div className="max-w-[1100px] mx-auto flex flex-col gap-6">
@@ -532,7 +537,9 @@ function NonCustodialExplainer() {
         >
           <p className="text-sm font-semibold text-teal-300 leading-relaxed">
             Your wallet. Your keys.{' '}
-            {brand.compliance ? "Vanta's protocol" : brand.name} only reads your public trade data and never touches your&nbsp;capital.
+            {brand.id === 'bitcast'
+              ? <>{brand.name} only reads public trade data and never touches your&nbsp;capital.</>
+              : <>{brand.compliance ? "Vanta's protocol" : brand.name} only reads your public trade data and never touches your&nbsp;capital.</>}
           </p>
         </motion.div>
 

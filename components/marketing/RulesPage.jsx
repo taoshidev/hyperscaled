@@ -506,13 +506,15 @@ function FeesSection() {
 /* ───────────────────────────────────────────────
    Section 3 — Funded Account Rules
    ─────────────────────────────────────────────── */
-function remapBitcastFundedRules(rules) {
+function remapBitcastFundedRules(rules, brandId) {
   return rules.map((r) => {
     if (r.rule === 'Profit Split') {
       return {
         rule: 'Rewards',
         parameter:
-          'Vanta retains 0% of performance-based rewards. Rewards are independent-contractor compensation based on simulated performance — not a profit split.',
+          brandId === 'bitcast'
+            ? 'Hyperstack uses a 90/10 performance split: you keep 90% of eligible performance-based rewards. Rewards are independent-contractor compensation based on simulated performance, not a share of real trading profits.'
+            : 'Vanta retains 0% of performance-based rewards. Rewards are independent-contractor compensation based on simulated performance — not a profit split.',
       }
     }
     if (r.rule === 'Account Breach Consequence') {
@@ -532,7 +534,7 @@ function FundedRulesSection() {
   const brand = useBrand()
   const isBitcast = Boolean(brand.compliance)
   const baseRules = getFundedRules(brand.accountType, brand.name)
-  const rules = isBitcast ? remapBitcastFundedRules(baseRules) : baseRules
+  const rules = isBitcast ? remapBitcastFundedRules(baseRules, brand.id) : baseRules
   return (
     <section id="scaled" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
