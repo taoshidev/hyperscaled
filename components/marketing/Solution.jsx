@@ -52,49 +52,33 @@ const defaultCompareRows = [
   { label: 'Weekend Trading',     hs: 'Allowed',    ftmo: 'Restricted' },
 ]
 
-// Compliance brands (beanstock + any future Vanta-powered partner): non-comparative
-// framing — no "Profit Split"/"100%", KYC clarified for payout eligibility.
-const complianceCompareRows = [
-  { label: 'Profit Target',                      hs: '10%',               ftmo: '15%' },
-  { label: 'Challenge',                          hs: '1-Step',            ftmo: '2-Step' },
-  { label: 'Non-Custodial',                      hs: 'Yes',               ftmo: 'No' },
-  { label: 'KYC Required',                       hs: 'No KYC to trade; KYC for payout eligibility', ftmo: 'Full KYC' },
-  { label: 'Rewards Retained by You',   hs: 'Vanta retains 0%',  ftmo: 'Up to 30% retained' },
-  { label: 'Payout Verification',                hs: 'Onchain',           ftmo: 'Centralized' },
-  { label: 'Max Account',                        hs: '$400K',             ftmo: '$400K' },
-  { label: 'News Trading',                        hs: 'Allowed',          ftmo: 'Restricted' },
-  { label: 'Weekend Trading',                     hs: 'Allowed',          ftmo: 'Restricted' },
-]
-
-// Hyperstack (bitcast): trader-first 90/10 performance-split framing.
-const hyperstackCompareRows = [
-  { label: 'Profit Target',                      hs: '10%',               ftmo: '15%' },
-  { label: 'Challenge',                          hs: '1-Step',            ftmo: '2-Step' },
-  { label: 'Non-Custodial',                      hs: 'Yes',               ftmo: 'No' },
-  { label: 'KYC Required',                       hs: 'No KYC to trade; KYC for payout eligibility', ftmo: 'Full KYC' },
-  { label: 'Performance Split',         hs: '90/10 — you keep 90%', ftmo: 'Often 80/20' },
-  { label: 'Payout Verification',                hs: 'Onchain',           ftmo: 'Centralized' },
-  { label: 'Max Account',                        hs: '$400K',             ftmo: '$400K' },
-  { label: 'News Trading',                        hs: 'Allowed',          ftmo: 'Restricted' },
-  { label: 'Weekend Trading',                     hs: 'Allowed',          ftmo: 'Restricted' },
-]
+// Compliance brands (bitcast, beanstock + any future Vanta-powered partner):
+// non-comparative framing — no "Profit Split"/"100%", KYC clarified for payout
+// eligibility. The reward row is brand-specific (brand.compliance.reward).
+function buildComplianceCompareRows(reward) {
+  return [
+    { label: 'Profit Target',       hs: '10%',     ftmo: '15%' },
+    { label: 'Challenge',           hs: '1-Step',  ftmo: '2-Step' },
+    { label: 'Non-Custodial',       hs: 'Yes',     ftmo: 'No' },
+    { label: 'KYC Required',        hs: 'No KYC to trade; KYC for payout eligibility', ftmo: 'Full KYC' },
+    { label: reward.compareLabel,   hs: reward.label, ftmo: reward.compareFtmo },
+    { label: 'Payout Verification', hs: 'Onchain', ftmo: 'Centralized' },
+    { label: 'Max Account',         hs: '$400K',   ftmo: '$400K' },
+    { label: 'News Trading',        hs: 'Allowed', ftmo: 'Restricted' },
+    { label: 'Weekend Trading',     hs: 'Allowed', ftmo: 'Restricted' },
+  ]
+}
 
 const defaultHsBest = new Set(['10%', '1-Step', 'Yes', 'No', '100%', 'Onchain', '$400K', 'Allowed'])
-const complianceHsBest = new Set([
-  '10%', '1-Step', 'Yes', 'No KYC to trade; KYC for payout eligibility',
-  'Vanta retains 0%', 'Onchain', '$400K', 'Allowed',
-])
-const hyperstackHsBest = new Set([
-  '10%', '1-Step', 'Yes', 'No KYC to trade; KYC for payout eligibility',
-  '90/10 — you keep 90%', 'Onchain', '$400K', 'Allowed',
-])
+const complianceHsBestBase = ['10%', '1-Step', 'Yes', 'No KYC to trade; KYC for payout eligibility', 'Onchain', '$400K', 'Allowed']
 
 function getCompareConfig(brand) {
-  if (brand.id === 'bitcast') {
-    return { rows: hyperstackCompareRows, hsBest: hyperstackHsBest }
-  }
   if (brand.compliance) {
-    return { rows: complianceCompareRows, hsBest: complianceHsBest }
+    const { reward } = brand.compliance
+    return {
+      rows: buildComplianceCompareRows(reward),
+      hsBest: new Set([...complianceHsBestBase, reward.label]),
+    }
   }
   return { rows: defaultCompareRows, hsBest: defaultHsBest }
 }

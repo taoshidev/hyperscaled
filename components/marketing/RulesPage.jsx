@@ -506,15 +506,12 @@ function FeesSection() {
 /* ───────────────────────────────────────────────
    Section 3 — Funded Account Rules
    ─────────────────────────────────────────────── */
-function remapBitcastFundedRules(rules, brandId) {
+function remapFundedRulesForCompliance(rules, brand) {
   return rules.map((r) => {
     if (r.rule === 'Profit Split') {
       return {
         rule: 'Rewards',
-        parameter:
-          brandId === 'bitcast'
-            ? 'Hyperstack uses a 90/10 performance split: you keep 90% of eligible performance-based rewards. Rewards are independent-contractor compensation based on simulated performance, not a share of real trading profits.'
-            : 'Vanta retains 0% of performance-based rewards. Rewards are independent-contractor compensation based on simulated performance — not a profit split.',
+        parameter: brand.compliance.reward.ruleParameter,
       }
     }
     if (r.rule === 'Account Breach Consequence') {
@@ -532,14 +529,14 @@ function remapBitcastFundedRules(rules, brandId) {
 
 function FundedRulesSection() {
   const brand = useBrand()
-  const isBitcast = Boolean(brand.compliance)
+  const isCompliance = Boolean(brand.compliance)
   const baseRules = getFundedRules(brand.accountType, brand.name)
-  const rules = isBitcast ? remapBitcastFundedRules(baseRules, brand.id) : baseRules
+  const rules = isCompliance ? remapFundedRulesForCompliance(baseRules, brand) : baseRules
   return (
     <section id="scaled" className="px-6 pb-20 scroll-mt-[110px]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
-          {isBitcast ? 'Scaled Account Phase (Simulated)' : 'Funded Account Phase'}
+          {isCompliance ? 'Scaled Account Phase (Simulated)' : 'Funded Account Phase'}
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
           Once you pass the challenge, your {brand.accountType}{' '}account is activated immediately. These rules apply for the duration of your {brand.accountType}&nbsp;trading.

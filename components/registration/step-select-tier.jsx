@@ -131,8 +131,8 @@ export function StepSelectTier({
           Choose your {brand.accountType}{' '}account size
         </h2>
         <p className="text-sm text-muted-foreground max-w-md mx-auto text-balance">
-          {brand.id === 'bitcast' ? (
-            <>You keep 90% of performance-based&nbsp;rewards.</>
+          {brand.compliance?.selfAttributed ? (
+            <>{brand.compliance.reward.bullet}.</>
           ) : (
             <>One challenge. No recurring fees. 100%&nbsp;of performance rewards are&nbsp;yours.</>
           )}
@@ -179,10 +179,10 @@ export function StepSelectTier({
               const isSelected = i === selectedIndex;
               const isPopular = tier.badge != null;
               const tierIsFree = isFreeTier(tier);
-              // Hyperstack (bitcast): free $1K cap is 200, not 1,000.
+              // Free-tier availability cap is brand-specific (brand.freeTierCap).
               const displayBadge =
-                brand.id === 'bitcast' && tierIsFree && tier.badge
-                  ? 'Only 200 Available'
+                tierIsFree && tier.badge
+                  ? `Only ${brand.freeTierCap.toLocaleString()} Available`
                   : tier.badge;
               const isSoldOut =
                 (tierIsFree && freeAtCapacity) ||

@@ -38,11 +38,9 @@ function PageHero() {
   const brandHref = useBrandHref()
   const withQS = useWithPreservedQuery()
   const heroTitle =
-    brand.id === 'beanstock'
-      ? `Trade on Hyperliquid. Get ${brand.accountType} by Beanstock.`
-      : brand.poweredBy && brand.id !== 'hyperscaled'
-        ? `Trade on Hyperliquid. Get ${brand.accountType} by ${brand.name.replace(' Trading', '')}.`
-        : `Trade on Hyperliquid. Get ${brand.accountType} by the network.`
+    brand.poweredBy && brand.id !== 'hyperscaled'
+      ? `Trade on Hyperliquid. Get ${brand.accountType} by ${brand.name.replace(' Trading', '')}.`
+      : `Trade on Hyperliquid. Get ${brand.accountType} by the network.`
 
   return (
     <section className="pt-32 pb-16 px-6">
@@ -122,9 +120,8 @@ function KeyDetails({ rows, inline }) {
 /* ───────────────────────────────────────────────
    Section 2 — Step-by-Step Flow (4 steps)
    ─────────────────────────────────────────────── */
-function getSteps(brandName, hasCompliance, accountType, protocolName, brandId) {
-  const isBitcast = brandId === 'bitcast'
-  const enforcer = hasCompliance && !isBitcast ? "Vanta's protocol" : brandName
+function getSteps(brandName, hasCompliance, accountType, protocolName, selfAttributed, reward) {
+  const enforcer = hasCompliance && !selfAttributed ? "Vanta's protocol" : brandName
   return [
     {
       number: '01',
@@ -154,7 +151,7 @@ function getSteps(brandName, hasCompliance, accountType, protocolName, brandId) 
       number: '03',
       icon: Target,
       title: 'Track & Enforce in Real Time',
-      body: isBitcast
+      body: selfAttributed
         ? `Your dashboard shows live P&L, drawdown, and profit target progress. The ${brandName} Chrome extension overlays the same data directly onto Hyperliquid — previewing how each order scales to your scaled account (simulated) and blocking trades that would breach your limits, all enforced on chain.`
         : hasCompliance
         ? `Your dashboard shows live P&L, drawdown, and profit target progress. The ${brandName} Chrome extension overlays the same data directly onto Hyperliquid — previewing how each order scales to your scaled account (simulated) and blocking trades that would breach your limits, all enforced by ${protocolName}.`
@@ -181,10 +178,8 @@ function getSteps(brandName, hasCompliance, accountType, protocolName, brandId) 
           value: '5% daily / 8% EOD trailing',
         },
         { label: 'Payout Cycle', value: 'Monthly' },
-        isBitcast
-          ? { label: 'Rewards', value: 'You keep 90%' }
-          : hasCompliance
-          ? { label: 'Rewards', value: 'Vanta retains 0%' }
+        hasCompliance
+          ? { label: 'Rewards', value: reward.short }
           : { label: 'Profit Split', value: `100% — ${brandName} takes 0%` },
       ],
     },
@@ -300,7 +295,7 @@ function StepCard({ step, index }) {
 
 function StepByStepFlow() {
   const brand = useBrand()
-  const steps = getSteps(brand.name, Boolean(brand.compliance), brand.accountType, brand.protocolName, brand.id)
+  const steps = getSteps(brand.name, Boolean(brand.compliance), brand.accountType, brand.protocolName, Boolean(brand.compliance?.selfAttributed), brand.compliance?.reward)
   return (
     <section className="px-6 pb-20">
       <div className="max-w-[1100px] mx-auto flex flex-col gap-6">
@@ -387,7 +382,7 @@ function ChromeExtensionSection() {
           transition={{ ...spring, delay: 0.08 }}
           className="mt-6 mb-10 flex justify-center"
         >
-          {brand.id === 'hyperscaled' || brand.id === 'vanta' ? (
+          {brand.firstParty ? (
             <a
               href="https://github.com/taoshidev/hyperscaled_extension"
               target="_blank"
@@ -537,9 +532,8 @@ function NonCustodialExplainer() {
         >
           <p className="text-sm font-semibold text-teal-300 leading-relaxed">
             Your wallet. Your keys.{' '}
-            {brand.id === 'bitcast'
-              ? <>{brand.name}{' '}only reads public trade data and never touches your&nbsp;capital.</>
-              : <>{brand.compliance ? "Vanta's protocol" : brand.name} only reads your public trade data and never touches your&nbsp;capital.</>}
+            {brand.compliance && !brand.compliance.selfAttributed ? "Vanta's protocol" : brand.name}
+            {' '}only reads {brand.compliance?.selfAttributed ? '' : 'your '}public trade data and never touches your&nbsp;capital.
           </p>
         </motion.div>
 

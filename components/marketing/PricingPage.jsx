@@ -30,9 +30,9 @@ const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
 const TIER_LABELS = { 'free': 'Free', 'tier-1': 'Starter', 'tier-2': 'Tier I', 'tier-3': 'Tier II', 'tier-4': 'Tier III', 'tier-5': 'Tier IV' }
 
-function tierBadge(tier, brandId) {
+function tierBadge(tier, freeTierCap) {
   if (tier.popular) return 'Most Popular'
-  if (tier.id === 'free') return brandId === 'bitcast' ? 'Only 200 Available' : 'Only 1,000 Available'
+  if (tier.id === 'free') return `Only ${freeTierCap.toLocaleString()} Available`
   return null
 }
 
@@ -54,11 +54,9 @@ function PricingHero({ showPromoBar }) {
           className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1]"
           style={{ textWrap: 'balance' }}
         >
-          {brand.id === 'bitcast'
-            ? <>One fee. One challenge. Your simulated scaled trading&nbsp;account.</>
-            : brand.compliance
-              ? <>One fee. One challenge. Vanta-powered simulated scaled&nbsp;account.</>
-              : <>One fee. One challenge. Keep everything you&nbsp;earn.</>}
+          {brand.compliance
+            ? brand.compliance.pricingHeroTitle
+            : <>One fee. One challenge. Keep everything you&nbsp;earn.</>}
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 16 }}
@@ -108,11 +106,11 @@ function PricingCard({ tier, index, freeAtCapacity, paidAtCapacity }) {
       }`}
     >
       {/* Badge — Most Popular or Try for Free */}
-      {tierBadge(tier, brand.id) && (
+      {tierBadge(tier, brand.freeTierCap) && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="inline-flex items-center gap-1 bg-teal-400 text-[#09090b] text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full">
             <Star size={12} weight="fill" />
-            {tierBadge(tier, brand.id)}
+            {tierBadge(tier, brand.freeTierCap)}
           </span>
         </div>
       )}
@@ -406,11 +404,9 @@ function ModelSection() {
   const bullets = [
     `A ${brand.accountType} account upon challenge completion`,
     'Verifiable payouts through onchain technology',
-    brand.id === 'bitcast'
-      ? 'You keep 90% of performance-based rewards'
-      : brand.compliance
-        ? 'Vanta retains 0% of performance-based rewards'
-        : '100% profit split — you keep your earnings',
+    brand.compliance
+      ? brand.compliance.reward.bullet
+      : '100% profit split — you keep your earnings',
     'A system designed for trader success',
   ]
 
@@ -517,7 +513,7 @@ export default function PricingPage({ tiers, activeCampaign = null }) {
   const brand = useBrand()
   const resolvedTiers = tiers ?? brand.pricingTiers ?? PRICING_TIERS
   const showPromo =
-    (brand.id === 'hyperscaled' || brand.id === 'vanta') &&
+    Boolean(brand.firstParty) &&
     Boolean(activeCampaign && activeCampaign.bannerEnabled)
   return (
     <>

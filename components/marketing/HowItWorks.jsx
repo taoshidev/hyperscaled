@@ -119,7 +119,6 @@ function PayoutMockup({ isHF = false }) {
 export default function HowItWorks({ tiers = [] }) {
   const brand = useBrand()
   const isHF = Boolean(brand.compliance)
-  const isBitcast = brand.id === 'bitcast'
   const steps = [
     {
       number: '01',
@@ -139,10 +138,8 @@ export default function HowItWorks({ tiers = [] }) {
       number: '03',
       icon: Trophy,
       title: 'Hit the Target. Get Paid.',
-      body: isBitcast
-        ? `Hit the 10% profit target to pass the ${brand.name} Challenge and activate your ${brand.accountType} account immediately. Payouts are delivered to participants who meet the program conditions every 30 days as performance-based rewards \u2014 you keep\u00a090%.`
-        : isHF
-        ? `Hit the 10% profit target to pass the ${brand.name} Challenge and activate your ${brand.accountType} account immediately. Payouts are delivered to participants who meet the program conditions every 30 days as performance-based rewards \u2014 ${brand.operatorName} retains 0% of performance-based\u00a0rewards.`
+      body: isHF
+        ? `Hit the 10% profit target to pass the ${brand.name} Challenge and activate your ${brand.accountType} account immediately. Payouts are delivered to participants who meet the program conditions every 30 days as performance-based rewards \u2014 ${brand.compliance.reward.payoutTail}`
         : `Hit the 10% profit target to pass the ${brand.name} Challenge and activate your ${brand.accountType} account immediately. Payouts are delivered to your wallet every 30 days, and you keep 100% of everything you\u00a0earn.`,
       mockup: <PayoutMockup isHF={isHF} />,
     },
