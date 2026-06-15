@@ -67,7 +67,7 @@ function HeroSection() {
             </h1>
 
             <p className="text-lg text-zinc-400 leading-relaxed max-w-[48ch] mb-8 [text-wrap:pretty]">
-              LangChain, CrewAI, plain Python, or OpenClaw — no adapters, no rewrites.
+              LangChain, CrewAI, plain Python, or OpenClaw — no adapters, no rewrites.{' '}
               {brand.name} works with whatever runtime your agent already runs on.
             </p>
 

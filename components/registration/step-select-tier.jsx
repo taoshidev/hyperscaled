@@ -179,6 +179,11 @@ export function StepSelectTier({
               const isSelected = i === selectedIndex;
               const isPopular = tier.badge != null;
               const tierIsFree = isFreeTier(tier);
+              // Hyperstack (bitcast): free $1K cap is 200, not 1,000.
+              const displayBadge =
+                brand.id === 'bitcast' && tierIsFree && tier.badge
+                  ? 'Only 200 Available'
+                  : tier.badge;
               const isSoldOut =
                 (tierIsFree && freeAtCapacity) ||
                 (!tierIsFree && paidAtCapacity);
@@ -246,7 +251,7 @@ export function StepSelectTier({
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 pointer-events-none">
                       <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap bg-teal-400 text-zinc-950">
                         <Star size={12} weight="fill" />
-                        {tier.badge}
+                        {displayBadge}
                       </span>
                     </div>
                   )}
