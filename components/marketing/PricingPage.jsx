@@ -67,7 +67,7 @@ function PricingHero({ showPromoBar }) {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[60ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          Take the {brand.name} Challenge with no hidden rules, fees, or time limit. Rewards distributed&nbsp;monthly.
+          Take the {brand.name}{' '}Challenge with no hidden rules, fees, or time limit. Rewards distributed&nbsp;monthly.
         </motion.p>
       </div>
     </section>
@@ -475,7 +475,7 @@ function ScalingSection() {
             Start at $25K. Scale to&nbsp;$400K.
           </h2>
           <p className="mt-4 text-sm sm:text-base text-zinc-400 max-w-[56ch] mx-auto leading-relaxed" style={{ textWrap: 'balance' }}>
-            Every {brand.accountType} trader starts at their selected account size. Consistent performance unlocks the next tier automatically — no additional&nbsp;fees.
+            Every {brand.accountType}{' '}trader starts at their selected account size. Consistent performance unlocks the next tier automatically — no additional&nbsp;fees.
           </p>
         </motion.div>
         <ScalingPathVisual />

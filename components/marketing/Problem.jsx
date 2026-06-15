@@ -107,13 +107,13 @@ export default function Problem() {
           <p className="text-base text-zinc-400 leading-relaxed max-w-[60ch] [text-wrap:pretty]">
             {isCompliance ? (
               <>
-                {brand.name} is a Vanta-powered simulated scaled evaluation. Rules are published
+                {brand.name}{' '}is a Vanta-powered simulated scaled evaluation. Rules are published
                 upfront, performance-based rewards are delivered automatically onchain, and invited
                 Scaled Trader Program participants are compensated as independent&nbsp;contractors.
               </>
             ) : (
               <>
-                Legacy {brand.accountType} trading is broken by design. KYC walls, profit extraction, and centralized
+                Legacy {brand.accountType}{' '}trading is broken by design. KYC walls, profit extraction, and centralized
                 discretion mean profitable traders are systematically&nbsp;underserved.
               </>
             )}
@@ -165,7 +165,7 @@ export default function Problem() {
             className="mt-10 border-l-2 border-teal-400 pl-5 py-1"
           >
             <p className="text-sm font-semibold text-teal-300 leading-relaxed max-w-[65ch]">
-              {brand.name} pays out 100% of rewards to traders because our decentralized network is aligned with your success. No&nbsp;exceptions.
+              {brand.name}{' '}pays out 100% of rewards to traders because our decentralized network is aligned with your success. No&nbsp;exceptions.
             </p>
           </motion.div>
         )}

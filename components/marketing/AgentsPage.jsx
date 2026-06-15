@@ -68,7 +68,7 @@ function HeroSection() {
 
             <p className="text-lg text-zinc-400 leading-relaxed max-w-[48ch] mb-8 [text-wrap:pretty]">
               LangChain, CrewAI, plain Python, or OpenClaw — no adapters, no rewrites.{' '}
-              {brand.name} works with whatever runtime your agent already runs on.
+              {brand.name}{' '}works with whatever runtime your agent already runs on.
             </p>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -228,7 +228,7 @@ function IntegrationPaths() {
               </div>
               <h3 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-2">OpenClaw Skill</h3>
               <p className="text-sm text-zinc-400 leading-relaxed max-w-[40ch]">
-                The fastest path. One command installs {brand.name} into OpenClaw, exposing every
+                The fastest path. One command installs {brand.name}{' '}into OpenClaw, exposing every
                 action as a structured tool call with validated outputs.
               </p>
               <CodeBlock lines={[

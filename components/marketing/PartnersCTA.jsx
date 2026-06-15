@@ -36,7 +36,7 @@ export default function PartnersCTA() {
           {/* Right — body + CTA */}
           <div>
             <p className="text-base text-zinc-400 leading-relaxed max-w-[50ch] mb-8">
-              {brand.name} lets operators launch a fully branded prop trading business on decentralized
+              {brand.name}{' '}lets operators launch a fully branded prop trading business on decentralized
               infrastructure. Set your own pricing. Collect revenue directly. The network handles
               the challenge, enforcement, and&nbsp;payouts.
             </p>

@@ -63,7 +63,7 @@ function PageHero() {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[62ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          No API keys. No custody. Just Hyperliquid, your wallet, and your trades — {brand.name} handles the&nbsp;rest.
+          No API keys. No custody. Just Hyperliquid, your wallet, and your trades — {brand.name}{' '}handles the&nbsp;rest.
         </motion.p>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -472,7 +472,7 @@ function ScalingSection() {
             Scaling path: up to&nbsp;$400K
           </h2>
           <p className="mt-4 text-sm sm:text-base text-zinc-400 max-w-[56ch] mx-auto leading-relaxed" style={{ textWrap: 'balance' }}>
-            Consistently hit quarterly performance targets and your {brand.accountType} account grows automatically with no additional&nbsp;fees.
+            Consistently hit quarterly performance targets and your {brand.accountType}{' '}account grows automatically with no additional&nbsp;fees.
           </p>
         </motion.div>
         <ScalingPathVisual />
@@ -538,7 +538,7 @@ function NonCustodialExplainer() {
           <p className="text-sm font-semibold text-teal-300 leading-relaxed">
             Your wallet. Your keys.{' '}
             {brand.id === 'bitcast'
-              ? <>{brand.name} only reads public trade data and never touches your&nbsp;capital.</>
+              ? <>{brand.name}{' '}only reads public trade data and never touches your&nbsp;capital.</>
               : <>{brand.compliance ? "Vanta's protocol" : brand.name} only reads your public trade data and never touches your&nbsp;capital.</>}
           </p>
         </motion.div>
@@ -725,7 +725,7 @@ function PayoutMechanics() {
               brand.compliance?.rewardLine
             ) : (
               <>
-                100% of profits go to you. {brand.name} takes 0%, including on {brand.accountType} accounts up to&nbsp;$400K.
+                100% of profits go to you. {brand.name}{' '}takes 0%, including on {brand.accountType}{' '}accounts up to&nbsp;$400K.
               </>
             )}
           </p>

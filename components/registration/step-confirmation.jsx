@@ -160,7 +160,7 @@ function ExtensionMockup() {
           <div>
             <div className="flex items-center justify-between">
               <span className="text-xs uppercase tracking-widest text-zinc-500">
-                Open {brand.name} Positions
+                Open {brand.name}{' '}Positions
               </span>
               <span className="text-xs text-zinc-500">View on HL →</span>
             </div>
@@ -195,7 +195,7 @@ function ExtensionMockup() {
           <div className="rounded-md border border-white/[0.06] bg-white/[0.02] px-4 py-4 flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-white">View Full Analytics</p>
-              <p className="text-xs text-white/40">{brand.name} Dashboard</p>
+              <p className="text-xs text-white/40">{brand.name}{' '}Dashboard</p>
             </div>
             <CaretRight size={14} className="text-white/40" />
           </div>
@@ -329,7 +329,7 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
               You&#8217;re registered
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Your {brand.accountType} account is being provisioned on {brand.name}.
+              Your {brand.accountType}{' '}account is being provisioned on {brand.name}.
             </p>
           </div>
         </div>

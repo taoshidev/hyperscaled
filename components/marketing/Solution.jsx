@@ -123,7 +123,7 @@ export default function Solution() {
               className="mb-8"
             >
               <span className="text-xs text-zinc-500 tracking-widest uppercase block mb-4">
-                The {brand.name} Protocol
+                The {brand.name}{' '}Protocol
               </span>
               <h2 className="text-4xl md:text-5xl tracking-tighter leading-none font-bold mb-5 text-balance">
                 Open. Onchain.<br />No middlemen.
@@ -136,7 +136,7 @@ export default function Solution() {
                   </>
                 ) : (
                   <>
-                    {brand.name} mirrors your Hyperliquid trades into a protocol-{brand.accountType} simulated account
+                    {brand.name}{' '}mirrors your Hyperliquid trades into a protocol-{brand.accountType}{' '}simulated account
                     and pays out performance rewards in USDC — onchain, automatically, monthly.
                   </>
                 )}

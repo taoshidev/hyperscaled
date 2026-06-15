@@ -191,7 +191,7 @@ function EvalRulesSection() {
           Challenge Phase
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
-          The {brand.name} challenge is one step. Rules are consistent across all account&nbsp;sizes.
+          The {brand.name}{' '}challenge is one step. Rules are consistent across all account&nbsp;sizes.
         </p>
 
         <RulesTable rules={EVAL_RULES} />
@@ -221,7 +221,7 @@ function AvailablePairsSection() {
           Available Pairs
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed">
-          There are <span className="text-white font-medium">{totalPairs} tradable pairs</span> across crypto, commodities, indices, and stocks. Although you can trade any pair on Hyperliquid, only these {totalPairs} predefined pairs are tracked and counted toward your {brand.accountType} trading&nbsp;performance.
+          There are <span className="text-white font-medium">{totalPairs} tradable pairs</span> across crypto, commodities, indices, and stocks. Although you can trade any pair on Hyperliquid, only these {totalPairs} predefined pairs are tracked and counted toward your {brand.accountType}{' '}trading&nbsp;performance.
         </p>
 
         <div className="mt-8 space-y-6">
@@ -323,10 +323,10 @@ function WeightTrackingSection() {
           Weight Tracking & Limits
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed">
-          {brand.name} mirrors a trader's Hyperliquid positions by replicating each position's target portfolio weight. HL trades are never blocked or modified — {brand.name} only adjusts what it copies on its own&nbsp;side.
+          {brand.name}{' '}mirrors a trader's Hyperliquid positions by replicating each position's target portfolio weight. HL trades are never blocked or modified — {brand.name}{' '}only adjusts what it copies on its own&nbsp;side.
         </p>
         <p className="mt-3 text-sm sm:text-base text-zinc-400 leading-relaxed">
-          {brand.name} enforces three independent weight limits when tracking. A mirrored position is capped if it would exceed any one of&nbsp;them:
+          {brand.name}{' '}enforces three independent weight limits when tracking. A mirrored position is capped if it would exceed any one of&nbsp;them:
         </p>
         <ul className="mt-4 space-y-2 text-sm text-zinc-400">
           <li>
@@ -341,7 +341,7 @@ function WeightTrackingSection() {
         </ul>
         <div className="mt-5 rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-4">
           <p className="text-sm text-teal-300">
-            All limits are enforced automatically by the platform. HL is the source of truth — {brand.name} mirrors HL as closely as its limits allow, and resumes tracking as soon as weight exposure re-enters the allowed&nbsp;range.
+            All limits are enforced automatically by the platform. HL is the source of truth — {brand.name}{' '}mirrors HL as closely as its limits allow, and resumes tracking as soon as weight exposure re-enters the allowed&nbsp;range.
           </p>
         </div>
 
@@ -400,7 +400,7 @@ function WeightTrackingSection() {
           Weight Limits by Tier
         </h3>
         <p className="mb-5 text-sm text-zinc-400 leading-relaxed">
-          All limits are a percentage of your {brand.name} account balance and depend on your Weight Tier. A mirrored order must satisfy the per-pair, asset-class, and portfolio limit at the same&nbsp;time.
+          All limits are a percentage of your {brand.name}{' '}account balance and depend on your Weight Tier. A mirrored order must satisfy the per-pair, asset-class, and portfolio limit at the same&nbsp;time.
         </p>
 
         <TierMatrix
@@ -453,11 +453,11 @@ function TrackingMethodologySection() {
         {/* Order Fills */}
         <h3 className="mt-6 mb-3 text-sm font-semibold text-white">Order Fills</h3>
         <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
-          {brand.name} tracks trade executions, not pending orders. Open limit orders do not appear in your {brand.name} account until they fill on Hyperliquid. Once a fill&nbsp;occurs:
+          {brand.name}{' '}tracks trade executions, not pending orders. Open limit orders do not appear in your {brand.name}{' '}account until they fill on Hyperliquid. Once a fill&nbsp;occurs:
         </p>
         <ul className="mt-3 space-y-2 text-sm text-zinc-400">
           <li>
-            <span className="text-white font-medium">Market orders</span> — mirrored at a price simulated from Hyperliquid's live L2 orderbook, walking the book to compute the average fill price for the {brand.name} order size. This reflects realistic execution under current liquidity and may differ from your actual Hyperliquid fill&nbsp;price.
+            <span className="text-white font-medium">Market orders</span> — mirrored at a price simulated from Hyperliquid's live L2 orderbook, walking the book to compute the average fill price for the {brand.name}{' '}order size. This reflects realistic execution under current liquidity and may differ from your actual Hyperliquid fill&nbsp;price.
           </li>
           <li>
             <span className="text-white font-medium">Limit orders</span> — mirrored at the original limit price, with zero slippage (subject to change in future&nbsp;versions).
@@ -470,13 +470,13 @@ function TrackingMethodologySection() {
           Each position's weight is its <span className="text-white font-medium">notional value</span> (not margin) expressed as a percentage of your total HL account value — including perpetual account equity (margin + unrealized PnL) and available spot&nbsp;balance.
         </p>
         <p className="mt-3 text-sm sm:text-base text-zinc-400 leading-relaxed">
-          Weighting by notional ensures {brand.name} replicates your portfolio-level returns, not just your trading actions. For a given notional, the leverage or margin used on Hyperliquid has no effect on what {brand.name} mirrors. {brand.name} places no restrictions on your Hyperliquid trading, including leverage and margin mode choice. Note that higher leverage still increases liquidation risk on Hyperliquid itself. If a position is liquidated on Hyperliquid, it is also closed in your {brand.name}&nbsp;account.
+          Weighting by notional ensures {brand.name}{' '}replicates your portfolio-level returns, not just your trading actions. For a given notional, the leverage or margin used on Hyperliquid has no effect on what {brand.name}{' '}mirrors. {brand.name}{' '}places no restrictions on your Hyperliquid trading, including leverage and margin mode choice. Note that higher leverage still increases liquidation risk on Hyperliquid itself. If a position is liquidated on Hyperliquid, it is also closed in your {brand.name}&nbsp;account.
         </p>
 
         {/* 5-Second Cooldown */}
         <h3 className="mt-8 mb-3 text-sm font-semibold text-white">5-Second Cooldown</h3>
         <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
-          Your {brand.name} account mirrors each Hyperliquid fill immediately, subject to a <span className="text-white font-medium">5-second cooldown</span> between consecutive updates. If multiple fills occur within 5 seconds, only the first is mirrored immediately; once the cooldown expires, {brand.name} reads your latest cumulative HL position and applies a single update reflecting the net result — regardless of how many fills happened in&nbsp;between.
+          Your {brand.name}{' '}account mirrors each Hyperliquid fill immediately, subject to a <span className="text-white font-medium">5-second cooldown</span> between consecutive updates. If multiple fills occur within 5 seconds, only the first is mirrored immediately; once the cooldown expires, {brand.name}{' '}reads your latest cumulative HL position and applies a single update reflecting the net result — regardless of how many fills happened in&nbsp;between.
         </p>
       </div>
     </section>
@@ -495,7 +495,7 @@ function FeesSection() {
           Spread, Fees & Slippage
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
-          The following costs are applied to your {brand.name} account, consistent with real trading on&nbsp;Hyperliquid.
+          The following costs are applied to your {brand.name}{' '}account, consistent with real trading on&nbsp;Hyperliquid.
         </p>
         <RulesTable rules={FEE_RULES} />
       </div>
@@ -542,7 +542,7 @@ function FundedRulesSection() {
           {isBitcast ? 'Scaled Account Phase (Simulated)' : 'Funded Account Phase'}
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
-          Once you pass the challenge, your {brand.accountType} account is activated immediately. These rules apply for the duration of your {brand.accountType}&nbsp;trading.
+          Once you pass the challenge, your {brand.accountType}{' '}account is activated immediately. These rules apply for the duration of your {brand.accountType}&nbsp;trading.
         </p>
 
         <RulesTable rules={rules} />
@@ -583,7 +583,7 @@ function ScalingRulesSection() {
           Account Scaling
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-10">
-          Consistent performance on your {brand.accountType} account unlocks access to progressively larger account sizes, up to a maximum of $400K. Scaling is automatic and based on performance thresholds — no application required, no additional&nbsp;fees.
+          Consistent performance on your {brand.accountType}{' '}account unlocks access to progressively larger account sizes, up to a maximum of $400K. Scaling is automatic and based on performance thresholds — no application required, no additional&nbsp;fees.
         </p>
 
         {/* Qualifications callout boxes */}
@@ -772,7 +772,7 @@ function BestPracticesSection() {
           Best Practices
         </span>
         <p className="mt-4 text-sm sm:text-base text-zinc-400 leading-relaxed mb-8">
-          The following behaviors are not blocked or restricted by {brand.name}, but each may significantly degrade your {brand.name} performance. We strongly recommend avoiding&nbsp;them.
+          The following behaviors are not blocked or restricted by {brand.name}, but each may significantly degrade your {brand.name}{' '}performance. We strongly recommend avoiding&nbsp;them.
         </p>
         <div className="space-y-4">
           {BEST_PRACTICES.map((item) => (
@@ -814,7 +814,7 @@ function KYCSection() {
             KYC is not required to register, trade, or complete the challenge. It is required only to receive a&nbsp;payout.
           </p>
           <p>
-            When your {brand.accountType} account reaches payout eligibility at the end of a 30-day cycle, you will be prompted to complete a brief identity verification to unlock payouts. Payouts are then sent in USDC directly to your connected wallet. The entire payout flow is automated and verifiable&nbsp;onchain.
+            When your {brand.accountType}{' '}account reaches payout eligibility at the end of a 30-day cycle, you will be prompted to complete a brief identity verification to unlock payouts. Payouts are then sent in USDC directly to your connected wallet. The entire payout flow is automated and verifiable&nbsp;onchain.
           </p>
         </div>
       </div>
@@ -843,7 +843,7 @@ function ProtocolSection() {
             {brand.compliance ? (
               <>All rules are automated and enforced programmatically by Vanta&apos;s autonomous onchain protocol; any rule changes are published publicly before they take effect. There is no back office, no discretionary review committee, and no ability to override&nbsp;outcomes.</>
             ) : (
-              <>All rules are enforced programmatically by the {brand.name} protocol. There is no back office, no discretionary review committee, and no ability to override outcomes. Any rule changes are published publicly before taking&nbsp;effect.</>
+              <>All rules are enforced programmatically by the {brand.name}{' '}protocol. There is no back office, no discretionary review committee, and no ability to override outcomes. Any rule changes are published publicly before taking&nbsp;effect.</>
             )}
           </p>
         </div>

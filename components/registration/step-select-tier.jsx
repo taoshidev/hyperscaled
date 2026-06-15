@@ -128,7 +128,7 @@ export function StepSelectTier({
       {/* Header */}
       <div className="text-center space-y-2 mt-3">
         <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-          Choose your {brand.accountType} account size
+          Choose your {brand.accountType}{' '}account size
         </h2>
         <p className="text-sm text-muted-foreground max-w-md mx-auto text-balance">
           {brand.id === 'bitcast' ? (
