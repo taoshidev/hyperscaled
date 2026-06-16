@@ -149,7 +149,7 @@ export default function Leaderboard({ initialSearch = '' }) {
           <div className="flex items-center gap-3 mb-4">
             <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Network</span>
             <span className="h-px flex-1 bg-white/[0.06]" />
-            <span className="text-xs text-zinc-600">Aggregated across the {brand.name} network</span>
+            <span className="text-xs text-zinc-600">Aggregated across the {brand.name}{' '}network</span>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-6 gap-3">

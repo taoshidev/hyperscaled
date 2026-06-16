@@ -30,9 +30,9 @@ const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
 const TIER_LABELS = { 'free': 'Free', 'tier-1': 'Starter', 'tier-2': 'Tier I', 'tier-3': 'Tier II', 'tier-4': 'Tier III', 'tier-5': 'Tier IV' }
 
-function tierBadge(tier) {
+function tierBadge(tier, freeTierCap) {
   if (tier.popular) return 'Most Popular'
-  if (tier.id === 'free') return 'Only 1,000 Available'
+  if (tier.id === 'free') return `Only ${freeTierCap.toLocaleString()} Available`
   return null
 }
 
@@ -55,7 +55,7 @@ function PricingHero({ showPromoBar }) {
           style={{ textWrap: 'balance' }}
         >
           {brand.compliance
-            ? <>One fee. One challenge. Vanta-powered simulated scaled&nbsp;account.</>
+            ? brand.compliance.pricingHeroTitle
             : <>One fee. One challenge. Keep everything you&nbsp;earn.</>}
         </motion.h1>
         <motion.p
@@ -65,7 +65,7 @@ function PricingHero({ showPromoBar }) {
           className="mt-5 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-[60ch] mx-auto"
           style={{ textWrap: 'balance' }}
         >
-          Take the {brand.name} Challenge with no hidden rules, fees, or time limit. Rewards distributed&nbsp;monthly.
+          Take the {brand.name}{' '}Challenge with no hidden rules, fees, or time limit. Rewards distributed&nbsp;monthly.
         </motion.p>
       </div>
     </section>
@@ -106,11 +106,11 @@ function PricingCard({ tier, index, freeAtCapacity, paidAtCapacity }) {
       }`}
     >
       {/* Badge — Most Popular or Try for Free */}
-      {tierBadge(tier) && (
+      {tierBadge(tier, brand.freeTierCap) && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="inline-flex items-center gap-1 bg-teal-400 text-[#09090b] text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full">
             <Star size={12} weight="fill" />
-            {tierBadge(tier)}
+            {tierBadge(tier, brand.freeTierCap)}
           </span>
         </div>
       )}
@@ -405,7 +405,7 @@ function ModelSection() {
     `A ${brand.accountType} account upon challenge completion`,
     'Verifiable payouts through onchain technology',
     brand.compliance
-      ? 'Vanta retains 0% of performance-based rewards'
+      ? brand.compliance.reward.bullet
       : '100% profit split — you keep your earnings',
     'A system designed for trader success',
   ]
@@ -471,7 +471,7 @@ function ScalingSection() {
             Start at $25K. Scale to&nbsp;$400K.
           </h2>
           <p className="mt-4 text-sm sm:text-base text-zinc-400 max-w-[56ch] mx-auto leading-relaxed" style={{ textWrap: 'balance' }}>
-            Every {brand.accountType} trader starts at their selected account size. Consistent performance unlocks the next tier automatically — no additional&nbsp;fees.
+            Every {brand.accountType}{' '}trader starts at their selected account size. Consistent performance unlocks the next tier automatically — no additional&nbsp;fees.
           </p>
         </motion.div>
         <ScalingPathVisual />
@@ -513,7 +513,7 @@ export default function PricingPage({ tiers, activeCampaign = null }) {
   const brand = useBrand()
   const resolvedTiers = tiers ?? brand.pricingTiers ?? PRICING_TIERS
   const showPromo =
-    (brand.id === 'hyperscaled' || brand.id === 'vanta') &&
+    Boolean(brand.firstParty) &&
     Boolean(activeCampaign && activeCampaign.bannerEnabled)
   return (
     <>

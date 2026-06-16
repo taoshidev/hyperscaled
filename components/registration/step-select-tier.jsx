@@ -128,11 +128,14 @@ export function StepSelectTier({
       {/* Header */}
       <div className="text-center space-y-2 mt-3">
         <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-          Choose your {brand.accountType} account size
+          Choose your {brand.accountType}{' '}account size
         </h2>
         <p className="text-sm text-muted-foreground max-w-md mx-auto text-balance">
-          One challenge. No recurring fees. 100%&nbsp;of performance
-          rewards are&nbsp;yours.
+          {brand.compliance?.selfAttributed ? (
+            <>{brand.compliance.reward.bullet}.</>
+          ) : (
+            <>One challenge. No recurring fees. 100%&nbsp;of performance rewards are&nbsp;yours.</>
+          )}
         </p>
         {freeAtCapacity && paidAtCapacity && (
           <p className="text-center text-sm text-amber-400/95 max-w-lg mx-auto mt-3 text-balance font-medium">
@@ -176,6 +179,11 @@ export function StepSelectTier({
               const isSelected = i === selectedIndex;
               const isPopular = tier.badge != null;
               const tierIsFree = isFreeTier(tier);
+              // Free-tier availability cap is brand-specific (brand.freeTierCap).
+              const displayBadge =
+                tierIsFree && tier.badge
+                  ? `Only ${brand.freeTierCap.toLocaleString()} Available`
+                  : tier.badge;
               const isSoldOut =
                 (tierIsFree && freeAtCapacity) ||
                 (!tierIsFree && paidAtCapacity);
@@ -243,7 +251,7 @@ export function StepSelectTier({
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 pointer-events-none">
                       <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap bg-teal-400 text-zinc-950">
                         <Star size={12} weight="fill" />
-                        {tier.badge}
+                        {displayBadge}
                       </span>
                     </div>
                   )}
