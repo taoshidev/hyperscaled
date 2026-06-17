@@ -96,7 +96,7 @@ export function BridgePage() {
       title: 'Chrome Extension',
       tag: 'RECOMMENDED',
       body: 'Live guardrails overlaid on Hyperliquid. See your drawdown, performance target, and trailing limits on every order. Blocks trades that would breach your challenge before they execute.',
-      cta: { label: 'Install extension', href: CHROME_EXTENSION_URL, external: true },
+      cta: { label: 'Install extension', href: brand.chromeExtensionUrl || CHROME_EXTENSION_URL, external: true },
     },
     {
       key: 'telegram_bot',

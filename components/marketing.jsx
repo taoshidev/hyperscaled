@@ -3,6 +3,7 @@
 import Hero from './marketing/Hero'
 import HowItWorks from './marketing/HowItWorks'
 import HomePricing from './marketing/HomePricing'
+import VideoSection from './marketing/VideoSection'
 import Features from './marketing/Features'
 import Solution from './marketing/Solution'
 import Problem from './marketing/Problem'
@@ -19,6 +20,7 @@ export default function App({ tiers, activeCampaign = null }) {
       <Hero activeCampaign={activeCampaign} />
       <HowItWorks tiers={resolvedTiers} />
       <HomePricing tiers={resolvedTiers} />
+      {brand.homeVideo && <VideoSection video={brand.homeVideo} />}
       <Features />
       <Solution />
       <Problem />
