@@ -367,7 +367,7 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
                 Required to&nbsp;participate.
               </p>
               <a
-                href={CHROME_EXTENSION_URL}
+                href={brand.chromeExtensionUrl || CHROME_EXTENSION_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="shiny-cta h-11 w-full flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
