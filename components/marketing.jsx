@@ -19,8 +19,8 @@ export default function App({ tiers, activeCampaign = null }) {
     <>
       <Hero activeCampaign={activeCampaign} />
       <HowItWorks tiers={resolvedTiers} />
-      <HomePricing tiers={resolvedTiers} />
       {brand.homeVideo && <VideoSection video={brand.homeVideo} />}
+      <HomePricing tiers={resolvedTiers} />
       <Features />
       <Solution />
       <Problem />
