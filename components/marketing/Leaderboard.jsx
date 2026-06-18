@@ -42,7 +42,8 @@ export default function Leaderboard({ initialSearch = '' }) {
   useEffect(() => {
     let cancelled = false
 
-    fetch('/api/leaderboard')
+    const url = brand?.id ? `/api/leaderboard?brand_id=${encodeURIComponent(brand.id)}` : '/api/leaderboard'
+    fetch(url)
       .then((res) => {
         if (!res.ok) throw new Error(`Failed to load (${res.status})`)
         return res.json()

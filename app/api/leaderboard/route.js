@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { reportError } from "@/lib/errors";
 import { getDb } from "@/lib/db";
-import { registrations } from "@/lib/db/schema";
+import { registrations, entityMiners } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
-export async function GET() {
+export async function GET(request) {
   const validatorUrl = process.env.VALIDATOR_API_URL;
   if (!validatorUrl) {
     return NextResponse.json(
@@ -13,9 +13,26 @@ export async function GET() {
     );
   }
 
+  const { searchParams } = new URL(request.url);
+  const brandId = searchParams.get("brand_id");
+
   try {
+    let entityHotkey = null;
+    if (brandId) {
+      const db = await getDb();
+      const [row] = await db
+        .select({ hotkey: entityMiners.hotkey })
+        .from(entityMiners)
+        .where(eq(entityMiners.slug, brandId.toLowerCase()))
+        .limit(1);
+      if (row) entityHotkey = row.hotkey;
+    }
+
+    const validatorLeaderboardUrl = new URL(`${validatorUrl}/hl-leaderboard`);
+    if (entityHotkey) validatorLeaderboardUrl.searchParams.set("entity_hotkey", entityHotkey);
+
     const [res, dbRegs] = await Promise.all([
-      fetch(`${validatorUrl}/hl-leaderboard`),
+      fetch(validatorLeaderboardUrl.toString()),
       getDb()
         .then((db) =>
           db.select({ hlAddress: registrations.hlAddress, accountSize: registrations.accountSize, createdAt: registrations.createdAt })
