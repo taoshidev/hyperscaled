@@ -1,8 +1,64 @@
 import { NextResponse } from "next/server";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { STUB_ENABLED, stubDashboard } from "@/lib/gateway-stubs";
 import { isValidEvmAddress } from "@/lib/validation";
 import { reportCritical } from "@/lib/errors";
 import { transformTraderResponse } from "@/lib/transform-trader";
+import { getDb } from "@/lib/db";
+import { entityMiners, registrations } from "@/lib/db/schema";
+
+async function findPendingRegistration(hlAddress) {
+  try {
+    const db = await getDb();
+    const [row] = await db
+      .select({
+        accountSize: registrations.accountSize,
+        createdAt: registrations.createdAt,
+        payoutAddress: registrations.payoutAddress,
+        minerSlug: entityMiners.slug,
+      })
+      .from(registrations)
+      .leftJoin(entityMiners, eq(entityMiners.hotkey, registrations.minerHotkey))
+      .where(
+        and(
+          sql`lower(${registrations.hlAddress}) = ${hlAddress.toLowerCase()}`,
+          eq(registrations.status, "registered"),
+        ),
+      )
+      .orderBy(desc(registrations.createdAt))
+      .limit(1);
+    return row || null;
+  } catch {
+    return null;
+  }
+}
+
+function buildPendingTraderPayload(hlAddress, reg) {
+  return {
+    status: "success",
+    timestamp: Date.now(),
+    subaccount_status: "pending_first_trade",
+    hl_address: hlAddress,
+    payout_address: reg.payoutAddress || null,
+    account_size: reg.accountSize ?? 0,
+    created_at_ms: reg.createdAt ? new Date(reg.createdAt).getTime() : null,
+    miner_slug: reg.minerSlug || null,
+    synthetic_hotkey: null,
+    subaccount_uuid: null,
+    subaccount_id: null,
+    asset_class: null,
+    eliminated_at_ms: null,
+    challenge_period: null,
+    drawdown: null,
+    elimination: null,
+    account_size_data: null,
+    positions: null,
+    limit_orders: null,
+    limits: null,
+    statistics: null,
+    quarterly_pnl: null,
+  };
+}
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -36,6 +92,14 @@ export async function GET(request) {
     ]);
 
     if (traderRes.status === 404) {
+      // Validator doesn't know this address yet — but if it's a paid-up
+      // registration in our DB, surface it as a pending state so the
+      // dashboard can render a friendly "waiting for first trade" view
+      // instead of "Not registered".
+      const reg = await findPendingRegistration(hlAddress);
+      if (reg) {
+        return NextResponse.json(buildPendingTraderPayload(hlAddress, reg), { status: 200 });
+      }
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
