@@ -4,7 +4,7 @@ import { useRef, useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, useInView } from 'framer-motion'
 import { MagnifyingGlass, XCircle } from '@phosphor-icons/react'
-import { useBrand } from '@/lib/brand'
+import { useBrand, useBrandHref } from '@/lib/brand'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -26,6 +26,7 @@ function fmtCompact(n) {
 
 export default function Leaderboard({ initialSearch = '' }) {
   const brand = useBrand()
+  const brandHref = useBrandHref()
   const router = useRouter()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
@@ -36,13 +37,14 @@ export default function Leaderboard({ initialSearch = '' }) {
   const [searchQuery, setSearchQuery] = useState(initialSearch)
 
   const handleSelectTrader = (addr) => {
-    if (addr) router.push('/dashboard?addr=' + encodeURIComponent(addr))
+    if (addr) router.push(brandHref('/dashboard?addr=' + encodeURIComponent(addr)))
   }
 
   useEffect(() => {
     let cancelled = false
 
-    fetch('/api/leaderboard')
+    const url = brand?.id ? `/api/leaderboard?brand_id=${encodeURIComponent(brand.id)}` : '/api/leaderboard'
+    fetch(url)
       .then((res) => {
         if (!res.ok) throw new Error(`Failed to load (${res.status})`)
         return res.json()
@@ -280,7 +282,7 @@ export default function Leaderboard({ initialSearch = '' }) {
                   <table className="w-full min-w-[750px] tabular-nums">
                     <thead>
                       <tr className="border-b border-white/[0.06]">
-                        {['Address', 'PnL', 'Progress', 'Sharpe', 'Trades', 'Win%', 'Drawdown', 'Since'].map((h) => (
+                        {['Address', 'PnL', 'Funding', 'Sharpe', 'Trades', 'Win%', 'Drawdown', 'Since'].map((h) => (
                           <th key={h} className="text-left text-xs text-zinc-500 font-medium uppercase tracking-widest px-4 py-3">{h}</th>
                         ))}
                       </tr>
@@ -295,7 +297,6 @@ export default function Leaderboard({ initialSearch = '' }) {
                       )}
                       {filteredChallenge.map((t, i) => {
                         const noTrades = t.noTrades || t.trades === 0 && t.pnl == null
-                        const pct = noTrades ? 0 : (t.progress != null ? t.progress : Math.max(0, ((t.pnl || 0) / 25000 * 10) * 100))
                         return (
                           <tr
                             key={i}
@@ -306,21 +307,7 @@ export default function Leaderboard({ initialSearch = '' }) {
                             <td className={`px-4 py-3 text-sm font-semibold ${noTrades ? 'text-zinc-600' : (t.pnl || 0) >= 0 ? 'text-teal-400' : 'text-red-400'}`}>
                               {noTrades ? '--' : `${(t.pnl || 0) >= 0 ? '+' : ''}${fmtUSD(t.pnl || 0)}`}
                             </td>
-                            <td className="px-4 py-3">
-                              {noTrades ? (
-                                <span className="text-sm text-zinc-600">--</span>
-                              ) : (
-                                <div className="flex items-center gap-2">
-                                  <div className="w-16 h-1 rounded-full bg-white/[0.06] overflow-hidden">
-                                    <div
-                                      className={`h-1 rounded-full ${(t.pnl || 0) >= 0 ? 'bg-teal-400' : 'bg-red-400'}`}
-                                      style={{ width: `${Math.min(100, pct)}%` }}
-                                    />
-                                  </div>
-                                  <span className="text-xs text-zinc-500">{pct.toFixed(1)}%</span>
-                                </div>
-                              )}
-                            </td>
+                            <td className="px-4 py-3 text-sm text-zinc-300">{t.funding != null ? fmtUSD(t.funding) : '--'}</td>
                             <td className="px-4 py-3 text-sm text-zinc-300">{noTrades ? '--' : fmtSharpe(t.sharpe)}</td>
                             <td className="px-4 py-3 text-sm text-zinc-300">{noTrades ? '--' : fmt(t.trades || 0)}</td>
                             <td className={`px-4 py-3 text-sm ${!noTrades && (t.winRate || 0) >= 60 ? 'text-teal-400' : noTrades ? 'text-zinc-600' : 'text-white'}`}>{noTrades ? '--' : t.winRate != null ? `${t.winRate}%` : '--'}</td>
