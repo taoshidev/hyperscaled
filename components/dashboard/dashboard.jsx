@@ -415,6 +415,48 @@ export function Dashboard() {
     );
   }
 
+  // Registered in DB but not yet known to the validator (no trades placed yet)
+  if (dashboard.data?.subaccount_status === "pending_first_trade") {
+    const reg = dashboard.data;
+    const sizeLabel = reg.account_size >= 1000
+      ? `$${Math.round(reg.account_size / 1000)}K`
+      : `$${reg.account_size || 0}`;
+    return (
+      <div className="min-h-[calc(100dvh-4rem)] flex items-center justify-center p-6">
+        <div className="space-y-5 max-w-md w-full mx-auto text-center">
+          <div className="flex items-center justify-center w-16 h-16 mx-auto rounded-2xl bg-teal-500/10 border border-teal-500/20">
+            <Receipt size={32} weight="duotone" className="text-teal-400" />
+          </div>
+          <h2 className="text-xl font-bold tracking-tight">Waiting for first trade</h2>
+          <p className="text-sm text-zinc-400 leading-relaxed">
+            This wallet is registered for a {sizeLabel} {brand.name} challenge.
+            Performance data will appear here as soon as the first trade is placed on Hyperliquid.
+          </p>
+          <div className="flex flex-col items-center gap-1 text-xs text-zinc-500 font-mono">
+            <span>{truncateAddrFn(activeAddress)}</span>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => dashboard.refetch()}
+              className="border-white/[0.12] hover:border-white/[0.24] hover:bg-white/[0.04] gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleReset}
+              className="border-white/[0.12] hover:border-white/[0.24] hover:bg-white/[0.04]"
+            >
+              Try another address
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Loaded
   const data = dashboard.data;
   const eventsData = events.data;
