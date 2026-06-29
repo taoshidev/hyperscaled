@@ -20,14 +20,15 @@ export default function HyperstackEmailPopup({ portalId, formId, onCaptured }) {
   const valid = isValidEmail(value)
   const showError = touched && !valid
 
-  // Lock background scroll while the modal is open.
+  // Lock background scroll while the modal is open; restore as soon as it closes.
   useEffect(() => {
+    if (done) return
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = prev
     }
-  }, [])
+  }, [done])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -59,20 +60,21 @@ export default function HyperstackEmailPopup({ portalId, formId, onCaptured }) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/80 backdrop-blur-sm px-4 py-10"
+      className="fixed inset-0 z-[100] overflow-y-auto bg-black/80 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-label="Enter your email to continue"
     >
-      <div className="w-full max-w-md rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 sm:p-8 shadow-[0_24px_64px_rgba(0,0,0,0.6)]">
-        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-          Enter your email to continue
-        </h2>
-        <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
-          Add your email to start your Hyperstack Challenge — we&apos;ll send your registration confirmation and account updates&nbsp;here.
-        </p>
+      <div className="flex min-h-full items-start justify-center px-4 py-16 sm:py-24">
+        <div className="w-full max-w-md rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-6 sm:p-8 shadow-[0_24px_64px_rgba(0,0,0,0.6)]">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+            Enter your email to continue
+          </h2>
+          <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
+            Get started with the Hyperstack challenge with just an&nbsp;email.
+          </p>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-3" noValidate>
+          <form onSubmit={handleSubmit} className="mt-6 space-y-3" noValidate>
           <div className="space-y-1.5">
             <label htmlFor="hyperstack-popup-email" className="block text-xs font-medium text-zinc-400">
               Email address <span className="text-red-400">*</span>
@@ -107,6 +109,7 @@ export default function HyperstackEmailPopup({ portalId, formId, onCaptured }) {
             <ArrowRight size={14} weight="bold" />
           </button>
         </form>
+        </div>
       </div>
     </div>
   )
