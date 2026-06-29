@@ -1004,11 +1004,3 @@ textarea:active {
   font-size: 0.875rem !important;
   color: var(--color-teal-400) !important;
 }
-
-/* Hyperstack email popup — reuses .hyperscaled-waitlist-form styling (dark input
-   + teal submit button). The modal already provides the heading/subtext, so hide
-   the HubSpot form's own intro rich-text and field label for a clean look. */
-.hyperstack-email-popup-form .hs-richtext,
-.hyperstack-email-popup-form .hs-form-field > label {
-  display: none !important;
-}
