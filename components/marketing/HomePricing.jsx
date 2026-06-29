@@ -49,11 +49,11 @@ function PricingCard({ tier, index, brandHref, withQS, freeAtCapacity, paidAtCap
       }`}
     >
       {/* Badge — Most Popular or Try for Free */}
-      {tierBadge(tier, brand.freeTierCap, free && freeAtCapacity && brand.id === 'bitcast') && (
+      {tierBadge(tier, brand.freeTierCap, free && brand.id === 'bitcast') && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="inline-flex items-center gap-1 bg-teal-400 text-[#09090b] text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full">
             <Star size={12} weight="fill" />
-            {tierBadge(tier, brand.freeTierCap, free && freeAtCapacity && brand.id === 'bitcast')}
+            {tierBadge(tier, brand.freeTierCap, free && brand.id === 'bitcast')}
           </span>
         </div>
       )}
