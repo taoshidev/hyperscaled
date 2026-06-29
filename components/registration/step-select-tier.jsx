@@ -182,7 +182,9 @@ export function StepSelectTier({
               // Free-tier availability cap is brand-specific (brand.freeTierCap).
               const displayBadge =
                 tierIsFree && tier.badge
-                  ? `Only ${brand.freeTierCap.toLocaleString()} Available`
+                  ? tierIsFree && freeAtCapacity && brand.id === 'bitcast'
+                    ? 'Sold Out'
+                    : `Only ${brand.freeTierCap.toLocaleString()} Available`
                   : tier.badge;
               const isSoldOut =
                 (tierIsFree && freeAtCapacity) ||
