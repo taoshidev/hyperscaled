@@ -255,9 +255,20 @@ export function StepConnectAndPay({
 
   const { handleHelpFocus, handleHelpBlur } = useRegistrationHelp();
 
-  const hsPortalId = process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID || "";
-  const hsFormId = process.env.NEXT_PUBLIC_HUBSPOT_FORM_ID || "";
-  const isHubspotBrand = (brandVariant === "hyperscaled" || brandVariant === "vanta") && hsPortalId && hsFormId;
+  // Per-brand HubSpot lead form. Hyperstack (bitcast) uses its own portal/form so
+  // leads route to its own CRM; hyperscaled + vanta use the platform form (env).
+  const BRAND_HUBSPOT = {
+    bitcast: { portalId: "51676532", formId: "1b76c44b-0d48-4513-9b98-6e0a99b9ec74" },
+  };
+  const brandHubspot = BRAND_HUBSPOT[brandVariant];
+  const hsPortalId = brandHubspot?.portalId || process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID || "";
+  const hsFormId = brandHubspot?.formId || process.env.NEXT_PUBLIC_HUBSPOT_FORM_ID || "";
+  const isHubspotBrand =
+    (brandVariant === "hyperscaled" ||
+      brandVariant === "vanta" ||
+      brandVariant === "bitcast") &&
+    hsPortalId &&
+    hsFormId;
   const hubspotFormReadyRef = useRef(false);
   const hubspotFormContainerRef = useRef(null);
   // Drives the fade-in / skeleton state for the embedded form so the user

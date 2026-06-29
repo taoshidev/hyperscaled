@@ -1,5 +1,4 @@
 import { RegistrationFlow } from "@/components/registration/registration-flow"
-import HyperstackEmailGate from "@/components/registration/hyperstack-email-gate"
 import { buildMetadata } from "@/lib/metadata"
 import { getMinerBySlug, getTiersForMiner } from "@/lib/miners"
 import { TIERS as TIER_META } from "@/lib/constants"
@@ -62,16 +61,14 @@ export default async function BitcastRegisterPage() {
     // Keep nulls so client fallback fetch can recover.
   }
   return (
-    <HyperstackEmailGate>
-      <RegistrationFlow
-        initialMinerSlug={MINER_SLUG}
-        initialMinerTiers={initialMinerTiers}
-        initialPaymentWallet={initialPaymentWallet}
-        logo="/hyperstack-logo.svg"
-        logoAlt="Hyperstack"
-        logoHref="https://hyperstack.trade"
-        brandVariant="bitcast"
-      />
-    </HyperstackEmailGate>
+    <RegistrationFlow
+      initialMinerSlug={MINER_SLUG}
+      initialMinerTiers={initialMinerTiers}
+      initialPaymentWallet={initialPaymentWallet}
+      logo="/hyperstack-logo.svg"
+      logoAlt="Hyperstack"
+      logoHref="https://hyperstack.trade"
+      brandVariant="bitcast"
+    />
   )
 }
