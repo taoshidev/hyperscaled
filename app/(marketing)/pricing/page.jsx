@@ -7,6 +7,8 @@ import {
   serializeActiveCampaign,
 } from '@/lib/campaign-pricing'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = buildMetadata({
   title: 'Pricing — Hyperscaled Scaled Trading Accounts',
   description:

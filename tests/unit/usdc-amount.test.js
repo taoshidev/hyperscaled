@@ -37,26 +37,33 @@ describe("USDC amount boundary helpers", () => {
   });
 });
 
-describe("computeCouponDiscount float-safe rounding", () => {
-  it("returns a 2-decimal-clean finalAmount for the 33% off $299 case", () => {
+describe("computeCouponDiscount whole-dollar round-up", () => {
+  it("rounds the payable amount up to a whole dollar for the 33% off $299 case", () => {
     const { discountAmount, finalAmount } = computeCouponDiscount(
       "percent",
       33,
       299,
     );
-    expect(discountAmount).toBe(98.67);
-    expect(finalAmount).toBe(200.33);
-    expect(toUsdcAtomicString(finalAmount)).toBe("200330000");
+    // 299 * 0.67 = 200.33 → rounded up to 201; discount reconciles to 98.
+    expect(finalAmount).toBe(201);
+    expect(discountAmount).toBe(98);
+    expect(toUsdcAtomicString(finalAmount)).toBe("201000000");
   });
 
-  it("returns a clean finalAmount for representative percent-off prices", () => {
-    expect(computeCouponDiscount("percent", 17, 119).finalAmount).toBe(98.77);
-    expect(computeCouponDiscount("percent", 50, 29).finalAmount).toBe(14.5);
+  it("rounds representative percent-off prices up to whole dollars", () => {
+    expect(computeCouponDiscount("percent", 17, 119).finalAmount).toBe(99); // 98.77 → 99
+    expect(computeCouponDiscount("percent", 50, 29).finalAmount).toBe(15); // 14.5 → 15
     expect(computeCouponDiscount("percent", 100, 29).finalAmount).toBe(0);
   });
 
-  it("clamps a fixed discount to the base amount and returns 2dp finalAmount", () => {
+  it("clamps a fixed discount to the base amount and rounds the payable up", () => {
     expect(computeCouponDiscount("fixed", 50, 29).finalAmount).toBe(0);
     expect(computeCouponDiscount("fixed", 10, 29).finalAmount).toBe(19);
+  });
+
+  it("leaves the sub-dollar dev/test sentinel untouched", () => {
+    // A campaign coupon auto-applied on a $0.01 dev-test price must not be
+    // inflated to $1.
+    expect(computeCouponDiscount("percent", 25, 0.01).finalAmount).toBe(0.01);
   });
 });

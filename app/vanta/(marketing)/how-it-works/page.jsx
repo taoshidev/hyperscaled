@@ -4,6 +4,8 @@ import { JsonLd } from '@/components/shared/JsonLd'
 import { fetchDbPricingTiers } from '@/lib/pricing-db'
 import { resolveActiveCampaign } from '@/lib/campaign-pricing'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = buildMetadata({
   title: 'How It Works — Vanta Trading Scaled Trading',
   description:

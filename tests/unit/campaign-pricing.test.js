@@ -27,11 +27,11 @@ describe("applyCampaignToTierPrice", () => {
     expect(r).toEqual({ currentPrice: 74, originalPrice: 74 });
   });
 
-  it("applies a percent coupon discount uniformly", () => {
+  it("applies a percent coupon discount, rounding the payable up to a whole dollar", () => {
     const r = applyCampaignToTierPrice(5000, 74, baseCampaign);
     expect(r.originalPrice).toBe(74);
-    // 74 * (1 - 0.55) = 33.30
-    expect(r.currentPrice).toBeCloseTo(33.3, 2);
+    // 74 * (1 - 0.55) = 33.30 → rounded up to a clean $34.
+    expect(r.currentPrice).toBe(34);
   });
 
   it("applies a fixed coupon discount with floor at 0", () => {
@@ -65,7 +65,7 @@ describe("applyCampaignToTierPrice", () => {
     };
     const r = applyCampaignToTierPrice(10000, 135, c);
     expect(r.originalPrice).toBe(135);
-    expect(r.currentPrice).toBeCloseTo(60.75, 2); // 135 * 0.45
+    expect(r.currentPrice).toBe(61); // 135 * 0.45 = 60.75 → rounded up to 61
   });
 
   it("leaves a free tier (price 0) at zero", () => {
