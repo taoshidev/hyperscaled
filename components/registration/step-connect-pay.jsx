@@ -24,6 +24,7 @@ import {
   PencilSimple,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import HyperstackEmailPopup from "@/components/registration/hyperstack-email-popup";
 import { isValidHLAddress, isValidEmail } from "@/lib/validation";
 import { trackEvent, getRefSource } from "@/lib/analytics";
 import {
@@ -255,9 +256,31 @@ export function StepConnectAndPay({
 
   const { handleHelpFocus, handleHelpBlur } = useRegistrationHelp();
 
-  const hsPortalId = process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID || "";
-  const hsFormId = process.env.NEXT_PUBLIC_HUBSPOT_FORM_ID || "";
-  const isHubspotBrand = (brandVariant === "hyperscaled" || brandVariant === "vanta") && hsPortalId && hsFormId;
+  // Per-brand HubSpot lead form. Hyperstack (bitcast) uses its own portal/form so
+  // leads route to its own CRM; hyperscaled + vanta use the platform form (env).
+  const BRAND_HUBSPOT = {
+    bitcast: { portalId: "51676532", formId: "1b76c44b-0d48-4513-9b98-6e0a99b9ec74" },
+  };
+  const brandHubspot = BRAND_HUBSPOT[brandVariant];
+  const hsPortalId = brandHubspot?.portalId || process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID || "";
+  const hsFormId = brandHubspot?.formId || process.env.NEXT_PUBLIC_HUBSPOT_FORM_ID || "";
+  // hyperscaled + vanta: inline HubSpot email field on this step.
+  const isHubspotBrand =
+    (brandVariant === "hyperscaled" || brandVariant === "vanta") &&
+    hsPortalId &&
+    hsFormId;
+  // Hyperstack (bitcast): email is captured via a mandatory popup on this step
+  // (routes to Hyperstack's own CRM) instead of an inline field.
+  const isEmailPopupBrand =
+    brandVariant === "bitcast" && hsPortalId && hsFormId;
+  // Capture the popup's email into registration state; once a valid email is set,
+  // the parent stops rendering the popup (it closes).
+  const handleEmailCaptured = useCallback((capturedEmail) => {
+    if (capturedEmail) {
+      setEmail(capturedEmail);
+      setEmailTouched(true);
+    }
+  }, []);
   const hubspotFormReadyRef = useRef(false);
   const hubspotFormContainerRef = useRef(null);
   // Drives the fade-in / skeleton state for the embedded form so the user
@@ -2684,6 +2707,15 @@ export function StepConnectAndPay({
       </div>
 
       {/* ─── 2. Email ─── */}
+      {/* Hyperstack (bitcast): mandatory email popup instead of an inline field. */}
+      {isEmailPopupBrand && phase === "connect" && !emailReady && (
+        <HyperstackEmailPopup
+          portalId={hsPortalId}
+          formId={hsFormId}
+          onCaptured={handleEmailCaptured}
+        />
+      )}
+      {!isEmailPopupBrand && (
       <div className="w-full max-w-lg mt-4 space-y-1.5">
         <label htmlFor={isHubspotBrand ? undefined : "reg-email"} className="text-xs font-medium text-muted-foreground">
           Email address <span className="text-destructive">*</span>
@@ -2738,6 +2770,7 @@ export function StepConnectAndPay({
           We&#8217;ll send registration confirmation and account updates here
         </p>
       </div>
+      )}
 
       {/* ─── 3. Payment Method Selector (hidden for free tier) ─── */}
       {!isFree && (

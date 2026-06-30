@@ -3,6 +3,12 @@ import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { fetchDbPricingTiers } from '@/lib/pricing-db'
 import { pricingMinerSlugForBrandId } from '@/lib/pricing-miner-slug'
+import {
+  resolveActiveCampaign,
+  serializeActiveCampaign,
+} from '@/lib/campaign-pricing'
+
+export const dynamic = 'force-dynamic'
 
 export const metadata = buildMetadata({
   title: 'Pricing — Hyperstack Trading Challenges',
@@ -15,7 +21,11 @@ export const metadata = buildMetadata({
 })
 
 export default async function BitcastPricing() {
-  const tiers = await fetchDbPricingTiers(pricingMinerSlugForBrandId('bitcast'))
+  const minerSlug = pricingMinerSlugForBrandId('bitcast')
+  const activeCampaign = await resolveActiveCampaign({ minerSlug }).catch(
+    () => null,
+  )
+  const tiers = await fetchDbPricingTiers(minerSlug, { activeCampaign })
   const productSchemas = tiers.map((tier) => ({
     "@context": "https://schema.org",
     "@type": "Product",
@@ -26,7 +36,10 @@ export default async function BitcastPricing() {
   return (
     <>
       {productSchemas.map((schema, i) => <JsonLd key={i} data={schema} />)}
-      <PricingPage tiers={tiers} />
+      <PricingPage
+        tiers={tiers}
+        activeCampaign={serializeActiveCampaign(activeCampaign)}
+      />
     </>
   )
 }

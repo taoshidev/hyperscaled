@@ -190,8 +190,8 @@ describe("evaluateRegistrationPricing — couponMeta.code", () => {
 
     expect(res.ok).toBe(true);
     expect(res.couponMeta?.code).toBe("HS-XGKX-BPJ6");
-    expect(res.effectivePrice).toBe(14.5); // 29 * 0.5
-    expect(res.discountAmount).toBe(14.5);
+    expect(res.effectivePrice).toBe(15); // 29 * 0.5 = 14.5 → rounded up to 15
+    expect(res.discountAmount).toBe(14);
   });
 
   it("propagates a fixed-amount coupon's code on the meta", async () => {

@@ -99,14 +99,25 @@ export default function FAQ() {
 
             <div className="mt-8 p-4 rounded-xl bg-zinc-900/50 border border-white/[0.06] space-y-2">
               <div className="text-xs text-zinc-500">Still have questions?</div>
-              <a
-                href={brand.socials.discord}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-teal-400 hover:text-teal-300 transition-colors font-medium block"
-              >
-                Join our Discord →
-              </a>
+              {brand.socials.discord ? (
+                <a
+                  href={brand.socials.discord}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-teal-400 hover:text-teal-300 transition-colors font-medium block"
+                >
+                  Join our Discord →
+                </a>
+              ) : brand.socials.telegram ? (
+                <a
+                  href={brand.socials.telegram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-teal-400 hover:text-teal-300 transition-colors font-medium block"
+                >
+                  Join our Telegram →
+                </a>
+              ) : null}
               <Link
                 href={brandHref('/faq')}
                 className="text-sm text-zinc-400 hover:text-zinc-300 transition-colors font-medium block"
