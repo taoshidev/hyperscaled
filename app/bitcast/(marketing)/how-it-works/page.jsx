@@ -5,6 +5,8 @@ import { fetchDbPricingTiers } from '@/lib/pricing-db'
 import { pricingMinerSlugForBrandId } from '@/lib/pricing-miner-slug'
 import { resolveActiveCampaign } from '@/lib/campaign-pricing'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = buildMetadata({
   title: 'How It Works — Hyperstack',
   description: 'See how Hyperstack works. Connect your wallet, trade on Hyperliquid, pass the Challenge, and earn USDC rewards in a simulated scaled account.',

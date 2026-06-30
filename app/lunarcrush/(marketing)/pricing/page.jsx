@@ -1,7 +1,14 @@
 import PricingPage from '@/components/marketing/PricingPage'
 import { buildMetadata } from '@/lib/metadata'
 import { JsonLd } from '@/components/shared/JsonLd'
-import { PRICING_TIERS } from '@/lib/constants'
+import { fetchDbPricingTiers } from '@/lib/pricing-db'
+import { pricingMinerSlugForBrandId } from '@/lib/pricing-miner-slug'
+import {
+  resolveActiveCampaign,
+  serializeActiveCampaign,
+} from '@/lib/campaign-pricing'
+
+export const dynamic = 'force-dynamic'
 
 export const metadata = buildMetadata({
   title: 'Pricing — LunarCrush Funded Accounts',
@@ -13,7 +20,11 @@ export const metadata = buildMetadata({
 })
 
 export default async function LunarCrushPricing() {
-  const tiers = PRICING_TIERS
+  const minerSlug = pricingMinerSlugForBrandId('lunarcrush')
+  const activeCampaign = await resolveActiveCampaign({ minerSlug }).catch(
+    () => null,
+  )
+  const tiers = await fetchDbPricingTiers(minerSlug, { activeCampaign })
   const productSchemas = tiers.map((tier) => ({
     "@context": "https://schema.org",
     "@type": "Product",
@@ -25,7 +36,10 @@ export default async function LunarCrushPricing() {
   return (
     <>
       {productSchemas.map((schema, i) => <JsonLd key={i} data={schema} />)}
-      <PricingPage tiers={tiers} />
+      <PricingPage
+        tiers={tiers}
+        activeCampaign={serializeActiveCampaign(activeCampaign)}
+      />
     </>
   )
 }

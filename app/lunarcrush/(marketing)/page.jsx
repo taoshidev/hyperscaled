@@ -1,6 +1,6 @@
 import { cookies } from "next/headers"
 import App from "@/components/marketing"
-import { PRICING_TIERS } from "@/lib/constants"
+import { fetchDbPricingTiers } from "@/lib/pricing-db"
 import { pricingMinerSlugForBrandId } from "@/lib/pricing-miner-slug"
 import {
   resolveActiveCampaign,
@@ -25,13 +25,15 @@ export default async function LunarCrushHomePage() {
   const cookieStore = await cookies()
   const entry = cookieStore.get("hs_entry")?.value
   const lockedMiner = entry && entry !== "home" ? entry : null
-  const activeCampaign = await resolveActiveCampaign({
-    minerSlug: pricingMinerSlugForBrandId("lunarcrush"),
-  }).catch(() => null)
+  const minerSlug = pricingMinerSlugForBrandId("lunarcrush")
+  const activeCampaign = await resolveActiveCampaign({ minerSlug }).catch(
+    () => null,
+  )
+  const tiers = await fetchDbPricingTiers(minerSlug, { activeCampaign })
   return (
     <App
       lockedMiner={lockedMiner}
-      tiers={PRICING_TIERS}
+      tiers={tiers}
       activeCampaign={serializeActiveCampaign(activeCampaign)}
     />
   )

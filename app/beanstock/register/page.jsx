@@ -4,6 +4,11 @@ import { getMinerBySlug, getTiersForMiner } from "@/lib/miners"
 import { TIERS as TIER_META } from "@/lib/constants"
 import { unstable_cache } from "next/cache"
 import { listPriceUsdcFromDbTier } from "@/lib/wsb-tier-list-price"
+import {
+  resolveActiveCampaign,
+  serializeActiveCampaign,
+  applyCampaignToTierPrice,
+} from "@/lib/campaign-pricing"
 
 export const metadata = buildMetadata({
   title: "Start Your Challenge",
@@ -35,6 +40,25 @@ function enrichTier(dbTier, index) {
     badge: meta?.badge ?? null,
     details: meta?.details ?? [],
   }
+}
+
+/**
+ * Layer the active promotional campaign onto cached tiers. `promoPrice` stays
+ * the standard list price (the checkout base the server discounts via coupon);
+ * we add a display-only `salePrice` so the tier cards can show the discounted
+ * price with the list price struck through — matching the marketing storefront.
+ */
+function applyCampaignToTiers(tiers, activeCampaign) {
+  if (!Array.isArray(tiers)) return tiers
+  return tiers.map((t) => {
+    const list = Number(t.promoPrice)
+    const { currentPrice } = applyCampaignToTierPrice(
+      t.accountSize,
+      list,
+      activeCampaign,
+    )
+    return { ...t, salePrice: currentPrice }
+  })
 }
 
 const getCachedRegisterMinerData = unstable_cache(
@@ -71,15 +95,22 @@ export default async function BeanstockRegisterPage() {
     // Keep nulls so client fallback fetch can recover.
   }
 
+  const activeCampaign = await resolveActiveCampaign({
+    minerSlug: MINER_SLUG,
+  }).catch(() => null)
+
+  const tiersForFlow = applyCampaignToTiers(initialMinerTiers, activeCampaign)
+
   return (
     <RegistrationFlow
       initialMinerSlug={MINER_SLUG}
-      initialMinerTiers={initialMinerTiers}
+      initialMinerTiers={tiersForFlow}
       initialPaymentWallet={initialPaymentWallet}
       logo="/beanstock-logo.svg"
       logoAlt="Beanstock"
       logoHref="https://beanstocktrading.com"
       brandVariant="beanstock"
+      activeCampaign={serializeActiveCampaign(activeCampaign)}
     />
   )
 }

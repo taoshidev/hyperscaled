@@ -39,7 +39,10 @@ export default defineConfig({
   reporter: process.env.CI
     ? [["github"], ["html", { open: "never" }]]
     : [["list"], ["html", { open: "never" }]],
-  timeout: 120_000,
+  // Must stay comfortably above `navigationTimeout` below: a single cold
+  // navigation can consume most of the budget, and we still need room for
+  // the assertions that follow it.
+  timeout: 180_000,
   expect: { timeout: 10_000 },
   use: {
     baseURL: BASE_URL,
@@ -47,9 +50,16 @@ export default defineConfig({
     screenshot: "only-on-failure",
     video: "retain-on-failure",
     actionTimeout: 10_000,
-    // First cold compile of heavy routes (/dashboard, /register) under
-    // `next dev` regularly exceeds 30s when fonts + GA load as well.
-    navigationTimeout: 60_000,
+    // First cold compile of heavy routes under `next dev` (Turbopack) is
+    // slow because the whole route module graph + client bundle compiles
+    // on first request. In isolation /register-style routes take ~15-30s,
+    // but the per-tenant register routes (/bitcast/register, etc.) are only
+    // exercised by tenant-brands.spec.js, so they compile *last* in this
+    // serialized (workers:1) suite — and when the dev machine is also
+    // running other builds, that first navigation regularly blows past 60s.
+    // Locally `retries: 0`, so a single cold-compile timeout is a hard
+    // failure. Give the first navigation generous headroom instead.
+    navigationTimeout: 120_000,
   },
   projects: [
     {

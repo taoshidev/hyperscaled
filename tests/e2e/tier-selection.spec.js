@@ -27,11 +27,14 @@ function campaignAdjustedPrice(listPrice, accountSize, campaign) {
   }
 
   const dv = Number(campaign.discountValue);
-  const discountAmount =
+  const rawDiscount =
     campaign.discountType === "percent"
-      ? Math.round(((original * dv) / 100) * 100) / 100
+      ? (original * dv) / 100
       : Math.min(dv, original);
-  return Math.round(Math.max(0, original - discountAmount) * 100) / 100;
+  // Mirror computeCouponDiscount: the payable amount is rounded UP to a whole
+  // dollar for real ($1+) prices so the headline price is cents-free.
+  const centsFinal = Math.round(Math.max(0, original - rawDiscount) * 100) / 100;
+  return centsFinal >= 1 ? Math.ceil(centsFinal) : centsFinal;
 }
 
 // The cheapest spec in the suite: no DB writes, no wallet, no
