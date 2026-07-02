@@ -1,10 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const userMock = vi.fn();
+const getApplicantMock = vi.fn();
+const updateKycStatusMock = vi.fn();
 
 vi.mock("@/lib/sumsub.js", () => ({
   getUserByWallet: (...args) => userMock(...args),
+  getApplicant: (...args) => getApplicantMock(...args),
+  updateKycStatus: (...args) => updateKycStatusMock(...args),
 }));
+
+vi.mock("@/lib/errors", () => ({ reportError: vi.fn() }));
 
 const { GET } = await import("@/app/api/kyc/status/route.js");
 
@@ -18,6 +24,8 @@ function makeRequest(wallet) {
 
 beforeEach(() => {
   userMock.mockReset();
+  getApplicantMock.mockReset().mockResolvedValue(null);
+  updateKycStatusMock.mockReset().mockResolvedValue(1);
 });
 
 afterEach(() => {
@@ -88,5 +96,70 @@ describe("GET /api/kyc/status (public read)", () => {
     expect(res.status).toBe(500);
     const body = await res.json();
     expect(body.error).toMatch(/Internal/);
+  });
+
+  it("does not reconcile a non-pending status against SumSub", async () => {
+    userMock.mockResolvedValue({
+      wallet: A,
+      kycStatus: "approved",
+      kycVerifiedAt: new Date(),
+    });
+    await GET(makeRequest(A));
+    expect(getApplicantMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("GET /api/kyc/status — pending reconciliation fallback", () => {
+  beforeEach(() => {
+    userMock.mockResolvedValue({
+      wallet: A,
+      kycStatus: "pending",
+      kycVerifiedAt: null,
+    });
+  });
+
+  it("promotes to approved when SumSub reports a GREEN review (missed webhook)", async () => {
+    getApplicantMock.mockResolvedValue({
+      review: { reviewResult: { reviewAnswer: "GREEN" } },
+    });
+    const res = await GET(makeRequest(A));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.kycStatus).toBe("approved");
+    expect(body.verified).toBe(true);
+    expect(body.verifiedAt).not.toBeNull();
+    expect(updateKycStatusMock).toHaveBeenCalledWith(
+      A,
+      expect.objectContaining({ kycStatus: "approved" }),
+    );
+  });
+
+  it("moves to rejected when SumSub reports a RED review", async () => {
+    getApplicantMock.mockResolvedValue({
+      review: { reviewResult: { reviewAnswer: "RED", reviewRejectType: "FINAL" } },
+    });
+    const res = await GET(makeRequest(A));
+    const body = await res.json();
+    expect(body.kycStatus).toBe("rejected");
+    expect(body.verified).toBe(false);
+    expect(updateKycStatusMock).toHaveBeenCalledWith(A, { kycStatus: "rejected" });
+  });
+
+  it("stays pending when SumSub has no terminal result yet", async () => {
+    getApplicantMock.mockResolvedValue({
+      review: { reviewResult: {} },
+    });
+    const res = await GET(makeRequest(A));
+    const body = await res.json();
+    expect(body.kycStatus).toBe("pending");
+    expect(updateKycStatusMock).not.toHaveBeenCalled();
+  });
+
+  it("falls back to the stored 'pending' when the SumSub lookup fails", async () => {
+    getApplicantMock.mockRejectedValue(new Error("sumsub down"));
+    const res = await GET(makeRequest(A));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.kycStatus).toBe("pending");
   });
 });
