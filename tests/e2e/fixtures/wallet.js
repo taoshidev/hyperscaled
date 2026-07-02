@@ -19,3 +19,9 @@ export const E2E_MOCK_WALLET_ADDRESS =
 // match the connected wallet. Not connected anywhere — just a label.
 export const E2E_OTHER_WALLET_ADDRESS =
   "0x000000000000000000000000000000000000bEEF";
+
+// Deterministic SumSub webhook secret. `playwright.config.js` injects this into
+// the spawned dev server's env so `verifyWebhookSignature` (which reads
+// SUMSUB_WEBHOOK_SECRET) accepts the HMACs the webhook spec computes. Sharing
+// one constant keeps the runner and the server in sync.
+export const E2E_SUMSUB_WEBHOOK_SECRET = "e2e-sumsub-webhook-secret";

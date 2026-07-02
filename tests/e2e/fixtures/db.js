@@ -195,6 +195,52 @@ export async function seedRegistration({
 }
 
 /**
+ * Seed (or upsert) a bare `users` row with a known KYC state. The KYC webhook
+ * spec needs a wallet-keyed user to mutate; unlike `seedRegistration` it does
+ * not create any registration rows.
+ */
+export async function seedUser({
+  wallet,
+  kycStatus = "pending",
+  kycApplicantId = null,
+  kycVerifiedAt = null,
+}) {
+  const lower = String(wallet).toLowerCase();
+  const { rows } = await getPool().query(
+    `INSERT INTO users (wallet, kyc_status, kyc_applicant_id, kyc_verified_at)
+     VALUES ($1, $2, $3, $4)
+     ON CONFLICT (wallet) DO UPDATE SET
+       kyc_status = EXCLUDED.kyc_status,
+       kyc_applicant_id = EXCLUDED.kyc_applicant_id,
+       kyc_verified_at = EXCLUDED.kyc_verified_at,
+       updated_at = now()
+     RETURNING id`,
+    [lower, kycStatus, kycApplicantId, kycVerifiedAt],
+  );
+  return rows[0].id;
+}
+
+/**
+ * Read back the KYC-relevant columns for a wallet, or null if there's no row.
+ */
+export async function getUserKyc(wallet) {
+  const lower = String(wallet).toLowerCase();
+  const { rows } = await getPool().query(
+    `SELECT wallet, kyc_status, kyc_applicant_id, kyc_verified_at
+       FROM users WHERE LOWER(wallet) = $1 LIMIT 1`,
+    [lower],
+  );
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    wallet: row.wallet,
+    kycStatus: row.kyc_status,
+    kycApplicantId: row.kyc_applicant_id,
+    kycVerifiedAt: row.kyc_verified_at,
+  };
+}
+
+/**
  * Insert (or replace) a coupon row keyed by `code`. Used by E2E specs that
  * need a deterministic coupon to apply at checkout — e.g. verifying the
  * order summary stays stable across email edits when a 100% off promo is

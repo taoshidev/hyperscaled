@@ -23,6 +23,18 @@ const nextConfig = {
     "@google-cloud/cloud-sql-connector",
     "google-auth-library",
   ],
+  // Belt-and-suspenders for the externalized Cloud SQL packages: force NFT to
+  // copy them into the API function bundles. Static imports in lib/db already
+  // make tracing deterministic, but under pnpm's symlinked layout the copy step
+  // has still intermittently dropped them ("Cannot find package
+  // '@google-cloud/cloud-sql-connector'"). Scoped to /api/** (never '/*', which
+  // bloats every function's trace) — these packages are only used server-side.
+  outputFileTracingIncludes: {
+    "/api/**": [
+      "./node_modules/.pnpm/@google-cloud+cloud-sql-connector@*/node_modules/@google-cloud/cloud-sql-connector/**",
+      "./node_modules/.pnpm/google-auth-library@*/node_modules/google-auth-library/**",
+    ],
+  },
   webpack: (config, { isServer }) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,

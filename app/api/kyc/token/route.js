@@ -9,6 +9,8 @@ import {
   generateAccessToken,
   updateKycStatus,
   getAuthorizedWalletsForHlAddress,
+  resetApplicant,
+  isApplicantFinalRejected,
 } from "@/lib/sumsub";
 
 export async function POST(request) {
@@ -59,6 +61,14 @@ export async function POST(request) {
 
     // Check if applicant already exists in SumSub
     let applicant = await getApplicant(externalUserId);
+
+    // A terminal (FINAL) rejection is sticky: without a reset the SDK would
+    // immediately show "couldn't verify you" on every retry. Reset so the
+    // user can re-submit, and move the local status back to pending.
+    if (applicant && isApplicantFinalRejected(applicant)) {
+      await resetApplicant(applicant.id);
+      await updateKycStatus(wallet, { kycStatus: "pending" });
+    }
 
     if (!applicant) {
       applicant = await createApplicant(externalUserId, user.email);
