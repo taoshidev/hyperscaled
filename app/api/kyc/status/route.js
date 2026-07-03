@@ -1,8 +1,43 @@
 import { NextResponse } from "next/server";
 
 import { isValidEvmAddress } from "@/lib/validation";
-import { getUserByWallet } from "@/lib/sumsub";
+import {
+  getUserByWallet,
+  getApplicant,
+  updateKycStatus,
+} from "@/lib/sumsub";
 import { reportError } from "@/lib/errors";
+
+/**
+ * Best-effort reconciliation for users stuck on `pending`: if a review webhook
+ * was missed (e.g. transient DB outage), pull the live applicant review from
+ * SumSub and persist any terminal result. Returns the reconciled fields, or
+ * null to keep the stored value. Never throws — a read must not depend on
+ * SumSub being reachable.
+ */
+async function reconcilePendingKyc(wallet) {
+  try {
+    const applicant = await getApplicant(wallet.toLowerCase());
+    const result =
+      applicant?.review?.reviewResult ?? applicant?.reviewResult ?? null;
+    const answer = result?.reviewAnswer;
+    if (answer === "GREEN") {
+      const kycVerifiedAt = new Date();
+      await updateKycStatus(wallet, { kycStatus: "approved", kycVerifiedAt });
+      return { kycStatus: "approved", kycVerifiedAt };
+    }
+    if (answer === "RED") {
+      await updateKycStatus(wallet, { kycStatus: "rejected" });
+      return { kycStatus: "rejected", kycVerifiedAt: null };
+    }
+  } catch (err) {
+    reportError(err, {
+      source: "api/kyc/status",
+      metadata: { step: "reconcile" },
+    });
+  }
+  return null;
+}
 
 /**
  * GET /api/kyc/status?wallet=0x…
@@ -40,11 +75,22 @@ export async function GET(request) {
       });
     }
 
+    let kycStatus = user.kycStatus;
+    let verifiedAt = user.kycVerifiedAt;
+
+    if (kycStatus === "pending") {
+      const reconciled = await reconcilePendingKyc(user.wallet);
+      if (reconciled) {
+        kycStatus = reconciled.kycStatus;
+        verifiedAt = reconciled.kycVerifiedAt;
+      }
+    }
+
     return NextResponse.json({
       wallet: user.wallet,
-      kycStatus: user.kycStatus,
-      verified: user.kycStatus === "approved",
-      verifiedAt: user.kycVerifiedAt,
+      kycStatus,
+      verified: kycStatus === "approved",
+      verifiedAt,
     });
   } catch (err) {
     reportError(err, { source: "api/kyc/status" });

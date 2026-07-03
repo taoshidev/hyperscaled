@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 import { loadEnvConfig } from "@next/env";
+import { E2E_SUMSUB_WEBHOOK_SECRET } from "./tests/e2e/fixtures/wallet.js";
 
 // Load `.env`, `.env.local`, etc. into the Playwright runner's
 // `process.env` BEFORE we read any of them below. This is the same
@@ -120,6 +121,9 @@ export default defineConfig({
           // not disable the free tier or swap pricing CTAs for "sold out" UI.
           REGISTRATION_FREE_MAX: "",
           REGISTRATION_PAID_MAX: "",
+          // Deterministic secret so the KYC webhook spec can forge valid SumSub
+          // HMAC signatures (kyc-webhook.spec.js signs with the same constant).
+          SUMSUB_WEBHOOK_SECRET: E2E_SUMSUB_WEBHOOK_SECRET,
         },
       },
 });
