@@ -70,7 +70,6 @@ export default function NetworkStats() {
     { label: 'Traders', value: fmt(s.totalTraders || 0), color: 'text-white' },
     { label: 'Active Funded', value: fmt(s.fundedTraders || 0), color: 'text-blue-400' },
     { label: 'In Challenge', value: fmt(s.inChallenge || 0), color: 'text-amber-400' },
-    { label: 'Eliminated', value: fmt(s.eliminated || 0), color: 'text-red-400' },
     { label: 'Network Volume', value: fmtCompact(s.totalVolume || 0), color: 'text-white' },
   ]
 
@@ -101,7 +100,7 @@ export default function NetworkStats() {
           </div>
 
           {/* Stat tiles */}
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
             {stats.map((st) => (
               <div
                 key={st.label}
