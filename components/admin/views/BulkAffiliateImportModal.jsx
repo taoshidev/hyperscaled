@@ -94,7 +94,6 @@ const initialPromo = () => ({
   useType: "unlimited",
   maxUses: "",
   validFrom: todayISODate(),
-  validUntil: "",
   notes: "",
   batchLabel: "",
 });
@@ -248,7 +247,8 @@ export function BulkAffiliateImportModal({
       useType: promo.useType,
       maxUses: promo.useType === "multi_use" ? Number(promo.maxUses) : null,
       validFrom: promo.validFrom ? new Date(promo.validFrom).toISOString() : null,
-      validUntil: promo.validUntil ? new Date(promo.validUntil).toISOString() : null,
+      // Affiliate codes are evergreen — never stamp an expiry on a bulk import.
+      validUntil: null,
       notes: promo.notes ? promo.notes.trim() : null,
       batchLabel: promo.batchLabel ? promo.batchLabel.trim() : null,
     };
@@ -749,13 +749,16 @@ function ConfigurePane({
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-zinc-300">Valid until (optional)</Label>
-            <input
-              type="date"
-              value={promo.validUntil}
-              onChange={(e) => setPromo({ ...promo, validUntil: e.target.value })}
-              className={cn(fieldClass, "date-field relative")}
-            />
+            <Label className="text-zinc-300">Valid until</Label>
+            <div
+              className={cn(fieldClass, "items-center text-zinc-400 select-none")}
+            >
+              Never expires
+            </div>
+            <p className="text-xs text-zinc-500">
+              Affiliate codes never expire. To end a cohort later, filter by its
+              batch label and bulk-edit the end date.
+            </p>
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
