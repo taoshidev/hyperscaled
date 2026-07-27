@@ -257,7 +257,7 @@ export function BuilderCodeForm() {
       setSignState("error");
     } finally {
       if (previousChainId && previousChainId !== HL_SIGNING_CHAIN_ID) {
-        switchChainAsync({ chainId: previousChainId }).catch(() => {});
+        await switchChainAsync({ chainId: previousChainId }).catch(() => {});
       }
     }
   }, [

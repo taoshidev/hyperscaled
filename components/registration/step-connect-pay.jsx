@@ -1392,7 +1392,7 @@ export function StepConnectAndPay({
         // Step 3 — Switch back to Base regardless of signing outcome
         if (previousChainId && previousChainId !== HL_SIGNING_CHAIN_ID) {
           console.info("[REGISTRATION] EIP-712: switching chain back", { to: previousChainId });
-          switchChainAsync({ chainId: previousChainId }).catch((err) => {
+          await switchChainAsync({ chainId: previousChainId }).catch((err) => {
             console.warn("[REGISTRATION] EIP-712: switch-back failed (non-fatal)", { error: err?.message });
           });
         }
@@ -1735,7 +1735,7 @@ export function StepConnectAndPay({
         });
         console.info("[REGISTRATION] Free: builder fee approval", builderFeeResult);
         if (previousChainId && previousChainId !== HL_SIGNING_CHAIN_ID) {
-          switchChainAsync({ chainId: previousChainId }).catch(() => {});
+          await switchChainAsync({ chainId: previousChainId }).catch(() => {});
         }
       }
 
