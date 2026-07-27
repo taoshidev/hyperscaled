@@ -334,6 +334,21 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
           </div>
         </div>
 
+        {/* Onboarding video — Hyperstack only */}
+        {brand.id === "bitcast" && (
+          <div className="w-full mt-8">
+            <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-black">
+              <video
+                className="block h-auto w-full"
+                src="/hyperstack-onboarding.mp4"
+                controls
+                playsInline
+                preload="metadata"
+              />
+            </div>
+          </div>
+        )}
+
         {/* Extension CTA — first content block */}
         <div className="w-full mt-8">
           {extensionDetected ? (
