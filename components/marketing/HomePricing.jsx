@@ -9,7 +9,7 @@ import { useBrand, useBrandHref } from '@/lib/brand'
 import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
 import { useRegistrationCapacity } from '@/hooks/use-registration-capacity'
-import { isFreeTierForRegistration } from '@/lib/registration-tier-helpers'
+import { isFreeTierForRegistration, freeTierBadgeLabel } from '@/lib/registration-tier-helpers'
 import { RegistrationCapacityWaitlist } from '@/components/marketing/RegistrationCapacityWaitlist'
 import { capacityMinerSlugForBrandId } from '@/lib/capacity-miner-slug'
 
@@ -19,7 +19,7 @@ const TIER_LABELS = { 'free': 'Free', 'tier-1': 'Starter', 'tier-2': 'Tier I', '
 
 function tierBadge(tier, freeTierCap, freeSoldOut) {
   if (tier.popular) return 'Most Popular'
-  if (tier.id === 'free') return freeSoldOut ? 'Sold Out' : `Only ${freeTierCap.toLocaleString()} Available`
+  if (tier.id === 'free') return freeTierBadgeLabel(freeSoldOut, freeTierCap)
   return null
 }
 
@@ -49,11 +49,11 @@ function PricingCard({ tier, index, brandHref, withQS, freeAtCapacity, paidAtCap
       }`}
     >
       {/* Badge — Most Popular or Try for Free */}
-      {tierBadge(tier, brand.freeTierCap, free && brand.id === 'bitcast') && (
+      {tierBadge(tier, brand.freeTierCap, free && freeAtCapacity) && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="inline-flex items-center gap-1 bg-teal-400 text-[#09090b] text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full">
             <Star size={12} weight="fill" />
-            {tierBadge(tier, brand.freeTierCap, free && brand.id === 'bitcast')}
+            {tierBadge(tier, brand.freeTierCap, free && freeAtCapacity)}
           </span>
         </div>
       )}
