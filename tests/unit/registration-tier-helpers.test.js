@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  freeTierBadgeLabel,
   isFreeTierForRegistration,
   tierBlockedForCaps,
 } from "@/lib/registration-tier-helpers.js";
@@ -20,5 +21,11 @@ describe("registration-tier-helpers", () => {
     expect(tierBlockedForCaps(free, false, true)).toBe(false);
     expect(tierBlockedForCaps(paid, false, true)).toBe(true);
     expect(tierBlockedForCaps(paid, true, false)).toBe(false);
+  });
+
+  it("freeTierBadgeLabel shows Sold Out only when actually at capacity", () => {
+    expect(freeTierBadgeLabel(true, 200)).toBe("Sold Out");
+    expect(freeTierBadgeLabel(false, 200)).toBe("Only 200 Available");
+    expect(freeTierBadgeLabel(false, 1000)).toBe("Only 1,000 Available");
   });
 });

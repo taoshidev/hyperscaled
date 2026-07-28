@@ -5,7 +5,7 @@ import { Check, ArrowRight, Star, ArrowUpRight } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { useBrand } from "@/lib/brand";
 import { HubspotWaitlistBanner } from "@/components/registration/HubspotWaitlistBanner";
-import { isFreeTierForRegistration } from "@/lib/registration-tier-helpers";
+import { isFreeTierForRegistration, freeTierBadgeLabel } from "@/lib/registration-tier-helpers";
 
 function isFreeTier(tier) {
   return isFreeTierForRegistration(tier);
@@ -182,9 +182,7 @@ export function StepSelectTier({
               // Free-tier availability cap is brand-specific (brand.freeTierCap).
               const displayBadge =
                 tierIsFree && tier.badge
-                  ? tierIsFree && brand.id === 'bitcast'
-                    ? 'Sold Out'
-                    : `Only ${brand.freeTierCap.toLocaleString()} Available`
+                  ? freeTierBadgeLabel(freeAtCapacity, brand.freeTierCap)
                   : tier.badge;
               const isSoldOut =
                 (tierIsFree && freeAtCapacity) ||
