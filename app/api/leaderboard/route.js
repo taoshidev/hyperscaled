@@ -56,10 +56,10 @@ export async function GET(request) {
 
     const data = await res.json();
 
-    // Index registrations by lowercased hl_address so we can enrich validator
-    // traders (and backfill missing ones) from our own signup record: the
-    // registered account size as `funding`, and the registration date as
-    // `sinceDate` — a real full date the validator's month+year string lacks.
+    // Index registrations by lowercased hl_address. Our signup record is the
+    // source of truth for which accounts belong on the board, and it also
+    // supplies the registered account size as `funding` and the registration
+    // date as `sinceDate` — a real full date the validator's month+year lacks.
     // Rows are ordered by created_at above, so the first seen per address is the
     // earliest registration.
     const regsByAddr = new Map();
@@ -69,19 +69,27 @@ export async function GET(request) {
       if (!regsByAddr.has(key)) regsByAddr.set(key, r);
     }
 
-    const enrichFromRegistration = (traders) =>
-      (traders || []).map((t) => {
-        const reg = regsByAddr.get((t.address || t.addr || "").toLowerCase());
-        if (!reg) return t;
-        return {
-          ...t,
-          funding: t.funding != null ? t.funding : reg.accountSize,
-          sinceDate: reg.createdAt ? new Date(reg.createdAt).toISOString() : t.sinceDate,
-        };
-      });
+    // Anchor the board to our registrations: keep only validator traders we have
+    // a signup record for, and drop the rest (idle/orphan subaccounts on the
+    // validator with no registration — e.g. cohorts we've removed). A freshly
+    // onboarded account still shows because it has a registration, even with
+    // zero trades. Kept rows are enriched with our funding + registration date.
+    const enrichAndFilter = (traders) =>
+      (traders || [])
+        .map((t) => {
+          const reg = regsByAddr.get((t.address || t.addr || "").toLowerCase());
+          if (!reg) return null;
+          return {
+            ...t,
+            funding: t.funding != null ? t.funding : reg.accountSize,
+            sinceDate: reg.createdAt ? new Date(reg.createdAt).toISOString() : t.sinceDate,
+          };
+        })
+        .filter(Boolean);
 
-    data.fundedTraders = enrichFromRegistration(data.fundedTraders);
-    data.challengeTraders = enrichFromRegistration(data.challengeTraders);
+    data.fundedTraders = enrichAndFilter(data.fundedTraders);
+    data.challengeTraders = enrichAndFilter(data.challengeTraders);
+    if (data.summary) data.summary.fundedTraders = data.fundedTraders.length;
 
     const knownAddresses = new Set([
       ...(data.fundedTraders || []).map((t) => (t.address || t.addr || "").toLowerCase()),
@@ -113,6 +121,9 @@ export async function GET(request) {
     data.challengeTraders = [...(data.challengeTraders || []), ...missingTraders];
     if (data.summary) {
       data.summary.inChallenge = data.challengeTraders.length;
+      // Keep the "Traders" tile consistent with the now-filtered board.
+      data.summary.totalTraders =
+        (data.fundedTraders?.length || 0) + data.challengeTraders.length;
     }
 
     return NextResponse.json(data, { status: 200 });
