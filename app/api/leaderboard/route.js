@@ -42,6 +42,7 @@ export async function GET(request) {
           db.select({ hlAddress: registrations.hlAddress, accountSize: registrations.accountSize, createdAt: registrations.createdAt })
             .from(registrations)
             .where(regsWhere)
+            .orderBy(registrations.createdAt)
         )
         .catch(() => []),
     ]);
@@ -55,9 +56,12 @@ export async function GET(request) {
 
     const data = await res.json();
 
-    // Index registrations by lowercased hl_address so we can enrich
-    // validator traders (and backfill missing ones) with the registered
-    // account size as `funding`.
+    // Index registrations by lowercased hl_address so we can enrich validator
+    // traders (and backfill missing ones) from our own signup record: the
+    // registered account size as `funding`, and the registration date as
+    // `sinceDate` — a real full date the validator's month+year string lacks.
+    // Rows are ordered by created_at above, so the first seen per address is the
+    // earliest registration.
     const regsByAddr = new Map();
     for (const r of dbRegs) {
       if (!r.hlAddress) continue;
@@ -65,15 +69,19 @@ export async function GET(request) {
       if (!regsByAddr.has(key)) regsByAddr.set(key, r);
     }
 
-    const enrichWithFunding = (traders) =>
+    const enrichFromRegistration = (traders) =>
       (traders || []).map((t) => {
-        if (t.funding != null) return t;
         const reg = regsByAddr.get((t.address || t.addr || "").toLowerCase());
-        return reg ? { ...t, funding: reg.accountSize } : t;
+        if (!reg) return t;
+        return {
+          ...t,
+          funding: t.funding != null ? t.funding : reg.accountSize,
+          sinceDate: reg.createdAt ? new Date(reg.createdAt).toISOString() : t.sinceDate,
+        };
       });
 
-    data.fundedTraders = enrichWithFunding(data.fundedTraders);
-    data.challengeTraders = enrichWithFunding(data.challengeTraders);
+    data.fundedTraders = enrichFromRegistration(data.fundedTraders);
+    data.challengeTraders = enrichFromRegistration(data.challengeTraders);
 
     const knownAddresses = new Set([
       ...(data.fundedTraders || []).map((t) => (t.address || t.addr || "").toLowerCase()),
@@ -84,7 +92,8 @@ export async function GET(request) {
       .filter((r) => r.hlAddress && !knownAddresses.has(r.hlAddress.toLowerCase()))
       .map((r) => {
         const d = new Date(r.createdAt);
-        const since = d.toLocaleString("en-US", { month: "short", year: "numeric" });
+        const since = d.toLocaleString("en-US", { year: "numeric", month: "short", day: "numeric" });
+        const sinceDate = d.toISOString();
         return {
           address: r.hlAddress,
           pnl: null,
@@ -96,6 +105,7 @@ export async function GET(request) {
           volume: 0,
           drawdown: null,
           since,
+          sinceDate,
           noTrades: true,
         };
       });

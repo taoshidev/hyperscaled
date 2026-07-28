@@ -23,6 +23,20 @@ function fmtCompact(n) {
   if (n >= 1_000_000) return '$' + (n / 1_000_000).toFixed(0) + 'M+'
   return fmtUSD(n)
 }
+// SINCE column: prefer an explicit raw date from the API (ISO `sinceDate` or
+// epoch `sinceTs`) and render it in full ("Jun 12, 2026"); otherwise fall back
+// to whatever the validator already sent pre-formatted ("Jun 2026"). We never
+// parse the pre-formatted string ourselves — that would invent a day-of-month.
+function formatSince(row) {
+  const raw = row?.sinceDate ?? row?.sinceTs
+  if (raw != null) {
+    const d = new Date(raw)
+    if (!Number.isNaN(d.getTime())) {
+      return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+    }
+  }
+  return row?.since || row?.registered || '--'
+}
 
 export default function Leaderboard({ initialSearch = '' }) {
   const brand = useBrand()
@@ -266,7 +280,7 @@ export default function Leaderboard({ initialSearch = '' }) {
                           <td className="px-4 py-3 text-sm text-zinc-300">{fmt(t.trades || 0)}</td>
                           <td className={`px-4 py-3 text-sm ${(t.winRate || 0) >= 60 ? 'text-teal-400' : 'text-white'}`}>{t.winRate != null ? `${t.winRate}%` : '--'}</td>
                           <td className="px-4 py-3 text-sm text-teal-400">{fmtUSD(t.payouts || 0)}</td>
-                          <td className="px-4 py-3 text-xs text-zinc-500">{t.since || t.registered || '--'}</td>
+                          <td className="px-4 py-3 text-xs text-zinc-500">{formatSince(t)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -314,7 +328,7 @@ export default function Leaderboard({ initialSearch = '' }) {
                             <td className="px-4 py-3 text-sm text-zinc-300">
                               {noTrades ? '--' : t.drawdown != null ? `${t.drawdown.toFixed(1)}%` : '0.0%'}
                             </td>
-                            <td className="px-4 py-3 text-xs text-zinc-500">{t.since || t.registered || '--'}</td>
+                            <td className="px-4 py-3 text-xs text-zinc-500">{formatSince(t)}</td>
                           </tr>
                         )
                       })}
