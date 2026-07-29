@@ -4,6 +4,7 @@ import Hero from './marketing/Hero'
 import HowItWorks from './marketing/HowItWorks'
 import HomePricing from './marketing/HomePricing'
 import VideoSection from './marketing/VideoSection'
+import NetworkStats from './marketing/NetworkStats'
 import Features from './marketing/Features'
 import Solution from './marketing/Solution'
 import Problem from './marketing/Problem'
@@ -18,6 +19,7 @@ export default function App({ tiers, activeCampaign = null }) {
   return (
     <>
       <Hero activeCampaign={activeCampaign} />
+      {brand.id === 'bitcast' && <NetworkStats />}
       <HowItWorks tiers={resolvedTiers} />
       {brand.homeVideo && <VideoSection video={brand.homeVideo} />}
       <HomePricing tiers={resolvedTiers} />
