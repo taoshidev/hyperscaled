@@ -337,13 +337,18 @@ export function StepConfirmation({ selectedTier, hlAddress, txHash, registration
         {/* Onboarding video — Hyperstack only */}
         {brand.id === "bitcast" && (
           <div className="w-full mt-8">
-            <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-black">
-              <video
-                className="block h-auto w-full"
-                src="/hyperstack-onboarding.mp4"
-                controls
-                playsInline
-                preload="metadata"
+            <h3 className="text-lg font-bold tracking-tight text-foreground text-center text-balance mb-4">
+              Watch This For Next Steps
+            </h3>
+            <div className="relative w-full aspect-video overflow-hidden rounded-2xl border border-white/[0.08] bg-black">
+              <iframe
+                className="absolute inset-0 h-full w-full"
+                src="https://www.youtube-nocookie.com/embed/3jhJRgqNSKg"
+                title="Watch This For Next Steps"
+                loading="lazy"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
               />
             </div>
           </div>
