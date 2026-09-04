@@ -336,3 +336,12 @@ Last updated: 2026-04-22
 | Phase notes | Done |
 
 **Next action**: Polish pass next
+
+## Command Center (`/command-center`)
+**Status**: Operational — Registrations page added 2026-09-04
+
+| Item | State |
+|------|-------|
+| Registrations (`/command-center/registrations`) | Done — lists `pending`/`failed` registrations with the miner's last error; "Retry all pending" + per-row Retry re-send `create-hl-subaccount` via `lib/registrations/retry-pending.js` (shared with `/api/register/retry`). Pending rows only; `failed` rows are read-only for admin review. |
+| Concurrency guards | Done — one run at a time via `pg_try_advisory_xact_lock` (second caller gets "already in progress"); every status write is compare-and-set on `status='pending'` so an overlapping run can never flip a provisioned row to `failed`; per-miner fetch timeout, least-recently-tried ordering, per-row DB error isolation. |
+| Scheduled retry | Done — `vercel.json` cron hits `GET /api/register/retry` every 15 min with `CRON_SECRET`; route also accepts `RETRY_SECRET` for manual calls. |

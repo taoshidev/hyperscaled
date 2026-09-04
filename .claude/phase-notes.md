@@ -740,3 +740,11 @@ Polish pass next.
 - VANTA_USDC_WALLET exposed as NEXT_PUBLIC env var with zero-address default
 - Confirmation step passes currentStep=3 to stepper to show all steps as complete
 - Registration nav bar: logo (links home) + "Exit" ghost button (links home), replaces centered branding
+
+## Session 22 — 2026-09-04 — Command Center: Registrations retry
+- New `/command-center/registrations` page (pending + failed rows, last miner error, tx link to Hyperliquid or Basescan by payment method). Nav entry first in the sidebar.
+- Retry logic extracted to `lib/registrations/retry-pending.js` (time-budgeted, oldest-first, optional `ids` filter, injectable fetch/clock). `/api/register/retry` is a thin wrapper: GET + POST, bearer `RETRY_SECRET` or `CRON_SECRET`. Server action `retryRegistrations` in `app/actions/registrations.js` is staff-gated.
+- UI retries `pending` rows only; `failed` rows (already registered at miner) stay read-only for admin review.
+- `vercel.json` cron: `/api/register/retry` every 15 min (Vercel sends GET with `CRON_SECRET`).
+- Pure UI text helpers live in `lib/registrations/retry-result-text.js` so client components never import drizzle/errors.
+- Adversarial review found the cron/button overlap could mark a provisioned row `failed` (miner duplicate guard). Fixed with an advisory-lock mutex per run + compare-and-set status writes (`inArray(status, [...])` + `returning`), `statusDetail` merge (keeps `paymentMethod`), 15s miner fetch timeout, `updated_at` ordering, per-row DB-error isolation, id validation caps.

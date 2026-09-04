@@ -1,10 +1,8 @@
 import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
-import { registrations, entityMiners } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { reportError, reportCritical, reportWarning } from "@/lib/errors";
-import { parseErrorBody } from "@/lib/parse-error-body";
+import { reportCritical, reportWarning } from "@/lib/errors";
+import { RETRY_ALREADY_RUNNING, retryPendingRegistrations } from "@/lib/registrations/retry-pending";
 
 function timingSafeEqual(a, b) {
   const bufA = Buffer.from(a);
@@ -17,48 +15,39 @@ function timingSafeEqual(a, b) {
   return crypto.timingSafeEqual(bufA, bufB);
 }
 
-function sanitizeApiKey(key) {
-  if (key == null) return null;
-  const t = String(key)
-    .trim()
-    .replace(/[\u200B-\u200D\uFEFF]/g, "");
-  return t || null;
-}
-
-function resolveMinerApiKey(miner) {
-  const fromDb = sanitizeApiKey(miner.apiKey);
-  if (fromDb) return fromDb;
-  const slugEnv = `ENTITY_MINER_API_KEY_${miner.slug.replace(/-/g, "_").toUpperCase()}`;
-  return sanitizeApiKey(process.env[slugEnv]) || sanitizeApiKey(process.env.ENTITY_MINER_API_KEY) || null;
-}
-
-async function postCreateHlSubaccount(baseUrl, payload, apiKey) {
-  const headers = { "Content-Type": "application/json" };
-  if (apiKey) {
-    headers.Authorization = `Bearer ${apiKey}`;
+/**
+ * The route accepts either bearer:
+ *   - RETRY_SECRET — manual / CLI invocations
+ *   - CRON_SECRET  — Vercel injects it on every cron invocation (see vercel.json)
+ * Both are compared in constant time; an empty/unset secret never matches.
+ */
+function isAuthorized(authHeader) {
+  const presented = authHeader?.replace(/^Bearer\s+/i, "") || "";
+  const secrets = [process.env.RETRY_SECRET, process.env.CRON_SECRET].filter(Boolean);
+  // Always run the comparison for every configured secret so the response
+  // time does not reveal which one matched.
+  let ok = false;
+  for (const secret of secrets) {
+    if (timingSafeEqual(secret, presented)) ok = true;
   }
-  return fetch(`${baseUrl}/api/create-hl-subaccount`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(payload),
-  });
+  return ok;
 }
 
 /**
- * POST /api/register/retry
+ * POST|GET /api/register/retry
  *
- * Retries all pending registrations by calling the miner API again.
- * Protected by a shared secret (RETRY_SECRET env var) so only cron jobs
- * or admins can trigger it.
+ * Retries all `pending` registrations by calling the miner API again.
+ * GET exists because Vercel cron jobs issue GET requests; POST is kept for
+ * scripts and the README-documented manual invocation. The shared
+ * implementation lives in `lib/registrations/retry-pending.js` and is also
+ * used by the Command Center Registrations page.
  */
-export async function POST(request) {
-  const db = await getDb();
+async function handle(request, trigger) {
   const reqId = Math.random().toString(36).slice(2, 10);
-  console.info("[REGISTRATION][retry] POST /api/register/retry received", { reqId });
+  console.info(`[REGISTRATION][retry] ${request.method} /api/register/retry received`, { reqId, trigger });
 
-  const retrySecret = process.env.RETRY_SECRET;
-  if (!retrySecret) {
-    console.error("[REGISTRATION][retry] RETRY_SECRET not configured", { reqId });
+  if (!process.env.RETRY_SECRET && !process.env.CRON_SECRET) {
+    console.error("[REGISTRATION][retry] RETRY_SECRET / CRON_SECRET not configured", { reqId });
     reportCritical(new Error("retry_secret_missing"), {
       source: "api/register/retry",
       metadata: { step: "config_missing", reqId },
@@ -67,7 +56,7 @@ export async function POST(request) {
   }
 
   const auth = request.headers.get("authorization");
-  if (!timingSafeEqual(retrySecret, auth?.replace(/^Bearer\s+/i, "") || "")) {
+  if (!isAuthorized(auth)) {
     console.warn("[REGISTRATION][retry] unauthorized", { reqId, hasAuth: Boolean(auth) });
     reportWarning("retry_unauthorized", {
       source: "api/register/retry",
@@ -76,189 +65,33 @@ export async function POST(request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let pending;
-  try {
-    pending = await db
-      .select()
-      .from(registrations)
-      .where(eq(registrations.status, "pending"));
-  } catch (err) {
-    reportCritical(err, {
-      source: "api/register/retry",
-      metadata: { step: "load_pending_registrations", reqId },
-    });
-    return NextResponse.json({ error: "Failed to load pending registrations" }, { status: 500 });
-  }
-
-  console.info("[REGISTRATION][retry] pending count", { reqId, pendingCount: pending.length });
-
-  if (pending.length === 0) {
-    return NextResponse.json({ retried: 0, results: [] });
-  }
-
-  // Batch-load all miners we need
-  const hotkeySet = [...new Set(pending.map((r) => r.minerHotkey))];
-  const miners = {};
-  for (const hotkey of hotkeySet) {
-    try {
-      const [miner] = await db
-        .select()
-        .from(entityMiners)
-        .where(eq(entityMiners.hotkey, hotkey))
-        .limit(1);
-      if (miner) miners[hotkey] = miner;
-    } catch (err) {
-      reportError(err, {
-        source: "api/register/retry",
-        metadata: { step: "load_miner", reqId, hotkey },
-      });
-    }
-  }
-
-  const results = [];
-
-  for (const reg of pending) {
-    const miner = miners[reg.minerHotkey];
-    if (!miner || !miner.apiUrl) {
-      console.warn("[REGISTRATION][retry] skipping — miner has no apiUrl", {
-        reqId,
-        regId: reg.id,
-        minerHotkey: reg.minerHotkey,
-      });
-      results.push({ id: reg.id, status: "skipped", reason: "no_miner_api" });
-      continue;
-    }
-
-    try {
-      const apiKey = resolveMinerApiKey(miner);
-      const baseUrl = miner.apiUrl.replace(/\/+$/, "");
-      console.info("[REGISTRATION][retry] calling miner API", {
-        reqId,
-        regId: reg.id,
-        baseUrl,
-        hlAddress: reg.hlAddress,
-        hasApiKey: Boolean(apiKey),
-      });
-      const res = await postCreateHlSubaccount(
-        baseUrl,
-        {
-          hl_address: reg.hlAddress,
-          account_size: reg.accountSize,
-          payout_address: reg.payoutAddress,
-        },
-        apiKey,
-      );
-
-      if (res.ok) {
-        const minerResponseBody = await res.json().catch((err) => {
-          console.warn("[REGISTRATION][retry] miner API returned 200 with unparseable JSON body", {
-            reqId,
-            regId: reg.id,
-            error: err?.message,
-          });
-          return null;
-        });
-        await db
-          .update(registrations)
-          .set({
-            status: "registered",
-            statusDetail: null,
-            metadata: minerResponseBody,
-            updatedAt: new Date(),
-          })
-          .where(eq(registrations.id, reg.id));
-        console.info("[REGISTRATION][retry] marked registered", { reqId, regId: reg.id });
-        results.push({ id: reg.id, status: "registered" });
-      } else {
-        const errText = await res.text().catch(() => "");
-        // Miner-side duplicate guard. Don't silently re-attribute a
-        // pre-existing subaccount to this row's user/payment — terminate
-        // the retry loop and surface to admin for refund/investigation.
-        if (res.status === 400 && errText.includes("already registered to subaccount")) {
-          const detail = {
-            reason: "already_registered_at_miner",
-            apiStatus: res.status,
-            error: parseErrorBody(errText),
-          };
-          await db
-            .update(registrations)
-            .set({ status: "failed", statusDetail: detail, updatedAt: new Date() })
-            .where(eq(registrations.id, reg.id));
-          console.warn("[REGISTRATION][retry] miner reports address already registered — marking failed for admin review", {
-            reqId,
-            regId: reg.id,
-            hlAddress: reg.hlAddress,
-          });
-          reportError(new Error("retry_already_registered_at_miner"), {
-            source: "api/register/retry",
-            metadata: {
-              step: "already_registered_at_miner",
-              reqId,
-              regId: reg.id,
-              minerHotkey: reg.minerHotkey,
-              hlAddress: reg.hlAddress,
-              errText: errText.slice(0, 500),
-            },
-          });
-          results.push({ id: reg.id, status: "failed", reason: "already_registered_at_miner" });
-          continue;
-        }
-        const detail = { reason: "miner_api_error", error: parseErrorBody(errText), apiStatus: res.status };
-        await db
-          .update(registrations)
-          .set({ statusDetail: detail, updatedAt: new Date() })
-          .where(eq(registrations.id, reg.id));
-        console.warn("[REGISTRATION][retry] still pending — miner API error", {
-          reqId,
-          regId: reg.id,
-          apiStatus: res.status,
-          errText: errText.slice(0, 300),
-        });
-        reportError(new Error("retry_miner_api_error"), {
-          source: "api/register/retry",
-          metadata: {
-            step: "miner_api_error",
-            reqId,
-            regId: reg.id,
-            minerHotkey: reg.minerHotkey,
-            hlAddress: reg.hlAddress,
-            apiStatus: res.status,
-            errText: errText.slice(0, 500),
-          },
-        });
-        results.push({ id: reg.id, status: "still_pending", apiStatus: res.status });
-      }
-    } catch (err) {
-      const detail = { reason: "miner_api_unreachable", error: err.message };
-      await db
-        .update(registrations)
-        .set({ statusDetail: detail, updatedAt: new Date() })
-        .where(eq(registrations.id, reg.id));
-      console.error("[REGISTRATION][retry] miner API unreachable", {
-        reqId,
-        regId: reg.id,
-        error: err.message,
-      });
-      reportError(err, {
-        source: "api/register/retry",
-        metadata: {
-          step: "miner_api_unreachable",
-          reqId,
-          regId: reg.id,
-          minerHotkey: reg.minerHotkey,
-          hlAddress: reg.hlAddress,
-          apiUrl: miner.apiUrl,
-        },
-      });
-      results.push({ id: reg.id, status: "still_pending", error: err.message });
-    }
-  }
-
-  console.info("[REGISTRATION][retry] processed batch", {
+  const db = await getDb();
+  const result = await retryPendingRegistrations(db, {
     reqId,
-    total: pending.length,
-    results,
+    source: "api/register/retry",
+    actor: trigger,
   });
 
-  return NextResponse.json({ retried: pending.length, results });
+  if (!result.ok) {
+    if (result.error === RETRY_ALREADY_RUNNING) {
+      // Another run (cron or Command Center) holds the lock; that run will
+      // cover every pending row, so this is not an error worth alerting on.
+      return NextResponse.json({ error: "A retry run is already in progress" }, { status: 409 });
+    }
+    return NextResponse.json({ error: result.error }, { status: 500 });
+  }
+
+  return NextResponse.json({
+    retried: result.retried,
+    results: result.results,
+    budgetExhausted: result.budgetExhausted,
+  });
+}
+
+export async function POST(request) {
+  return handle(request, "bearer");
+}
+
+export async function GET(request) {
+  return handle(request, "cron");
 }

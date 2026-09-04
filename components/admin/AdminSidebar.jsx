@@ -6,12 +6,18 @@ import {
   Tag,
   SignOut,
   UsersThree,
+  UserPlus,
   ChartLineUp,
   Megaphone,
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
+  {
+    href: "/command-center/registrations",
+    label: "Registrations",
+    icon: UserPlus,
+  },
   {
     href: "/command-center/campaigns",
     label: "Campaigns",
