@@ -50,17 +50,23 @@ export async function listAdminRegistrationsPage(options = {}) {
   const db = await getDb();
 
   const status = parseRegistrationsAdminStatus(options.status);
-  const page = Math.max(1, Number.parseInt(options.page ?? 1, 10) || 1);
   const pageSize = REGISTRATIONS_ADMIN_PAGE_SIZE;
   const where = inArray(registrations.status, REGISTRATIONS_ADMIN_STATUS_FILTERS[status]);
 
-  const [[countRow], rows] = await Promise.all([
-    db
-      .select({ count: sql`count(*)::int` })
-      .from(registrations)
-      .where(where),
-    db
-      .select({
+  // Count first so the requested page can be clamped to what exists; an
+  // unbounded OFFSET is both a wasted query and, for absurd values, a
+  // Postgres error.
+  const [countRow] = await db
+    .select({ count: sql`count(*)::int` })
+    .from(registrations)
+    .where(where);
+  const total = Number(countRow?.count ?? 0);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const requested = Number.parseInt(options.page ?? 1, 10);
+  const page = Math.min(Number.isSafeInteger(requested) && requested > 0 ? requested : 1, totalPages);
+
+  const rows = await db
+    .select({
         id: registrations.id,
         hlAddress: registrations.hlAddress,
         payerAddress: registrations.payerAddress,
@@ -81,12 +87,11 @@ export async function listAdminRegistrationsPage(options = {}) {
       .where(where)
       .orderBy(desc(registrations.createdAt))
       .limit(pageSize)
-      .offset((page - 1) * pageSize),
-  ]);
+      .offset((page - 1) * pageSize);
 
   return {
     rows: rows.map(serializeRow),
-    total: Number(countRow?.count ?? 0),
+    total,
     page,
     pageSize,
     status,

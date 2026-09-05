@@ -1,17 +1,28 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowsClockwise } from "@phosphor-icons/react";
 import { retryRegistrations } from "@/app/actions/registrations";
 import { describeRetryResult, summarizeRetryResults } from "@/lib/registrations/retry-result-text";
 import { cn } from "@/lib/utils";
 
-const primaryButtonClass =
-  "inline-flex h-9 items-center gap-2 rounded-lg border border-teal-400/30 bg-teal-400/15 px-3 text-sm font-medium text-teal-300 transition-colors hover:bg-teal-400/25 disabled:cursor-not-allowed disabled:opacity-50";
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/30 focus-visible:border-teal-400/40";
 
-const rowButtonClass =
-  "inline-flex h-8 items-center gap-1.5 rounded-md border border-white/[0.08] bg-zinc-900/70 px-2.5 text-xs text-zinc-300 transition-colors hover:bg-white/[0.04] hover:text-white disabled:cursor-not-allowed disabled:opacity-50";
+const primaryButtonClass = cn(
+  "inline-flex h-9 items-center gap-2 rounded-lg border border-teal-400/30 bg-teal-400/15 px-3 text-sm font-medium text-teal-300 transition-colors hover:bg-teal-400/25 disabled:cursor-not-allowed disabled:opacity-50",
+  focusRing,
+);
+
+const rowButtonClass = cn(
+  "inline-flex h-8 items-center gap-1.5 rounded-md border border-white/[0.08] bg-zinc-900/70 px-2.5 text-xs text-zinc-300 transition-colors hover:bg-white/[0.04] hover:text-white disabled:cursor-not-allowed disabled:opacity-50",
+  focusRing,
+);
+
+// A row that just became `registered` leaves the list on refresh; hold the
+// refresh briefly so the operator sees the outcome before the row goes.
+const ROW_REFRESH_DELAY_MS = 1_500;
 
 function toneClass(type) {
   if (type === "error") return "text-red-300";
@@ -31,9 +42,19 @@ function StatusLine({ status, className }) {
   );
 }
 
+function useDelayedRefresh() {
+  const router = useRouter();
+  const timer = useRef(null);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  return (delayMs) => {
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => router.refresh(), delayMs);
+  };
+}
+
 /** Header button: re-drives every `pending` registration. */
 export function RetryAllPendingButton({ pendingCount }) {
-  const router = useRouter();
+  const refreshAfter = useDelayedRefresh();
   const [isPending, startTransition] = useTransition();
   const [status, setStatus] = useState(null);
 
@@ -52,7 +73,7 @@ export function RetryAllPendingButton({ pendingCount }) {
           ? `${summary}. Time budget hit — run again for the rest.`
           : summary,
       });
-      router.refresh();
+      refreshAfter(0);
     });
   };
 
@@ -75,7 +96,7 @@ export function RetryAllPendingButton({ pendingCount }) {
 
 /** Row button: re-drives one `pending` registration. */
 export function RetryRowButton({ id }) {
-  const router = useRouter();
+  const refreshAfter = useDelayedRefresh();
   const [isPending, startTransition] = useTransition();
   const [status, setStatus] = useState(null);
 
@@ -87,7 +108,7 @@ export function RetryRowButton({ id }) {
         setStatus({ type: "error", message: result.error });
         return;
       }
-      const first = result.results[0];
+      const first = result.results.find((r) => r.id === id);
       if (!first) {
         setStatus({ type: "info", message: "Already handled — row is no longer pending." });
       } else {
@@ -96,7 +117,7 @@ export function RetryRowButton({ id }) {
           message: describeRetryResult(first),
         });
       }
-      router.refresh();
+      refreshAfter(ROW_REFRESH_DELAY_MS);
     });
   };
 

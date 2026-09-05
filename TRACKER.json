@@ -344,7 +344,8 @@
         { "name": "Shared retry implementation used by route and Command Center", "status": "done" },
         { "name": "Cron: /api/register/retry every 15 min, accepts CRON_SECRET or RETRY_SECRET", "status": "done" },
         { "name": "Concurrency guards: advisory-lock mutex + compare-and-set status writes", "status": "done" },
-        { "name": "Unit tests for retry semantics, route auth and action validation", "status": "done" }
+        { "name": "Unit tests for retry semantics, route auth and action validation", "status": "done" },
+        { "name": "Review round 2: durable registered write, lock heartbeat, aggregated alerts, gated real-Postgres test", "status": "done" }
       ]
     }
   ],

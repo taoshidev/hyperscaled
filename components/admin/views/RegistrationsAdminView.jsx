@@ -17,6 +17,7 @@ import {
 } from "@/components/admin/AdminTablePage";
 import { RetryRowButton } from "@/components/admin/views/RegistrationRetryControls";
 import { registrationsAdminHref as tabHref } from "@/lib/admin/registrations-command-center";
+import { errorText } from "@/lib/registrations/retry-result-text";
 import { BASESCAN_URL, HL_EXPLORER_TX_URL } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -74,12 +75,7 @@ function txExplorerHref(row) {
 
 function detailText(detail) {
   if (!detail || typeof detail !== "object") return "";
-  const err = detail.error;
-  if (typeof err === "string") return err;
-  if (err && typeof err === "object") {
-    return err.message || err.error || JSON.stringify(err);
-  }
-  return "";
+  return errorText(detail.error);
 }
 
 function StatusBadge({ status }) {
@@ -211,6 +207,11 @@ export function RegistrationsAdminView({ result }) {
                               {detail}
                             </span>
                           ) : null}
+                          {typeof row.statusDetail?.note === "string" ? (
+                            <span className="block truncate text-amber-300/80" title={row.statusDetail.note}>
+                              {row.statusDetail.note}
+                            </span>
+                          ) : null}
                           {!reason && !detail ? "—" : null}
                         </TableCell>
                         <TableCell className="text-right">
@@ -223,7 +224,7 @@ export function RegistrationsAdminView({ result }) {
               </Table>
             )}
           </AdminTableScrollCard>
-          {totalPages > 1 ? (
+          {totalPages > 1 || page > 1 ? (
             <AdminTablePaginationBar>
               <span className="text-xs text-zinc-500">
                 Page {page} of {totalPages}

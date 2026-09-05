@@ -4,6 +4,11 @@ import { getDb } from "@/lib/db";
 import { reportCritical, reportWarning } from "@/lib/errors";
 import { RETRY_ALREADY_RUNNING, retryPendingRegistrations } from "@/lib/registrations/retry-pending";
 
+// A mutating job: never cache the GET, and give it the same budget the retry
+// loop stops itself at (RETRY_BUDGET_MS, 55s by default).
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
+
 function timingSafeEqual(a, b) {
   const bufA = Buffer.from(a);
   const bufB = Buffer.from(b);

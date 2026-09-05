@@ -112,6 +112,7 @@ non-obvious ones — read `env.example` for the rest.
 | `pnpm lint`        | ESLint (flat config, React + hooks)                  |
 | `pnpm test`        | Vitest unit suite                                    |
 | `pnpm test:watch`  | Vitest in watch mode                                 |
+| `RETRY_INTEGRATION_DATABASE_URL=… pnpm test` | Also runs the real-Postgres check for the registration retry lock/CAS (dev DB only; skipped otherwise) |
 | `pnpm e2e`         | Playwright end-to-end suite (see [E2E tests](#e2e-tests)) |
 | `pnpm e2e:ui`      | Playwright UI mode (interactive runner)              |
 | `pnpm e2e:debug`   | Playwright inspector / step debugger                 |
@@ -223,7 +224,7 @@ Brief inventory; full request/response shapes live in
 | POST   | `/api/dashboard/payout`    | EVM signed (wallet-bound)                  |
 | POST   | `/api/register`            | HL ownership signature + x402 / HL transfer proof |
 | POST   | `/api/register/preflight`  | public                                     |
-| GET/POST | `/api/register/retry`    | bearer `RETRY_SECRET` or `CRON_SECRET`     |
+| GET/POST | `/api/register/retry`    | bearer `RETRY_SECRET` or `CRON_SECRET` (409 while a run is in progress) |
 | POST   | `/api/testnet-register`    | env-gated (off by default)                 |
 | GET    | `/api/registration-status` | public                                     |
 | GET    | `/api/sync-registrations`  | bearer `CRON_SECRET`                       |

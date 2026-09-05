@@ -12,9 +12,14 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
+// The Retry server action runs under this segment: give it the same budget
+// as the cron route (the retry loop stops itself at RETRY_BUDGET_MS, 55s).
+export const maxDuration = 60;
+
 export default async function RegistrationsPage({ searchParams }) {
   const sp = await searchParams;
-  const page = Math.max(1, parseInt(sp?.page ?? "1", 10) || 1);
+  const parsedPage = parseInt(sp?.page ?? "1", 10);
+  const page = Number.isSafeInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1;
   const status = parseRegistrationsAdminStatus(typeof sp?.status === "string" ? sp.status : undefined);
 
   const [result, pendingCount] = await Promise.all([
