@@ -111,7 +111,7 @@ td{padding:10px 14px;border-bottom:1px solid var(--rule)}
 // ╚══════════════════════════════════════════════════════════════════╝
 const TRACKER = {
   "project": "Hyperscaled Marketing Website",
-  "lastUpdated": "2026-04-02T20:00:00Z",
+  "lastUpdated": "2026-09-04T22:50:29Z",
   "phases": [
     {
       "id": 0, "name": "Global Compliance Sweep", "status": "done",
@@ -443,6 +443,21 @@ const TRACKER = {
         { "name": "Remove Help sidebar from registration flow", "status": "done" },
         { "name": "Verify skip payment dev-only gate", "status": "done" }
       ]
+    },
+    {
+      "id": 20, "name": "Command Center — Registrations retry", "status": "done",
+      "scope": "Command Center", "estSessions": "1 session", "estHours": 3,
+      "dependsOn": [19],
+      "sessions": [{ "session": 22, "date": "2026-09-04", "notes": "Registrations page (pending/failed with miner error), Retry all / per-row Retry via shared lib/registrations/retry-pending.js; /api/register/retry now GET+POST accepting RETRY_SECRET or CRON_SECRET; vercel.json cron every 15 min; advisory-lock mutex + compare-and-set writes; 29 unit tests" }],
+      "items": [
+        { "name": "Registrations page lists pending/failed rows with last miner response", "status": "done" },
+        { "name": "Retry all pending + per-row Retry (pending only), staff-gated server action", "status": "done" },
+        { "name": "Shared retry implementation used by route and Command Center", "status": "done" },
+        { "name": "Cron: /api/register/retry every 15 min, accepts CRON_SECRET or RETRY_SECRET", "status": "done" },
+        { "name": "Concurrency guards: advisory-lock mutex + compare-and-set status writes", "status": "done" },
+        { "name": "Unit tests for retry semantics, route auth and action validation", "status": "done" },
+        { "name": "Review round 2: durable registered write, lock heartbeat, aggregated alerts, gated real-Postgres test", "status": "done" }
+      ]
     }
   ],
   "routes": [
@@ -456,7 +471,8 @@ const TRACKER = {
     { "path": "/register", "label": "Register", "status": "complete", "phase": 15, "note": "4-step flow: Select Plan → Connect & Pay → Confirm → Done" },
     { "path": "/dashboard", "label": "Dashboard", "status": "complete", "phase": 13, "note": "Wallet lookup added, metadata updated" },
     { "path": "/miner/[slug]", "label": "Miner Detail", "status": "complete", "phase": null, "note": "Dynamic route, working" },
-    { "path": "/status", "label": "Status", "status": "complete", "phase": null, "note": "Working" }
+    { "path": "/status", "label": "Status", "status": "complete", "phase": null, "note": "Working" },
+    { "path": "/command-center/registrations", "label": "Command Center · Registrations", "status": "complete", "phase": 20, "note": "Pending/failed registrations with Retry; cron retries every 15 min" }
   ],
   "violations": [
     { "name": "Vanta branding", "fixed": 9, "total": 9, "severity": "high" },

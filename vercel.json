@@ -3,6 +3,10 @@
     {
       "path": "/api/sync-registrations",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/register/retry",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

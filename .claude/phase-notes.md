@@ -740,3 +740,12 @@ Polish pass next.
 - VANTA_USDC_WALLET exposed as NEXT_PUBLIC env var with zero-address default
 - Confirmation step passes currentStep=3 to stepper to show all steps as complete
 - Registration nav bar: logo (links home) + "Exit" ghost button (links home), replaces centered branding
+
+## Session 22 — 2026-09-04 — Command Center: Registrations retry
+- New `/command-center/registrations` page (pending + failed rows, last miner error, tx link to Hyperliquid or Basescan by payment method). Nav entry first in the sidebar.
+- Retry logic extracted to `lib/registrations/retry-pending.js` (time-budgeted, oldest-first, optional `ids` filter, injectable fetch/clock). `/api/register/retry` is a thin wrapper: GET + POST, bearer `RETRY_SECRET` or `CRON_SECRET`. Server action `retryRegistrations` in `app/actions/registrations.js` is staff-gated.
+- UI retries `pending` rows only; `failed` rows (already registered at miner) stay read-only for admin review.
+- `vercel.json` cron: `/api/register/retry` every 15 min (Vercel sends GET with `CRON_SECRET`).
+- Pure UI text helpers live in `lib/registrations/retry-result-text.js` so client components never import drizzle/errors.
+- Adversarial review found the cron/button overlap could mark a provisioned row `failed` (miner duplicate guard). Fixed with an advisory-lock mutex per run + compare-and-set status writes (`inArray(status, [...])` + `returning`), `statusDetail` merge (keeps `paymentMethod`), 15s miner fetch timeout, `updated_at` ordering, per-row DB-error isolation, id validation caps.
+- Review round 2: `registered` write retried with backoff (its loss made the next run mislabel a provisioned row as `failed`); duplicate-guard demotion now records whether another registered row exists so ops can tell own-lost-write from double payment; lock connection heartbeated and a commit failure after the loop no longer discards results; lost CAS reports `row_changed`/`row_missing` with the real status; miner errors aggregated to one alert per group per run + `flushErrors()`; result payloads carry stable codes, raw driver messages stay in logs; page clamped to totalPages; `maxDuration = 60` on the route and page; integration test gated on `RETRY_INTEGRATION_DATABASE_URL`.

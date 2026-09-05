@@ -89,8 +89,8 @@ non-obvious ones — read `env.example` for the rest.
 | `DEV_TEST_WALLETS`                                            | no           | Comma-separated allowlist of EVM addresses that pay $0.01 instead of full price. **Never set in production.**             |
 | `SKIP_ENTITY_MINER_CALL`                                      | no           | Skips the post-registration call to the miner gateway's `create-hl-subaccount`. Useful when running without a real miner. |
 | `STUB_GATEWAY`                                                | no           | Returns deterministic stub data from `lib/gateway-stubs.js` for offline UI dev.                                           |
-| `CRON_SECRET`                                                 | yes (prod)   | Bearer secret for `GET /api/sync-registrations` (Vercel cron).                                                            |
-| `RETRY_SECRET`                                                | yes (prod)   | Bearer secret for `POST /api/register/retry`.                                                                             |
+| `CRON_SECRET`                                                 | yes (prod)   | Bearer secret Vercel injects on cron calls: `GET /api/sync-registrations` and `GET /api/register/retry`.                 |
+| `RETRY_SECRET`                                                | no (manual)  | Bearer secret for manual/CLI calls to `/api/register/retry` (the cron uses `CRON_SECRET`; the Command Center uses the staff session). |
 | `VANTA_SYNC_API_KEY`                                          | yes (prod)   | Bearer secret for `POST /api/vanta-sync`.                                                                                 |
 | `TESTNET_REGISTER_SECRET` + `ENABLE_TESTNET_REGISTER`         | staging only | Gate `POST /api/testnet-register`. Defaults to `404`. Never enable in production.                                         |
 | `SUMSUB_APP_TOKEN`/`SECRET_KEY`/`WEBHOOK_SECRET`/`LEVEL_NAME` | yes (KYC)    | Sumsub API and webhook HMAC.                                                                                              |
@@ -112,6 +112,7 @@ non-obvious ones — read `env.example` for the rest.
 | `pnpm lint`        | ESLint (flat config, React + hooks)                  |
 | `pnpm test`        | Vitest unit suite                                    |
 | `pnpm test:watch`  | Vitest in watch mode                                 |
+| `RETRY_INTEGRATION_DATABASE_URL=… pnpm test` | Also runs the real-Postgres check for the registration retry lock/CAS (dev DB only; skipped otherwise) |
 | `pnpm e2e`         | Playwright end-to-end suite (see [E2E tests](#e2e-tests)) |
 | `pnpm e2e:ui`      | Playwright UI mode (interactive runner)              |
 | `pnpm e2e:debug`   | Playwright inspector / step debugger                 |
@@ -161,7 +162,7 @@ drizzle/                      Generated SQL + meta (do not edit by hand)
 tests/                        Vitest unit suite + setup
 proxy.js                      Hostname rewrites, affiliate cookies (NOT auth); Next.js 16 edge proxy
 sentry.*.config.js            Server / edge / client Sentry init
-vercel.json                   Cron schedule for /api/sync-registrations
+vercel.json                   Cron schedules: /api/sync-registrations (hourly), /api/register/retry (every 15 min)
 ```
 
 ## Database
@@ -223,7 +224,7 @@ Brief inventory; full request/response shapes live in
 | POST   | `/api/dashboard/payout`    | EVM signed (wallet-bound)                  |
 | POST   | `/api/register`            | HL ownership signature + x402 / HL transfer proof |
 | POST   | `/api/register/preflight`  | public                                     |
-| POST   | `/api/register/retry`      | bearer `RETRY_SECRET`                      |
+| GET/POST | `/api/register/retry`    | bearer `RETRY_SECRET` or `CRON_SECRET` (409 while a run is in progress) |
 | POST   | `/api/testnet-register`    | env-gated (off by default)                 |
 | GET    | `/api/registration-status` | public                                     |
 | GET    | `/api/sync-registrations`  | bearer `CRON_SECRET`                       |
