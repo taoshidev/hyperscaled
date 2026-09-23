@@ -32,7 +32,7 @@ export default async function VantaPricing() {
       "@type": "Offer",
       price: String(tier.launchPrice),
       priceCurrency: "USD",
-      availability: "https://schema.org/InStock",
+      availability: "https://schema.org/Discontinued", // registrations closed (Notion #1560)
       url: "https://vantatrading.io/vanta/register",
     },
   }))

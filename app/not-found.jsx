@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function NotFoundPage() {
   return (
-    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-[#09090b] px-4 py-16 text-center text-white">
+    <div className="relative flex min-h-[calc(100dvh_-_var(--site-banner-h,0px))] flex-col items-center justify-center overflow-hidden bg-[#09090b] px-4 py-16 text-center text-white">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-40"

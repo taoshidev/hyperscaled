@@ -86,7 +86,7 @@ export default function FAQAccordion({ items, grouped = false, sectionIds = fals
             : undefined
 
           return (
-            <div key={group.category} id={id} className={sectionIds ? 'scroll-mt-24' : undefined}>
+            <div key={group.category} id={id} className={sectionIds ? 'scroll-mt-[calc(6rem_+_var(--site-banner-h,0px))]' : undefined}>
               <h2 className="text-2xl font-bold tracking-tight mb-2">
                 {brandifyText(group.category, brand)}
               </h2>

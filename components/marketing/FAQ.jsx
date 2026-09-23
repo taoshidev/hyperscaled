@@ -84,7 +84,7 @@ export default function FAQ() {
             initial={{ opacity: 0, y: 16 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={spring}
-            className="md:sticky md:top-28"
+            className="md:sticky md:top-[calc(7rem_+_var(--site-banner-h,0px))]"
           >
             <span className="text-xs text-zinc-500 tracking-widest uppercase block mb-4">
               FAQ

@@ -4,6 +4,8 @@ import { getDb } from "@/lib/db";
 import { users, registrations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { isValidEvmAddress, isValidEmail } from "@/lib/validation";
+import { REGISTRATIONS_CLOSED } from "@/lib/sunset";
+import { registrationsClosedResponse } from "@/lib/registrations/closed-response";
 
 function timingSafeEqual(a, b) {
   const bufA = Buffer.from(a);
@@ -236,6 +238,8 @@ export async function POST(request) {
 
   switch (action) {
     case "sync_registration":
+      // Notion #1560: registrations are closed, including synced ones.
+      if (REGISTRATIONS_CLOSED) return registrationsClosedResponse();
       return handleSyncRegistration(body);
     case "sync_kyc":
       return handleSyncKyc(body);

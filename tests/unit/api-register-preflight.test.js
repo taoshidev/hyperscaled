@@ -38,6 +38,14 @@ vi.mock("@/lib/registration-capacity", () => ({
   },
 }));
 
+// The pre-sunset registration logic still sits behind the Notion #1560 gate.
+// These tests exercise it with the gate open; the closure itself is covered
+// in sunset-registrations-closed.test.js.
+vi.mock("@/lib/sunset", async (importOriginal) => ({
+  ...(await importOriginal()),
+  REGISTRATIONS_CLOSED: false,
+}));
+
 const { POST } = await import("@/app/api/register/preflight/route.js");
 
 const HL_ADDRESS = "0x14b2eb14FE037f14456cF63Ab06a9D46577e2dC1";

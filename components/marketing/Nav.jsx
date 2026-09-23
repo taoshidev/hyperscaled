@@ -3,12 +3,12 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { ArrowLeft, ArrowRight, List, X, DotsThree, ArrowSquareOut } from '@phosphor-icons/react'
+import { ArrowLeft, ArrowUpRight, List, X, DotsThree, ArrowSquareOut } from '@phosphor-icons/react'
 import { CHROME_EXTENSION_URL } from '@/lib/constants'
 import { useBrand, useBrandHref } from '@/lib/brand'
-import { useWithPreservedQuery } from '@/lib/preserve-query'
 import { trackCtaClick } from '@/lib/analytics'
-import NavStartChallengeCta from './NavStartChallengeCta'
+import { REGISTRATION_CLOSED_COPY } from '@/lib/sunset'
+import VantaTradingLink from '@/components/shared/VantaTradingLink'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -110,6 +110,17 @@ function MoreDropdown({ brandHref, brand }) {
                   <ArrowSquareOut size={13} weight="bold" className="text-zinc-600" />
                 </a>
               )}
+
+              {/* Header CTA is hidden below lg (see Nav); keep the link here. */}
+              <VantaTradingLink
+                label={REGISTRATION_CLOSED_COPY.cta}
+                location="nav_dropdown"
+                onClickCapture={() => setOpen(false)}
+                className="flex items-center justify-between gap-2 px-4 py-2.5 text-sm font-medium text-teal-400 hover:text-teal-300 hover:bg-white/[0.04] transition-colors lg:hidden"
+              >
+                {REGISTRATION_CLOSED_COPY.cta}
+                <ArrowUpRight size={13} weight="bold" aria-hidden="true" />
+              </VantaTradingLink>
             </div>
           </motion.div>
         )}
@@ -118,14 +129,10 @@ function MoreDropdown({ brandHref, brand }) {
   )
 }
 
-// `walletAware` swaps in a CTA variant that hides itself when the
-// connected wallet has an active registration. Only enable this on
-// layouts that mount `<Providers>` (the wallet-aware CTA uses wagmi).
-export default function Nav({ excludeLinks = [], walletAware = false }) {
+export default function Nav({ excludeLinks = [] }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const brand = useBrand()
   const brandHref = useBrandHref()
-  const withQS = useWithPreservedQuery()
 
   const primaryLinks = excludeLinks.length
     ? PRIMARY_LINKS.filter((l) => !excludeLinks.includes(l.label))
@@ -137,7 +144,7 @@ export default function Nav({ excludeLinks = [], walletAware = false }) {
   return (
     <>
     {brand.parentSite && (
-      <div className="fixed top-0 left-0 right-0 z-50 bg-zinc-900/90 border-b border-white/[0.06] backdrop-blur-sm">
+      <div className="fixed top-[var(--site-banner-h,0px)] left-0 right-0 z-50 bg-zinc-900/90 border-b border-white/[0.06] backdrop-blur-sm">
         <div className="max-w-[1400px] mx-auto px-6 h-8 flex items-center">
           <a
             href={brand.parentSite.url}
@@ -153,7 +160,7 @@ export default function Nav({ excludeLinks = [], walletAware = false }) {
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={spring}
-      className={`fixed left-0 right-0 z-50 backdrop-blur-xl bg-[#09090b]/60 border-b border-white/[0.06] ${brand.parentSite ? 'top-8' : 'top-0'}`}
+      className={`fixed left-0 right-0 z-50 backdrop-blur-xl bg-[#09090b]/60 border-b border-white/[0.06] ${brand.parentSite ? 'top-[calc(2rem_+_var(--site-banner-h,0px))]' : 'top-[var(--site-banner-h,0px)]'}`}
     >
       <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between gap-4 relative">
         {/* Logo */}
@@ -183,20 +190,22 @@ export default function Nav({ excludeLinks = [], walletAware = false }) {
         <div className="flex items-center gap-3 shrink-0 relative z-10">
           <MoreDropdown brandHref={brandHref} brand={brand} />
 
-          {walletAware ? (
-            <NavStartChallengeCta />
-          ) : (
-            <Link
-              href={withQS(brandHref('/register'))}
-              onClick={() => trackCtaClick({ label: 'Start Challenge', location: 'nav' })}
-              className="shiny-cta px-5 py-2"
-            >
-              <span className="flex items-center gap-1.5">
-                Start Challenge
-                <ArrowRight size={15} weight="bold" />
-              </span>
-            </Link>
-          )}
+          {/* Registrations are closed (Notion #1560) — the nav CTA sends
+              traders to Vanta Trading instead of /register. The label is too
+              wide below lg (it pushes the hamburger off-screen on phones and
+              clips the primary links on tablets), so there the same link
+              lives in the More dropdown and the hamburger menu instead. */}
+          <VantaTradingLink
+            label={REGISTRATION_CLOSED_COPY.cta}
+            location="nav"
+            data-testid="nav-vanta-trading-cta"
+            className="shiny-cta hidden px-4 py-2 lg:inline-flex xl:px-5"
+          >
+            <span className="flex items-center gap-1.5 whitespace-nowrap">
+              {REGISTRATION_CLOSED_COPY.cta}
+              <ArrowUpRight size={15} weight="bold" aria-hidden="true" />
+            </span>
+          </VantaTradingLink>
 
           {/* Hamburger — visible below md */}
           <button
@@ -219,7 +228,7 @@ export default function Nav({ excludeLinks = [], walletAware = false }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden border-t border-white/[0.06] bg-[#09090b]/95 backdrop-blur-xl px-6 pb-6 pt-4"
+            className={`md:hidden overflow-y-auto border-t border-white/[0.06] bg-[#09090b]/95 backdrop-blur-xl px-6 pb-6 pt-4 ${brand.parentSite ? 'max-h-[calc(100dvh_-_6rem_-_var(--site-banner-h,0px))]' : 'max-h-[calc(100dvh_-_4rem_-_var(--site-banner-h,0px))]'}`}
           >
             <div className="flex flex-col gap-1">
               {allLinks
@@ -249,6 +258,16 @@ export default function Nav({ excludeLinks = [], walletAware = false }) {
                   <ArrowSquareOut size={13} weight="bold" className="text-zinc-600" />
                 </a>
               )}
+              <VantaTradingLink
+                label={REGISTRATION_CLOSED_COPY.cta}
+                location="nav_mobile"
+                data-testid="nav-mobile-vanta-trading-cta"
+                onClickCapture={() => setMobileOpen(false)}
+                className="flex items-center justify-between text-sm font-medium text-teal-400 hover:text-teal-300 transition-colors py-2.5"
+              >
+                {REGISTRATION_CLOSED_COPY.cta}
+                <ArrowUpRight size={13} weight="bold" aria-hidden="true" />
+              </VantaTradingLink>
             </div>
           </motion.nav>
         )}

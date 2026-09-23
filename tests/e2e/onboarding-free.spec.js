@@ -20,7 +20,10 @@ import { E2E_MOCK_WALLET_ADDRESS } from "./fixtures/wallet.js";
 // Side effects suppressed via env (`SKIP_ENTITY_MINER_CALL=true`,
 // blank validator) — see playwright.config.js.
 
-test.describe("Free-tier onboarding (mocked wallet)", () => {
+// Notion #1560: new registrations are closed and the wizard is no longer
+// reachable (every signup route renders the closure notice, covered by
+// sunset.spec.js). Kept, skipped, so the flow can be re-tested if it returns.
+test.describe.skip("Free-tier onboarding (mocked wallet)", () => {
   let freeTier;
 
   test.beforeAll(async () => {

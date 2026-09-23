@@ -2,16 +2,15 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { ArrowRight, TrendUp, ArrowsClockwise } from '@phosphor-icons/react'
+import { ArrowRight, ArrowUpRight, TrendUp, ArrowsClockwise } from '@phosphor-icons/react'
 import { HERO_STATS } from '@/lib/constants'
 import LiquidCrystalBg from './LiquidCrystalBg'
 import dynamic from 'next/dynamic'
 
 const BeamsBg = dynamic(() => import('./BeamsBg'), { ssr: false })
-import PromoBanner from './PromoBanner'
 import { useBrand, useBrandHref } from '@/lib/brand'
-import { useWithPreservedQuery } from '@/lib/preserve-query'
-import { trackCtaClick } from '@/lib/analytics'
+import { REGISTRATION_CLOSED_COPY } from '@/lib/sunset'
+import VantaTradingLink from '@/components/shared/VantaTradingLink'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -30,14 +29,13 @@ const cardVariants = {
   visible: { opacity: 1, x: 0, transition: { ...spring, delay: 0.3 } },
 }
 
-export default function Hero({ activeCampaign = null }) {
+export default function Hero() {
   const brand = useBrand()
   const brandHref = useBrandHref()
-  const withQS = useWithPreservedQuery()
   const isHF = Boolean(brand.compliance)
 
   return (
-    <section className={`relative min-h-[100dvh] flex flex-col overflow-hidden ${brand.parentSite ? 'pt-24' : 'pt-16'}`}>
+    <section className={`relative min-h-[calc(100dvh_-_var(--site-banner-h,0px))] flex flex-col overflow-hidden ${brand.parentSite ? 'pt-24' : 'pt-16'}`}>
       {/* Animated shader background */}
       {brand.showLiquidCrystal && brand.heroBeams
         ? <BeamsBg className="pointer-events-none" />
@@ -45,9 +43,6 @@ export default function Hero({ activeCampaign = null }) {
           ? <LiquidCrystalBg className="pointer-events-none" color={brand.id === 'hyperscaled' ? undefined : brand.accentRgb} />
           : null}
       <div className={`absolute inset-0 pointer-events-none ${brand.heroBeams ? 'bg-zinc-950/30' : 'bg-zinc-950/60'}`} />
-
-      {/* Promo banner — scrolls with hero */}
-      <PromoBanner campaign={activeCampaign} />
 
       <div className="relative max-w-[1400px] mx-auto px-6 w-full py-20 flex-1 flex items-center">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-20 items-center">
@@ -59,20 +54,6 @@ export default function Hero({ activeCampaign = null }) {
             initial="hidden"
             animate="visible"
           >
-            {/* Eyebrow */}
-            <motion.div variants={itemVariants} className="mb-6">
-              <Link
-                href={withQS(brandHref('/register'))}
-                onClick={() => trackCtaClick({ label: 'Free $1k Eyebrow', location: 'hero_eyebrow' })}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-teal-400/20 bg-teal-400/8 text-xs text-teal-400 font-medium hover:bg-teal-400/12 transition-colors"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-teal-400 pulse-teal" />
-                {isHF
-                  ? 'Free $1k simulated challenge accounts are live'
-                  : 'Free $1k challenge accounts are live — only 1,000 available'}
-              </Link>
-            </motion.div>
-
             {/* Headline */}
             <motion.h1
               variants={itemVariants}
@@ -92,16 +73,17 @@ export default function Hero({ activeCampaign = null }) {
 
             {/* CTA buttons */}
             <motion.div variants={itemVariants} className="flex flex-col items-center sm:items-start sm:flex-row gap-3 mb-10">
-              <Link
-                href={withQS(brandHref('/register'))}
-                onClick={() => trackCtaClick({ label: 'Start Your Challenge', location: 'hero' })}
+              {/* Registrations are closed (Notion #1560). */}
+              <VantaTradingLink
+                label={REGISTRATION_CLOSED_COPY.cta}
+                location="hero"
                 className="shiny-cta px-6 py-3 min-h-12 whitespace-nowrap text-center"
               >
                 <span className="flex items-center justify-center gap-1.5">
-                  Start Your Challenge
-                  <ArrowRight size={15} weight="bold" />
+                  {REGISTRATION_CLOSED_COPY.cta}
+                  <ArrowUpRight size={15} weight="bold" aria-hidden="true" />
                 </span>
-              </Link>
+              </VantaTradingLink>
               <Link
                 href={brandHref('/how-it-works')}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 min-h-12 rounded-xl border border-white/[0.12] text-white text-sm font-medium hover:border-white/[0.24] hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-teal-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 active:scale-[0.98] transition-[border-color,background-color,transform] duration-200"

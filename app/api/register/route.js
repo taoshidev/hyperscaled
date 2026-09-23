@@ -42,6 +42,8 @@ import {
   releaseCouponRedemption,
   COUPON_RESERVATION_ERRORS,
 } from "@/lib/registration-pricing";
+import { REGISTRATIONS_CLOSED } from "@/lib/sunset";
+import { registrationsClosedResponse } from "@/lib/registrations/closed-response";
 
 const USE_TESTNET = process.env.USE_TESTNET === "true";
 
@@ -267,7 +269,122 @@ async function upsertRegistrationUser(
   return { userId, didAttributeAffiliate };
 }
 
+// Hyperliquid/EIP-712 clients send USDC to the miner *before* calling this
+// route. Preflight is closed as well, so the only request that can arrive here
+// with funds already moved is a checkout that passed preflight just before the
+// sunset deploy. Anyone can POST an arbitrary body here, so ops is paged only
+// for a transfer Hyperliquid itself confirms — a recent USDC send from the
+// claimed sender to the miner's payment wallet that no registration recorded —
+// once per hash per instance. The trader is told to contact support either
+// way. Nothing here may turn the 410 into a 500.
+const HL_TX_HASH_RE = /^0x[0-9a-fA-F]{64}$/;
+const EVM_ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
+const CLOSED_TRANSFER_WINDOW_MS = 60 * 60 * 1000;
+const pagedClosedTransferHashes = new Set();
+
+async function findUnrecordedMinerTransfer({ hash, sender, minerSlug }) {
+  if (typeof minerSlug !== "string" || !minerSlug) return null;
+  const miner = await getMinerBySlug(minerSlug);
+  const minerWallet = miner?.usdcWallet?.toLowerCase();
+  if (!minerWallet) return null;
+
+  const hlApiUrl = USE_TESTNET
+    ? "https://api.hyperliquid-testnet.xyz"
+    : "https://api.hyperliquid.xyz";
+  const res = await fetch(`${hlApiUrl}/info`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      type: "userNonFundingLedgerUpdates",
+      user: sender,
+      startTime: Date.now() - CLOSED_TRANSFER_WINDOW_MS,
+    }),
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!res.ok) return null;
+  const updates = await res.json();
+  if (!Array.isArray(updates)) return null;
+  // Same predicate the checkout used to find its own transfer.
+  const match = updates.find((u) => {
+    const d = u?.delta;
+    return (
+      (u.hash || "").toLowerCase() === hash &&
+      d?.type === "send" &&
+      d.token === "USDC" &&
+      (d.destination || "").toLowerCase() === minerWallet
+    );
+  });
+  if (!match) return null;
+
+  const db = await getDb();
+  const [recorded] = await db
+    .select({ id: registrations.id })
+    .from(registrations)
+    .where(sql`lower(${registrations.txHash}) = ${hash}`)
+    .limit(1);
+  if (recorded) return null;
+
+  return { minerWallet, amount: match.delta.amount, time: match.time };
+}
+
+async function refuseClosedRegistration(request) {
+  let body = null;
+  try {
+    body = JSON.parse(await request.text());
+  } catch {
+    return registrationsClosedResponse();
+  }
+
+  const rawHash = body?.hlTransferHash;
+  const isTransferCall =
+    (body?.paymentMethod === "eip712" || body?.paymentMethod === "hyperliquid") &&
+    typeof rawHash === "string" &&
+    HL_TX_HASH_RE.test(rawHash);
+  if (!isTransferCall) return registrationsClosedResponse();
+
+  const hash = rawHash.toLowerCase();
+  const address = (v) => (typeof v === "string" && EVM_ADDRESS_RE.test(v) ? v.toLowerCase() : null);
+  const sender = address(body.hlTransferSender) ?? address(body.hlAddress);
+  try {
+    if (sender && !pagedClosedTransferHashes.has(hash)) {
+      const transfer = await findUnrecordedMinerTransfer({ hash, sender, minerSlug: body.minerSlug });
+      if (transfer && !pagedClosedTransferHashes.has(hash)) {
+        pagedClosedTransferHashes.add(hash);
+        // Raw values for the logs: reportCritical masks hashes/addresses.
+        console.error("[REGISTRATION] closed: paid transfer refused — refund or provision manually", {
+          hlTransferHash: hash,
+          sender,
+          hlAddress: address(body.hlAddress),
+          ...transfer,
+        });
+        await reportCritical(
+          new Error("Registration refused after a confirmed Hyperliquid transfer — registrations are closed"),
+          {
+            source: "api/register",
+            metadata: {
+              step: "registrations_closed_after_transfer",
+              hlTransferHash: hash,
+              sender,
+              hlAddress: address(body.hlAddress),
+              minerSlug: typeof body.minerSlug === "string" ? body.minerSlug.slice(0, 64) : null,
+              ...transfer,
+            },
+          },
+        );
+        await flushErrors();
+      }
+    }
+  } catch (err) {
+    console.error("[REGISTRATION] closed: transfer check failed", { hlTransferHash: hash, sender, error: err?.message });
+  }
+  return registrationsClosedResponse({ paymentSent: true });
+}
+
 export async function POST(request) {
+  // Notion #1560: new registrations are closed on every brand. Refuse before
+  // any DB write, attribution read, or payment settlement.
+  if (REGISTRATIONS_CLOSED) return refuseClosedRegistration(request);
+
   const db = await getDb();
   const reqId = Math.random().toString(36).slice(2, 10);
   const hasPaymentSignature = Boolean(request.headers.get("payment-signature"));

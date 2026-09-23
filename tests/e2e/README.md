@@ -10,14 +10,12 @@ via env. No funded testnet wallet, no MetaMask extension required.
 
 | Spec | What it covers |
 |---|---|
-| `tier-selection.spec.js` | Every active tier from the DB renders on `/register` and `/pricing` with the correct price. No DB writes. |
-| `deep-link.spec.js` | Clicking a tier card on `/pricing` deep-links to `/register?tier=<size>` and lands on step 1 (Connect & Pay) without flashing step 0. |
-| `tenant-brands.spec.js` | `/beanstock`, `/bitcast`, `/lunarcrush` register pages render their tier list, the Exit button targets the tenant home, the logo links to the external brand site. |
-| `onboarding-free.spec.js` | Full free-tier flow: select tier → fill HL address → confirm → submit → DB row written with `status='registered'`. |
-| `wallet-ownership.spec.js` | Typing an HL address that doesn't match the connected wallet shows the amber mismatch banner and disables the Sign Up button. |
-| `duplicate-registration.spec.js` | A pre-seeded `registered` row blocks re-registration and surfaces a clean error in the UI. |
-| `stale-pending.spec.js` | A pre-seeded stale `pending` row is reconciled and a fresh registration succeeds. |
-| `dashboard-nav.spec.js` | The "Start Challenge" CTA hides when the connected wallet has an active registration. The wallet-mismatch KYC card is absent on dashboards the connected wallet does not own. |
+| `sunset.spec.js` | Notion #1560 sunset: the retirement banner on every page type with the approved desktop (≥640px) and compact mobile copy, pinned above the nav, CTAs to `https://vantatrading.io` in a new tab, not dismissible on marketing/signup pages, dismissible per session on the wallet-connected dashboard; every signup route shows the closure notice; `/api/register` and `/api/register/preflight` return `410 REGISTRATIONS_CLOSED`. |
+| `tier-selection.spec.js` | `/pricing` renders every active tier with the correct headline price. (Wizard tests skipped — registrations are closed.) |
+| `tenant-brands.spec.js` | `/beanstock`, `/bitcast`, `/lunarcrush` register pages show the closure notice, the Exit button targets the tenant home, the logo links to the external brand site. |
+| `dashboard-nav.spec.js` | The nav CTA on `/dashboard` is the Vanta Trading link (no path back into `/register`). The wallet-mismatch KYC card is absent on dashboards the connected wallet does not own. |
+| `kyc-webhook.spec.js` | SumSub webhook approve/reject/ignore/signature handling against the real DB. |
+| `deep-link.spec.js`, `onboarding-free.spec.js`, `wallet-ownership.spec.js`, `duplicate-registration.spec.js`, `stale-pending.spec.js`, `order-summary-stability.spec.js` | Registration-wizard flows. **Skipped** since registrations closed (Notion #1560); kept so the flow can be re-tested if it ever returns. |
 
 ## Prerequisites
 

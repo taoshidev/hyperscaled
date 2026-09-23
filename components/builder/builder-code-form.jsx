@@ -283,7 +283,7 @@ export function BuilderCodeForm() {
   }[signState];
 
   return (
-    <main className="min-h-[100dvh] px-4 py-12 md:py-16">
+    <main className="min-h-[calc(100dvh_-_var(--site-banner-h,0px))] px-4 py-12 md:py-16">
       <div className="mx-auto w-full max-w-xl space-y-6">
         {/* Hero */}
         <header className="space-y-2 text-center">

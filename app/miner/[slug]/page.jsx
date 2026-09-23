@@ -1,30 +1,19 @@
-import { notFound } from "next/navigation";
-import { getMinerWithTiersBySlug } from "@/lib/miners";
-import { RegistrationFlow } from "@/components/registration/registration-flow";
+import RegistrationClosed from "@/components/registration/registration-closed";
+import { buildMetadata } from "@/lib/metadata";
+import { REGISTRATION_CLOSED_COPY } from "@/lib/sunset";
 
-export const dynamic = "force-dynamic";
-
+// Notion #1560: this legacy per-miner checkout is closed like /register. Every
+// slug gets the closure notice (no miner lookup) so old links still resolve.
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const miner = await getMinerWithTiersBySlug(slug);
-  if (!miner) return {};
-  return {
-    title: `Register — ${miner.name} | Hyperscaled`,
-    description: `Sign up to trade with ${miner.name} on the Hyperscaled network`,
-  };
+  return buildMetadata({
+    title: REGISTRATION_CLOSED_COPY.heading,
+    description: REGISTRATION_CLOSED_COPY.body,
+    path: `/miner/${encodeURIComponent(slug)}`,
+    robots: { index: false, follow: true },
+  });
 }
 
-export default async function MinerPage({ params }) {
-  const { slug } = await params;
-  const miner = await getMinerWithTiersBySlug(slug);
-  if (!miner) notFound();
-
-  const clientMiner = {
-    name: miner.name,
-    slug: miner.slug,
-    color: miner.color,
-    tiers: miner.tiers,
-  };
-
-  return <RegistrationFlow miner={clientMiner} minerWallet={miner.usdcWallet} />;
+export default function MinerPage() {
+  return <RegistrationClosed />;
 }

@@ -12,6 +12,22 @@ import {
   resetApplicant,
   isApplicantFinalRejected,
 } from "@/lib/sumsub";
+import { checkValidatorStatus } from "@/lib/validator";
+import { REGISTRATIONS_CLOSED } from "@/lib/sunset";
+import { registrationsClosedResponse } from "@/lib/registrations/closed-response";
+
+// Notion #1560: with registrations closed, KYC must not create a user for an
+// address that has no account. Existing traders keep KYC — a registration row
+// here, or any account the validator knows (accounts provisioned outside this
+// app have no row). Only an address the validator confirms it has never seen
+// is refused; a validator outage ("unknown") fails open.
+async function hasExistingAccount(wallet, knownAuthorizedWallets) {
+  const authorized =
+    knownAuthorizedWallets ?? (await getAuthorizedWalletsForHlAddress(wallet));
+  if (authorized.length > 0) return true;
+  const { status } = await checkValidatorStatus(wallet);
+  return status !== "not_found";
+}
 
 export async function POST(request) {
   let body;
@@ -42,14 +58,19 @@ export async function POST(request) {
     const hlLower = wallet.toLowerCase();
     const connLower = connectedWallet.toLowerCase();
 
+    let authorizedWallets = null;
     if (connLower !== hlLower) {
-      const authorizedWallets = await getAuthorizedWalletsForHlAddress(wallet);
+      authorizedWallets = await getAuthorizedWalletsForHlAddress(wallet);
       if (!authorizedWallets.includes(connLower)) {
         return NextResponse.json(
           { error: "Connected wallet is not authorized to KYC for this address" },
           { status: 403 },
         );
       }
+    }
+
+    if (REGISTRATIONS_CLOSED && !(await hasExistingAccount(wallet, authorizedWallets))) {
+      return registrationsClosedResponse();
     }
 
     let user = await getUserByWallet(wallet);

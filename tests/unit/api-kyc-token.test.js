@@ -31,6 +31,11 @@ vi.mock("@/lib/validation", () => ({
 
 vi.mock("@/lib/errors", () => ({ reportError: vi.fn() }));
 
+const checkValidatorStatus = vi.fn();
+vi.mock("@/lib/validator", () => ({
+  checkValidatorStatus: (...a) => checkValidatorStatus(...a),
+}));
+
 const { POST } = await import("@/app/api/kyc/token/route.js");
 
 const WALLET = "0x1111111111111111111111111111111111111111";
@@ -52,6 +57,10 @@ beforeEach(() => {
   });
   mocks.generateAccessToken.mockResolvedValue({ token: "sdk-token" });
   mocks.isApplicantFinalRejected.mockReturnValue(false);
+  // Default: an existing trader with a registration row for this HL address.
+  mocks.getAuthorizedWalletsForHlAddress.mockResolvedValue([WALLET]);
+  checkValidatorStatus.mockReset();
+  checkValidatorStatus.mockResolvedValue({ status: "not_found" });
 });
 
 afterEach(() => {
@@ -131,5 +140,69 @@ describe("POST /api/kyc/token — applicant lifecycle", () => {
     mocks.getApplicant.mockRejectedValue(new Error("sumsub down"));
     const res = await POST(makeReq({ wallet: WALLET, connectedWallet: WALLET }));
     expect(res.status).toBe(500);
+  });
+});
+
+describe("POST /api/kyc/token — registrations closed (Notion #1560)", () => {
+  it("refuses an address with no registration that the validator has never seen", async () => {
+    mocks.getAuthorizedWalletsForHlAddress.mockResolvedValue([]);
+    mocks.getUserByWallet.mockResolvedValue(null);
+    checkValidatorStatus.mockResolvedValue({ status: "not_found" });
+
+    const res = await POST(makeReq({ wallet: WALLET, connectedWallet: WALLET }));
+    expect(res.status).toBe(410);
+    const body = await res.json();
+    expect(body.code).toBe("REGISTRATIONS_CLOSED");
+    expect(body.error).toMatch(/^Hyperscaled is no longer accepting new accounts\./);
+    expect(mocks.createUserByWallet).not.toHaveBeenCalled();
+    expect(mocks.createApplicant).not.toHaveBeenCalled();
+    expect(mocks.generateAccessToken).not.toHaveBeenCalled();
+  });
+
+  it("keeps KYC for an account the validator knows but this app never registered", async () => {
+    mocks.getAuthorizedWalletsForHlAddress.mockResolvedValue([]);
+    checkValidatorStatus.mockResolvedValue({ status: "active" });
+    mocks.getApplicant.mockResolvedValue({ id: "app-existing" });
+
+    const res = await POST(makeReq({ wallet: WALLET, connectedWallet: WALLET }));
+    expect(res.status).toBe(200);
+    expect(checkValidatorStatus).toHaveBeenCalledWith(WALLET);
+  });
+
+  it("keeps KYC for an eliminated account (it may still be owed rewards)", async () => {
+    mocks.getAuthorizedWalletsForHlAddress.mockResolvedValue([]);
+    checkValidatorStatus.mockResolvedValue({ status: "eliminated" });
+    mocks.getApplicant.mockResolvedValue({ id: "app-existing" });
+
+    const res = await POST(makeReq({ wallet: WALLET, connectedWallet: WALLET }));
+    expect(res.status).toBe(200);
+  });
+
+  it("fails open when the validator is unreachable", async () => {
+    mocks.getAuthorizedWalletsForHlAddress.mockResolvedValue([]);
+    checkValidatorStatus.mockResolvedValue({ status: "unknown" });
+    mocks.getApplicant.mockResolvedValue({ id: "app-existing" });
+
+    const res = await POST(makeReq({ wallet: WALLET, connectedWallet: WALLET }));
+    expect(res.status).toBe(200);
+  });
+
+  it("does not consult the validator when a registration row exists", async () => {
+    mocks.getApplicant.mockResolvedValue({ id: "app-existing" });
+
+    const res = await POST(makeReq({ wallet: WALLET, connectedWallet: WALLET }));
+    expect(res.status).toBe(200);
+    expect(checkValidatorStatus).not.toHaveBeenCalled();
+  });
+
+  it("reuses the authorization lookup for a secondary wallet instead of querying twice", async () => {
+    const payer = "0x3333333333333333333333333333333333333333";
+    mocks.getAuthorizedWalletsForHlAddress.mockResolvedValue([WALLET, payer]);
+    mocks.getApplicant.mockResolvedValue({ id: "app-existing" });
+
+    const res = await POST(makeReq({ wallet: WALLET, connectedWallet: payer }));
+    expect(res.status).toBe(200);
+    expect(mocks.getAuthorizedWalletsForHlAddress).toHaveBeenCalledTimes(1);
+    expect(checkValidatorStatus).not.toHaveBeenCalled();
   });
 });

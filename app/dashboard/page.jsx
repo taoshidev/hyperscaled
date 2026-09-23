@@ -16,7 +16,7 @@ export const metadata = buildMetadata({
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={<div className="bg-[#09090b] min-h-[100dvh]" />}>
+    <Suspense fallback={<div className="bg-[#09090b] min-h-[calc(100dvh_-_var(--site-banner-h,0px))]" />}>
       <Dashboard />
     </Suspense>
   );

@@ -2,9 +2,9 @@
 
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
-import Link from 'next/link'
 import {
   ArrowRight,
+  ArrowUpRight,
   ArrowsLeftRight,
   Bell,
   Broadcast,
@@ -24,9 +24,9 @@ import {
 } from '@phosphor-icons/react'
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
 import PricingPreview from '@/components/marketing/PricingPreview'
-import { useBrand, useBrandHref } from '@/lib/brand'
-import { useWithPreservedQuery } from '@/lib/preserve-query'
-import { trackCtaClick } from '@/lib/analytics'
+import { useBrand } from '@/lib/brand'
+import { REGISTRATION_CLOSED_COPY } from '@/lib/sunset'
+import VantaTradingLink from '@/components/shared/VantaTradingLink'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
@@ -35,8 +35,6 @@ const spring = { type: 'spring', stiffness: 100, damping: 20 }
    ─────────────────────────────────────────────── */
 function PageHero() {
   const brand = useBrand()
-  const brandHref = useBrandHref()
-  const withQS = useWithPreservedQuery()
   const heroTitle =
     brand.poweredBy && brand.id !== 'hyperscaled'
       ? `Trade on Hyperliquid. Get ${brand.accountType} by ${brand.name.replace(' Trading', '')}.`
@@ -69,14 +67,15 @@ function PageHero() {
           transition={{ ...spring, delay: 0.16 }}
           className="mt-8"
         >
-          <Link
-            href={withQS(brandHref('/register'))}
-            onClick={() => trackCtaClick({ label: 'Start Your Challenge', location: 'how_it_works_hero' })}
+          {/* Registrations are closed (Notion #1560). */}
+          <VantaTradingLink
+            label={REGISTRATION_CLOSED_COPY.cta}
+            location="how_it_works_hero"
             className="shiny-cta inline-flex items-center gap-1.5 px-6 py-3 min-h-12"
           >
-            Start Your Challenge
-            <ArrowRight size={15} weight="bold" />
-          </Link>
+            {REGISTRATION_CLOSED_COPY.cta}
+            <ArrowUpRight size={15} weight="bold" aria-hidden="true" />
+          </VantaTradingLink>
         </motion.div>
       </div>
     </section>
@@ -202,8 +201,6 @@ function getScalingQualifications(hasCompliance) {
 }
 
 function StepCard({ step, index }) {
-  const brandHref = useBrandHref()
-  const withQS = useWithPreservedQuery()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
@@ -273,14 +270,14 @@ function StepCard({ step, index }) {
             {step.body}
           </p>
           {step.cta && (
-            <Link
-              href={withQS(brandHref('/register'))}
-              onClick={() => trackCtaClick({ label: 'Get started', location: 'how_it_works_step' })}
+            <VantaTradingLink
+              label={REGISTRATION_CLOSED_COPY.cta}
+              location="how_it_works_step"
               className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-teal-400 hover:text-teal-300 transition-colors"
             >
-              Get started
-              <ArrowRight size={14} weight="bold" />
-            </Link>
+              {REGISTRATION_CLOSED_COPY.cta}
+              <ArrowUpRight size={14} weight="bold" aria-hidden="true" />
+            </VantaTradingLink>
           )}
         </div>
 

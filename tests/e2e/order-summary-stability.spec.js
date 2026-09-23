@@ -44,7 +44,10 @@ const COUPON_CODE = "HS-E2E-FREE";
 const PAID_TIER_ACCOUNT_SIZE = 5000;
 const TIER_LIST_PRICE_USDC = 29; // matches `lib/db/seed.mjs` for vanta:5000
 
-test.describe("Order summary stability with applied coupon", () => {
+// Notion #1560: new registrations are closed and the wizard is no longer
+// reachable (every signup route renders the closure notice, covered by
+// sunset.spec.js). Kept, skipped, so the flow can be re-tested if it returns.
+test.describe.skip("Order summary stability with applied coupon", () => {
   let paidTier;
 
   test.beforeAll(async () => {

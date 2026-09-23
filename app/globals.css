@@ -4,8 +4,27 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Height of the sticky sunset banner (Notion #1560). Fixed/sticky chrome
+   (nav, parent-site bar, TOCs) offsets by it. These are pre-hydration
+   estimates of its wrapped height; components/shared/SunsetBanner.jsx
+   measures the real value on mount and sets 0px once it is dismissed or
+   absent. */
+:root {
+  --site-banner-h: 61px;
+}
+@media (min-width: 640px) {
+  :root {
+    --site-banner-h: 81px;
+  }
+}
+@media (min-width: 1024px) {
+  :root {
+    --site-banner-h: 61px;
+  }
+}
+
 [id] {
-  scroll-margin-top: 110px;
+  scroll-margin-top: calc(110px + var(--site-banner-h, 0px));
 }
 
 /* Pin the native date picker toggle to the right edge of the field. The

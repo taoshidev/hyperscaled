@@ -8,6 +8,8 @@ import { users, registrations } from "@/lib/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
 import { parseErrorBody } from "@/lib/parse-error-body";
+import { REGISTRATIONS_CLOSED } from "@/lib/sunset";
+import { registrationsClosedResponse } from "@/lib/registrations/closed-response";
 
 const MINER_SLUG = "vanta";
 
@@ -59,6 +61,9 @@ export async function POST(request) {
   if (!constantTimeEqual(provided, expectedSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  // Notion #1560: registrations are closed on every environment.
+  if (REGISTRATIONS_CLOSED) return registrationsClosedResponse();
 
   const db = await getDb();
   let body;

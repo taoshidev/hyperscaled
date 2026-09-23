@@ -32,7 +32,7 @@ export default async function Pricing() {
       "@type": "Offer",
       price: String(tier.launchPrice),
       priceCurrency: "USD",
-      availability: "https://schema.org/InStock",
+      availability: "https://schema.org/Discontinued", // registrations closed (Notion #1560)
       url: `${process.env.HYPERSCALED_BASE_URL || "https://hyperscaled.trade"}/register`,
     },
   }))
