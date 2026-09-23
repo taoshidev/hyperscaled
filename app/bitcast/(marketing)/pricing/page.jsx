@@ -31,7 +31,7 @@ export default async function BitcastPricing() {
     "@type": "Product",
     name: `Hyperstack ${tier.name} Challenge Account`,
     description: `${tier.accountSize} simulated scaled trading account on Hyperliquid. 10% profit target, 5% max drawdown.`,
-    offers: { "@type": "Offer", price: String(tier.launchPrice), priceCurrency: "USD", availability: "https://schema.org/InStock", url: "https://hyperstack.trade/register" },
+    offers: { "@type": "Offer", price: String(tier.launchPrice), priceCurrency: "USD", availability: "https://schema.org/Discontinued", url: "https://hyperstack.trade/register" },
   }))
   return (
     <>

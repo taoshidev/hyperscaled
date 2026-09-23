@@ -111,7 +111,7 @@ td{padding:10px 14px;border-bottom:1px solid var(--rule)}
 // ╚══════════════════════════════════════════════════════════════════╝
 const TRACKER = {
   "project": "Hyperscaled Marketing Website",
-  "lastUpdated": "2026-09-04T22:50:29Z",
+  "lastUpdated": "2026-09-23T22:03:31Z",
   "phases": [
     {
       "id": 0, "name": "Global Compliance Sweep", "status": "done",
@@ -457,6 +457,23 @@ const TRACKER = {
         { "name": "Concurrency guards: advisory-lock mutex + compare-and-set status writes", "status": "done" },
         { "name": "Unit tests for retry semantics, route auth and action validation", "status": "done" },
         { "name": "Review round 2: durable registered write, lock heartbeat, aggregated alerts, gated real-Postgres test", "status": "done" }
+      ]
+    },
+    {
+      "id": 21, "name": "Hyperscaled sunset — retirement banner + registrations closed (Notion #1560)", "status": "done",
+      "scope": "Sitewide (all brands)", "estSessions": "1 session", "estHours": 6,
+      "dependsOn": [20],
+      "sessions": [{ "session": 23, "date": "2026-09-23", "notes": "Sticky amber retirement banner above the nav on every page of every brand (approved copy, CTA to vantatrading.io in a new tab, dismissible per session only on the wallet-connected dashboard); /api/register, preflight, testnet-register, vanta-sync sync_registration and KYC start for unknown wallets return 410 REGISTRATIONS_CLOSED; signup routes show the closure notice; signup CTAs swapped to Go to Vanta Trading; two adversarial review rounds" }],
+      "items": [
+        { "name": "Retirement banner on every page of every brand, pinned above the nav", "status": "done" },
+        { "name": "Approved desktop (>=640px) and compact mobile copy verbatim; CTA https://vantatrading.io in a new tab", "status": "done" },
+        { "name": "Per-session dismiss on the wallet-connected dashboard only", "status": "done" },
+        { "name": "Fixed/sticky chrome offset by --site-banner-h (nav, parent-site bar, TOCs, scroll margins, full-viewport wrappers)", "status": "done" },
+        { "name": "API gates: /api/register (+ ops alert for a Hyperliquid-confirmed in-flight transfer), preflight, testnet-register, vanta-sync sync_registration -> 410 REGISTRATIONS_CLOSED", "status": "done" },
+        { "name": "KYC start refused only for an address with no registration that the validator confirms it has never seen (fails open)", "status": "done" },
+        { "name": "Signup routes (/register on every brand, /miner/[slug], /vanta/start) render the closure notice", "status": "done" },
+        { "name": "Signup CTAs swapped to Go to Vanta Trading; free-tier eyebrow, promo banner, campaign pill, capacity badges and waitlist removed", "status": "done" },
+        { "name": "Unit tests (closure gates, KYC) + e2e sunset.spec.js; wizard e2e specs skipped", "status": "done" }
       ]
     }
   ],

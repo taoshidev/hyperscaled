@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { siteBannerHeight } from '@/lib/sunset-banner-store'
 
 /* ───────────────────────────────────────────────
    TOC sections definition
@@ -52,7 +53,7 @@ function TableOfContents({ activeId }) {
       {/* Desktop sidebar */}
       <nav
         ref={navRef}
-        className="hidden lg:block fixed left-[max(1rem,calc((100vw-900px)/2-180px))] top-[126px] w-[140px] z-40 transition-opacity duration-300"
+        className="hidden lg:block fixed left-[max(1rem,calc((100vw-900px)/2-180px))] top-[calc(126px_+_var(--site-banner-h,0px))] w-[140px] z-40 transition-opacity duration-300"
         aria-label="Page sections"
       >
         <ul className="space-y-1">
@@ -75,7 +76,7 @@ function TableOfContents({ activeId }) {
       </nav>
 
       {/* Mobile jump bar */}
-      <div className="lg:hidden sticky top-[94px] z-30 bg-[#09090b]/95 backdrop-blur-sm border-b border-white/[0.06]">
+      <div className="lg:hidden sticky top-[calc(94px_+_var(--site-banner-h,0px))] z-30 bg-[#09090b]/95 backdrop-blur-sm border-b border-white/[0.06]">
         <div className="overflow-x-auto scrollbar-hide">
           <div className="flex items-center gap-1 px-4 py-2 min-w-max">
             {TOC_SECTIONS.map((s) => (
@@ -121,7 +122,7 @@ function useActiveSection() {
           setActiveId(visible[0].target.id)
         }
       },
-      { rootMargin: '-110px 0px -60% 0px', threshold: 0 }
+      { rootMargin: `-${110 + siteBannerHeight()}px 0px -60% 0px`, threshold: 0 }
     )
 
     elements.forEach((el) => observer.observe(el))
@@ -138,7 +139,7 @@ const prose = 'text-sm text-zinc-400 leading-relaxed'
 const heading3 = 'text-base font-semibold text-zinc-200 mt-8 mb-3'
 const sectionLabel = 'text-xs font-mono text-teal-400 tracking-widest uppercase'
 const bulletList = 'space-y-2 ml-5 list-disc marker:text-zinc-700'
-const sectionWrap = 'px-6 pb-20 scroll-mt-[110px]'
+const sectionWrap = 'px-6 pb-20 scroll-mt-[calc(110px_+_var(--site-banner-h,0px))]'
 const container = 'max-w-[900px] mx-auto'
 
 /* ───────────────────────────────────────────────

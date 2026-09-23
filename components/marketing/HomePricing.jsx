@@ -2,33 +2,25 @@
 
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
-import Link from 'next/link'
-import { ArrowRight, Star } from '@phosphor-icons/react'
-import { PRICING_TIERS, parseTierAccountSize } from '@/lib/constants'
-import { useBrand, useBrandHref } from '@/lib/brand'
-import { useWithPreservedQuery } from '@/lib/preserve-query'
-import { trackCtaClick } from '@/lib/analytics'
-import { useRegistrationCapacity } from '@/hooks/use-registration-capacity'
-import { isFreeTierForRegistration, freeTierBadgeLabel } from '@/lib/registration-tier-helpers'
-import { RegistrationCapacityWaitlist } from '@/components/marketing/RegistrationCapacityWaitlist'
-import { capacityMinerSlugForBrandId } from '@/lib/capacity-miner-slug'
+import { ArrowUpRight, Star } from '@phosphor-icons/react'
+import { PRICING_TIERS } from '@/lib/constants'
+import { useBrand } from '@/lib/brand'
+import { REGISTRATION_CLOSED_COPY } from '@/lib/sunset'
+import VantaTradingLink from '@/components/shared/VantaTradingLink'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
 const TIER_LABELS = { 'free': 'Free', 'tier-1': 'Starter', 'tier-2': 'Tier I', 'tier-3': 'Tier II', 'tier-4': 'Tier III', 'tier-5': 'Tier IV' }
 
-function tierBadge(tier, freeTierCap, freeSoldOut) {
-  if (tier.popular) return 'Most Popular'
-  if (tier.id === 'free') return freeTierBadgeLabel(freeSoldOut, freeTierCap)
-  return null
+// Registrations are closed (Notion #1560): no availability/sold-out badges and
+// every card's CTA goes to Vanta Trading.
+function tierBadge(tier) {
+  return tier.popular ? 'Most Popular' : null
 }
 
-function PricingCard({ tier, index, brandHref, withQS, freeAtCapacity, paidAtCapacity }) {
-  const brand = useBrand()
+function PricingCard({ tier, index }) {
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
-  const free = isFreeTierForRegistration(tier)
-  const soldOut = (free && freeAtCapacity) || (!free && paidAtCapacity)
 
   const details = [
     { label: 'Profit Target', value: tier.profitTargetAmount },
@@ -49,11 +41,11 @@ function PricingCard({ tier, index, brandHref, withQS, freeAtCapacity, paidAtCap
       }`}
     >
       {/* Badge — Most Popular or Try for Free */}
-      {tierBadge(tier, brand.freeTierCap, free && freeAtCapacity) && (
+      {tierBadge(tier) && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="inline-flex items-center gap-1 bg-teal-400 text-[#09090b] text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full">
             <Star size={12} weight="fill" />
-            {tierBadge(tier, brand.freeTierCap, free && freeAtCapacity)}
+            {tierBadge(tier)}
           </span>
         </div>
       )}
@@ -92,37 +84,24 @@ function PricingCard({ tier, index, brandHref, withQS, freeAtCapacity, paidAtCap
         ))}
       </ul>
 
-      {soldOut ? (
-        <span className="mt-auto flex items-center justify-center gap-1.5 min-h-12 xl:min-h-10 rounded-xl text-xs sm:text-sm font-semibold tabular-nums whitespace-nowrap cursor-not-allowed opacity-60 bg-white/[0.04] border border-white/[0.08] text-zinc-400 px-3 py-3 xl:px-2 xl:py-2">
-          {free ? "Limit reached" : "Sold out — join waitlist"}
-        </span>
-      ) : (
-      <Link
-        href={(() => {
-          const size = parseTierAccountSize(tier.accountSize)
-          const base = brandHref('/register')
-          return withQS(size ? `${base}?tier=${size}` : base)
-        })()}
-        onClick={() => trackCtaClick({ label: tier.cta, location: `home_pricing:${tier.name || tier.accountSize || 'unknown'}` })}
-        className={`mt-auto flex items-center justify-center gap-1.5 min-h-12 xl:min-h-10 rounded-xl text-sm xl:text-xs font-semibold transition-colors ${
+      <VantaTradingLink
+        label={REGISTRATION_CLOSED_COPY.cta}
+        location={`home_pricing:${tier.name || tier.accountSize || 'unknown'}`}
+        className={`mt-auto flex items-center justify-center gap-1.5 min-h-12 xl:min-h-10 rounded-xl text-sm xl:text-xs font-semibold whitespace-nowrap transition-colors ${
           tier.popular || tier.id === 'free'
             ? 'shiny-cta px-6 py-3 xl:px-3 xl:py-2'
             : 'bg-white/[0.06] border border-white/[0.08] text-white hover:bg-white/[0.1]'
         }`}
       >
-        {tier.cta}
-        <ArrowRight size={14} weight="bold" />
-      </Link>
-      )}
+        {REGISTRATION_CLOSED_COPY.cta}
+        <ArrowUpRight size={14} weight="bold" aria-hidden="true" />
+      </VantaTradingLink>
     </motion.div>
   )
 }
 
 export default function HomePricing({ tiers }) {
   const brand = useBrand()
-  const brandHref = useBrandHref()
-  const withQS = useWithPreservedQuery()
-  const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity(capacityMinerSlugForBrandId(brand.id))
   const resolvedTiers = tiers ?? brand.pricingTiers ?? PRICING_TIERS
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
@@ -151,19 +130,9 @@ export default function HomePricing({ tiers }) {
 
         <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${resolvedTiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-6 md:gap-5 xl:gap-3 items-stretch`}>
           {resolvedTiers.map((tier, i) => (
-            <PricingCard
-              key={tier.id}
-              tier={tier}
-              index={i}
-              brandHref={brandHref}
-              withQS={withQS}
-              freeAtCapacity={freeAtCapacity}
-              paidAtCapacity={paidAtCapacity}
-            />
+            <PricingCard key={tier.id} tier={tier} index={i} />
           ))}
         </div>
-
-        <RegistrationCapacityWaitlist paidAtCapacity={paidAtCapacity} />
 
         {/* Universal rules */}
         <motion.p

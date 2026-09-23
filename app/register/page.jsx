@@ -1,117 +1,16 @@
-import { RegistrationFlow } from "@/components/registration/registration-flow";
-import { buildMetadata } from "@/lib/metadata";
-import { getMinerBySlug, getTiersForMiner } from "@/lib/miners";
-import { TIERS as TIER_META } from "@/lib/constants";
-import { unstable_cache } from "next/cache";
-import { reportError } from "@/lib/errors";
-import { listPriceUsdcFromDbTier } from "@/lib/wsb-tier-list-price";
-import {
-  resolveActiveCampaign,
-  serializeActiveCampaign,
-  applyCampaignToTierPrice,
-} from "@/lib/campaign-pricing";
+import RegistrationClosed from "@/components/registration/registration-closed"
+import { buildMetadata } from "@/lib/metadata"
+import { REGISTRATION_CLOSED_COPY } from "@/lib/sunset"
 
+// Notion #1560: new registrations are closed on every brand. The route stays
+// so inbound links land on the closure notice instead of a 404.
 export const metadata = buildMetadata({
-  title: "Start Your Challenge",
-  description:
-    "Choose your funded account size and begin your one-step challenge on Hyperliquid. No recurring fees. 100% of performance rewards are yours.",
-  ogTitle: "Start Your Challenge — Hyperscaled Funded Trading",
-  ogDescription:
-    "Choose from $5K to $100K. One-time USDC fee. Pass the challenge. Keep 100% of your profits.",
+  title: REGISTRATION_CLOSED_COPY.heading,
+  description: REGISTRATION_CLOSED_COPY.body,
   path: "/register",
-});
+  robots: { index: false, follow: true },
+})
 
-export const dynamic = "force-dynamic";
-
-const MINER_SLUG = "vanta";
-
-function enrichTier(dbTier, index) {
-  const meta = TIER_META.find((t) => t.accountSize === dbTier.accountSize);
-  return {
-    id: meta?.id || `tier-${index}`,
-    name: meta?.name || `$${dbTier.accountSize / 1000}K`,
-    accountSize: dbTier.accountSize,
-    fullPrice: meta?.fullPrice ?? null,
-    promoPrice: listPriceUsdcFromDbTier(
-      MINER_SLUG,
-      dbTier.accountSize,
-      Number(dbTier.priceUsdc),
-    ),
-    badge: meta?.badge ?? null,
-    details: meta?.details ?? [],
-  };
-}
-
-/**
- * Layer the active promotional campaign onto cached tiers. `promoPrice` stays
- * the standard list price (the checkout base the server discounts via coupon);
- * we add a display-only `salePrice` so the tier cards can show the discounted
- * price with the list price struck through — matching the marketing storefront.
- */
-function applyCampaignToTiers(tiers, activeCampaign) {
-  if (!Array.isArray(tiers)) return tiers;
-  return tiers.map((t) => {
-    const list = Number(t.promoPrice);
-    const { currentPrice } = applyCampaignToTierPrice(
-      t.accountSize,
-      list,
-      activeCampaign,
-    );
-    return { ...t, salePrice: currentPrice };
-  });
-}
-
-const getCachedRegisterMinerData = unstable_cache(
-  async () => {
-    const miner = await getMinerBySlug(MINER_SLUG);
-    if (!miner) {
-      return { initialMinerTiers: null, initialPaymentWallet: null };
-    }
-
-    const dbTiers = await getTiersForMiner(miner.hotkey);
-    const activeTiers = dbTiers.filter((t) => t.isActive);
-
-    return {
-      initialMinerTiers: activeTiers.map(enrichTier),
-      initialPaymentWallet: miner.usdcWallet,
-    };
-  },
-  ["register-miner-vanta"],
-  {
-    revalidate: 60,
-    tags: ["pricing-tiers", "pricing-tiers:vanta"],
-  },
-);
-
-export default async function RegisterPage() {
-  let initialMinerTiers = null;
-  let initialPaymentWallet = null;
-
-  try {
-    const data = await getCachedRegisterMinerData();
-    initialMinerTiers = data.initialMinerTiers;
-    initialPaymentWallet = data.initialPaymentWallet;
-  } catch (err) {
-    reportError(err, {
-      source: "app/register/page",
-      metadata: { step: "ssr_miner_data_load", minerSlug: MINER_SLUG },
-    });
-    // Keep nulls so client fallback fetch can recover.
-  }
-
-  const activeCampaign = await resolveActiveCampaign({
-    minerSlug: MINER_SLUG,
-  }).catch(() => null);
-
-  const tiersForFlow = applyCampaignToTiers(initialMinerTiers, activeCampaign);
-
-  return (
-    <RegistrationFlow
-      initialMinerSlug={MINER_SLUG}
-      initialMinerTiers={tiersForFlow}
-      initialPaymentWallet={initialPaymentWallet}
-      brandVariant="hyperscaled"
-      activeCampaign={serializeActiveCampaign(activeCampaign)}
-    />
-  );
+export default function RegisterPage() {
+  return <RegistrationClosed />
 }

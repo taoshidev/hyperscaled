@@ -3,6 +3,7 @@ import Script from "next/script";
 import "./globals.css";
 import { GA_MEASUREMENT_ID } from "@/lib/analytics";
 import { PageViewTracker } from "@/components/analytics/page-view-tracker";
+import SunsetBanner from "@/components/shared/SunsetBanner";
 
 const SITE_URL = process.env.HYPERSCALED_BASE_URL || "https://hyperscaled.trade";
 const OG_IMAGE = {
@@ -79,7 +80,12 @@ export default function RootLayout({ children }) {
         <Suspense fallback={null}>
           <PageViewTracker />
         </Suspense>
-        {children}
+        {/* body is height:100%, so a sticky child of <body> would scroll away
+            after one viewport; this wrapper spans the whole page instead. */}
+        <div>
+          <SunsetBanner />
+          {children}
+        </div>
       </body>
     </html>
   );

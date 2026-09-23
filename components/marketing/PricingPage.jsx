@@ -4,7 +4,6 @@ import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import {
   CheckCircle,
-  ArrowRight,
   ListChecks,
   Target,
   CalendarCheck,
@@ -12,38 +11,30 @@ import {
   Lightning,
   LinkSimple,
   Star,
+  ArrowUpRight,
 } from '@phosphor-icons/react'
-import Link from 'next/link'
 import ScalingPathVisual from '@/components/shared/ScalingPathVisual'
-import { useBrand, useBrandHref } from '@/lib/brand'
-import { useWithPreservedQuery } from '@/lib/preserve-query'
-import { trackCtaClick } from '@/lib/analytics'
+import { useBrand } from '@/lib/brand'
 import FAQAccordion from '@/components/shared/FAQAccordion'
-import PromoBanner from '@/components/marketing/PromoBanner'
 import { PRICING_TIERS, PRICING_FAQ, parseTierAccountSize } from '@/lib/constants'
-import { useRegistrationCapacity } from '@/hooks/use-registration-capacity'
-import { isFreeTierForRegistration, freeTierBadgeLabel } from '@/lib/registration-tier-helpers'
-import { RegistrationCapacityWaitlist } from '@/components/marketing/RegistrationCapacityWaitlist'
-import { capacityMinerSlugForBrandId } from '@/lib/capacity-miner-slug'
+import { isFreeTierForRegistration } from '@/lib/registration-tier-helpers'
+import { REGISTRATION_CLOSED_COPY } from '@/lib/sunset'
+import VantaTradingLink from '@/components/shared/VantaTradingLink'
 
 const spring = { type: 'spring', stiffness: 100, damping: 20 }
 
 const TIER_LABELS = { 'free': 'Free', 'tier-1': 'Starter', 'tier-2': 'Tier I', 'tier-3': 'Tier II', 'tier-4': 'Tier III', 'tier-5': 'Tier IV' }
 
-function tierBadge(tier, freeTierCap, freeSoldOut) {
-  if (tier.popular) return 'Most Popular'
-  if (tier.id === 'free') return freeTierBadgeLabel(freeSoldOut, freeTierCap)
-  return null
+// Registrations are closed (Notion #1560): no availability/sold-out badges and
+// every card's CTA goes to Vanta Trading.
+function tierBadge(tier) {
+  return tier.popular ? 'Most Popular' : null
 }
 
 /* ── Page Hero ── */
-function PricingHero({ showPromoBar }) {
+function PricingHero() {
   const brand = useBrand()
-  const topPad = showPromoBar
-    ? "pt-8"
-    : brand.parentSite
-      ? "pt-32"
-      : "pt-24"
+  const topPad = brand.parentSite ? "pt-32" : "pt-24"
   return (
     <section className={`pb-16 px-6 ${topPad}`}>
       <div className="max-w-[800px] mx-auto text-center">
@@ -73,14 +64,11 @@ function PricingHero({ showPromoBar }) {
 }
 
 /* ── Single Pricing Card ── */
-function PricingCard({ tier, index, freeAtCapacity, paidAtCapacity }) {
+function PricingCard({ tier, index }) {
   const brand = useBrand()
-  const brandHref = useBrandHref()
-  const withQS = useWithPreservedQuery()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-40px' })
   const free = isFreeTierForRegistration(tier)
-  const soldOut = (free && freeAtCapacity) || (!free && paidAtCapacity)
 
   const details = [
     { label: 'Profit Target', value: tier.profitTargetAmount },
@@ -106,11 +94,11 @@ function PricingCard({ tier, index, freeAtCapacity, paidAtCapacity }) {
       }`}
     >
       {/* Badge — Most Popular or Try for Free */}
-      {tierBadge(tier, brand.freeTierCap, free && freeAtCapacity) && (
+      {tierBadge(tier) && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="inline-flex items-center gap-1 bg-teal-400 text-[#09090b] text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full">
             <Star size={12} weight="fill" />
-            {tierBadge(tier, brand.freeTierCap, free && freeAtCapacity)}
+            {tierBadge(tier)}
           </span>
         </div>
       )}
@@ -152,28 +140,19 @@ function PricingCard({ tier, index, freeAtCapacity, paidAtCapacity }) {
         ))}
       </ul>
 
-      {soldOut ? (
-        <span className="mt-auto flex items-center justify-center gap-1.5 min-h-12 xl:min-h-10 rounded-xl text-xs sm:text-sm font-semibold tabular-nums whitespace-nowrap cursor-not-allowed opacity-60 bg-white/[0.04] border border-white/[0.08] text-zinc-400 px-3 py-3 xl:px-2 xl:py-2">
-          {free ? "Limit reached" : "Sold out — join waitlist"}
-        </span>
-      ) : (
-      <Link
-        href={(() => {
-          const base = brandHref('/register')
-          return withQS(numericAccountSize ? `${base}?tier=${numericAccountSize}` : base)
-        })()}
+      <VantaTradingLink
+        label={REGISTRATION_CLOSED_COPY.cta}
+        location={`pricing_page:${tier.name || tier.accountSize || 'unknown'}`}
         data-testid="pricing-tier-cta"
-        onClick={() => trackCtaClick({ label: tier.cta, location: `pricing_page:${tier.name || tier.accountSize || 'unknown'}` })}
-        className={`mt-auto flex items-center justify-center gap-1.5 min-h-12 xl:min-h-10 rounded-xl text-sm xl:text-xs font-semibold transition-colors ${
+        className={`mt-auto flex items-center justify-center gap-1.5 min-h-12 xl:min-h-10 rounded-xl text-sm xl:text-xs font-semibold whitespace-nowrap transition-colors ${
           tier.popular || tier.id === 'free'
             ? 'shiny-cta px-6 py-3 xl:px-3 xl:py-2'
             : 'bg-white/[0.06] border border-white/[0.08] text-white hover:bg-white/[0.1]'
         }`}
       >
-        {tier.cta}
-        <ArrowRight size={14} weight="bold" />
-      </Link>
-      )}
+        {REGISTRATION_CLOSED_COPY.cta}
+        <ArrowUpRight size={14} weight="bold" aria-hidden="true" />
+      </VantaTradingLink>
       {brand.compliance && free && (
         <p className="mt-3 text-[11px] leading-snug text-zinc-600 text-center">
           Simulated trading only — no funded or live trading account is created or provided.
@@ -184,9 +163,8 @@ function PricingCard({ tier, index, freeAtCapacity, paidAtCapacity }) {
 }
 
 /* ── Pricing Cards Grid ── */
-function PricingCards({ tiers, brandId, activeCampaign }) {
+function PricingCards({ tiers }) {
   const brand = useBrand()
-  const { freeAtCapacity, paidAtCapacity } = useRegistrationCapacity(capacityMinerSlugForBrandId(brandId))
   return (
     <section className="px-6 pb-20">
       <div className="max-w-[1400px] mx-auto w-full flex flex-col gap-8">
@@ -194,34 +172,9 @@ function PricingCards({ tiers, brandId, activeCampaign }) {
           className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${tiers.length <= 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-6'} gap-6 md:gap-5 xl:gap-3 items-stretch`}
         >
           {tiers.map((tier, i) => (
-            <PricingCard
-              key={tier.id}
-              tier={tier}
-              index={i}
-              freeAtCapacity={freeAtCapacity}
-              paidAtCapacity={paidAtCapacity}
-            />
+            <PricingCard key={tier.id} tier={tier} index={i} />
           ))}
         </div>
-        <RegistrationCapacityWaitlist
-          paidAtCapacity={paidAtCapacity}
-          className="mt-0"
-        />
-        {activeCampaign && activeCampaign.bannerEnabled && (
-          <div className="flex justify-center">
-            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white">
-              <span className="text-sm font-semibold text-zinc-900 tracking-tight">
-                {activeCampaign.bannerText || activeCampaign.name}
-                {activeCampaign.coupon?.code ? (
-                  <>
-                    {' · code '}
-                    <span className="tracking-wide">{activeCampaign.coupon.code}</span>
-                  </>
-                ) : null}
-              </span>
-            </div>
-          </div>
-        )}
       </div>
       <p className="text-center text-sm text-zinc-500 mt-4 max-w-[60ch] mx-auto" style={{ textWrap: 'balance' }}>
         {brand.compliance
@@ -509,25 +462,13 @@ function PricingFAQSection() {
 }
 
 /* ── Page Compose ── */
-export default function PricingPage({ tiers, activeCampaign = null }) {
+export default function PricingPage({ tiers }) {
   const brand = useBrand()
   const resolvedTiers = tiers ?? brand.pricingTiers ?? PRICING_TIERS
-  const showPromo =
-    Boolean(brand.firstParty) &&
-    Boolean(activeCampaign && activeCampaign.bannerEnabled)
   return (
     <>
-      {showPromo && (
-        <div className={brand.parentSite ? 'mt-24' : 'mt-16'}>
-          <PromoBanner campaign={activeCampaign} />
-        </div>
-      )}
-      <PricingHero showPromoBar={showPromo} />
-      <PricingCards
-        tiers={resolvedTiers}
-        brandId={brand.id}
-        activeCampaign={activeCampaign}
-      />
+      <PricingHero />
+      <PricingCards tiers={resolvedTiers} />
       <WhatsIncludedGrid />
       <ModelSection />
       <ScalingSection />

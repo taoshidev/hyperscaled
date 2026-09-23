@@ -20,7 +20,10 @@ import {
 // guard fired on submit instead of on input change, so users got all
 // the way to MetaMask before learning their wallets didn't line up.
 
-test.describe("Wallet ownership UX guard", () => {
+// Notion #1560: new registrations are closed and the wizard is no longer
+// reachable (every signup route renders the closure notice, covered by
+// sunset.spec.js). Kept, skipped, so the flow can be re-tested if it returns.
+test.describe.skip("Wallet ownership UX guard", () => {
   let freeTier;
 
   test.beforeAll(async () => {

@@ -1,18 +1,19 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
 import {
   ArrowRight,
+  ArrowUpRight,
   CheckCircle,
   XCircle,
   Warning,
 } from '@phosphor-icons/react'
 import RulesTable from '@/components/shared/RulesTable'
 import { EVAL_RULES, getFundedRules, SCALING_PATH, BUYING_POWER_BY_SIZE, PER_PAIR_LIMITS, PER_PAIR_OVERRIDES, ASSET_CLASS_LIMITS, PORTFOLIO_LIMITS, FEE_RULES, TRADABLE_PAIRS } from '@/lib/constants'
-import { useBrand, useBrandHref } from '@/lib/brand'
-import { useWithPreservedQuery } from '@/lib/preserve-query'
-import { trackCtaClick } from '@/lib/analytics'
+import { useBrand } from '@/lib/brand'
+import { REGISTRATION_CLOSED_COPY } from '@/lib/sunset'
+import VantaTradingLink from '@/components/shared/VantaTradingLink'
+import { siteBannerHeight } from '@/lib/sunset-banner-store'
 
 /* ───────────────────────────────────────────────
    TOC sections definition
@@ -71,7 +72,7 @@ function TableOfContents({ activeId }) {
       {/* Desktop sidebar */}
       <nav
         ref={navRef}
-        className="hidden lg:block fixed left-[max(1rem,calc((100vw-900px)/2-180px))] top-[126px] w-[140px] z-40 transition-opacity duration-300"
+        className="hidden lg:block fixed left-[max(1rem,calc((100vw-900px)/2-180px))] top-[calc(126px_+_var(--site-banner-h,0px))] w-[140px] z-40 transition-opacity duration-300"
         aria-label="Page sections"
       >
         <ul className="space-y-1">
@@ -94,7 +95,7 @@ function TableOfContents({ activeId }) {
       </nav>
 
       {/* Mobile jump bar */}
-      <div className="lg:hidden sticky top-[94px] z-30 bg-[#09090b]/95 backdrop-blur-sm border-b border-white/[0.06]">
+      <div className="lg:hidden sticky top-[calc(94px_+_var(--site-banner-h,0px))] z-30 bg-[#09090b]/95 backdrop-blur-sm border-b border-white/[0.06]">
         <div className="overflow-x-auto scrollbar-hide">
           <div className="flex items-center gap-1 px-4 py-2 min-w-max">
             {sections.map((s) => (
@@ -140,7 +141,7 @@ function useActiveSection() {
           setActiveId(visible[0].target.id)
         }
       },
-      { rootMargin: '-110px 0px -60% 0px', threshold: 0 }
+      { rootMargin: `-${110 + siteBannerHeight()}px 0px -60% 0px`, threshold: 0 }
     )
 
     elements.forEach((el) => observer.observe(el))
@@ -185,7 +186,7 @@ function PageHero() {
 function EvalRulesSection() {
   const brand = useBrand()
   return (
-    <section id="challenge" className="px-6 pb-20 scroll-mt-[110px]">
+    <section id="challenge" className="px-6 pb-20 scroll-mt-[calc(110px_+_var(--site-banner-h,0px))]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Challenge Phase
@@ -215,7 +216,7 @@ function AvailablePairsSection() {
   const brand = useBrand()
   const totalPairs = TRADABLE_PAIRS.reduce((sum, group) => sum + group.count, 0)
   return (
-    <section id="pairs" className="px-6 pb-20 scroll-mt-[110px]">
+    <section id="pairs" className="px-6 pb-20 scroll-mt-[calc(110px_+_var(--site-banner-h,0px))]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Available Pairs
@@ -317,7 +318,7 @@ function TierMatrix({ caption, labelHeader, rows }) {
 function WeightTrackingSection() {
   const brand = useBrand()
   return (
-    <section id="weight-tracking" className="px-6 pb-20 scroll-mt-[110px]">
+    <section id="weight-tracking" className="px-6 pb-20 scroll-mt-[calc(110px_+_var(--site-banner-h,0px))]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Weight Tracking & Limits
@@ -444,7 +445,7 @@ function WeightTrackingSection() {
 function TrackingMethodologySection() {
   const brand = useBrand()
   return (
-    <section id="tracking" className="px-6 pb-20 scroll-mt-[110px]">
+    <section id="tracking" className="px-6 pb-20 scroll-mt-[calc(110px_+_var(--site-banner-h,0px))]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Tracking Methodology
@@ -489,7 +490,7 @@ function TrackingMethodologySection() {
 function FeesSection() {
   const brand = useBrand()
   return (
-    <section id="fees" className="px-6 pb-20 scroll-mt-[110px]">
+    <section id="fees" className="px-6 pb-20 scroll-mt-[calc(110px_+_var(--site-banner-h,0px))]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Spread, Fees & Slippage
@@ -533,7 +534,7 @@ function FundedRulesSection() {
   const baseRules = getFundedRules(brand.accountType, brand.name)
   const rules = isCompliance ? remapFundedRulesForCompliance(baseRules, brand) : baseRules
   return (
-    <section id="scaled" className="px-6 pb-20 scroll-mt-[110px]">
+    <section id="scaled" className="px-6 pb-20 scroll-mt-[calc(110px_+_var(--site-banner-h,0px))]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           {isCompliance ? 'Scaled Account Phase (Simulated)' : 'Funded Account Phase'}
@@ -574,7 +575,7 @@ const DOES_NOT_DISQUALIFY = [
 function ScalingRulesSection() {
   const brand = useBrand()
   return (
-    <section id="scaling" className="px-6 pb-20 scroll-mt-[110px]">
+    <section id="scaling" className="px-6 pb-20 scroll-mt-[calc(110px_+_var(--site-banner-h,0px))]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Account Scaling
@@ -696,7 +697,7 @@ function DisqualificationSection() {
   const brand = useBrand()
   const disqualifyRules = getDisqualifyRules(brand.accountType)
   return (
-    <section id="disqualification" className="px-6 pb-20 scroll-mt-[110px]">
+    <section id="disqualification" className="px-6 pb-20 scroll-mt-[calc(110px_+_var(--site-banner-h,0px))]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Disqualification
@@ -763,7 +764,7 @@ const BEST_PRACTICES = [
 function BestPracticesSection() {
   const brand = useBrand()
   return (
-    <section id="best-practices" className="px-6 pb-20 scroll-mt-[110px]">
+    <section id="best-practices" className="px-6 pb-20 scroll-mt-[calc(110px_+_var(--site-banner-h,0px))]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Best Practices
@@ -798,7 +799,7 @@ function BestPracticesSection() {
 function KYCSection() {
   const brand = useBrand()
   return (
-    <section id="kyc" className="px-6 pb-20 scroll-mt-[110px]">
+    <section id="kyc" className="px-6 pb-20 scroll-mt-[calc(110px_+_var(--site-banner-h,0px))]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           KYC & Payouts
@@ -824,10 +825,8 @@ function KYCSection() {
    ─────────────────────────────────────────────── */
 function ProtocolSection() {
   const brand = useBrand()
-  const brandHref = useBrandHref()
-  const withQS = useWithPreservedQuery()
   return (
-    <section id="protocol" className="px-6 pb-24 scroll-mt-[110px]">
+    <section id="protocol" className="px-6 pb-24 scroll-mt-[calc(110px_+_var(--site-banner-h,0px))]">
       <div className="max-w-[900px] mx-auto">
         <span className="text-xs font-mono text-teal-400 tracking-widest uppercase">
           Protocol
@@ -846,14 +845,15 @@ function ProtocolSection() {
         </div>
 
         <div className="mt-8">
-          <Link
-            href={withQS(brandHref('/register'))}
-            onClick={() => trackCtaClick({ label: 'Start Your Challenge', location: 'rules_bottom' })}
+          {/* Registrations are closed (Notion #1560). */}
+          <VantaTradingLink
+            label={REGISTRATION_CLOSED_COPY.cta}
+            location="rules_bottom"
             className="text-sm text-teal-400 hover:text-teal-300 transition-colors inline-flex items-center gap-1.5"
           >
-            Start Your Challenge
-            <ArrowRight size={14} weight="bold" />
-          </Link>
+            {REGISTRATION_CLOSED_COPY.cta}
+            <ArrowUpRight size={14} weight="bold" aria-hidden="true" />
+          </VantaTradingLink>
         </div>
 
       </div>

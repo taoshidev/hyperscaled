@@ -5,6 +5,7 @@ import { ArrowRight, DiscordLogo, Envelope } from '@phosphor-icons/react'
 import FAQAccordion from '@/components/shared/FAQAccordion'
 import { FAQ_ITEMS } from '@/lib/constants'
 import { useBrand, brandifyText } from '@/lib/brand'
+import { siteBannerHeight } from '@/lib/sunset-banner-store'
 
 /* ───────────────────────────────────────────────
    TOC sections — derived from FAQ_ITEMS categories
@@ -50,7 +51,7 @@ function TableOfContents({ activeId }) {
       {/* Desktop sidebar */}
       <nav
         ref={navRef}
-        className="hidden lg:block fixed left-[max(1rem,calc((100vw-900px)/2-180px))] top-[126px] w-[140px] z-40 transition-opacity duration-300"
+        className="hidden lg:block fixed left-[max(1rem,calc((100vw-900px)/2-180px))] top-[calc(126px_+_var(--site-banner-h,0px))] w-[140px] z-40 transition-opacity duration-300"
         aria-label="FAQ sections"
       >
         <ul className="space-y-1">
@@ -73,7 +74,7 @@ function TableOfContents({ activeId }) {
       </nav>
 
       {/* Mobile jump bar */}
-      <div className="lg:hidden sticky top-[94px] z-30 bg-[#09090b]/95 backdrop-blur-sm border-b border-white/[0.06]">
+      <div className="lg:hidden sticky top-[calc(94px_+_var(--site-banner-h,0px))] z-30 bg-[#09090b]/95 backdrop-blur-sm border-b border-white/[0.06]">
         <div className="overflow-x-auto scrollbar-hide">
           <div className="flex items-center gap-1 px-4 py-2 min-w-max">
             {TOC_SECTIONS.map((s) => (
@@ -119,7 +120,7 @@ function useActiveSection() {
           setActiveId(visible[0].target.id)
         }
       },
-      { rootMargin: '-110px 0px -60% 0px', threshold: 0 }
+      { rootMargin: `-${110 + siteBannerHeight()}px 0px -60% 0px`, threshold: 0 }
     )
 
     elements.forEach((el) => observer.observe(el))

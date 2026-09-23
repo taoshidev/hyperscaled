@@ -8,6 +8,8 @@ import { checkValidatorStatus, isConfirmedDeregistered } from "@/lib/validator";
 import { reportError } from "@/lib/errors";
 import { checkRegistrationCap } from "@/lib/registration-capacity";
 import { evaluateRegistrationPricing } from "@/lib/registration-pricing";
+import { REGISTRATIONS_CLOSED } from "@/lib/sunset";
+import { registrationsClosedResponse } from "@/lib/registrations/closed-response";
 
 // POST /api/register/preflight
 // Runs every check that /api/register runs before payment, so callers on the
@@ -15,6 +17,11 @@ import { evaluateRegistrationPricing } from "@/lib/registration-pricing";
 // complete. The x402 path already gets this implicitly via the initial 402
 // probe, but using the same endpoint there is harmless.
 export async function POST(request) {
+  // Notion #1560: registrations are closed. Every checkout calls preflight
+  // before it signs or sends a payment, so this also stops tabs still running
+  // the pre-sunset bundle from moving funds.
+  if (REGISTRATIONS_CLOSED) return registrationsClosedResponse();
+
   const db = await getDb();
   const reqId = Math.random().toString(36).slice(2, 10);
   console.info("[REGISTRATION] POST /api/register/preflight received", { reqId });

@@ -22,7 +22,10 @@ import { E2E_MOCK_WALLET_ADDRESS } from "./fixtures/wallet.js";
 // (no active subaccount on the validator), so the stale row qualifies
 // for reconciliation.
 
-test.describe("Stale pending reconciliation (free tier)", () => {
+// Notion #1560: new registrations are closed and the wizard is no longer
+// reachable (every signup route renders the closure notice, covered by
+// sunset.spec.js). Kept, skipped, so the flow can be re-tested if it returns.
+test.describe.skip("Stale pending reconciliation (free tier)", () => {
   let freeTier;
 
   test.beforeAll(async () => {

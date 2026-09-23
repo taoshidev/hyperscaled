@@ -15,7 +15,7 @@ export const metadata = buildMetadata({
 
 export default function BitcastDashboardPage() {
   return (
-    <Suspense fallback={<div className="bg-black min-h-[100dvh]" />}>
+    <Suspense fallback={<div className="bg-black min-h-[calc(100dvh_-_var(--site-banner-h,0px))]" />}>
       <Dashboard />
     </Suspense>
   )

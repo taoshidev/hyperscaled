@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAccount, useDisconnect } from "wagmi";
 import { useQuery } from "@tanstack/react-query";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { AlertCircle, RefreshCw } from "lucide-react";
-import { MagnifyingGlass, Wallet, ArrowRight, Warning, WifiSlash, Receipt } from "@phosphor-icons/react";
+import { MagnifyingGlass, Wallet, ArrowRight, ArrowUpRight, Warning, WifiSlash, Receipt } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { useBrand, useBrandHref } from "@/lib/brand";
+import { useBrand } from "@/lib/brand";
 import { truncateAddress as truncateAddrFn } from "@/lib/format";
+import { REGISTRATION_CLOSED_COPY } from "@/lib/sunset";
+import { setSunsetBannerDismissible } from "@/lib/sunset-banner-store";
+import VantaTradingLink from "@/components/shared/VantaTradingLink";
 
 import { useDashboardData, usePayoutData } from "@/hooks/use-dashboard";
 import { useDashboardStream } from "@/hooks/use-dashboard-stream";
@@ -29,7 +31,6 @@ import { KycVerification } from "./kyc-verification";
 const FUNDED_DEMO_LOOKUP = "0x7939aF2C9889F59A96C3921B515300A9a70898BD".toLowerCase();
 
 export function Dashboard() {
-  const brandHref = useBrandHref();
   const brand = useBrand();
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
@@ -41,6 +42,14 @@ export function Dashboard() {
   const [dashTab, setDashTab] = useState("performance");
 
   const onIntro = !useConnectedWallet && !lookupSubmitted;
+
+  // Notion #1560: the sunset banner is dismissible (per session) only on the
+  // wallet-connected dashboard — the connect screen is the login page, so it
+  // stays pinned there and on every other page.
+  useEffect(() => {
+    setSunsetBannerDismissible(isConnected);
+    return () => setSunsetBannerDismissible(false);
+  }, [isConnected]);
   const linkedAccounts = useQuery({
     queryKey: ["dashboard-accounts", address, brand.id],
     queryFn: async () => {
@@ -95,7 +104,7 @@ export function Dashboard() {
   // No choice made yet — show options
   if (!useConnectedWallet && !lookupSubmitted) {
     return (
-      <div className="min-h-[calc(100dvh-4rem)] flex items-center justify-center p-6">
+      <div className="min-h-[calc(100dvh_-_4rem_-_var(--site-banner-h,0px))] flex items-center justify-center p-6">
         <div className="space-y-8 max-w-md w-full mx-auto text-center">
           <div className="space-y-3">
             <div className="flex items-center justify-center gap-2 mb-2">
@@ -224,7 +233,7 @@ export function Dashboard() {
   // Loading — skeleton instead of spinner
   if (dashboard.isLoading) {
     return (
-      <div className="min-h-[calc(100dvh-4rem)] px-6 py-8">
+      <div className="min-h-[calc(100dvh_-_4rem_-_var(--site-banner-h,0px))] px-6 py-8">
         <div className="max-w-[1400px] mx-auto space-y-6">
 
           {/* Account header */}
@@ -349,7 +358,7 @@ export function Dashboard() {
   // Error: 404
   if (dashboard.error?.status === 404) {
     return (
-      <div className="min-h-[calc(100dvh-4rem)] flex items-center justify-center p-6">
+      <div className="min-h-[calc(100dvh_-_4rem_-_var(--site-banner-h,0px))] flex items-center justify-center p-6">
         <div className="space-y-5 max-w-md w-full mx-auto text-center">
           <div className="flex items-center justify-center w-16 h-16 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/20">
             <Warning size={32} weight="duotone" className="text-amber-500" />
@@ -359,14 +368,17 @@ export function Dashboard() {
             This wallet is not registered with any entity miner.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-            <Link href={brandHref("/register")}>
-              <span className="shiny-cta px-6 py-3 inline-flex items-center gap-1.5">
-                <span className="flex items-center gap-1.5">
-                  Register Now
-                  <ArrowRight size={15} weight="bold" />
-                </span>
+            {/* Registrations are closed (Notion #1560). */}
+            <VantaTradingLink
+              label={REGISTRATION_CLOSED_COPY.cta}
+              location="dashboard_no_account"
+              className="shiny-cta px-6 py-3 inline-flex items-center gap-1.5"
+            >
+              <span className="flex items-center gap-1.5">
+                {REGISTRATION_CLOSED_COPY.cta}
+                <ArrowUpRight size={15} weight="bold" aria-hidden="true" />
               </span>
-            </Link>
+            </VantaTradingLink>
             <Button
               variant="outline"
               onClick={handleReset}
@@ -383,7 +395,7 @@ export function Dashboard() {
   // Error: 502 or other
   if (dashboard.error) {
     return (
-      <div className="min-h-[calc(100dvh-4rem)] flex items-center justify-center p-6">
+      <div className="min-h-[calc(100dvh_-_4rem_-_var(--site-banner-h,0px))] flex items-center justify-center p-6">
         <div className="space-y-5 max-w-md w-full mx-auto text-center">
           <div className="flex items-center justify-center w-16 h-16 mx-auto rounded-2xl bg-red-500/10 border border-red-500/20">
             {dashboard.error.status === 502 ? (
@@ -422,7 +434,7 @@ export function Dashboard() {
       ? `$${Math.round(reg.account_size / 1000)}K`
       : `$${reg.account_size || 0}`;
     return (
-      <div className="min-h-[calc(100dvh-4rem)] flex items-center justify-center p-6">
+      <div className="min-h-[calc(100dvh_-_4rem_-_var(--site-banner-h,0px))] flex items-center justify-center p-6">
         <div className="space-y-5 max-w-md w-full mx-auto text-center">
           <div className="flex items-center justify-center w-16 h-16 mx-auto rounded-2xl bg-teal-500/10 border border-teal-500/20">
             <Receipt size={32} weight="duotone" className="text-teal-400" />
@@ -487,7 +499,7 @@ export function Dashboard() {
   const tierLabel = tierMap.find(tier => data.account_size >= tier.min)?.label;
 
   return (
-    <div className="min-h-[calc(100dvh-4rem)] px-6 py-8">
+    <div className="min-h-[calc(100dvh_-_4rem_-_var(--site-banner-h,0px))] px-6 py-8">
       <div className="max-w-[1400px] mx-auto space-y-6">
         {/* KYC Verification */}
         <KycVerification hlAddress={activeAddress} connectedWallet={address} />

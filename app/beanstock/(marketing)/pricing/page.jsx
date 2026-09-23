@@ -36,7 +36,7 @@ export default async function BeanstockPricing() {
       "@type": "Offer",
       price: String(tier.launchPrice),
       priceCurrency: "USD",
-      availability: "https://schema.org/InStock",
+      availability: "https://schema.org/Discontinued", // registrations closed (Notion #1560)
       url: "https://hyperscaled.trade/beanstock/register",
     },
   }))

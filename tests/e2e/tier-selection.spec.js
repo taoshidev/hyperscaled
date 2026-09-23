@@ -60,7 +60,8 @@ test.describe("Tier selection", () => {
     await closePool();
   });
 
-  test("registration wizard renders every active tier card", async ({
+  // Notion #1560: the wizard is unreachable while registrations are closed.
+  test.skip("registration wizard renders every active tier card", async ({
     page,
   }) => {
     await page.goto("/register");
@@ -116,7 +117,8 @@ test.describe("Tier selection", () => {
     }
   });
 
-  test("clicking a wizard tier card advances to step 1 (Connect & Pay)", async ({
+  // Notion #1560: the wizard is unreachable while registrations are closed.
+  test.skip("clicking a wizard tier card advances to step 1 (Connect & Pay)", async ({
     page,
   }) => {
     await page.goto("/register");

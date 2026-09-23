@@ -13,7 +13,10 @@ import {
 // regression hit during the multi-tenancy work — the wizard would
 // briefly render step 0 before async tier data resolved.
 
-test.describe("Deep link from /pricing → /register", () => {
+// Notion #1560: new registrations are closed and the wizard is no longer
+// reachable (every signup route renders the closure notice, covered by
+// sunset.spec.js). Kept, skipped, so the flow can be re-tested if it returns.
+test.describe.skip("Deep link from /pricing → /register", () => {
   let tiers;
 
   /** Avoid substring traps (e.g. tier=1000 matching tier=10000). */

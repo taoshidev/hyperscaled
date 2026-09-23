@@ -18,7 +18,7 @@ export default function ErrorBoundary({ error, reset }) {
   }, [error]);
 
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4">
+    <div className="min-h-[calc(100dvh_-_var(--site-banner-h,0px))] flex items-center justify-center bg-background px-4">
       <div className="max-w-md w-full text-center space-y-6">
         <div className="space-y-2">
           <p className="text-xs uppercase tracking-widest text-muted-foreground font-mono">

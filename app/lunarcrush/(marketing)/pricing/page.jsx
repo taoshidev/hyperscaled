@@ -30,7 +30,7 @@ export default async function LunarCrushPricing() {
     "@type": "Product",
     name: `LunarCrush ${tier.name} Funded Account`,
     description: `${tier.accountSize} scaled trading account on Hyperliquid. 10% profit target, 5% max drawdown, ${tier.profitSplit} profit split.`,
-    offers: { "@type": "Offer", price: String(tier.launchPrice), priceCurrency: "USD", availability: "https://schema.org/InStock", url: "https://hyperscaled.trade/lunarcrush/register" },
+    offers: { "@type": "Offer", price: String(tier.launchPrice), priceCurrency: "USD", availability: "https://schema.org/Discontinued", url: "https://hyperscaled.trade/lunarcrush/register" },
   }))
 
   return (

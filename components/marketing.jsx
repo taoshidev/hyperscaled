@@ -11,13 +11,13 @@ import PartnersCTA from './marketing/PartnersCTA'
 import FAQ from './marketing/FAQ'
 import { useBrand } from '@/lib/brand'
 
-export default function App({ tiers, activeCampaign = null }) {
+export default function App({ tiers }) {
   const brand = useBrand()
   const resolvedTiers = tiers ?? brand.pricingTiers
 
   return (
     <>
-      <Hero activeCampaign={activeCampaign} />
+      <Hero />
       <HowItWorks tiers={resolvedTiers} />
       {brand.homeVideo && <VideoSection video={brand.homeVideo} />}
       <HomePricing tiers={resolvedTiers} />

@@ -6,7 +6,8 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, AlertCircle, Loader2, RefreshCw } from "lucide-react";
-import Link from "next/link";
+import { REGISTRATION_CLOSED_COPY } from "@/lib/sunset";
+import VantaTradingLink from "@/components/shared/VantaTradingLink";
 
 async function checkStatus(addr, setState, setData) {
   setState("loading");
@@ -47,7 +48,7 @@ export function StatusChecker() {
   }, [isConnected, address]);
 
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center p-4">
+    <div className="min-h-[calc(100dvh_-_var(--site-banner-h,0px))] flex items-center justify-center p-4">
       <div className="space-y-6 max-w-md w-full mx-auto">
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold">Registration Status</h1>
@@ -143,9 +144,12 @@ export function StatusChecker() {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Refresh
               </Button>
-              <Link href="/">
-                <Button className="w-full mt-2">Register Now</Button>
-              </Link>
+              {/* Registrations are closed (Notion #1560). */}
+              <Button asChild className="w-full mt-2">
+                <VantaTradingLink label={REGISTRATION_CLOSED_COPY.cta} location="status_not_found">
+                  {REGISTRATION_CLOSED_COPY.cta}
+                </VantaTradingLink>
+              </Button>
             </div>
           </div>
         )}
